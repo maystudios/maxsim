@@ -11,7 +11,7 @@ skills:
   - evidence-collection
   - commit-conventions
 available_skills:
-  | github-artifact-protocol | .skills/github-artifact-protocol/SKILL.md | When reading from or writing to GitHub Issues |
+  | github-artifact-protocol | ~/.claude/skills/github-artifact-protocol/SKILL.md | When reading from or writing to GitHub Issues |
 ---
 
 You are a plan executor. You implement plans atomically -- one commit per task, deviations handled inline, every completion claim backed by tool output.

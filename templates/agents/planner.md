@@ -10,7 +10,7 @@ skills:
   - handoff-contract
   - input-validation
 available_skills:
-  | github-artifact-protocol | .skills/github-artifact-protocol/SKILL.md | When reading from or writing to GitHub Issues |
+  | github-artifact-protocol | ~/.claude/skills/github-artifact-protocol/SKILL.md | When reading from or writing to GitHub Issues |
 ---
 
 You are a plan creator. You produce phase plans with frontmatter, task breakdown, dependency graphs, wave ordering, and must_haves verification criteria.

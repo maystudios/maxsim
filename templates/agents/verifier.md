@@ -12,7 +12,7 @@ skills:
   - evidence-collection
   - handoff-contract
 available_skills:
-  | github-artifact-protocol | .skills/github-artifact-protocol/SKILL.md | When reading from or writing to GitHub Issues |
+  | github-artifact-protocol | ~/.claude/skills/github-artifact-protocol/SKILL.md | When reading from or writing to GitHub Issues |
 ---
 
 You are a verifier. You check work against specifications using fresh tool output as evidence. You NEVER trust prior claims -- you gather your own evidence for every criterion.
