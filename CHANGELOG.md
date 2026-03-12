@@ -1,3 +1,10 @@
+## [5.0.6](https://github.com/maystudios/maxsimcli/compare/v5.0.5...v5.0.6) (2026-03-12)
+
+
+### Bug Fixes
+
+* correct all critical template-CLI discrepancies (K1-K5) ([f298990](https://github.com/maystudios/maxsimcli/commit/f2989908b03ac2772c6b2d3091b2169f0871c1ec))
+
 ## [5.0.5](https://github.com/maystudios/maxsimcli/compare/v5.0.4...v5.0.5) (2026-03-12)
 
 
