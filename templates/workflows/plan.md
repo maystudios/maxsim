@@ -20,7 +20,7 @@ This file is the ORCHESTRATOR ONLY. Stage-specific logic lives in:
 Load phase state in one call:
 
 ```bash
-INIT=$(node .claude/maxsim/bin/maxsim-tools.cjs init plan-phase "$PHASE")
+INIT=$(node ~/.claude/maxsim/bin/maxsim-tools.cjs init plan-phase "$PHASE")
 ```
 
 Parse JSON for: `phase_found`, `phase_dir`, `phase_number`, `phase_name`, `phase_slug`, `padded_phase`, `has_context`, `has_research`, `has_plans`, `plan_count`, `plans`, `commit_docs`, `researcher_model`, `planner_model`, `checker_model`, `research_enabled`, `plan_checker_enabled`, `state_path`, `roadmap_path`, `requirements_path`, `context_path`, `research_path`, `phase_req_ids`, `phase_issue_number`.
@@ -47,7 +47,7 @@ Detect planning stage by querying the phase GitHub Issue:
 2. **If no `phase_issue_number` exists:** The phase has not been set up on GitHub yet.
    - Run `node ~/.claude/maxsim/bin/maxsim-tools.cjs github create-phase --phase-number "$PHASE_NUMBER" --phase-name "$PHASE_NAME" --goal "$GOAL" --requirements "$REQUIREMENTS" --success-criteria "$SUCCESS_CRITERIA"` to create the issue (uses roadmap data).
    - Store the returned issue number as `phase_issue_number`.
-3. Run `node ~/.claude/maxsim/bin/maxsim-tools.cjs github get-issue $PHASE_ISSUE_NUMBER --include-comments` to read the phase issue body and comments.
+3. Run `node ~/.claude/maxsim/bin/maxsim-tools.cjs github get-issue --issue-number $PHASE_ISSUE_NUMBER --include-comments` to read the phase issue body and comments.
 4. Check issue comments for existing artifacts using HTML marker comments:
    - Has a comment containing `<!-- maxsim:type=context -->`? → Discussion stage complete
    - Has a comment containing `<!-- maxsim:type=research -->`? → Research stage complete
@@ -105,7 +105,7 @@ Pass context: `phase_number`, `phase_name`, `phase_dir`, `padded_phase`, `phase_
 
 Re-query the phase issue to verify the `type=context` comment now exists:
 ```bash
-node ~/.claude/maxsim/bin/maxsim-tools.cjs github get-issue $PHASE_ISSUE_NUMBER --include-comments
+node ~/.claude/maxsim/bin/maxsim-tools.cjs github get-issue --issue-number $PHASE_ISSUE_NUMBER --include-comments
 ```
 
 Show gate:
@@ -140,7 +140,7 @@ Pass context: `phase_number`, `phase_name`, `phase_dir`, `padded_phase`, `phase_
 
 Re-query the phase issue to verify the `type=research` comment now exists:
 ```bash
-node ~/.claude/maxsim/bin/maxsim-tools.cjs github get-issue $PHASE_ISSUE_NUMBER --include-comments
+node ~/.claude/maxsim/bin/maxsim-tools.cjs github get-issue --issue-number $PHASE_ISSUE_NUMBER --include-comments
 ```
 
 Show gate:
@@ -172,7 +172,7 @@ Pass context: `phase_number`, `phase_name`, `phase_dir`, `padded_phase`, `phase_
 
 Re-query the phase issue to verify `type=plan` comments exist:
 ```bash
-node ~/.claude/maxsim/bin/maxsim-tools.cjs github get-issue $PHASE_ISSUE_NUMBER --include-comments
+node ~/.claude/maxsim/bin/maxsim-tools.cjs github get-issue --issue-number $PHASE_ISSUE_NUMBER --include-comments
 ```
 
 Show final gate:
@@ -229,7 +229,7 @@ The stage detection in step 3 handles resume automatically -- completed stages p
 After all stages complete, update STATE.md:
 
 ```bash
-node .claude/maxsim/bin/maxsim-tools.cjs state record-session \
+node ~/.claude/maxsim/bin/maxsim-tools.cjs state record-session \
   --stopped-at "Phase ${PHASE} planned" \
   --resume-file "GitHub Issue #${phase_issue_number}"
 ```

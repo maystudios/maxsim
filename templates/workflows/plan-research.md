@@ -21,7 +21,7 @@ The orchestrator provides phase context. Verify we have what we need:
 ## Step 2: Resolve Researcher Model
 
 ```bash
-RESEARCHER_MODEL=$(node .claude/maxsim/bin/maxsim-tools.cjs resolve-model researcher --raw)
+RESEARCHER_MODEL=$(node ~/.claude/maxsim/bin/maxsim-tools.cjs resolve-model researcher --raw)
 ```
 
 ## Step 3: Check Existing Research
@@ -58,7 +58,7 @@ Return control to orchestrator.
 ## Step 4: Gather Phase Context
 
 ```bash
-PHASE_DESC=$(node .claude/maxsim/bin/maxsim-tools.cjs roadmap get-phase "${PHASE}" 2>/dev/null)
+PHASE_DESC=$(node ~/.claude/maxsim/bin/maxsim-tools.cjs roadmap get-phase "${PHASE}" 2>/dev/null)
 ```
 
 Extract the phase section/description from the JSON output for the researcher prompt.

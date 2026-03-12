@@ -194,7 +194,7 @@ Deviations are normal — handle via rules below.
      ```
    - Close the task sub-issue and move to "Done":
      ```bash
-     node ~/.claude/maxsim/bin/maxsim-tools.cjs github close-issue $TASK_SUB_ISSUE_NUMBER
+     node ~/.claude/maxsim/bin/maxsim-tools.cjs github close-issue --issue-number $TASK_SUB_ISSUE_NUMBER
      node ~/.claude/maxsim/bin/maxsim-tools.cjs github move-issue --issue-number $TASK_SUB_ISSUE_NUMBER --status "Done"
      ```
 
@@ -351,7 +351,7 @@ If verification fails: STOP. Present: "Verification failed for Task [X]: [name].
 
 **On review failure (WIRE-07):** If the task sub-issue was already moved to "Done", reopen and move back:
 ```bash
-node ~/.claude/maxsim/bin/maxsim-tools.cjs github reopen-issue $TASK_SUB_ISSUE_NUMBER
+node ~/.claude/maxsim/bin/maxsim-tools.cjs github reopen-issue --issue-number $TASK_SUB_ISSUE_NUMBER
 node ~/.claude/maxsim/bin/maxsim-tools.cjs github move-issue --issue-number $TASK_SUB_ISSUE_NUMBER --status "In Progress"
 TMPFILE=$(mktemp)
 cat > "$TMPFILE" << 'BODY_EOF'
@@ -596,7 +596,7 @@ Wait for user response:
 
 If the code review identifies failures tied to specific tasks, and those task sub-issues were already closed:
 ```bash
-node ~/.claude/maxsim/bin/maxsim-tools.cjs github reopen-issue $TASK_SUB_ISSUE_NUMBER
+node ~/.claude/maxsim/bin/maxsim-tools.cjs github reopen-issue --issue-number $TASK_SUB_ISSUE_NUMBER
 node ~/.claude/maxsim/bin/maxsim-tools.cjs github move-issue --issue-number $TASK_SUB_ISSUE_NUMBER --status "In Progress"
 TMPFILE=$(mktemp)
 cat > "$TMPFILE" << 'BODY_EOF'
@@ -1058,7 +1058,7 @@ If `USER_SETUP_CREATED=true`: display `⚠️ USER SETUP REQUIRED` with path + e
 
 Check completion by querying the phase issue's task sub-issues:
 ```bash
-node ~/.claude/maxsim/bin/maxsim-tools.cjs github list-sub-issues $PHASE_ISSUE_NUMBER
+node ~/.claude/maxsim/bin/maxsim-tools.cjs github list-sub-issues --phase-issue-number $PHASE_ISSUE_NUMBER
 ```
 
 Count open vs closed sub-issues. Map closed count to plans complete.

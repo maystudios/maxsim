@@ -110,8 +110,10 @@ export interface ExecutePhaseContext {
   state_exists: boolean;
   roadmap_exists: boolean;
   config_exists: boolean;
+  has_verification: boolean;
   state_path: string;
   roadmap_path: string;
+  requirements_path: string;
   config_path: string;
   worktree_mode: WorktreeMode;
   max_parallel_agents: number;
@@ -436,8 +438,10 @@ export async function cmdInitExecutePhase(cwd: string, phase: string | undefined
     state_exists: await pathExistsInternal(planningPath(cwd, 'STATE.md')),
     roadmap_exists: await pathExistsInternal(planningPath(cwd, 'ROADMAP.md')),
     config_exists: await pathExistsInternal(planningPath(cwd, 'config.json')),
+    has_verification: phaseInfo?.has_verification ?? false,
     state_path: '.planning/STATE.md',
     roadmap_path: '.planning/ROADMAP.md',
+    requirements_path: '.planning/REQUIREMENTS.md',
     config_path: '.planning/config.json',
     worktree_mode: config.worktree_mode ?? 'auto',
     max_parallel_agents: config.max_parallel_agents ?? 10,

@@ -662,9 +662,9 @@ If "No, change it": capture the preferred convention via freeform.
 - Set `{{source}}` to "init-existing scan + user confirmation"
 - Set `{{generated_or_confirmed}}` to "confirmed"
 
-Write `.planning/CONVENTIONS.md`:
+Write `.planning/CONVENTIONS.md` directly using the Write tool (CONVENTIONS.md is not a valid artefakt type):
 ```bash
-node ~/.claude/maxsim/bin/maxsim-tools.cjs artefakte-write .planning/CONVENTIONS.md
+# Use the Write tool to create .planning/CONVENTIONS.md with the content above
 ```
 
 ## Step 6d: No-Gos from Scan
@@ -1222,7 +1222,7 @@ Generate structured artefakte documents from gathered context.
 **DECISIONS.md:**
 
 ```bash
-node ~/.claude/maxsim/bin/maxsim-tools.cjs artefakte-write .planning/DECISIONS.md
+node ~/.claude/maxsim/bin/maxsim-tools.cjs artefakte-write decisions
 ```
 
 Write content:
@@ -1246,7 +1246,7 @@ Write content:
 **ACCEPTANCE-CRITERIA.md:**
 
 ```bash
-node ~/.claude/maxsim/bin/maxsim-tools.cjs artefakte-write .planning/ACCEPTANCE-CRITERIA.md
+node ~/.claude/maxsim/bin/maxsim-tools.cjs artefakte-write acceptance-criteria
 ```
 
 Write content:
@@ -1274,7 +1274,7 @@ Populated per-phase during /maxsim:plan (discussion stage).
 **NO-GOS.md:**
 
 ```bash
-node ~/.claude/maxsim/bin/maxsim-tools.cjs artefakte-write .planning/NO-GOS.md
+node ~/.claude/maxsim/bin/maxsim-tools.cjs artefakte-write no-gos
 ```
 
 Write content:

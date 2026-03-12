@@ -20,7 +20,7 @@ Verification is handled inline (spawning verifier agent) since it is a stage of 
 Load phase state in one call:
 
 ```bash
-INIT=$(node .claude/maxsim/bin/maxsim-tools.cjs init execute-phase "$PHASE")
+INIT=$(node ~/.claude/maxsim/bin/maxsim-tools.cjs init execute-phase "$PHASE")
 ```
 
 Parse `$ARGUMENTS` for: phase number (required), `--worktrees` (force worktree mode), `--no-worktrees` (force standard mode), `--auto` (auto-advance), `--gaps-only` (gap plans only).
@@ -42,7 +42,7 @@ Exit workflow.
 When GitHub integration is active (phase_issue_number is set), check for plan comments on the phase issue before reporting no plans:
 
 ```bash
-node ~/.claude/maxsim/bin/maxsim-tools.cjs github get-issue $PHASE_ISSUE_NUMBER --include-comments
+node ~/.claude/maxsim/bin/maxsim-tools.cjs github get-issue --issue-number $PHASE_ISSUE_NUMBER --include-comments
 ```
 
 Parse the response to find comments with `<!-- maxsim:type=plan -->` markers or `## Plan NN` headings. If no plan comments are found:
@@ -62,7 +62,7 @@ When GitHub integration is active (`phase_issue_number` is set):
 
 1. Fetch the phase issue and its comments:
    ```bash
-   node ~/.claude/maxsim/bin/maxsim-tools.cjs github get-issue $PHASE_ISSUE_NUMBER --include-comments
+   node ~/.claude/maxsim/bin/maxsim-tools.cjs github get-issue --issue-number $PHASE_ISSUE_NUMBER --include-comments
    ```
 
 2. Parse issue comments to identify plan comments. A plan comment is one that contains either:
@@ -76,7 +76,7 @@ When GitHub integration is active (`phase_issue_number` is set):
 
 4. Check completion status for each plan by calling:
    ```bash
-   node ~/.claude/maxsim/bin/maxsim-tools.cjs github list-sub-issues $PHASE_ISSUE_NUMBER
+   node ~/.claude/maxsim/bin/maxsim-tools.cjs github list-sub-issues --phase-issue-number $PHASE_ISSUE_NUMBER
    ```
    A plan is considered complete when ALL of its task sub-issues are closed (state: closed).
    Additionally, check for `<!-- maxsim:type=summary -->` comments on the phase issue as a secondary completion signal.
@@ -306,7 +306,7 @@ Verify that the phase achieved its GOAL, not just that tasks completed.
 Resolve verifier model and spawn the verifier agent:
 
 ```bash
-VERIFIER_MODEL=$(node .claude/maxsim/bin/maxsim-tools.cjs resolve-model verifier --raw)
+VERIFIER_MODEL=$(node ~/.claude/maxsim/bin/maxsim-tools.cjs resolve-model verifier --raw)
 ```
 
 ```
@@ -330,7 +330,7 @@ Also write VERIFICATION.md to the phase directory for local reference.",
 Read verification status from the verification comment on the phase issue:
 
 ```bash
-node ~/.claude/maxsim/bin/maxsim-tools.cjs github get-issue $PHASE_ISSUE_NUMBER --include-comments
+node ~/.claude/maxsim/bin/maxsim-tools.cjs github get-issue --issue-number $PHASE_ISSUE_NUMBER --include-comments
 ```
 
 Look for the `<!-- maxsim:type=verification -->` comment and parse the `status:` field from its body.
@@ -368,12 +368,12 @@ node ~/.claude/maxsim/bin/maxsim-tools.cjs github post-comment --issue-number $P
 
 Mark phase complete:
 ```bash
-COMPLETION=$(node .claude/maxsim/bin/maxsim-tools.cjs phase complete "${PHASE_NUMBER}")
+COMPLETION=$(node ~/.claude/maxsim/bin/maxsim-tools.cjs phase complete "${PHASE_NUMBER}")
 ```
 
 Update tracking files:
 ```bash
-node .claude/maxsim/bin/maxsim-tools.cjs commit "docs(phase-{X}): complete phase execution" --files .planning/ROADMAP.md .planning/STATE.md .planning/REQUIREMENTS.md {phase_dir}/*-VERIFICATION.md
+node ~/.claude/maxsim/bin/maxsim-tools.cjs commit "docs(phase-{X}): complete phase execution" --files .planning/ROADMAP.md .planning/STATE.md .planning/REQUIREMENTS.md {phase_dir}/*-VERIFICATION.md
 ```
 
 **If `gaps_found`:** Post a gaps comment on the phase issue, then proceed to Retry Loop (step 6).
@@ -493,7 +493,7 @@ The state detection in step 2 handles resume automatically -- completed plans ha
 After verification passes, update STATE.md:
 
 ```bash
-node .claude/maxsim/bin/maxsim-tools.cjs state record-session \
+node ~/.claude/maxsim/bin/maxsim-tools.cjs state record-session \
   --stopped-at "Phase ${PHASE} executed and verified" \
   --resume-file "${phase_dir}"
 ```

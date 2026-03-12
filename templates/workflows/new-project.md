@@ -469,7 +469,7 @@ After PROJECT.md is committed, generate artefakte documents that capture structu
 **DECISIONS.md** — Key decisions made during questioning with rationale:
 
 ```bash
-node ~/.claude/maxsim/bin/maxsim-tools.cjs artefakte-write .planning/DECISIONS.md
+node ~/.claude/maxsim/bin/maxsim-tools.cjs artefakte-write decisions
 ```
 
 Write content:
@@ -492,7 +492,7 @@ Write content:
 **ACCEPTANCE-CRITERIA.md** — Measurable success criteria derived from user's vision:
 
 ```bash
-node ~/.claude/maxsim/bin/maxsim-tools.cjs artefakte-write .planning/ACCEPTANCE-CRITERIA.md
+node ~/.claude/maxsim/bin/maxsim-tools.cjs artefakte-write acceptance-criteria
 ```
 
 Write content:
@@ -522,7 +522,7 @@ Populated per-phase during /maxsim:plan.
 **NO-GOS.md** — Explicit exclusions and anti-patterns:
 
 ```bash
-node ~/.claude/maxsim/bin/maxsim-tools.cjs artefakte-write .planning/NO-GOS.md
+node ~/.claude/maxsim/bin/maxsim-tools.cjs artefakte-write no-gos
 ```
 
 Write content:
@@ -573,8 +573,9 @@ Populate from questioning context + reasonable defaults:
 
 Write content using the 4 must-have sections (Tech Stack, File Layout, Error Handling, Testing). Remove HTML comment examples and replace with actual project-specific conventions.
 
+Write `.planning/CONVENTIONS.md` directly using the Write tool (CONVENTIONS.md is not a valid artefakt type):
 ```bash
-node ~/.claude/maxsim/bin/maxsim-tools.cjs artefakte-write .planning/CONVENTIONS.md
+# Use the Write tool to create .planning/CONVENTIONS.md with the content above
 ```
 
 **Commit artefakte:**

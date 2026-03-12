@@ -35,8 +35,8 @@ Parse JSON for: `executor_model`, `verifier_model`, `commit_docs`, `phase_found`
 Find incomplete plans by querying GitHub Issues (the source of truth for plans and completion status):
 
 ```bash
-node ~/.claude/maxsim/bin/maxsim-tools.cjs github get-issue ${phase_issue_number} --include-comments
-node ~/.claude/maxsim/bin/maxsim-tools.cjs github list-sub-issues ${phase_issue_number}
+node ~/.claude/maxsim/bin/maxsim-tools.cjs github get-issue --issue-number ${phase_issue_number} --include-comments
+node ~/.claude/maxsim/bin/maxsim-tools.cjs github list-sub-issues --phase-issue-number ${phase_issue_number}
 ```
 
 Parse plan comments (`<!-- maxsim:type=plan -->`) from the phase issue. A plan is complete when all its task sub-issues are closed.
@@ -406,7 +406,7 @@ After all plans in the phase are processed:
 
 Check completion by querying the phase issue's task sub-issues:
 ```bash
-node ~/.claude/maxsim/bin/maxsim-tools.cjs github list-sub-issues ${phase_issue_number}
+node ~/.claude/maxsim/bin/maxsim-tools.cjs github list-sub-issues --phase-issue-number ${phase_issue_number}
 ```
 
 Count open vs closed sub-issues to determine completion.

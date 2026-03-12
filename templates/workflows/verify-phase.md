@@ -305,7 +305,7 @@ Do NOT write a UAT.md file to `.planning/phases/`.
 
 ```bash
 node ~/.claude/maxsim/bin/maxsim-tools.cjs github move-issue --issue-number N --status "Done"
-node ~/.claude/maxsim/bin/maxsim-tools.cjs github close-issue N
+node ~/.claude/maxsim/bin/maxsim-tools.cjs github close-issue --issue-number N
 ```
 
 **If verification passes but PR not yet merged:**

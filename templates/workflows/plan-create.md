@@ -21,15 +21,15 @@ The orchestrator provides phase context. Verify we have what we need:
 ## Step 2: Resolve Models
 
 ```bash
-PLANNER_MODEL=$(node .claude/maxsim/bin/maxsim-tools.cjs resolve-model planner --raw)
-CHECKER_MODEL=$(node .claude/maxsim/bin/maxsim-tools.cjs resolve-model planner --raw)
+PLANNER_MODEL=$(node ~/.claude/maxsim/bin/maxsim-tools.cjs resolve-model planner --raw)
+CHECKER_MODEL=$(node ~/.claude/maxsim/bin/maxsim-tools.cjs resolve-model planner --raw)
 ```
 
 ## Step 3: Check Existing Plans
 
 Query the phase GitHub Issue for existing plan comments:
 ```bash
-node ~/.claude/maxsim/bin/maxsim-tools.cjs github get-issue $PHASE_ISSUE_NUMBER --include-comments
+node ~/.claude/maxsim/bin/maxsim-tools.cjs github get-issue --issue-number $PHASE_ISSUE_NUMBER --include-comments
 ```
 
 Look for comments that contain `<!-- maxsim:type=plan -->`.
@@ -324,7 +324,7 @@ Parse tasks from the posted plans. For each `<task>` element in the plan XML, ex
 Run `github batch-create-tasks` with the full tasks array and the phase issue number:
 
 ```bash
-node ~/.claude/maxsim/bin/maxsim-tools.cjs github batch-create-tasks --phase-number "$PHASE_NUMBER" --parent-issue-number $PHASE_ISSUE_NUMBER --tasks-json '[{"id":"1.1","title":"Task title","description":"Task body"}, ...]'
+node ~/.claude/maxsim/bin/maxsim-tools.cjs github batch-create-tasks --phase-number "$PHASE_NUMBER" --parent-issue-number $PHASE_ISSUE_NUMBER --tasks '[{"task_id":"1.1","title":"Task title","body":"Task body"}, ...]'
 ```
 
 Each task becomes a GitHub sub-issue linked to the phase issue.

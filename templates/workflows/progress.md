@@ -107,7 +107,7 @@ For the current active phase (or any phase requested by user):
 
 ```bash
 node ~/.claude/maxsim/bin/maxsim-tools.cjs github phase-progress --phase-issue-number N
-node ~/.claude/maxsim/bin/maxsim-tools.cjs github list-sub-issues N
+node ~/.claude/maxsim/bin/maxsim-tools.cjs github list-sub-issues --phase-issue-number N
 ```
 
 **Detect external edits:**

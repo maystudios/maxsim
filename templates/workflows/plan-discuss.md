@@ -128,7 +128,7 @@ Phase: "API documentation"
 Phase number, name, directory, and GitHub issue number come from the orchestrator context.
 
 ```bash
-INIT=$(node .claude/maxsim/bin/maxsim-tools.cjs init phase-op "${PHASE}")
+INIT=$(node ~/.claude/maxsim/bin/maxsim-tools.cjs init phase-op "${PHASE}")
 ```
 
 Parse JSON for: `commit_docs`, `phase_found`, `phase_dir`, `phase_number`, `phase_name`, `phase_slug`, `padded_phase`, `has_research`, `has_context`, `has_plans`, `plan_count`, `roadmap_exists`, `planning_exists`.
@@ -141,7 +141,7 @@ Also extract `phase_issue_number` passed from the orchestrator.
 
 Check if a context comment already exists on the phase GitHub Issue by calling:
 ```bash
-node ~/.claude/maxsim/bin/maxsim-tools.cjs github get-issue $PHASE_ISSUE_NUMBER --include-comments
+node ~/.claude/maxsim/bin/maxsim-tools.cjs github get-issue --issue-number $PHASE_ISSUE_NUMBER --include-comments
 ```
 
 Look for a comment that contains `<!-- maxsim:type=context -->`.

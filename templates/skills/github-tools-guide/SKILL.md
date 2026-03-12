@@ -25,7 +25,7 @@ Add `--raw` to get machine-readable JSON output (no formatting).
 |---------|-------------|
 | `github create-phase --phase-number "01" --phase-name "Name" --goal "Goal" [--requirements "R1,R2"] [--success-criteria "SC1,SC2"]` | Create phase issue + add to board + set "To Do" |
 | `github create-task --phase-number "01" --task-id "T1" --title "Title" --body "Body" --parent-issue-number N` | Create task sub-issue |
-| `github batch-create-tasks --phase-number "01" --parent-issue-number N --tasks-json '[...]'` | Batch create tasks with rollback |
+| `github batch-create-tasks --phase-number "01" --parent-issue-number N --tasks '[{"task_id":"1.1","title":"Title","body":"Body"}, ...]'` | Batch create tasks with rollback |
 | `github post-plan-comment --phase-issue-number N --plan-number "01" --plan-content "..." [--plan-content-file F]` | Post plan comment on phase issue |
 
 ### Comments
@@ -37,10 +37,10 @@ Add `--raw` to get machine-readable JSON output (no formatting).
 ### Issue Operations
 | Command | Description |
 |---------|-------------|
-| `github get-issue N [--include-comments]` | Get issue details (with optional comments) |
-| `github list-sub-issues N` | List sub-issues of a phase issue |
-| `github close-issue N [--reason "..."] [--state-reason completed\|not_planned]` | Close issue |
-| `github reopen-issue N` | Reopen closed issue |
+| `github get-issue --issue-number N [--include-comments]` | Get issue details (with optional comments) |
+| `github list-sub-issues --phase-issue-number N` | List sub-issues of a phase issue |
+| `github close-issue --issue-number N [--reason "..."] [--state-reason completed\|not_planned]` | Close issue |
+| `github reopen-issue --issue-number N` | Reopen closed issue |
 | `github bounce-issue --issue-number N --reason "feedback"` | Bounce to In Progress with feedback |
 | `github move-issue --issue-number N --status "STATUS"` | Move to board column (To Do, In Progress, In Review, Done) |
 | `github detect-external-edits --phase-number "01"` | Check body hash mismatch |

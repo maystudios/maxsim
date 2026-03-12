@@ -427,7 +427,7 @@ After writing CONTEXT.md, append phase-specific entries to the project-level art
 **Append to DECISIONS.md:**
 
 ```bash
-node ~/.claude/maxsim/bin/maxsim-tools.cjs artefakte-append .planning/DECISIONS.md
+node ~/.claude/maxsim/bin/maxsim-tools.cjs artefakte-append decisions --entry "..."
 ```
 
 Append content:
@@ -444,7 +444,7 @@ Append content:
 **Append to ACCEPTANCE-CRITERIA.md:**
 
 ```bash
-node ~/.claude/maxsim/bin/maxsim-tools.cjs artefakte-append .planning/ACCEPTANCE-CRITERIA.md
+node ~/.claude/maxsim/bin/maxsim-tools.cjs artefakte-append acceptance-criteria --entry "..."
 ```
 
 Append content under "Phase-Level Criteria":
@@ -463,7 +463,7 @@ Append content under "Phase-Level Criteria":
 If any "don't do this" or "avoid this approach" decisions were made during discussion:
 
 ```bash
-node ~/.claude/maxsim/bin/maxsim-tools.cjs artefakte-append .planning/NO-GOS.md
+node ~/.claude/maxsim/bin/maxsim-tools.cjs artefakte-append no-gos --entry "..."
 ```
 
 Append content:

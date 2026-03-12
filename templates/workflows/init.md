@@ -52,7 +52,7 @@ Use the results to route:
 For Scenario C vs D, check phase progress:
 
 ```bash
-node .claude/maxsim/bin/maxsim-tools.cjs roadmap analyze 2>/dev/null || echo "NO_ANALYSIS"
+node ~/.claude/maxsim/bin/maxsim-tools.cjs roadmap analyze 2>/dev/null || echo "NO_ANALYSIS"
 ```
 
 If all phases show status "complete" -> Scenario D (Milestone Complete).
@@ -140,7 +140,7 @@ Display:
 Load current state:
 
 ```bash
-node .claude/maxsim/bin/maxsim-tools.cjs state load 2>/dev/null
+node ~/.claude/maxsim/bin/maxsim-tools.cjs state load 2>/dev/null
 ```
 
 Read `.planning/ROADMAP.md` and `.planning/STATE.md` to display:
