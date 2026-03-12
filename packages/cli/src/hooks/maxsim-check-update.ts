@@ -37,6 +37,7 @@ export function checkForUpdate(options: CheckForUpdateOptions): void {
   }
 
   // Run check in background (spawn background process, windowsHide prevents console flash)
+  const isWindows = process.platform === 'win32';
   const child = spawn(process.execPath, ['-e', `
   const fs = require('fs');
   const { execSync } = require('child_process');
@@ -71,7 +72,7 @@ export function checkForUpdate(options: CheckForUpdateOptions): void {
 `], {
     stdio: 'ignore',
     windowsHide: true,
-    detached: true,
+    detached: !isWindows,
   });
 
   child.unref();

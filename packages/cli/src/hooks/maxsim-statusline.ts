@@ -44,6 +44,7 @@ try {
     encoding: 'utf8',
     timeout: 10000,
     stdio: ['pipe', 'pipe', 'pipe'],
+    windowsHide: true,
   }).trim();
 
   if (!nameWithOwner || !nameWithOwner.includes('/')) {
@@ -58,7 +59,7 @@ try {
   try {
     const milestonesRaw = execSync(
       'gh api repos/' + owner + '/' + repo + '/milestones --jq "."',
-      { encoding: 'utf8', timeout: 10000, stdio: ['pipe', 'pipe', 'pipe'] }
+      { encoding: 'utf8', timeout: 10000, stdio: ['pipe', 'pipe', 'pipe'], windowsHide: true }
     ).trim();
     if (milestonesRaw) {
       const milestones = JSON.parse(milestonesRaw);
@@ -81,7 +82,7 @@ try {
   try {
     const phaseRaw = execSync(
       'gh api "repos/' + owner + '/' + repo + '/issues?state=open&labels=phase&per_page=1&sort=updated&direction=desc" --jq ".[0] | {number: .number, title: .title}"',
-      { encoding: 'utf8', timeout: 10000, stdio: ['pipe', 'pipe', 'pipe'] }
+      { encoding: 'utf8', timeout: 10000, stdio: ['pipe', 'pipe', 'pipe'], windowsHide: true }
     ).trim();
     const phaseData = JSON.parse(phaseRaw || '{}');
     const titleMatch = (phaseData.title || '').match(/^\\[Phase\\s+(\\S+)\\]/);
@@ -100,7 +101,7 @@ try {
       const gqlQuery = '{ repository(owner: "' + owner + '", name: "' + repo + '") { issue(number: ' + issueNumber + ') { projectItems(first: 5, includeArchived: false) { nodes { fieldValueByName(name: "Status") { ... on ProjectV2ItemFieldSingleSelectValue { name } } } } } } }';
       const boardRaw = execSync(
         'gh api graphql -f query=@-',
-        { input: gqlQuery, encoding: 'utf8', timeout: 10000, stdio: ['pipe', 'pipe', 'pipe'] }
+        { input: gqlQuery, encoding: 'utf8', timeout: 10000, stdio: ['pipe', 'pipe', 'pipe'], windowsHide: true }
       ).trim();
       const boardData = JSON.parse(boardRaw);
       const nodes = boardData?.data?.repository?.issue?.projectItems?.nodes || [];
@@ -141,10 +142,11 @@ try {
 }
 `;
 
+    const isWindows = process.platform === 'win32';
     const child = spawn(process.execPath, ['-e', script], {
       stdio: 'ignore',
       windowsHide: true,
-      detached: true,
+      detached: !isWindows,
     });
     child.unref();
   } catch {

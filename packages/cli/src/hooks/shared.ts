@@ -48,8 +48,8 @@ export function playSound(type: 'question' | 'stop'): void {
       const { spawn } = require('node:child_process') as typeof import('node:child_process');
       const child = spawn(
         'powershell',
-        ['-NoProfile', '-Command', `(New-Object Media.SoundPlayer '${file}').PlaySync()`],
-        { stdio: 'ignore', windowsHide: true, detached: true },
+        ['-NoProfile', '-WindowStyle', 'Hidden', '-Command', `(New-Object Media.SoundPlayer '${file}').PlaySync()`],
+        { stdio: 'ignore', windowsHide: true },
       );
       child.unref();
     } else if (platform === 'darwin') {
