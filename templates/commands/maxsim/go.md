@@ -21,9 +21,9 @@ Show + Act pattern: display detection reasoning, then act. No arguments -- pure 
 </objective>
 
 <execution_context>
-@./workflows/go.md
+@~/.claude/maxsim/workflows/go.md
 </execution_context>
 
 <process>
-Execute the go workflow from @./workflows/go.md end-to-end.
+Execute the go workflow from @~/.claude/maxsim/workflows/go.md end-to-end.
 </process>

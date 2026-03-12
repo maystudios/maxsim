@@ -38,15 +38,15 @@ Unified project initialization. Detects whether this is a new project, existing 
 </objective>
 
 <execution_context>
-@./workflows/init.md
-@./references/questioning.md
-@./references/thinking-partner.md
-@./references/ui-brand.md
-@./templates/project.md
-@./templates/requirements.md
+@~/.claude/maxsim/workflows/init.md
+@~/.claude/maxsim/references/questioning.md
+@~/.claude/maxsim/references/thinking-partner.md
+@~/.claude/maxsim/references/ui-brand.md
+@~/.claude/maxsim/templates/project.md
+@~/.claude/maxsim/templates/requirements.md
 </execution_context>
 
 <process>
-Execute the init workflow from @./workflows/init.md end-to-end.
+Execute the init workflow from @~/.claude/maxsim/workflows/init.md end-to-end.
 Pass $ARGUMENTS through to the workflow for flag handling (--auto).
 </process>

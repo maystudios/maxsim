@@ -29,8 +29,8 @@ Execute the phase state machine: Execute all plans in wave order, auto-verify, r
 </objective>
 
 <execution_context>
-@./workflows/execute.md
-@./references/ui-brand.md
+@~/.claude/maxsim/workflows/execute.md
+@~/.claude/maxsim/references/ui-brand.md
 </execution_context>
 
 <context>
@@ -40,6 +40,6 @@ Context files are resolved inside the workflow via `maxsim-tools init execute-ph
 </context>
 
 <process>
-Execute the execute workflow from @./workflows/execute.md end-to-end.
+Execute the execute workflow from @~/.claude/maxsim/workflows/execute.md end-to-end.
 Preserve all workflow gates (state detection, wave execution, verification, retry loop, re-entry flow).
 </process>

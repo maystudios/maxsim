@@ -13,10 +13,10 @@ Output ONLY the reference content below. Do NOT add:
 </objective>
 
 <execution_context>
-@./workflows/help.md
+@~/.claude/maxsim/workflows/help.md
 </execution_context>
 
 <process>
-Output the complete MAXSIM command reference from @./workflows/help.md.
+Output the complete MAXSIM command reference from @~/.claude/maxsim/workflows/help.md.
 Display directly -- no additions or modifications.
 </process>

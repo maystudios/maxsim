@@ -21,11 +21,11 @@ Routes to the settings workflow which handles:
 </objective>
 
 <execution_context>
-@./workflows/settings.md
+@~/.claude/maxsim/workflows/settings.md
 </execution_context>
 
 <process>
-**Follow the settings workflow** from `@./workflows/settings.md`.
+**Follow the settings workflow** from `@~/.claude/maxsim/workflows/settings.md`.
 
 The workflow handles all logic including:
 1. Config file creation with defaults if missing

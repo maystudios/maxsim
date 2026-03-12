@@ -16,10 +16,10 @@ Provides situational awareness before continuing work, detects phase gaps, and i
 </objective>
 
 <execution_context>
-@./workflows/progress.md
+@~/.claude/maxsim/workflows/progress.md
 </execution_context>
 
 <process>
-Execute the progress workflow from @./workflows/progress.md end-to-end.
+Execute the progress workflow from @~/.claude/maxsim/workflows/progress.md end-to-end.
 Preserve all routing logic (Routes A through F) and edge case handling.
 </process>

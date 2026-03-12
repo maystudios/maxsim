@@ -30,8 +30,8 @@ Execute the plan state machine: Discussion -> Research -> Planning. Each stage p
 </objective>
 
 <execution_context>
-@./workflows/plan.md
-@./references/ui-brand.md
+@~/.claude/maxsim/workflows/plan.md
+@~/.claude/maxsim/references/ui-brand.md
 </execution_context>
 
 <context>
@@ -45,6 +45,6 @@ Context files are resolved inside the workflow via `maxsim-tools init plan-phase
 </context>
 
 <process>
-Execute the plan workflow from @./workflows/plan.md end-to-end.
+Execute the plan workflow from @~/.claude/maxsim/workflows/plan.md end-to-end.
 Preserve all workflow gates (stage detection, discussion, research, planning, gate confirmations, re-entry flow).
 </process>
