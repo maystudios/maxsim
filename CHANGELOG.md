@@ -1,3 +1,13 @@
+## [5.0.4](https://github.com/maystudios/maxsimcli/compare/v5.0.3...v5.0.4) (2026-03-12)
+
+
+### Bug Fixes
+
+* **agents:** correct skill path prefix in available_skills frontmatter ([37d4a84](https://github.com/maystudios/maxsimcli/commit/37d4a84255b85990e6aafd1467617f3b0b6398c4))
+* **commands:** use absolute [@path](https://github.com/path) refs so commands resolve after install ([ff86aae](https://github.com/maystudios/maxsimcli/commit/ff86aaee0d02aae064ee1ac82bfba7730f1f2a42))
+* **hooks:** prevent console window flashes on Windows ([35a2591](https://github.com/maystudios/maxsimcli/commit/35a2591e18fe81cce5e0a10ae81595852804dcfa))
+* **workflows:** correct [@path](https://github.com/path) references to use ~/.claude/maxsim/ prefix ([9fdacc0](https://github.com/maystudios/maxsimcli/commit/9fdacc08f0adc6236288f4edcfef7a5845531797))
+
 ## [5.0.3](https://github.com/maystudios/maxsimcli/compare/v5.0.2...v5.0.3) (2026-03-12)
 
 

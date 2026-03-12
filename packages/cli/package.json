@@ -1,6 +1,6 @@
 {
   "name": "maxsimcli",
-  "version": "5.0.3",
+  "version": "5.0.4",
   "private": false,
   "description": "A meta-prompting, context engineering and spec-driven development system for Claude Code, OpenCode, Gemini and Codex by MayStudios.",
   "bin": {
