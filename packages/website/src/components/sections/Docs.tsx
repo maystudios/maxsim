@@ -322,16 +322,10 @@ const commands: CommandDef[] = [
     example: `/maxsim:map-codebase`,
   },
   {
-    name: "add-todo",
-    signature: "/maxsim:add-todo",
-    description: "Capture an idea or task as a todo from the current conversation context. Stored in .planning/todos/pending/.",
-    example: `/maxsim:add-todo`,
-  },
-  {
-    name: "check-todos",
-    signature: "/maxsim:check-todos",
-    description: "List all pending todos and interactively select one to work on next.",
-    example: `/maxsim:check-todos`,
+    name: "quick --todo",
+    signature: `/maxsim:quick --todo "desc"`,
+    description: `Capture a task or idea as a GitHub Issue (label: todo). Use --todo list to view open todos, --todo done N to close Issue #N, or --todo triage to prioritize against the roadmap.`,
+    example: `/maxsim:quick --todo "Refactor auth module"`,
   },
   {
     name: "dashboard",

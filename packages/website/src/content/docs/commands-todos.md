@@ -1,18 +1,24 @@
 ---
 id: commands-todos
-title: Todo Commands
+title: Todo Management
 group: Commands Reference
 ---
 
-{% doctable headers=["Command", "Description"] rows=[["/maxsim:add-todo", "Capture an idea or task from the current conversation as a todo file"], ["/maxsim:check-todos", "List pending todos and interactively select one to work on next"]] %}
+{% doctable headers=["Command", "Description"] rows=[["/maxsim:quick --todo \"desc\"", "Capture a task or idea as a GitHub Issue with label 'todo'"], ["/maxsim:quick --todo list", "Show open todo Issues from GitHub"], ["/maxsim:quick --todo done N", "Close GitHub Issue #N as completed"], ["/maxsim:quick --todo triage", "Prioritize todos and cross-reference with the roadmap"]] %}
 {% /doctable %}
 
-Todos are stored as markdown files in `.planning/todos/pending/`. Each todo has a title, description, priority, and creation timestamp. Completed todos move to `.planning/todos/completed/`.
+Todo management uses GitHub Issues as the sole source of truth. Todos are created as Issues with the `todo` label and closed when completed — no local files are involved.
 
 {% codeblock language="bash" %}
-# Save an idea as a todo (from conversation context)
-/maxsim:add-todo
+# Capture an idea as a GitHub Issue
+/maxsim:quick --todo "Refactor auth module to use refresh tokens"
 
-# Review and pick a todo to work on
-/maxsim:check-todos
+# List pending todos (open Issues labeled 'todo')
+/maxsim:quick --todo list
+
+# Mark a todo complete by closing Issue #12
+/maxsim:quick --todo done 12
+
+# Triage: prioritize todos against the current roadmap
+/maxsim:quick --todo triage
 {% /codeblock %}

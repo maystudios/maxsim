@@ -197,8 +197,8 @@ rapid prototyping phases where test infrastructure isn't the focus.
 | `/maxsim:map-codebase` | Analyze existing codebase | Before `/maxsim:new-project` on existing code |
 | `/maxsim:quick` | Ad-hoc task with MAXSIM guarantees | Bug fixes, small features, config changes |
 | `/maxsim:debug [desc]` | Systematic debugging with persistent state | When something breaks |
-| `/maxsim:add-todo [desc]` | Capture an idea for later | Think of something during a session |
-| `/maxsim:check-todos` | List pending todos | Review captured ideas |
+| `/maxsim:quick --todo "desc"` | Capture an idea as a GitHub Issue | Think of something during a session |
+| `/maxsim:quick --todo list` | List pending todos from GitHub | Review captured ideas |
 | `/maxsim:settings` | Configure workflow toggles and model profile | Change model, toggle agents |
 | `/maxsim:set-profile <profile>` | Quick profile switch | Change cost/quality tradeoff |
 | `/maxsim:reapply-patches` | Restore local modifications after update | After `/maxsim:update` if you had local edits |
