@@ -6,7 +6,7 @@ Execute a phase plan (loaded from GitHub issue comment or local PLAN.md) and pos
 Read STATE.md before any operation to load project context.
 Read config.json for planning behavior settings.
 
-@./references/git-integration.md
+@~/.claude/maxsim/references/git-integration.md
 </required_reading>
 
 MAXSIM provides CLI commands (`github create-phase`, `github list-phases`, etc.) for structured operations.

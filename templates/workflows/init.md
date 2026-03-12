@@ -1,10 +1,10 @@
 <purpose>
 
 Unified initialization router. Detects the current project state and delegates to the appropriate sub-workflow:
-- **New project** (no .planning/) -> delegates to @./workflows/new-project.md
-- **Existing project** (.planning/ exists, no ROADMAP.md) -> delegates to @./workflows/init-existing.md
+- **New project** (no .planning/) -> delegates to @~/.claude/maxsim/workflows/new-project.md
+- **Existing project** (.planning/ exists, no ROADMAP.md) -> delegates to @~/.claude/maxsim/workflows/init-existing.md
 - **Active milestone** (.planning/ + ROADMAP.md, phases in progress) -> shows status, offers options
-- **Milestone complete** (all phases done) -> offers completion or new milestone via @./workflows/new-milestone.md
+- **Milestone complete** (all phases done) -> offers completion or new milestone via @~/.claude/maxsim/workflows/new-milestone.md
 
 This file is a THIN ROUTER. All heavy logic lives in the sub-workflows.
 
@@ -81,7 +81,7 @@ echo "$INIT_CONTEXT"
 
 Save this JSON output — the sub-workflow will use it as `INIT_CONTEXT` and skip its own init call.
 
-Now delegate to @./workflows/new-project.md — execute the full new-project workflow end-to-end. The `INIT_CONTEXT` JSON is already loaded; the sub-workflow will detect this and skip Step 1's CLI call.
+Now delegate to @~/.claude/maxsim/workflows/new-project.md — execute the full new-project workflow end-to-end. The `INIT_CONTEXT` JSON is already loaded; the sub-workflow will detect this and skip Step 1's CLI call.
 
 Pass through:
 - `--auto` flag if set
@@ -114,7 +114,7 @@ echo "$INIT_CONTEXT"
 
 Save this JSON output — the sub-workflow will use it as `INIT_CONTEXT` and skip its own init call.
 
-Now delegate to @./workflows/init-existing.md — execute the full init-existing workflow end-to-end. The `INIT_CONTEXT` JSON is already loaded; the sub-workflow will detect this and skip Step 1's CLI call.
+Now delegate to @~/.claude/maxsim/workflows/init-existing.md — execute the full init-existing workflow end-to-end. The `INIT_CONTEXT` JSON is already loaded; the sub-workflow will detect this and skip Step 1's CLI call.
 
 Pass through:
 - `--auto` flag if set
@@ -159,7 +159,7 @@ Then present options conversationally (natural language, not AskUserQuestion):
    - If verification is pending: "Verify the current phase"
 
 2. **Start a new milestone** -- If the user wants to pivot or start fresh:
-   - Delegate to @./workflows/new-milestone.md for the milestone creation flow
+   - Delegate to @~/.claude/maxsim/workflows/new-milestone.md for the milestone creation flow
 
 3. **View detailed progress** -- Direct to `/maxsim:progress` for full status
 
@@ -189,12 +189,12 @@ Then present options conversationally:
 **Options:**
 
 1. **Complete and archive this milestone** -- Run the milestone completion flow:
-   - Delegate to @./workflows/new-milestone.md with completion mode
+   - Delegate to @~/.claude/maxsim/workflows/new-milestone.md with completion mode
    - Archives current milestone data
    - Updates MILESTONES.md with summary
 
 2. **Start a new milestone** -- Begin the next cycle:
-   - Delegate to @./workflows/new-milestone.md for creation flow
+   - Delegate to @~/.claude/maxsim/workflows/new-milestone.md for creation flow
    - Gathers new milestone goals
    - Creates fresh REQUIREMENTS.md and ROADMAP.md
 

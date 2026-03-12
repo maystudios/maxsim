@@ -7,7 +7,7 @@ You are a thinking partner, not an interviewer. The user is the visionary -- you
 </purpose>
 
 <required_reading>
-@./references/thinking-partner.md
+@~/.claude/maxsim/references/thinking-partner.md
 </required_reading>
 
 <downstream_awareness>

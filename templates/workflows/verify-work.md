@@ -18,7 +18,7 @@ No Pass/Fail buttons. No severity questions. Just: "Here's what should happen. D
 </required_reading>
 
 <template>
-@./templates/UAT.md
+@~/.claude/maxsim/templates/UAT.md
 </template>
 
 <process>
@@ -337,7 +337,7 @@ Spawning parallel debug agents to investigate each issue.
 ```
 
 - Load diagnose-issues workflow
-- Follow @./workflows/diagnose-issues.md
+- Follow @~/.claude/maxsim/workflows/diagnose-issues.md
 - Spawn parallel debug agents for each issue
 - Collect root causes
 - Update UAT.md with root causes

@@ -4,8 +4,8 @@ Initialize a new project through unified flow: questioning, research (optional),
 
 <required_reading>
 Read all files referenced by the invoking prompt's execution_context before starting.
-@./references/thinking-partner.md
-@./references/questioning.md
+@~/.claude/maxsim/references/thinking-partner.md
+@~/.claude/maxsim/references/questioning.md
 </required_reading>
 
 <auto_mode>

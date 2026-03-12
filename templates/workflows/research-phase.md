@@ -8,14 +8,14 @@ Standalone research command. For most workflows, use `/maxsim:plan` which integr
 
 ## Step 0: Resolve Model Profile
 
-@./references/model-profile-resolution.md
+@~/.claude/maxsim/references/model-profile-resolution.md
 
 Resolve model for:
 - `researcher`
 
 ## Step 1: Normalize and Validate Phase
 
-@./references/phase-argument-parsing.md
+@~/.claude/maxsim/references/phase-argument-parsing.md
 
 ```bash
 PHASE_INFO=$(node ~/.claude/maxsim/bin/maxsim-tools.cjs roadmap get-phase "${PHASE}")

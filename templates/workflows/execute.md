@@ -8,7 +8,7 @@ Before executing any step in this workflow, verify:
 Thin orchestrator for the /maxsim:execute state machine. Detects the current state of a phase (already done, needs verification, needs execution), delegates per-plan execution to execute-plan.md subagents, runs auto-verification, and handles retry with gap closure.
 
 This file is the ORCHESTRATOR ONLY. Per-plan execution logic lives in:
-- @./workflows/execute-plan.md (per-plan subagent execution)
+- @~/.claude/maxsim/workflows/execute-plan.md (per-plan subagent execution)
 
 Verification is handled inline (spawning verifier agent) since it is a stage of this workflow, not a separate command.
 </purpose>
@@ -213,10 +213,10 @@ Execute each wave in sequence. Within a wave: parallel if `parallelization` is t
        </objective>
 
        <execution_context>
-       @./workflows/execute-plan.md
-       @./templates/summary.md
-       @./references/checkpoints.md
-       @./references/tdd.md
+       @~/.claude/maxsim/workflows/execute-plan.md
+       @~/.claude/maxsim/templates/summary.md
+       @~/.claude/maxsim/references/checkpoints.md
+       @~/.claude/maxsim/references/tdd.md
        </execution_context>
 
        <github_context>

@@ -24,8 +24,8 @@ Then verify each level against the actual codebase.
 </core_principle>
 
 <required_reading>
-@./references/verification-patterns.md
-@./templates/verification-report.md
+@~/.claude/maxsim/references/verification-patterns.md
+@~/.claude/maxsim/templates/verification-report.md
 </required_reading>
 
 <process>

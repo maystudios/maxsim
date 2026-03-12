@@ -11,7 +11,7 @@ You are a thinking partner, not an interviewer. The user is the visionary — yo
 </purpose>
 
 <required_reading>
-@./references/thinking-partner.md
+@~/.claude/maxsim/references/thinking-partner.md
 </required_reading>
 
 <tool_mandate>
@@ -612,9 +612,9 @@ Task(
     </objective>
 
     <execution_context>
-    @./workflows/plan.md
-    @./references/ui-brand.md
-    @./references/model-profile-resolution.md
+    @~/.claude/maxsim/workflows/plan.md
+    @~/.claude/maxsim/references/ui-brand.md
+    @~/.claude/maxsim/references/model-profile-resolution.md
     </execution_context>
 
     <arguments>

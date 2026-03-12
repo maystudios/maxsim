@@ -8,9 +8,9 @@ Before executing any step in this workflow, verify:
 Thin orchestrator for the /maxsim:plan state machine. Detects the current stage of a phase (Discussion, Research, Planning), delegates to stage sub-workflows, shows gate confirmations between stages, and handles re-entry on already-planned phases.
 
 This file is the ORCHESTRATOR ONLY. Stage-specific logic lives in:
-- @./workflows/plan-discuss.md (Discussion stage)
-- @./workflows/plan-research.md (Research stage)
-- @./workflows/plan-create.md (Planning stage)
+- @~/.claude/maxsim/workflows/plan-discuss.md (Discussion stage)
+- @~/.claude/maxsim/workflows/plan-research.md (Research stage)
+- @~/.claude/maxsim/workflows/plan-create.md (Planning stage)
 </purpose>
 
 <process>
@@ -97,7 +97,7 @@ Wait for user choice via natural conversation.
 
 Delegate to the discussion sub-workflow for full discussion logic:
 
-@./workflows/plan-discuss.md
+@~/.claude/maxsim/workflows/plan-discuss.md
 
 Pass context: `phase_number`, `phase_name`, `phase_dir`, `padded_phase`, `phase_slug`, `commit_docs`, `roadmap_path`, `state_path`, `phase_issue_number`.
 
@@ -132,7 +132,7 @@ Wait for user response via natural conversation (not AskUserQuestion).
 
 Delegate to the research sub-workflow:
 
-@./workflows/plan-research.md
+@~/.claude/maxsim/workflows/plan-research.md
 
 Pass context: `phase_number`, `phase_name`, `phase_dir`, `padded_phase`, `phase_slug`, `commit_docs`, `researcher_model`, `research_enabled`, `has_research`, `state_path`, `roadmap_path`, `requirements_path`, `context_path`, `phase_req_ids`, `phase_issue_number`. Also pass the `--force-research` flag if present in $ARGUMENTS.
 
@@ -164,7 +164,7 @@ Wait for user response via natural conversation.
 
 Delegate to the planning sub-workflow:
 
-@./workflows/plan-create.md
+@~/.claude/maxsim/workflows/plan-create.md
 
 Pass context: `phase_number`, `phase_name`, `phase_dir`, `padded_phase`, `phase_slug`, `commit_docs`, `planner_model`, `checker_model`, `plan_checker_enabled`, `state_path`, `roadmap_path`, `requirements_path`, `context_path`, `research_path`, `phase_req_ids`, `phase_issue_number`. Also pass the `--skip-verify` flag if present in $ARGUMENTS.
 
