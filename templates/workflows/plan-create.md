@@ -29,7 +29,7 @@ CHECKER_MODEL=$(node .claude/maxsim/bin/maxsim-tools.cjs resolve-model planner -
 
 Query the phase GitHub Issue for existing plan comments:
 ```bash
-node ~/.claude/maxsim/bin/maxsim-tools.cjs github get-issue $PHASE_ISSUE_NUMBER --comments
+node ~/.claude/maxsim/bin/maxsim-tools.cjs github get-issue $PHASE_ISSUE_NUMBER --include-comments
 ```
 
 Look for comments that contain `<!-- maxsim:type=plan -->`.

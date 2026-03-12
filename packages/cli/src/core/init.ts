@@ -33,7 +33,6 @@ import type {
   MilestoneInfo,
   AppConfig,
   CmdResult,
-  TodoItem,
   ExecutorAgentContext,
   PlannerAgentContext,
   ResearcherAgentContext,
@@ -47,7 +46,6 @@ import type {
 
 import { loadMapping } from '../github/mapping.js';
 import type { IssueMappingFile } from '../github/types.js';
-import { fetchTodoItems } from './commands.js';
 
 // ─── GitHub context helper ───────────────────────────────────────────────────
 
@@ -78,7 +76,6 @@ export type WorkflowType =
   | 'resume'
   | 'verify-work'
   | 'phase-op'
-  | 'todos'
   | 'milestone-op'
   | 'map-codebase'
   | 'init-existing'
@@ -259,16 +256,6 @@ export interface PhaseOpContext {
   uat_path?: string;
 }
 
-export interface TodosContext {
-  commit_docs: boolean;
-  date: string;
-  timestamp: string;
-  todo_count: number;
-  todos: TodoItem[];
-  area_filter: string | null;
-  planning_exists: boolean;
-}
-
 export interface MilestoneOpContext {
   commit_docs: boolean;
   milestone_version: string;
@@ -368,7 +355,6 @@ export type InitContext =
   | ResumeContext
   | VerifyWorkContext
   | PhaseOpContext
-  | TodosContext
   | MilestoneOpContext
   | MapCodebaseContext
   | InitExistingContext
@@ -681,24 +667,6 @@ export async function cmdInitPhaseOp(cwd: string, phase: string | undefined): Pr
   if (await pathExistsInternal(planningPath(cwd, 'CONVENTIONS.md'))) {
     result.conventions_path = '.planning/CONVENTIONS.md';
   }
-  return cmdOk(result);
-}
-
-export async function cmdInitTodos(cwd: string, area: string | undefined): Promise<CmdResult> {
-  const [config, todos, planning_exists] = await Promise.all([
-    loadConfig(cwd),
-    fetchTodoItems(area),
-    pathExistsInternal(planningPath(cwd)),
-  ]);
-  const result: TodosContext = {
-    commit_docs: config.commit_docs,
-    date: todayISO(),
-    timestamp: new Date().toISOString(),
-    todo_count: todos.length,
-    todos,
-    area_filter: area ?? null,
-    planning_exists,
-  };
   return cmdOk(result);
 }
 

@@ -42,7 +42,7 @@ Exit workflow.
 When GitHub integration is active (phase_issue_number is set), check for plan comments on the phase issue before reporting no plans:
 
 ```bash
-node ~/.claude/maxsim/bin/maxsim-tools.cjs github get-issue $PHASE_ISSUE_NUMBER --comments
+node ~/.claude/maxsim/bin/maxsim-tools.cjs github get-issue $PHASE_ISSUE_NUMBER --include-comments
 ```
 
 Parse the response to find comments with `<!-- maxsim:type=plan -->` markers or `## Plan NN` headings. If no plan comments are found:
@@ -62,7 +62,7 @@ When GitHub integration is active (`phase_issue_number` is set):
 
 1. Fetch the phase issue and its comments:
    ```bash
-   node ~/.claude/maxsim/bin/maxsim-tools.cjs github get-issue $PHASE_ISSUE_NUMBER --comments
+   node ~/.claude/maxsim/bin/maxsim-tools.cjs github get-issue $PHASE_ISSUE_NUMBER --include-comments
    ```
 
 2. Parse issue comments to identify plan comments. A plan comment is one that contains either:
@@ -330,7 +330,7 @@ Also write VERIFICATION.md to the phase directory for local reference.",
 Read verification status from the verification comment on the phase issue:
 
 ```bash
-node ~/.claude/maxsim/bin/maxsim-tools.cjs github get-issue $PHASE_ISSUE_NUMBER --comments
+node ~/.claude/maxsim/bin/maxsim-tools.cjs github get-issue $PHASE_ISSUE_NUMBER --include-comments
 ```
 
 Look for the `<!-- maxsim:type=verification -->` comment and parse the `status:` field from its body.

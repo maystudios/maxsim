@@ -304,7 +304,7 @@ Do NOT write a UAT.md file to `.planning/phases/`.
 3. Report to orchestrator: phase complete, issue closed
 
 ```bash
-node ~/.claude/maxsim/bin/maxsim-tools.cjs github move-issue --project-number P --item-id ID --status "Done"
+node ~/.claude/maxsim/bin/maxsim-tools.cjs github move-issue --issue-number N --status "Done"
 node ~/.claude/maxsim/bin/maxsim-tools.cjs github close-issue N
 ```
 
@@ -319,7 +319,7 @@ node ~/.claude/maxsim/bin/maxsim-tools.cjs github close-issue N
 4. Note which gaps need fixing before re-verification
 
 ```bash
-node ~/.claude/maxsim/bin/maxsim-tools.cjs github move-issue --project-number P --item-id ID --status "In Progress"
+node ~/.claude/maxsim/bin/maxsim-tools.cjs github move-issue --issue-number N --status "In Progress"
 ```
 
 **If human_needed:**

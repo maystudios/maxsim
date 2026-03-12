@@ -2,7 +2,7 @@
  * GitHub Issue Templates — Template file generation
  *
  * Installs GitHub Issue Form YAML templates into `.github/ISSUE_TEMPLATE/`
- * for the MAXSIM-managed issue types: phase tasks and todos.
+ * for the MAXSIM-managed issue types: phase tasks.
  *
  * These are file-system operations only (no gh CLI needed).
  * Uses synchronous fs to match existing core module patterns.
@@ -45,40 +45,14 @@ body:
       description: Detailed task specification including actions, criteria, and dependencies
 `;
 
-/**
- * Todo issue template (GitHub Issue Forms YAML format).
- *
- * Used for issues created from MAXSIM todo items.
- * Labels: task
- */
-const TODO_TEMPLATE = `name: "MAXSIM Todo"
-description: "Todo item tracked by MAXSIM"
-labels: ["task"]
-body:
-  - type: textarea
-    id: description
-    attributes:
-      label: Description
-      description: Brief description of the todo item
-    validations:
-      required: true
-
-  - type: textarea
-    id: acceptance
-    attributes:
-      label: Acceptance Criteria
-      description: What defines "done" for this todo?
-`;
-
 // ---- Installation ----------------------------------------------------------
 
 /**
  * Install MAXSIM issue templates into the project's `.github/ISSUE_TEMPLATE/` directory.
  *
  * Creates the directory recursively if it does not exist.
- * Writes two YAML files:
+ * Writes one YAML file:
  *   - phase-task.yml (for phase plan tasks)
- *   - todo.yml (for todo items)
  *
  * Overwrites existing templates if present (to ensure latest version).
  * This is a synchronous file write operation (no gh CLI needed).
@@ -93,13 +67,6 @@ export function installIssueTemplates(cwd: string): void {
   fs.writeFileSync(
     path.join(templateDir, 'phase-task.yml'),
     PHASE_TASK_TEMPLATE,
-    'utf-8',
-  );
-
-  // Write todo template
-  fs.writeFileSync(
-    path.join(templateDir, 'todo.yml'),
-    TODO_TEMPLATE,
     'utf-8',
   );
 }

@@ -141,7 +141,7 @@ Also extract `phase_issue_number` passed from the orchestrator.
 
 Check if a context comment already exists on the phase GitHub Issue by calling:
 ```bash
-node ~/.claude/maxsim/bin/maxsim-tools.cjs github get-issue $PHASE_ISSUE_NUMBER --comments
+node ~/.claude/maxsim/bin/maxsim-tools.cjs github get-issue $PHASE_ISSUE_NUMBER --include-comments
 ```
 
 Look for a comment that contains `<!-- maxsim:type=context -->`.

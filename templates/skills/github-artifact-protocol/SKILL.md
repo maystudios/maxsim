@@ -65,4 +65,3 @@ On partial failure during batch operations:
 - `STATE.md` -- decisions, blockers, metrics
 - `github-issues.json` -- mapping cache (rebuildable)
 - `codebase/` -- stack, architecture, conventions
-- `todos/` -- pending/completed todos

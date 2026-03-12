@@ -14,8 +14,6 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 import type { CmdResult } from '../core/index.js';
-import { generateSlugInternal, todayISO, planningPath } from '../core/core.js';
-
 import {
   requireAuth,
   getOctokit,
@@ -34,8 +32,6 @@ import {
   listPhaseSubIssues,
   postCompletionComment,
   postComment,
-  createTodoIssue,
-  listTodoIssues,
 } from './issues.js';
 
 import {
@@ -126,14 +122,6 @@ function updateLocalMappingStatus(
     for (const task of Object.values(phase.tasks)) {
       if (task.number === issueNumber) {
         task.status = status;
-        return true;
-      }
-    }
-  }
-  if (mapping.todos) {
-    for (const todo of Object.values(mapping.todos)) {
-      if (todo.number === issueNumber) {
-        todo.status = status;
         return true;
       }
     }
@@ -757,16 +745,70 @@ export async function cmdGitHubBounceIssue(
 
 /**
  * Move a GitHub issue to a new status column on the project board.
+ *
+ * Resolves `project_number` and `item_id` from the local mapping file
+ * (`.planning/github-issues.json`) using the human-readable issue number.
  */
 export async function cmdGitHubMoveIssue(
-  projectNumber: number,
-  itemId: string,
+  cwd: string,
+  issueNumber: number,
   status: string,
 ): Promise<CmdResult> {
   const authErr = checkAuth();
   if (authErr) return authErr;
 
+  if (!issueNumber) {
+    return { ok: false, error: 'Missing --issue-number' };
+  }
+  if (!status) {
+    return { ok: false, error: 'Missing --status' };
+  }
+
   try {
+    // Load the mapping file to resolve project_number and item_id
+    const mapping = loadMapping(cwd);
+    if (!mapping) {
+      return { ok: false, error: 'github-issues.json not found. Run project setup first.' };
+    }
+
+    const projectNumber = mapping.project_number;
+    if (!projectNumber) {
+      return { ok: false, error: 'project_number not set in github-issues.json.' };
+    }
+
+    // Search through phases for a matching issue number
+    let itemId: string | null = null;
+
+    for (const phase of Object.values(mapping.phases)) {
+      // Check tracking issue
+      if (phase.tracking_issue?.number === issueNumber) {
+        itemId = phase.tracking_issue.item_id;
+        break;
+      }
+      // Check task sub-issues
+      for (const task of Object.values(phase.tasks)) {
+        if (task.number === issueNumber) {
+          itemId = task.item_id;
+          break;
+        }
+      }
+      if (itemId) break;
+    }
+
+    // Also check todos
+    if (!itemId && mapping.todos) {
+      for (const todo of Object.values(mapping.todos)) {
+        if (todo.number === issueNumber) {
+          itemId = todo.item_id;
+          break;
+        }
+      }
+    }
+
+    if (!itemId) {
+      return { ok: false, error: `Issue #${issueNumber} not found in github-issues.json mapping.` };
+    }
+
     const result = await moveItemToStatus(
       projectNumber,
       itemId,
@@ -780,6 +822,7 @@ export async function cmdGitHubMoveIssue(
     const data = {
       project_number: projectNumber,
       item_id: itemId,
+      issue_number: issueNumber,
       status,
       moved: true,
     };
@@ -1191,159 +1234,7 @@ export async function cmdGitHubDetectInterrupted(
   }
 }
 
-// ---- 22. cmdGitHubAddTodo ---------------------------------------------------
-
-/**
- * Create a new todo as a GitHub Issue. GitHub Issues is the sole source of truth.
- */
-export async function cmdGitHubAddTodo(
-  cwd: string,
-  title: string,
-  description?: string | null,
-  area?: string | null,
-  phase?: string | null,
-): Promise<CmdResult> {
-  try {
-    const root = detectProjectRoot(cwd);
-    if (!root) {
-      return { ok: false, error: 'No .planning/ directory found. Project not detected.' };
-    }
-
-    const areaVal = area || 'general';
-
-    requireAuth();
-    const ghResult = await createTodoIssue(title, description ?? undefined, areaVal, phase ?? undefined);
-    if (!ghResult.ok) {
-      return { ok: false, error: `GitHub issue creation failed: ${ghResult.error}` };
-    }
-
-    const data: Record<string, unknown> = {
-      title,
-      area: areaVal,
-      github_issue: ghResult.data.number,
-    };
-
-    return {
-      ok: true,
-      result: JSON.stringify(data, null, 2),
-      rawValue: data,
-    };
-  } catch (e) {
-    if (e instanceof AuthError) {
-      return { ok: false, error: `GitHub auth required for todo creation: ${e.message}` };
-    }
-    return { ok: false, error: (e as Error).message };
-  }
-}
-
-// ---- 23. cmdGitHubCompleteTodo ----------------------------------------------
-
-/**
- * Mark a todo as completed. Closes the GitHub Issue directly.
- * todoId is the GitHub issue number.
- */
-export async function cmdGitHubCompleteTodo(
-  cwd: string,
-  todoId: string,
-  githubIssueNumber?: number | null,
-): Promise<CmdResult> {
-  try {
-    const root = detectProjectRoot(cwd);
-    if (!root) {
-      return { ok: false, error: 'No .planning/ directory found. Project not detected.' };
-    }
-
-    const today = todayISO();
-    const issueNumber = githubIssueNumber ?? parseInt(todoId, 10);
-
-    if (!issueNumber || isNaN(issueNumber)) {
-      return { ok: false, error: `Invalid todo/issue number: ${todoId}` };
-    }
-
-    requireAuth();
-    const closeResult = await closeIssue(issueNumber, `Todo completed on ${today}`);
-    if (!closeResult.ok) {
-      return { ok: false, error: `GitHub issue close failed: ${closeResult.error}` };
-    }
-
-    const data: Record<string, unknown> = {
-      completed: true,
-      date: today,
-      github_closed: true,
-      github_issue: issueNumber,
-    };
-
-    return {
-      ok: true,
-      result: JSON.stringify(data, null, 2),
-      rawValue: data,
-    };
-  } catch (e) {
-    if (e instanceof AuthError) {
-      return { ok: false, error: `GitHub auth required for todo completion: ${e.message}` };
-    }
-    return { ok: false, error: (e as Error).message };
-  }
-}
-
-// ---- 24. cmdGitHubListTodos -------------------------------------------------
-
-/**
- * List todo items from GitHub Issues. GitHub Issues is the sole source of truth.
- */
-export async function cmdGitHubListTodos(
-  cwd: string,
-  area?: string | null,
-  status?: string | null,
-): Promise<CmdResult> {
-  try {
-    const root = detectProjectRoot(cwd);
-    if (!root) {
-      return { ok: false, error: 'No .planning/ directory found. Project not detected.' };
-    }
-
-    requireAuth();
-    const ghState = status === 'completed' ? 'closed'
-      : status === 'all' ? 'all'
-      : 'open';
-    const ghResult = await listTodoIssues(ghState as 'open' | 'closed' | 'all');
-
-    if (!ghResult.ok) {
-      return { ok: false, error: `GitHub todo list failed: ${ghResult.error}` };
-    }
-
-    let todos = ghResult.data;
-
-    if (area) {
-      todos = todos.filter(t => t.area === area);
-    }
-
-    const data = {
-      count: todos.length,
-      source: 'github',
-      todos: todos.map(t => ({
-        github_issue: t.number,
-        title: t.title,
-        area: t.area,
-        status: t.state === 'open' ? 'pending' : 'completed',
-        created: t.created_at,
-      })),
-    };
-
-    return {
-      ok: true,
-      result: JSON.stringify(data, null, 2),
-      rawValue: data,
-    };
-  } catch (e) {
-    if (e instanceof AuthError) {
-      return { ok: false, error: `GitHub auth required for todo listing: ${e.message}` };
-    }
-    return { ok: false, error: (e as Error).message };
-  }
-}
-
-// ---- 25. cmdGitHubStatus ----------------------------------------------------
+// ---- 22. cmdGitHubStatus ----------------------------------------------------
 
 /**
  * Combined status: all-progress + detect-interrupted + board overview.

@@ -117,9 +117,8 @@ Usage: `/maxsim:debug login form returns 500` or `/maxsim:debug` (resume)
 
 Ad-hoc tasks with MAXSIM guarantees.
 
-- Atomic commits, state tracking, todo capture
+- Atomic commits, state tracking
 - `--full` flag enables plan-checking and verification agents
-- "Save for later" captures ideas as todos for future work
 
 Usage: `/maxsim:quick` or `/maxsim:quick --full`
 

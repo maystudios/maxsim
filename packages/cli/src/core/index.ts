@@ -50,7 +50,6 @@ export type {
   MilestoneCompleteOptions,
   MilestoneResult,
   ArchiveResult,
-  TodoItem,
   HistoryDigest,
   HistoryPhaseDigest,
   SlugResult,
@@ -183,7 +182,6 @@ export {
 export {
   cmdGenerateSlug,
   cmdCurrentTimestamp,
-  cmdListTodos,
   cmdVerifyPathExists,
   cmdHistoryDigest,
   cmdResolveModel,
@@ -191,7 +189,6 @@ export {
   cmdSummaryExtract,
   cmdWebsearch,
   cmdProgressRender,
-  cmdTodoComplete,
   cmdScaffold,
 } from './commands.js';
 
@@ -308,7 +305,6 @@ export type {
   ResumeContext,
   VerifyWorkContext,
   PhaseOpContext,
-  TodosContext,
   MilestoneOpContext,
   MapCodebaseContext,
   InitExistingContext,
@@ -324,7 +320,6 @@ export {
   cmdInitResume,
   cmdInitVerifyWork,
   cmdInitPhaseOp,
-  cmdInitTodos,
   cmdInitMilestoneOp,
   cmdInitMapCodebase,
   cmdInitExisting,

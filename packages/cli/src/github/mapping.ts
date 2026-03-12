@@ -142,36 +142,6 @@ export function updateTaskMapping(
   saveMapping(cwd, mapping);
 }
 
-/**
- * Update a specific todo's issue mapping.
- *
- * Load-modify-save pattern. Creates `todos` section if missing.
- * Merges partial data with existing entry (if any).
- *
- * @throws If mapping file does not exist (must be initialized first via saveMapping)
- */
-export function updateTodoMapping(
-  cwd: string,
-  todoId: string,
-  data: Partial<TaskIssueMapping>,
-): void {
-  const mapping = loadMapping(cwd);
-  if (!mapping) {
-    throw new Error('github-issues.json does not exist. Run project setup first.');
-  }
-
-  // Create todos section if missing
-  if (!mapping.todos) {
-    mapping.todos = {};
-  }
-
-  // Merge with existing todo data (if any)
-  const existing = mapping.todos[todoId];
-  const defaults: TaskIssueMapping = { number: 0, id: 0, node_id: '', item_id: '', status: 'To Do' };
-  mapping.todos[todoId] = Object.assign(defaults, existing, data);
-
-  saveMapping(cwd, mapping);
-}
 
 /**
  * Create a properly typed empty mapping object with sensible defaults.
@@ -190,7 +160,6 @@ export function createEmptyMapping(repo: string): IssueMappingFile {
     milestone_title: '',
     labels: {},
     phases: {},
-    todos: {},
   };
 }
 
@@ -211,18 +180,6 @@ export function getIssueForTask(
   if (!phase) return null;
 
   return phase.tasks[taskId] ?? null;
-}
-
-/**
- * Quick lookup: get the issue mapping for a specific todo.
- *
- * Returns null if the mapping file or todo does not exist.
- */
-export function getIssueForTodo(cwd: string, todoId: string): TaskIssueMapping | null {
-  const mapping = loadMapping(cwd);
-  if (!mapping) return null;
-
-  return mapping.todos?.[todoId] ?? null;
 }
 
 // ---- Rebuild from GitHub (cache rebuild) ------------------------------------

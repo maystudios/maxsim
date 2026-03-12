@@ -124,11 +124,9 @@ node ~/.claude/maxsim/bin/maxsim-tools.cjs github detect-external-edits --phase-
 
 - Use `current_phase` and `next_phase` from `$ROADMAP` (local) cross-referenced with GitHub board status
 - Note `paused_at` if work was paused (from `$STATE`)
-- Count pending todos: run `github list-todos` for live todo count
 - Check for interrupted phases via `github detect-interrupted`
 
 ```bash
-node ~/.claude/maxsim/bin/maxsim-tools.cjs github list-todos --status pending
 node ~/.claude/maxsim/bin/maxsim-tools.cjs github detect-interrupted --phase-issue-number N
 ```
 </step>
@@ -172,9 +170,6 @@ CONTEXT: [✓ if has_context | - if not]
 (Only show if gaps found during analysis)
 - Phase [N]: [issue description, e.g., "External edit detected — body_hash mismatch"]
 - Phase [M]: [issue description, e.g., "Local: complete, GitHub: In Progress — discrepancy"]
-
-## Pending Todos
-- [count] pending — /maxsim:quick --todo to review
 
 ## What's Next
 [Next phase/plan objective from live GitHub data and local roadmap]

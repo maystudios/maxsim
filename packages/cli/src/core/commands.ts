@@ -30,7 +30,6 @@ import {
 } from './core.js';
 import { extractFrontmatter } from './frontmatter.js';
 import type {
-  TodoItem,
   HistoryDigest,
   HistoryPhaseDigest,
   WebSearchOptions,
@@ -77,36 +76,6 @@ export function cmdCurrentTimestamp(format: TimestampFormat, raw: boolean): CmdR
   }
 
   return cmdOk({ timestamp: result }, raw ? result : undefined);
-}
-
-// ─── Todos ──────────────────────────────────────────────────────────────────
-
-/** Shared helper: fetch open todo items from GitHub Issues. Returns empty array on auth failure. */
-export async function fetchTodoItems(area: string | undefined): Promise<TodoItem[]> {
-  try {
-    const { requireAuth } = await import('../github/client.js');
-    const { listTodoIssues } = await import('../github/issues.js');
-    requireAuth();
-    const ghResult = await listTodoIssues('open');
-    if (ghResult.ok) {
-      const filtered = area ? ghResult.data.filter(t => t.area === area) : ghResult.data;
-      return filtered.map(t => ({
-        github_issue: t.number,
-        created: t.created_at,
-        title: t.title,
-        area: t.area,
-      }));
-    }
-  } catch (e) {
-    debugLog('fetchTodoItems-github', e);
-  }
-  return [];
-}
-
-export async function cmdListTodos(cwd: string, area: string | undefined, raw: boolean): Promise<CmdResult> {
-  const items = await fetchTodoItems(area);
-  const source = items.length > 0 ? 'github' : 'unavailable';
-  return cmdOk({ count: items.length, todos: items, source }, raw ? items.length.toString() : undefined);
 }
 
 // ─── Path verification ──────────────────────────────────────────────────────
@@ -568,40 +537,6 @@ export async function cmdProgressRender(cwd: string, format: string, raw: boolea
       percent,
     });
   }
-}
-
-// ─── Todo complete ──────────────────────────────────────────────────────────
-
-export async function cmdTodoComplete(cwd: string, filename: string | undefined, raw: boolean): Promise<CmdResult> {
-  if (!filename) {
-    return cmdErr('issue number required for todo complete');
-  }
-
-  const issueNumber = parseInt(filename, 10);
-  if (isNaN(issueNumber)) {
-    return cmdErr(`Invalid issue number: ${filename}`);
-  }
-
-  const today = todayISO();
-
-  // GitHub Issues is the sole source of truth for todos
-  try {
-    const { requireAuth } = await import('../github/client.js');
-    const { closeIssue } = await import('../github/issues.js');
-    requireAuth();
-    const closeResult = await closeIssue(issueNumber, `Todo completed on ${today}`);
-    if (!closeResult.ok) {
-      return cmdErr(`GitHub issue close failed: ${closeResult.error}`);
-    }
-  } catch (e) {
-    debugLog('cmdTodoComplete-github', e);
-    return cmdErr(`GitHub auth required for todo completion: ${(e as Error).message}`);
-  }
-
-  return cmdOk(
-    { completed: true, date: today, github_closed: true, github_issue: issueNumber },
-    raw ? 'completed' : undefined,
-  );
 }
 
 // ─── Scaffold ───────────────────────────────────────────────────────────────

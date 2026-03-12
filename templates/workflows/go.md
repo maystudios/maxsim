@@ -112,7 +112,7 @@ Block until user responds.
 Check if any phase issue has a verification comment with FAIL status (from live GitHub data via `github all-progress` — look for phases stuck in "In Review" with a known failure, or check recent comments via `github get-issue` for the current phase issue):
 
 ```bash
-node ~/.claude/maxsim/bin/maxsim-tools.cjs github get-issue N --comments
+node ~/.claude/maxsim/bin/maxsim-tools.cjs github get-issue N --include-comments
 ```
 ```
 ## Problem Detected

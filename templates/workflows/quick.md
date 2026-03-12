@@ -5,13 +5,11 @@ Before executing any step in this workflow, verify:
 </sanity_check>
 
 <purpose>
-Execute small, ad-hoc tasks with MAXSIM guarantees (atomic commits, STATE.md tracking). Also supports "save for later" todo capture via GitHub Issues.
+Execute small, ad-hoc tasks with MAXSIM guarantees (atomic commits, STATE.md tracking).
 
 Quick mode spawns planner (quick mode) + executor(s), tracks tasks as GitHub Issues (label: "quick"), and updates STATE.md's "Quick Tasks Completed" table.
 
 With `--full` flag: enables plan-checking (max 2 iterations) and post-execution verification for quality guarantees without full milestone ceremony.
-
-With `--todo` flag (or trigger words): enters Todo Mode for listing, capturing, completing, and triaging todos via GitHub Issues.
 </purpose>
 
 <required_reading>
@@ -22,17 +20,8 @@ Read all files referenced by the invoking prompt's execution_context before star
 **Step 1: Parse arguments and detect mode**
 
 Parse `$ARGUMENTS` for:
-- `--todo` flag → store as `$TODO_MODE` (true/false)
 - `--full` flag → store as `$FULL_MODE` (true/false)
 - Remaining text → use as `$DESCRIPTION` if non-empty
-
-**Mode detection:** Enter Todo Mode if ANY of these are true:
-1. `--todo` flag is present
-2. `$DESCRIPTION` starts with "todo", "save", "remember", "later" (case-insensitive)
-
-**If Todo Mode → skip to Step T1 (Todo Mode section below)**
-
-If not Todo Mode, continue with Quick Task Mode:
 
 If `$DESCRIPTION` is empty after parsing, prompt user interactively:
 
@@ -574,138 +563,6 @@ Ready for next task: /maxsim:quick
 
 ---
 
-## Todo Mode
-
-**Entered when `--todo` flag is set or description starts with "todo", "save", "remember", "later".**
-
-```
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
- MAXSIM ► TODO MODE
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-```
-
-**Step T1: Initialize todo context**
-
-```bash
-INIT=$(node ~/.claude/maxsim/bin/maxsim-tools.cjs init todos)
-```
-
-Extract from init JSON: `todo_count`, `todos`, `date`, `timestamp`, `github_ready`.
-
----
-
-**Step T2: Determine todo action**
-
-Parse `$DESCRIPTION` (text after `--todo` flag or trigger word) for intent:
-
-| Intent | Trigger | Action |
-|--------|---------|--------|
-| List | No description, or "list", "show" | Go to **T3: List** |
-| Capture | Has a description (not a trigger word) | Go to **T4: Capture** |
-| Complete | "done", "complete", "finish" + identifier | Go to **T5: Complete** |
-| Triage | "triage", "what next", "what should I work on" | Go to **T6: Triage** |
-
-If intent is ambiguous, default to **T3: List** (shows todos, then offers options).
-
----
-
-**Step T3: List Existing Todos**
-
-```bash
-node ~/.claude/maxsim/bin/maxsim-tools.cjs todos list
-```
-
-Display current todos in a clean table:
-
-```
-Pending Todos:
-
-| # | Title | Area | Priority | Age |
-|---|-------|------|----------|-----|
-| 1 | [title] | [area] | [priority] | [relative time] |
-
----
-
-Options:
-1. Add a new todo: /maxsim:quick --todo [description]
-2. Complete a todo: /maxsim:quick --todo done [number]
-3. Triage: /maxsim:quick --todo triage
-4. Back to quick tasks: /maxsim:quick [description]
-```
-
-If no pending todos: "No pending todos. Use `/maxsim:quick --todo [description]` to capture one."
-
-Exit after display.
-
----
-
-**Step T4: Capture New Todo**
-
-If user provided a description:
-
-1. Parse priority from description (look for HIGH/MEDIUM/LOW keywords, default MEDIUM)
-2. Infer area from file paths mentioned or conversation context (default "general")
-3. Create GitHub Issue (primary action):
-   - Run `github add-todo` with title, priority, area, and description to create a tracked GitHub Issue (label: "todo")
-   - If GitHub is unavailable, warn user: "GitHub unavailable. Run `/maxsim:init` to enable GitHub tracking."
-
-   ```bash
-   node ~/.claude/maxsim/bin/maxsim-tools.cjs github add-todo --title "${TITLE}" --description "${DESCRIPTION}" --area "${AREA}"
-   ```
-4. Confirm: "Saved: ${TITLE} (priority: ${PRIORITY}) — GitHub Issue #{number}"
-
-Exit after confirm.
-
----
-
-**Step T5: Complete Todo**
-
-If user references an existing todo to complete:
-
-1. Parse identifier (number from list, or title fragment)
-2. Close the corresponding GitHub Issue: run `github close-issue` with the todo's issue number
-
-   ```bash
-   node ~/.claude/maxsim/bin/maxsim-tools.cjs github close-issue N
-   ```
-3. Confirm: "Completed: ${TITLE} — GitHub Issue closed"
-
-Exit after confirm.
-
----
-
-**Step T6: Triage**
-
-Help user decide what to work on next:
-
-1. List all pending todos sorted by priority (HIGH first)
-2. Check if any todos relate to the current phase (cross-reference with ROADMAP.md):
-
-```bash
-ROADMAP=$(node ~/.claude/maxsim/bin/maxsim-tools.cjs roadmap analyze)
-```
-
-3. Present prioritized view:
-
-```
-What should I work on?
-
-## Phase-Related Todos
-- [todo title] -- relates to Phase [N]: [phase name]
-
-## Standalone Todos
-- [HIGH] [todo title] (created [age] ago)
-- [MEDIUM] [todo title] (created [age] ago)
-
----
-
-Pick a todo to work on, or:
-- /maxsim:quick [description] -- start a new task
-- /maxsim:quick --todo [description] -- save something for later
-```
-
-Exit after display.
-
 </process>
 
 <success_criteria>
@@ -722,11 +579,4 @@ Exit after display.
 - [ ] (--full) `${next_num}-VERIFICATION.md` created by verifier
 - [ ] STATE.md updated with quick task row (Status column when --full)
 - [ ] Artifacts committed
-
-**Todo Mode:**
-- [ ] `--todo` flag or trigger words detected
-- [ ] Todo action determined (list/capture/complete/triage)
-- [ ] (capture) GitHub Issue created with todo label
-- [ ] (complete) GitHub Issue closed
-- [ ] (triage) Prioritized view with phase context shown
 </success_criteria>

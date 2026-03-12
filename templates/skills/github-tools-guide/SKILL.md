@@ -37,12 +37,12 @@ Add `--raw` to get machine-readable JSON output (no formatting).
 ### Issue Operations
 | Command | Description |
 |---------|-------------|
-| `github get-issue N [--comments]` | Get issue details (with optional comments) |
+| `github get-issue N [--include-comments]` | Get issue details (with optional comments) |
 | `github list-sub-issues N` | List sub-issues of a phase issue |
 | `github close-issue N [--reason "..."] [--state-reason completed\|not_planned]` | Close issue |
 | `github reopen-issue N` | Reopen closed issue |
 | `github bounce-issue --issue-number N --reason "feedback"` | Bounce to In Progress with feedback |
-| `github move-issue --project-number P --item-id ID --status "STATUS"` | Move to board column (To Do, In Progress, In Review, Done) |
+| `github move-issue --issue-number N --status "STATUS"` | Move to board column (To Do, In Progress, In Review, Done) |
 | `github detect-external-edits --phase-number "01"` | Check body hash mismatch |
 
 ### Board Operations
@@ -59,13 +59,6 @@ Add `--raw` to get machine-readable JSON output (no formatting).
 | `github phase-progress --phase-issue-number N` | Phase progress from sub-issues |
 | `github all-progress` | All phases progress overview |
 | `github detect-interrupted --phase-issue-number N` | Detect interrupted phase |
-
-### Todos
-| Command | Description |
-|---------|-------------|
-| `github add-todo --title "T" [--description "D"] [--area A] [--phase P]` | Create todo issue |
-| `github complete-todo --todo-id "N" [--github-issue-number N]` | Complete todo |
-| `github list-todos [--area A] [--status pending\|completed\|all]` | List todos |
 
 ### Convenience
 | Command | Description |

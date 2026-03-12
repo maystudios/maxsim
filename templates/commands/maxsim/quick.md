@@ -1,7 +1,7 @@
 ---
 name: maxsim:quick
-description: Execute a quick task with MAXSIM guarantees, or capture todos for later work
-argument-hint: "[--full] [--todo]"
+description: Execute a quick task with MAXSIM guarantees
+argument-hint: "[--full]"
 allowed-tools:
   - Read
   - Write
@@ -13,7 +13,7 @@ allowed-tools:
   - AskUserQuestion
 ---
 <objective>
-Execute small, ad-hoc tasks with MAXSIM guarantees (atomic commits, STATE.md tracking). Also supports "save for later" -- capturing ideas as GitHub Issues with 'todo' label for future work.
+Execute small, ad-hoc tasks with MAXSIM guarantees (atomic commits, STATE.md tracking).
 
 Quick mode is the same system with a shorter path:
 - Spawns planner (quick mode) + executor(s)
@@ -23,8 +23,6 @@ Quick mode is the same system with a shorter path:
 **Default:** Skips research, plan-checker, verifier. Use when you know exactly what to do.
 
 **`--full` flag:** Enables plan-checking (max 2 iterations) and post-execution verification. Use when you want quality guarantees without full milestone ceremony.
-
-**`--todo` flag:** Enters todo management mode. List, capture, complete, and triage todos without executing tasks. "Save for later" creates a GitHub Issue with 'todo' label (primary) with local file cache.
 </objective>
 
 <execution_context>

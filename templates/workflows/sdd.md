@@ -35,7 +35,7 @@ Parse JSON for: `executor_model`, `verifier_model`, `commit_docs`, `phase_found`
 Find incomplete plans by querying GitHub Issues (the source of truth for plans and completion status):
 
 ```bash
-node ~/.claude/maxsim/bin/maxsim-tools.cjs github get-issue ${phase_issue_number} --comments
+node ~/.claude/maxsim/bin/maxsim-tools.cjs github get-issue ${phase_issue_number} --include-comments
 node ~/.claude/maxsim/bin/maxsim-tools.cjs github list-sub-issues ${phase_issue_number}
 ```
 

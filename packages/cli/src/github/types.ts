@@ -85,7 +85,8 @@ export interface IssueMappingFile {
   milestone_title: string;
   labels: Record<string, string>;
   phases: Record<string, PhaseMapping>;
-  todos: Record<string, TaskIssueMapping>;
+  /** @deprecated Todo functionality has been removed. Kept for backwards compatibility with existing mapping files. */
+  todos?: Record<string, TaskIssueMapping>;
 }
 
 // ---- Label definitions -----------------------------------------------------

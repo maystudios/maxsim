@@ -30,9 +30,6 @@ import {
   cmdGitHubPhaseProgress,
   cmdGitHubAllProgress,
   cmdGitHubDetectInterrupted,
-  cmdGitHubAddTodo,
-  cmdGitHubCompleteTodo,
-  cmdGitHubListTodos,
   cmdGitHubStatus,
   cmdGitHubSync,
   cmdGitHubOverview,
@@ -53,7 +50,6 @@ import {
   cmdConfigGet,
   cmdGenerateSlug,
   cmdCurrentTimestamp,
-  cmdListTodos,
   cmdVerifyPathExists,
   cmdHistoryDigest,
   cmdResolveModel,
@@ -61,7 +57,6 @@ import {
   cmdSummaryExtract,
   cmdWebsearch,
   cmdProgressRender,
-  cmdTodoComplete,
   cmdScaffold,
   cmdStateLoad,
   cmdStateGet,
@@ -110,7 +105,6 @@ import {
   cmdInitResume,
   cmdInitVerifyWork,
   cmdInitPhaseOp,
-  cmdInitTodos,
   cmdInitMilestoneOp,
   cmdInitMapCodebase,
   cmdInitExisting,
@@ -397,7 +391,6 @@ const handleInit: Handler = async (args, cwd, raw) => {
     'resume': () => cmdInitResume(cwd),
     'verify-work': () => cmdInitVerifyWork(cwd, args[2]),
     'phase-op': () => cmdInitPhaseOp(cwd, args[2]),
-    'todos': () => cmdInitTodos(cwd, args[2]),
     'milestone-op': () => cmdInitMilestoneOp(cwd),
     'map-codebase': () => cmdInitMapCodebase(cwd),
     'init-existing': () => cmdInitExisting(cwd),
@@ -414,7 +407,7 @@ const handleInit: Handler = async (args, cwd, raw) => {
   };
   const handler = workflow ? handlers[workflow] : undefined;
   if (handler) return handleResult(await handler(), raw);
-  error(`Unknown init workflow: ${workflow}\nAvailable: execute-phase, plan-phase, new-project, new-milestone, quick, resume, verify-work, phase-op, todos, milestone-op, map-codebase, init-existing, progress, executor, planner, researcher, verifier, debugger, check-drift, realign`);
+  error(`Unknown init workflow: ${workflow}\nAvailable: execute-phase, plan-phase, new-project, new-milestone, quick, resume, verify-work, phase-op, milestone-op, map-codebase, init-existing, progress, executor, planner, researcher, verifier, debugger, check-drift, realign`);
 };
 
 const handleGitHub: Handler = async (args, cwd, raw) => {
@@ -535,10 +528,10 @@ const handleGitHub: Handler = async (args, cwd, raw) => {
       );
     },
     'move-issue': () => {
-      const f = getFlags(args, 'project-number', 'item-id', 'status');
+      const f = getFlags(args, 'issue-number', 'status');
       return cmdGitHubMoveIssue(
-        parseInt(f['project-number'] ?? '0', 10),
-        f['item-id'] ?? '',
+        cwd,
+        parseInt(f['issue-number'] ?? '0', 10),
         f.status ?? '',
       );
     },
@@ -583,26 +576,6 @@ const handleGitHub: Handler = async (args, cwd, raw) => {
         parseInt(f['phase-issue-number'] ?? '0', 10),
       );
     },
-    'add-todo': () => {
-      const f = getFlags(args, 'title', 'description', 'area', 'phase');
-      return cmdGitHubAddTodo(cwd,
-        f.title ?? '',
-        f.description,
-        f.area,
-        f.phase,
-      );
-    },
-    'complete-todo': () => {
-      const f = getFlags(args, 'todo-id', 'github-issue-number');
-      return cmdGitHubCompleteTodo(cwd,
-        f['todo-id'] ?? '',
-        f['github-issue-number'] ? parseInt(f['github-issue-number'], 10) : null,
-      );
-    },
-    'list-todos': () => {
-      const f = getFlags(args, 'area', 'status');
-      return cmdGitHubListTodos(cwd, f.area, f.status);
-    },
     'status': () => cmdGitHubStatus(cwd),
     'sync': () => cmdGitHubSync(cwd),
     'overview': () => cmdGitHubOverview(cwd),
@@ -635,7 +608,6 @@ const COMMANDS: Record<string, Handler> = {
   'verify': handleVerify,
   'generate-slug': (args, _cwd, raw) => handleResult(cmdGenerateSlug(args[1], raw), raw),
   'current-timestamp': (args, _cwd, raw) => handleResult(cmdCurrentTimestamp((args[1] || 'full') as TimestampFormat, raw), raw),
-  'list-todos': async (args, cwd, raw) => handleResult(await cmdListTodos(cwd, args[1], raw), raw),
   'verify-path-exists': (args, cwd, raw) => handleResult(cmdVerifyPathExists(cwd, args[1], raw), raw),
   'config-ensure-section': (_args, cwd, raw) => handleResult(cmdConfigEnsureSection(cwd, raw), raw),
   'config-set': (args, cwd, raw) => handleResult(cmdConfigSet(cwd, args[1], args[2], raw), raw),
@@ -658,10 +630,6 @@ const COMMANDS: Record<string, Handler> = {
   },
   'validate-plan-independence': (args, _cwd, raw) => handleResult(cmdValidatePlanIndependence(args[1]), raw),
   'progress': async (args, cwd, raw) => handleResult(await cmdProgressRender(cwd, args[1] || 'json', raw), raw),
-  'todo': async (args, cwd, raw) => {
-    if (args[1] === 'complete') handleResult(await cmdTodoComplete(cwd, args[2], raw), raw);
-    else error('Unknown todo subcommand. Available: complete');
-  },
   'scaffold': async (args, cwd, raw) => {
     const f = getFlags(args, 'phase', 'name');
     handleResult(await cmdScaffold(cwd, args[1], { phase: f.phase, name: f.name ? args.slice(args.indexOf('--name') + 1).join(' ') : null }, raw), raw);
