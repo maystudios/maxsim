@@ -1,16 +1,22 @@
-import { Github, Package, ArrowUp, BookOpen, MessageCircle, Twitter } from "lucide-react";
+import { Github, Package, ArrowUp, BookOpen, MessageCircle } from "lucide-react";
 import { motion, useAnimationFrame, useMotionValue, useTransform } from "motion/react";
 import { useRef } from "react";
 import { cn } from "@/lib/utils";
 
-function MovingBorderButton({
+export function MovingBorderButton({
   children,
   onClick,
+  href,
+  target,
+  rel,
   duration = 3000,
   className,
 }: {
   children: React.ReactNode;
   onClick?: () => void;
+  href?: string;
+  target?: string;
+  rel?: string;
   duration?: number;
   className?: string;
 }) {
@@ -30,14 +36,8 @@ function MovingBorderButton({
     rectRef.current ? rectRef.current.getPointAtLength(v).y : 0
   );
 
-  return (
-    <button
-      onClick={onClick}
-      className={cn(
-        "group relative inline-flex overflow-hidden rounded-lg cursor-pointer",
-        className
-      )}
-    >
+  const inner = (
+    <>
       <svg
         className="absolute inset-0 h-full w-full"
         xmlns="http://www.w3.org/2000/svg"
@@ -62,6 +62,25 @@ function MovingBorderButton({
       <span className="relative flex items-center gap-2 bg-surface/40 px-5 py-2.5 text-xs font-mono text-muted group-hover:text-foreground transition-colors duration-200">
         {children}
       </span>
+    </>
+  );
+
+  const classes = cn(
+    "group relative inline-flex overflow-hidden rounded-lg cursor-pointer",
+    className
+  );
+
+  if (href) {
+    return (
+      <a href={href} target={target} rel={rel} className={classes}>
+        {inner}
+      </a>
+    );
+  }
+
+  return (
+    <button onClick={onClick} className={classes}>
+      {inner}
     </button>
   );
 }
@@ -130,12 +149,6 @@ const RESOURCE_LINKS = [
 ];
 
 const CONNECT_LINKS = [
-  {
-    label: "Twitter / X",
-    href: "https://x.com/maystudios",
-    icon: <Twitter size={13} strokeWidth={1.5} />,
-    external: true,
-  },
   {
     label: "Discussions",
     href: "https://github.com/maystudios/maxsimcli/discussions",

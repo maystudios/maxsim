@@ -1,5 +1,5 @@
 import { motion } from "motion/react";
-import { Brain, Layers, FileText, Users, Gauge, GitBranch, Zap, Puzzle } from "lucide-react";
+import { Brain, Layers, FileText, Users, Gauge, GitBranch, Zap, Puzzle, Radar } from "lucide-react";
 
 const features = [
   {
@@ -49,6 +49,12 @@ const features = [
     title: "Branching Strategies",
     description:
       "Creates git branches per phase or milestone automatically. Templates like maxsim/phase-{N}-{slug} keep your repo tidy.",
+  },
+  {
+    icon: Radar,
+    title: "Drift Detection",
+    description:
+      "Compares your codebase against the spec and flags divergence before it snowballs. Realign from spec-to-code or code-to-spec in one command.",
   },
 ];
 

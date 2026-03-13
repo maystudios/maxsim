@@ -1,9 +1,8 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { Helmet } from "react-helmet-async";
 import { motion, AnimatePresence } from "motion/react";
-import { Menu, X, ChevronRight, Github } from "lucide-react";
 import { Footer } from "../components/sections/Footer";
-import { navigate } from "../App.tsx";
+import Navbar from "../components/sections/Navbar";
 import Markdoc from "@markdoc/markdoc";
 import React from "react";
 
@@ -172,83 +171,6 @@ function Sidebar({
   );
 }
 
-// ── Docs Navbar ────────────────────────────────────────────────────────────
-
-function DocsNavbar({
-  onMobileMenuToggle,
-  mobileOpen,
-}: {
-  onMobileMenuToggle: () => void;
-  mobileOpen: boolean;
-}) {
-  const [scrolled, setScrolled] = useState(false);
-
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 10);
-    window.addEventListener("scroll", onScroll);
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
-
-  const handleHome = (e: React.MouseEvent) => {
-    e.preventDefault();
-    navigate("/");
-  };
-
-  return (
-    <motion.header
-      initial={{ y: -100 }}
-      animate={{ y: 0 }}
-      transition={{ duration: 0.4, ease: "easeOut" }}
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 border-b ${
-        scrolled
-          ? "bg-[#09090b]/90 backdrop-blur-lg border-zinc-800"
-          : "bg-[#09090b]/80 backdrop-blur-md border-zinc-800/60"
-      }`}
-    >
-      <div className="max-w-screen-xl mx-auto px-6 h-14 flex items-center justify-between gap-4">
-        <div className="flex items-center gap-4">
-          <a
-            href="/"
-            onClick={handleHome}
-            className="text-base font-bold tracking-tight text-zinc-100"
-          >
-            MaxsimCLI
-          </a>
-          <ChevronRight size={14} className="text-zinc-600" />
-          <span className="text-sm text-zinc-500">Docs</span>
-        </div>
-
-        <div className="hidden md:flex items-center gap-6">
-          <a
-            href="/"
-            onClick={handleHome}
-            className="text-sm text-zinc-500 hover:text-zinc-300 transition-colors"
-          >
-            Back to Home
-          </a>
-          <a
-            href="https://github.com/maystudios/maxsimcli"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-2 text-sm px-3 py-1.5 rounded-md border border-zinc-800 text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50 transition-colors"
-          >
-            <Github size={14} />
-            GitHub
-          </a>
-        </div>
-
-        <button
-          className="md:hidden text-zinc-500 hover:text-zinc-300"
-          onClick={onMobileMenuToggle}
-          aria-label="Toggle mobile menu"
-        >
-          {mobileOpen ? <X size={18} /> : <Menu size={18} />}
-        </button>
-      </div>
-    </motion.header>
-  );
-}
-
 // ── Section wrapper ────────────────────────────────────────────────────────
 
 function DocSection({ doc }: { doc: ParsedDoc }) {
@@ -341,9 +263,9 @@ export default function DocsPage() {
         />
       </Helmet>
       <div className="min-h-screen bg-[#09090b] text-zinc-100 font-sans antialiased">
-        <DocsNavbar
-          onMobileMenuToggle={() => setMobileOpen((v) => !v)}
-          mobileOpen={mobileOpen}
+        <Navbar
+          onMobileSidebarToggle={() => setMobileOpen((v) => !v)}
+          mobileSidebarOpen={mobileOpen}
         />
 
         {/* Mobile sidebar drawer */}

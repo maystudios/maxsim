@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
+import { MovingBorderButton } from "./Footer";
 import { cn } from "@/lib/utils";
 
 const FLIP_WORDS = ["Engineering", "Prompting", "Development", "Orchestration"];
@@ -232,10 +233,7 @@ export default function Hero() {
               transition={{ duration: 0.6, delay: 0.2 }}
             >
               <h1
-                className="text-5xl sm:text-6xl md:text-7xl font-extrabold tracking-tight leading-none bg-clip-text text-transparent"
-                style={{
-                  backgroundImage: "linear-gradient(to bottom, #ffffff 30%, #3b82f6 100%)",
-                }}
+                className="text-5xl sm:text-6xl md:text-7xl font-extrabold tracking-tight leading-none text-foreground"
               >
                 MaxsimCLI
               </h1>
@@ -270,11 +268,10 @@ export default function Hero() {
               >
                 Get Started
               </a>
-              <a
+              <MovingBorderButton
                 href="https://github.com/maystudios/maxsimcli"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-8 py-3.5 rounded-md border border-border text-foreground font-semibold text-sm tracking-wide hover:border-accent/60 hover:text-accent transition-colors duration-200"
               >
                 GitHub
                 <svg
@@ -293,7 +290,7 @@ export default function Hero() {
                     strokeLinejoin="round"
                   />
                 </svg>
-              </a>
+              </MovingBorderButton>
             </motion.div>
 
             {/* Install command */}

@@ -1,7 +1,13 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Menu, X, Github } from "lucide-react";
+import { navigate } from "../../App";
 import { cn } from "@/lib/utils";
+
+interface NavbarProps {
+  onMobileSidebarToggle?: () => void;
+  mobileSidebarOpen?: boolean;
+}
 
 const navLinks = [
   { label: "Home", href: "#home", section: "home" },
@@ -48,7 +54,8 @@ function smoothScrollTo(sectionId: string, duration = 700, onDone?: () => void) 
   requestAnimationFrame(step);
 }
 
-export default function Navbar() {
+export default function Navbar({ onMobileSidebarToggle, mobileSidebarOpen }: NavbarProps = {}) {
+  const isDocsPage = window.location.pathname.startsWith("/docs");
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [activeSection, setActiveSection] = useState<string>("home");
@@ -104,6 +111,17 @@ export default function Navbar() {
   ) => {
     e.preventDefault();
     if (closeMobile) setMobileOpen(false);
+
+    // If not on homepage, navigate there first then scroll
+    if (isDocsPage) {
+      navigate("/");
+      setTimeout(() => {
+        setActiveSection(section);
+        smoothScrollTo(section, 700);
+      }, 100);
+      return;
+    }
+
     setActiveSection(section);
     isScrollingRef.current = true;
     smoothScrollTo(section, 700, () => {
@@ -147,7 +165,6 @@ export default function Navbar() {
           onClick={(e) => handleNavClick(e, "home")}
           className="text-lg font-bold tracking-tight text-foreground flex items-center"
         >
-          <span className="text-accent font-mono">/</span>
           <span>MaxsimCLI</span>
         </a>
 
@@ -211,15 +228,25 @@ export default function Navbar() {
         {/* Mobile Toggle */}
         <button
           className="md:hidden text-foreground relative z-50"
-          onClick={() => setMobileOpen(!mobileOpen)}
+          onClick={() => {
+            if (onMobileSidebarToggle) {
+              onMobileSidebarToggle();
+            } else {
+              setMobileOpen(!mobileOpen);
+            }
+          }}
           aria-label="Toggle menu"
         >
-          {mobileOpen ? <X size={20} /> : <Menu size={20} />}
+          {(onMobileSidebarToggle ? mobileSidebarOpen : mobileOpen) ? (
+            <X size={20} />
+          ) : (
+            <Menu size={20} />
+          )}
         </button>
       </nav>
 
-      {/* Full-screen Mobile Overlay Menu */}
-      <AnimatePresence>
+      {/* Full-screen Mobile Overlay Menu (only when not using external sidebar toggle) */}
+      {!onMobileSidebarToggle && <AnimatePresence>
         {mobileOpen && (
           <motion.div
             initial={{ opacity: 0 }}
@@ -278,7 +305,7 @@ export default function Navbar() {
             </div>
           </motion.div>
         )}
-      </AnimatePresence>
+      </AnimatePresence>}
     </motion.header>
   );
 }
