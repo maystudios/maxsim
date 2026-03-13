@@ -1,3 +1,10 @@
+## [5.0.7](https://github.com/maystudios/maxsimcli/compare/v5.0.6...v5.0.7) (2026-03-13)
+
+
+### Bug Fixes
+
+* **website:** unify header, remove gradient/twitter, add drift detection tile ([67d115d](https://github.com/maystudios/maxsimcli/commit/67d115d99e2d47855efaf31005dab6219dd057e4))
+
 ## [5.0.6](https://github.com/maystudios/maxsimcli/compare/v5.0.5...v5.0.6) (2026-03-12)
 
 
