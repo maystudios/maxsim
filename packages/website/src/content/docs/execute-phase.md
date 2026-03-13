@@ -18,7 +18,7 @@ group: Workflow
 
 By default, execution runs parallel agents in isolated git worktrees. Each agent gets its own working directory, so agents never conflict with each other or your main checkout. Use `--no-worktrees` if your project setup requires all work to happen in the main tree.
 
-Each executor agent works atomically: it commits after every completed task, writes a SUMMARY.md when all tasks are done, and updates STATE.md with decisions and metrics. Auto-verify runs at the end of execution to validate deliverables against success criteria.
+Each executor agent works atomically: it commits after every completed task, writes a SUMMARY.md when all tasks finish, and updates STATE.md with decisions and metrics. Auto-verify runs at the end of execution to validate deliverables against success criteria.
 
 Deviation handling is built into the executor. When it encounters bugs, missing error handling, or blocking issues, it auto-fixes them (Rules 1-3) without asking for permission. When it encounters architectural decisions or new tables, it pauses and returns a structured checkpoint for you to review (Rule 4). All deviations are documented in SUMMARY.md.
 

@@ -177,8 +177,8 @@ function GettingStarted() {
       <div>
         <DocHeading>Installation</DocHeading>
         <DocText>
-          Requirements: Node.js &gt;= 22. MaxsimCLI installs markdown files into your
-          AI runtime's config directories — no global binary needed.
+          Needs Node.js 22 or newer. MaxsimCLI installs markdown files into your
+          AI runtime's config directories. No global binary required.
         </DocText>
       </div>
 
@@ -193,7 +193,7 @@ function GettingStarted() {
       <div>
         <DocSubheading>What gets installed</DocSubheading>
         <DocText>
-          MaxsimCLI places commands, workflows, and agent definitions into your AI runtime's
+          Commands, workflows, and agent definitions go into your AI runtime's
           config directory. For Claude Code that's ~/.claude/.
         </DocText>
         <CodeBlock
@@ -208,8 +208,8 @@ function GettingStarted() {
       <div>
         <DocSubheading>Start a new project</DocSubheading>
         <DocText>
-          Initialize a project with deep context gathering. This creates the .planning/
-          directory with PROJECT.md, REQUIREMENTS.md, and ROADMAP.md.
+          Kicks off a project with deep context gathering. Creates .planning/
+          with PROJECT.md, REQUIREMENTS.md, and ROADMAP.md.
         </DocText>
         <CodeBlock
           language="bash"
@@ -235,55 +235,55 @@ const commands: CommandDef[] = [
   {
     name: "debug",
     signature: "/maxsim:debug",
-    description: "Start a structured debugging session with persistent state across context resets.",
+    description: "Starts a structured debugging session. State persists across context resets.",
     example: `/maxsim:debug "auth token not refreshing"`,
   },
   {
     name: "execute",
     signature: "/maxsim:execute",
-    description: "Execute a phase plan with parallel agents, atomic commits per task, and goal-backward verification.",
+    description: "Runs a phase plan with parallel agents, atomic commits per task, and goal-backward verification.",
     example: `/maxsim:execute 1`,
   },
   {
     name: "go",
     signature: "/maxsim:go",
-    description: "Auto-dispatch: detects project state and runs the right workflow automatically.",
+    description: "Detects your project state and picks the right workflow automatically.",
     example: `/maxsim:go`,
   },
   {
     name: "help",
     signature: "/maxsim:help",
-    description: "Show available commands and usage.",
+    description: "Lists all available commands with usage info.",
     example: `/maxsim:help`,
   },
   {
     name: "init",
     signature: "/maxsim:init",
-    description: "Initialize a new project, onboard an existing project, or manage milestones.",
+    description: "Sets up a new project, onboards an existing one, or manages milestones.",
     example: `/maxsim:init`,
   },
   {
     name: "plan",
     signature: "/maxsim:plan",
-    description: "Plan a phase through discussion, research, and planning stages.",
+    description: "Plans a phase through discussion, research, and planning stages.",
     example: `/maxsim:plan 1`,
   },
   {
     name: "progress",
     signature: "/maxsim:progress",
-    description: "Show current phase and milestone progress with status overview.",
+    description: "Shows current phase and milestone progress at a glance.",
     example: `/maxsim:progress`,
   },
   {
     name: "quick",
     signature: "/maxsim:quick",
-    description: "Run a quick standalone task outside the phase workflow.",
+    description: "Runs a quick standalone task outside the phase workflow.",
     example: `/maxsim:quick`,
   },
   {
     name: "settings",
     signature: "/maxsim:settings",
-    description: "View or modify MaxsimCLI configuration including model profile and workflow toggles.",
+    description: "Opens MaxsimCLI configuration. Change model profile, workflow toggles, and more.",
     example: `/maxsim:settings`,
   },
 ];
@@ -329,8 +329,8 @@ function Architecture() {
       <div>
         <DocHeading>Three-Layer Structure</DocHeading>
         <DocText>
-          MaxsimCLI commands are markdown prompts, not executable code. The "runtime" is the AI itself.
-          Commands load workflows which spawn agents.
+          Commands are markdown prompts, not executable code. The AI is the runtime.
+          Commands load workflows, workflows spawn agents.
         </DocText>
         <CodeBlock
           language="text"
@@ -343,7 +343,7 @@ agents/*.md                # Specialized subagent prompts (4 agents)`}
       <div>
         <DocSubheading>Data Structure in User Projects</DocSubheading>
         <DocText>
-          MaxsimCLI creates a .planning/ directory in user projects to track all state.
+          Creates a .planning/ directory in your project to track all state.
         </DocText>
         <CodeBlock
           language="text"
@@ -368,9 +368,9 @@ agents/*.md                # Specialized subagent prompts (4 agents)`}
       <div>
         <DocSubheading>Tools Layer</DocSubheading>
         <DocText>
-          cli.cjs is the main tools router — it dispatches to core modules for state management,
-          phase lifecycle, roadmap parsing, verification, and more. Large outputs are written to
-          a tmpfile and returned as @file:/path to prevent buffer overflow.
+          cli.cjs routes all tool calls to core modules: state management, phase lifecycle,
+          roadmap parsing, verification. Large outputs go to a tmpfile and return as
+          @file:/path to avoid buffer overflow.
         </DocText>
       </div>
     </div>
@@ -401,8 +401,8 @@ function Configuration() {
       <div>
         <DocHeading>.planning/config.json</DocHeading>
         <DocText>
-          Place config.json in your .planning/ directory to customize MaxsimCLI behavior.
-          All values have sensible defaults.
+          Drop config.json into your .planning/ directory to adjust behavior.
+          All values ship with sensible defaults.
         </DocText>
       </div>
       <CodeBlock language="json" code={configJson} />
@@ -410,7 +410,7 @@ function Configuration() {
       <div>
         <DocSubheading>Model Profiles</DocSubheading>
         <DocText>
-          Four tiers control which Claude model each of the 4 specialized agents uses.
+          Four tiers control which Claude model each agent gets.
         </DocText>
         <CodeBlock
           language="text"
@@ -432,7 +432,7 @@ tokenburner  → Opus for all agents`}
       <div>
         <DocSubheading>Per-agent overrides</DocSubheading>
         <DocText>
-          Override individual agents regardless of the active profile:
+          Override individual agents, no matter which profile is active:
         </DocText>
         <CodeBlock
           language="json"
@@ -449,7 +449,7 @@ tokenburner  → Opus for all agents`}
       <div>
         <DocSubheading>Workflow Toggles</DocSubheading>
         <DocText>
-          Enable or disable optional workflow agents to trade thoroughness for speed:
+          Toggle optional agents on or off. Trade thoroughness for speed:
         </DocText>
         <CodeBlock
           language="text"
@@ -467,10 +467,10 @@ brave_search   → Brave Search API in research agents         (default: false)`
 // ─── Tab: Agents ──────────────────────────────────────────────────────────────
 
 const agents = [
-  { name: "executor", description: "Implements code changes according to the phase plan. Preloaded skills: tool-priority-guide, commit-conventions, verification-before-completion" },
-  { name: "planner", description: "Creates detailed phase plans from research findings. Preloaded skills: brainstorming, sdd, roadmap-writing" },
-  { name: "researcher", description: "Investigates codebase and gathers context for planning. Preloaded skills: research-methodology, evidence-collection" },
-  { name: "verifier", description: "Reviews completed work against spec and quality gates. Preloaded skills: code-review, verification-gates, input-validation" },
+  { name: "executor", description: "Implements code changes from the phase plan. Skills: tool-priority-guide, commit-conventions, verification-before-completion" },
+  { name: "planner", description: "Builds detailed phase plans from research findings. Skills: brainstorming, sdd, roadmap-writing" },
+  { name: "researcher", description: "Investigates the codebase and collects context for planning. Skills: research-methodology, evidence-collection" },
+  { name: "verifier", description: "Checks completed work against spec and quality gates. Skills: code-review, verification-gates, input-validation" },
 ];
 
 function Agents() {
@@ -479,8 +479,8 @@ function Agents() {
       <div>
         <DocHeading>Specialized Agents</DocHeading>
         <DocText>
-          MaxsimCLI spawns specialized subagents — each with fresh context and a single responsibility.
-          Agents are defined as markdown prompts in the agents/ directory.
+          Spawns specialized subagents, each with fresh context and one job.
+          Agents live as markdown prompts in the agents/ directory.
         </DocText>
       </div>
 
@@ -573,7 +573,7 @@ export function Docs() {
             Documentation
           </h2>
           <p className="mt-4 text-muted text-lg max-w-xl">
-            Everything you need to know — from installation to agent architecture.
+            Installation, commands, agents, configuration. All in one place.
           </p>
         </motion.div>
 
@@ -631,7 +631,7 @@ export function Docs() {
               Looking for the complete reference?
             </p>
             <p className="text-xs text-muted">
-              The full documentation covers every command, agent, config option, and advanced workflow.
+              Covers every command, agent, config option, and advanced workflow.
             </p>
           </div>
           <a

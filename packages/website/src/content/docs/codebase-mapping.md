@@ -15,7 +15,7 @@ Codebase mapping runs automatically as part of the `/maxsim:init --existing` wor
 
 Multiple codebase-mapper agents run in parallel, each covering a different area of the codebase. One covers data models, another covers API routes, another covers frontend components, another covers infrastructure. Their outputs are synthesized into a unified analysis in `.planning/codebase/`.
 
-The codebase analysis is automatically loaded by phase-researcher agents. When planning a phase in an existing codebase, the researcher reads the analysis to understand existing patterns, conventions, and potential integration points — rather than re-discovering them from scratch.
+The codebase analysis is loaded automatically by phase-researcher agents. When planning a phase in an existing codebase, the researcher reads the analysis to understand existing patterns, conventions, and potential integration points instead of re-discovering them from scratch.
 
 {% callout type="note" %}
 Codebase mapping is not a standalone command. It is triggered as part of project initialization with `/maxsim:init --existing`. If you need to re-map the codebase after significant changes, run the init workflow again.

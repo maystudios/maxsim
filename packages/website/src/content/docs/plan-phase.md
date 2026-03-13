@@ -4,7 +4,7 @@ title: Go (Auto-Dispatch)
 group: Workflow
 ---
 
-`/maxsim:go` is the recommended entry point for most users. It detects your project's current state and automatically runs the right workflow, so you never have to remember which command comes next.
+`/maxsim:go` is the recommended entry point for most users. It detects your project's current state and runs the correct workflow. You never need to remember which command comes next.
 
 {% codeblock language="bash" %}
 /maxsim:go
@@ -17,7 +17,7 @@ group: Workflow
 {% doctable headers=["State Detected", "Action Taken"] rows=[["No project initialized", "Runs the init workflow to set up your project"], ["Project exists but no plan for the current phase", "Runs the plan workflow (discussion, research, planning)"], ["Plan exists but not yet executed", "Runs the execute workflow with parallel agents"], ["Execution complete but unverified", "Runs verification"], ["Everything done", "Reports completion and suggests next steps"]] %}
 {% /doctable %}
 
-This means you can run `/maxsim:go` repeatedly throughout your workflow. It always picks up where you left off and moves the project forward.
+You can run `/maxsim:go` repeatedly throughout your workflow. It picks up where you left off and moves the project forward.
 
 ### When to use something else
 

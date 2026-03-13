@@ -4,25 +4,25 @@ const steps = [
   {
     number: "01",
     title: "Install",
-    description: "Run a single command to install MaxsimCLI into your AI runtime. Commands, workflows, and agents are placed into your config directories.",
+    description: "One command installs MaxsimCLI into your AI runtime. Commands, workflows, and agents land in your config directories.",
     code: "npx maxsimcli@latest",
   },
   {
     number: "02",
     title: "Initialize",
-    description: "Start a new project with deep context gathering. MaxsimCLI creates PROJECT.md, REQUIREMENTS.md, and a phased ROADMAP.md.",
+    description: "Starts a project with deep context gathering. Creates PROJECT.md, REQUIREMENTS.md, and a phased ROADMAP.md for you.",
     code: "/maxsim:init",
   },
   {
     number: "03",
     title: "Plan",
-    description: "Research, plan, and verify each phase before execution. Specialized agents handle research, task breakdown, and plan checking.",
+    description: "Researches, plans, and verifies each phase before you execute. Dedicated agents handle the research, task breakdown, and plan checking.",
     code: "/maxsim:plan",
   },
   {
     number: "04",
     title: "Execute",
-    description: "Executor agents implement your plan with atomic commits, wave-based parallelization, and automatic state tracking.",
+    description: "Executor agents implement your plan with atomic commits, parallel waves, and automatic state tracking.",
     code: "/maxsim:execute",
   },
 ];
@@ -48,7 +48,7 @@ export function HowItWorks() {
             How It Works
           </h2>
           <p className="mt-4 text-muted text-lg max-w-xl">
-            From install to shipping features in four steps. No ceremony, no boilerplate.
+            Four steps from install to shipping features. No ceremony, no boilerplate.
           </p>
         </div>
 

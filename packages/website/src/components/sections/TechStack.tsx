@@ -72,7 +72,7 @@ export function TechStack() {
           Built With
         </h2>
         <p className="mt-4 text-muted text-lg max-w-xl">
-          Markdown-first commands powered by a Node.js toolchain and monorepo architecture.
+          Markdown-first commands on top of a Node.js toolchain and monorepo setup.
         </p>
       </div>
 

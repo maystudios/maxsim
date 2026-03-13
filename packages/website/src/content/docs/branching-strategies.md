@@ -17,7 +17,7 @@ MaxsimCLI can manage git branches automatically during execution. Set `branching
 }
 {% /codeblock %}
 
-With `phase` branching, the executor creates a branch from the template before execution and leaves it there for you to review and merge. The `{phase}` placeholder is replaced with the phase number and `{slug}` with a sanitized version of the phase name. With `milestone` branching, the branch spans all phases in the milestone — `{milestone}` is replaced with the milestone identifier.
+With `phase` branching, the executor creates a branch from the template before execution and leaves it for you to review and merge. The `{phase}` placeholder is replaced with the phase number. `{slug}` is replaced with a sanitized version of the phase name. With `milestone` branching, the branch spans all phases in the milestone. `{milestone}` is replaced with the milestone identifier.
 
 You can customize the branch name templates by setting `phase_branch_template` or `milestone_branch_template` in config.json. The default templates shown above work for most projects.
 

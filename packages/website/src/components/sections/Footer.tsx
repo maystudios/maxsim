@@ -162,7 +162,7 @@ export function Footer() {
 
             <p className="text-sm text-muted leading-relaxed max-w-sm">
               Meta-prompting, context engineering, and spec-driven development
-              for AI coding agents — by MayStudios.
+              for AI coding agents. By MayStudios.
             </p>
 
             {/* Mini terminal install block */}
@@ -251,7 +251,7 @@ export function Footer() {
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex flex-col gap-1.5">
             <p className="text-xs font-mono text-muted/60">
-              &copy; {new Date().getFullYear()} May Studios — Build with MaxsimCLI.
+              &copy; {new Date().getFullYear()} May Studios. Build with MaxsimCLI.
             </p>
             <p className="text-xs font-mono text-muted/40">
               by{" "}

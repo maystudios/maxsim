@@ -21,7 +21,7 @@ Each PLAN.md is a structured document with frontmatter (phase, plan number, type
 
 ### Execution with `/maxsim:execute`
 
-`/maxsim:execute` reads all PLAN.md files for a phase, groups them by wave, and runs each wave's plans in parallel using isolated worktrees. Auto-verify runs after execution completes, and gap closure is handled automatically.
+`/maxsim:execute` reads all PLAN.md files for a phase, groups them by wave, and runs each wave's plans in parallel using isolated worktrees. Auto-verify runs after execution completes. Gap closure is handled automatically.
 
 {% codeblock language="bash" %}
 /maxsim:execute

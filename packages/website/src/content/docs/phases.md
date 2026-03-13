@@ -4,7 +4,7 @@ title: Phases
 group: Core Concepts
 ---
 
-A phase is a cohesive unit of work that advances the project toward a milestone. Phases are defined in ROADMAP.md and tracked in STATE.md. Each phase contains one or more plans — a plan is a specific task breakdown for one workstream within the phase.
+A phase is a cohesive unit of work that advances the project toward a milestone. Phases are defined in ROADMAP.md and tracked in STATE.md. Each phase contains one or more plans. A plan is a specific task breakdown for one workstream within the phase.
 
 Phases have a lifecycle: planned, researched, executing, complete. The lifecycle is tracked in ROADMAP.md with status symbols. You can query current status any time with `/maxsim:progress`.
 

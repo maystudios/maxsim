@@ -20,7 +20,7 @@ MaxsimCLI's workflow includes optional agents and review steps you can disable t
 }
 {% /codeblock %}
 
-The `review` object controls what the verifier checks when it runs. Each review type can be toggled independently, and the retry limit controls how many times a failing review is re-attempted before giving up.
+The `review` object controls what the verifier checks when it runs. Each review type can be toggled independently. The retry limit controls how many times a failing review is re-attempted before giving up.
 
 {% doctable headers=["Toggle", "Default", "Description"] rows=[["review.spec_review", "true", "Checks that deliverables match the phase spec and success criteria"], ["review.code_review", "true", "Checks code quality, patterns, and potential issues"], ["review.simplify_review", "true", "Checks for unnecessary complexity that can be reduced"], ["review.retry_limit", "3", "Maximum retries when a review step fails"]] %}
 {% /doctable %}

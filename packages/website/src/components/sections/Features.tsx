@@ -6,49 +6,49 @@ const features = [
     icon: Brain,
     title: "Meta-Prompting",
     description:
-      "Commands load workflows which spawn specialized subagents — each with fresh context and a single responsibility.",
+      "Commands load workflows that spawn focused subagents. Each one gets fresh context and a single job.",
   },
   {
     icon: Layers,
     title: "Context Engineering",
     description:
-      "Solves context rot by offloading work to fresh-context subagents. Never lose track of your project state again.",
+      "Offloads work to fresh-context subagents so your main session stays clean. No more lost project state.",
   },
   {
     icon: FileText,
     title: "Spec-Driven Development",
     description:
-      "Structured planning with phases, research, verification, and UAT. Every step is documented in markdown and persists across sessions.",
+      "Phases, research, verification, and UAT. Every step lands in markdown and survives across sessions.",
   },
   {
     icon: Users,
     title: "4 Generic Agents",
     description:
-      "Executor, planner, researcher, and verifier — four focused agents handle every workflow. 21 skills provide the specialization each task needs.",
+      "Executor, planner, researcher, verifier. Four agents cover every workflow. 21 skills give each task the specialization it needs.",
   },
   {
     icon: Puzzle,
     title: "21 Skills & 23 Workflows",
     description:
-      "An extensible skill and workflow system that covers the full development lifecycle. Add your own skills and workflows to tailor MaxsimCLI to your project.",
+      "Covers the full development lifecycle with extensible skills and workflows. Build your own to fit MaxsimCLI to your project.",
   },
   {
     icon: Gauge,
     title: "4 Model Profiles",
     description:
-      "Quality, balanced, budget, and tokenburner tiers. Orchestrators use lean models; planners and executors use heavy ones. Override individual agents per project.",
+      "Quality, balanced, budget, and tokenburner. Orchestrators use lean models, planners and executors get powerful ones. Override per agent and project.",
   },
   {
     icon: Zap,
     title: "Wave-Based Parallelization",
     description:
-      "Execution plans are grouped into dependency waves and run in parallel with isolated fresh-context subagents, then committed atomically.",
+      "Tasks get grouped into dependency waves and run in parallel. Each wave uses isolated subagents, commits land atomically.",
   },
   {
     icon: GitBranch,
     title: "Branching Strategies",
     description:
-      "Auto-create git branches per phase or milestone. Configurable templates like maxsim/phase-{N}-{slug} keep your repo organized.",
+      "Creates git branches per phase or milestone automatically. Templates like maxsim/phase-{N}-{slug} keep your repo tidy.",
   },
 ];
 
@@ -86,7 +86,7 @@ export function Features() {
             <div className="hidden md:block h-px flex-1 bg-gradient-to-r from-accent/40 to-transparent" />
           </div>
           <p className="mt-4 text-muted text-lg max-w-xl">
-            Everything you need for structured, agent-driven development — without the context collapse.
+            Structured, agent-driven development that keeps your context clean.
           </p>
         </div>
 

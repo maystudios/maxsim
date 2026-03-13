@@ -4,7 +4,7 @@ title: config.json Reference
 group: Configuration
 ---
 
-Place `.planning/config.json` to customize MaxsimCLI behavior per-project. All keys have sensible defaults — start with an empty object and add only what you need to change.
+Place `.planning/config.json` to customize MaxsimCLI behavior per-project. All keys have sensible defaults. Start with an empty object and add only what you need to change.
 
 {% codeblock language="json" %}
 {

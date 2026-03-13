@@ -4,7 +4,7 @@ title: Quick Start
 group: Introduction
 ---
 
-The fastest way to start is `/maxsim:go` — it auto-detects where your project is in the workflow and does the right thing. For a new project, it walks you through initialization. For an existing project, it picks up where you left off.
+The fastest way to start is `/maxsim:go`. It auto-detects where your project is in the workflow and does the right thing. For a new project, it walks you through initialization. For an existing project, it picks up where you left off.
 
 The core MaxsimCLI workflow follows five steps. Each step is a slash command that spawns one or more focused subagents with fresh context.
 
@@ -25,8 +25,8 @@ The core MaxsimCLI workflow follows five steps. Each step is a slash command tha
 /maxsim:verify-work 1
 {% /codeblock %}
 
-After execution, each plan has a SUMMARY.md committed to git. STATE.md tracks decisions, blockers, and metrics across the entire project lifetime. You can always run `/maxsim:progress` to see where you are and what to do next.
+After execution, each plan has a SUMMARY.md committed to git. STATE.md tracks decisions, blockers, and metrics across the entire project lifetime. You can run `/maxsim:progress` any time to see where you are and what to do next.
 
 {% callout type="tip" %}
-Run /maxsim:plan before /maxsim:execute. The plan command manages discussion, research, and planning stages — surfacing assumptions and gray areas before you start building.
+Run /maxsim:plan before /maxsim:execute. The plan command manages discussion, research, and planning stages, surfacing assumptions and gray areas before you start building.
 {% /callout %}

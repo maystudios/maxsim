@@ -4,7 +4,7 @@ title: Installation
 group: Introduction
 ---
 
-MaxsimCLI requires Node.js 22 or later. It installs markdown files into your project's `.claude/` directory — no long-running process, no global binary, no daemon.
+MaxsimCLI requires Node.js 22 or later. It installs markdown files into your project's `.claude/` directory. There is no long-running process, no global binary, no daemon.
 
 ### Run the installer
 

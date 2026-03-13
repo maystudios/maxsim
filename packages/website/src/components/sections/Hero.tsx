@@ -252,9 +252,9 @@ export default function Hero() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.45 }}
             >
-              A meta-prompting, context engineering, and spec-driven development
-              system for Claude Code &mdash;
-              solving context rot with fresh-context subagents.
+              Structured prompts, dedicated agents, and spec-driven planning
+              for Claude Code. Each task gets a fresh-context subagent,
+              so your project state stays intact.
             </motion.p>
 
             {/* CTAs */}

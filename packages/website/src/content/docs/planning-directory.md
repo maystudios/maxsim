@@ -4,7 +4,7 @@ title: Planning Directory
 group: Core Concepts
 ---
 
-Every MaxsimCLI project has a `.planning/` directory at the project root. This directory is the persistent memory of your project — it stores everything from the initial vision through per-task execution summaries.
+Every MaxsimCLI project has a `.planning/` directory at the project root. This directory is the persistent memory of your project. It stores everything from the initial vision through per-task execution summaries.
 
 {% codeblock language="text" %}
 .planning/
@@ -26,10 +26,10 @@ Every MaxsimCLI project has a `.planning/` directory at the project root. This d
     └── completed/               # Archived todos
 {% /codeblock %}
 
-The `config.json` file controls model selection, workflow agent toggles, and branching strategy. PROJECT.md is loaded into every agent context automatically — it's the one document that every agent reads.
+The `config.json` file controls model selection, workflow agent toggles, and branching strategy. PROJECT.md is loaded into every agent context automatically. It is the one document that every agent reads.
 
 Phase directories are named `NN-Name` (e.g., `01-Foundation`). Files within them use the phase number as prefix. This naming scheme makes the directory scannable and supports the decimal gap-closure phases (01.1, 01.2) that verification creates.
 
 {% callout type="tip" %}
-Commit your .planning/ directory to git. It is the institutional memory of your project — SUMMARY.md files, decisions in STATE.md, and RESEARCH.md files are all valuable artifacts that should be versioned alongside your code.
+Commit your .planning/ directory to git. It is the institutional memory of your project. SUMMARY.md files, decisions in STATE.md, and RESEARCH.md files are all valuable artifacts that should be versioned alongside your code.
 {% /callout %}
