@@ -4,5 +4,23 @@ title: Milestone Commands
 group: Commands Reference
 ---
 
-{% doctable headers=["Command", "Description"] rows=[["/maxsim:complete-milestone", "Archive milestone phases and advance to the next milestone"], ["/maxsim:new-milestone", "Add a new milestone to ROADMAP.md with placeholder phases"], ["/maxsim:audit-milestone", "Audit milestone against original requirements — find gaps"], ["/maxsim:plan-milestone-gaps", "Create fix phases for all gaps found by audit-milestone"], ["/maxsim:add-tests", "Generate missing test coverage for a phase's deliverables"], ["/maxsim:cleanup", "Remove orphaned files and fix corrupted frontmatter in .planning/"]] %}
+Milestone lifecycle is managed through `/maxsim:init`. This single entry point handles all milestone operations.
+
+{% codeblock language="bash" %}
+/maxsim:init
+{% /codeblock %}
+
+### Operations available through `/maxsim:init`
+
+{% doctable headers=["Operation", "Description"] rows=[["new-project", "Initialize a new project — creates .planning/ with vision, requirements, roadmap"], ["init-existing", "Onboard an existing codebase into MAXSIM (use --existing flag)"], ["new-milestone", "Add a new milestone to ROADMAP.md with placeholder phases"], ["complete-milestone", "Archive milestone phases and advance to the next milestone"]] %}
 {% /doctable %}
+
+{% codeblock language="bash" %}
+# Initialize a new project
+/maxsim:init
+
+# Onboard an existing codebase
+/maxsim:init --existing
+{% /codeblock %}
+
+Milestone auditing and gap planning are handled as part of the init workflow. When completing a milestone, MAXSIM audits deliverables against original requirements, identifies gaps, and creates fix phases before archiving.

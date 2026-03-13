@@ -4,34 +4,30 @@ title: Installation
 group: Introduction
 ---
 
-MAXSIM requires Node.js 22 or later. It installs markdown files into your AI runtime's config directories — no long-running process, no global binary, no daemon.
+MAXSIM requires Node.js 22 or later. It installs markdown files into your project's `.claude/` directory — no long-running process, no global binary, no daemon.
 
 ### Run the installer
+
+From inside Claude Code, run:
 
 {% codeblock language="bash" %}
 npx maxsimcli@latest
 {% /codeblock %}
 
-The interactive installer asks which AI runtimes you use (Claude Code, OpenCode, Gemini CLI, Codex) and copies the appropriate files. You can skip the prompts with flags:
-
-{% codeblock language="bash" %}
-npx maxsimcli@latest --claude     # Claude Code only
-npx maxsimcli@latest --opencode   # OpenCode only
-npx maxsimcli@latest --all        # All runtimes, no prompts
-{% /codeblock %}
+The installer detects your project and copies the appropriate files into `.claude/` in your project directory.
 
 ### What gets installed
 
-For Claude Code, MAXSIM installs into `~/.claude/`:
+MAXSIM installs into `.claude/` at your project root:
 
 {% codeblock language="text" %}
-~/.claude/
-├── commands/maxsim/   # 30+ user-facing commands (/maxsim:*)
-├── agents/            # 11 specialized subagent prompts
-├── hooks/             # Pre/post session hooks
-└── dashboard/         # Bundled web dashboard (Vite + Express)
+.claude/
+├── commands/maxsim/   # 9 user-facing commands (/maxsim:*)
+├── agents/            # 4 specialized subagent prompts
+├── skills/            # 21 reusable skill modules
+└── workflows/         # Workflow orchestration templates
 {% /codeblock %}
 
 {% callout type="note" %}
-MAXSIM does not modify your project files during install. The .planning/ directory is created per-project when you run /maxsim:new-project inside a project.
+MAXSIM does not modify your project files during install. The .planning/ directory is created per-project when you run /maxsim:init inside a project.
 {% /callout %}

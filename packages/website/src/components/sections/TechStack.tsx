@@ -9,7 +9,6 @@ import {
   Hammer,
   Box,
   FolderGit2,
-  Wrench,
 } from "lucide-react";
 import type { ElementType, ReactNode } from "react";
 
@@ -24,10 +23,9 @@ const commandLayer = [
 const toolchainStack = [
   { name: "Node.js", Icon: Hexagon },
   { name: "TypeScript", Icon: Code },
-  { name: "esbuild", Icon: Hammer },
+  { name: "tsdown", Icon: Hammer },
   { name: "CJS Modules", Icon: Box },
   { name: "npm workspaces", Icon: FolderGit2 },
-  { name: "tsdown", Icon: Wrench },
 ];
 
 const commandMarquee = [...commandLayer, ...commandLayer, ...commandLayer];

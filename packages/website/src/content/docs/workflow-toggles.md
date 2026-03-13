@@ -4,17 +4,35 @@ title: Workflow Toggles
 group: Configuration
 ---
 
-MAXSIM's planning workflow includes optional agents you can disable to trade thoroughness for speed. Each toggle is a boolean in config.json that can also be overridden per-command with a flag.
+MAXSIM's workflow includes optional agents and review steps you can disable to trade thoroughness for speed. These are configured under the `workflow` and `review` objects in config.json.
 
-{% doctable headers=["Toggle", "Agent", "Cost when enabled", "When to disable"] rows=[["research", "maxsim-phase-researcher", "1–3 min + tokens", "Small phases, already-researched domains"], ["plan_checker", "maxsim-plan-checker", "1–2 min + tokens", "Simple plans, rapid iteration"], ["verifier", "maxsim-verifier", "2–5 min + tokens", "Speed runs, trusted executors"], ["parallelization", "Concurrent subagents", "Varies by wave count", "Sequential debugging, cost control"], ["brave_search", "Web search in researchers", "Per-search API cost", "Offline, cost control"]] %}
+{% doctable headers=["Toggle", "Agent/Step", "Cost when enabled", "When to disable"] rows=[["workflow.research", "researcher", "1-3 min + tokens", "Small phases, already-researched domains"], ["workflow.plan_checker", "planner (review pass)", "1-2 min + tokens", "Simple plans, rapid iteration"], ["workflow.verifier", "verifier", "2-5 min + tokens", "Speed runs, trusted executors"], ["parallelization", "Concurrent agents", "Varies by wave count", "Sequential debugging, cost control"], ["brave_search", "Web search in researcher", "Per-search API cost", "Offline, cost control"]] %}
 {% /doctable %}
 
 {% codeblock language="json" %}
 {
-  "research": false,
-  "plan_checker": true,
-  "verifier": true,
+  "workflow": {
+    "research": false,
+    "plan_checker": true,
+    "verifier": true
+  },
   "parallelization": false
+}
+{% /codeblock %}
+
+The `review` object controls what the verifier checks when it runs. Each review type can be toggled independently, and the retry limit controls how many times a failing review is re-attempted before giving up.
+
+{% doctable headers=["Toggle", "Default", "Description"] rows=[["review.spec_review", "true", "Checks that deliverables match the phase spec and success criteria"], ["review.code_review", "true", "Checks code quality, patterns, and potential issues"], ["review.simplify_review", "true", "Checks for unnecessary complexity that can be reduced"], ["review.retry_limit", "3", "Maximum retries when a review step fails"]] %}
+{% /doctable %}
+
+{% codeblock language="json" %}
+{
+  "review": {
+    "spec_review": true,
+    "code_review": true,
+    "simplify_review": false,
+    "retry_limit": 2
+  }
 }
 {% /codeblock %}
 

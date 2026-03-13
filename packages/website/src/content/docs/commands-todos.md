@@ -4,10 +4,10 @@ title: Todo Commands
 group: Commands Reference
 ---
 
+Todos are managed through `/maxsim:quick --todo` and tracked as GitHub Issues with the `todo` label.
+
 {% doctable headers=["Command", "Description"] rows=[["/maxsim:quick --todo [desc]", "Capture an idea or task as a GitHub Issue with the 'todo' label"], ["/maxsim:quick --todo triage", "List pending todos and decide what to work on next"]] %}
 {% /doctable %}
-
-Todos are tracked as GitHub Issues with the `todo` label. Use `/maxsim:quick --todo` to capture, list, complete, or triage todos.
 
 {% codeblock language="bash" %}
 # Save an idea as a todo

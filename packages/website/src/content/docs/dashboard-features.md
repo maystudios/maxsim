@@ -1,16 +1,30 @@
 ---
 id: dashboard-features
-title: Features
-group: Dashboard
+title: Worktree Mode
+group: Advanced
 ---
 
-The dashboard provides a structured view of your project's .planning/ directory with interactive editing capabilities. Every panel is connected to the filesystem — changes you make in the dashboard are written immediately to the corresponding markdown file.
+Worktree mode gives each agent an isolated git environment so multiple agents can work in parallel without stepping on each other's changes. Instead of sharing a single working directory, each agent operates in its own git worktree branched from the current state.
 
-{% doctable headers=["Panel", "Description"] rows=[["Phase overview", "Progress bars per phase, milestone stats, completion percentages"], ["Phase drill-down", "Expand any phase to see individual plans and task checkboxes"], ["Inline editor", "CodeMirror Markdown editor for any .planning/ file — Ctrl+S to save"], ["Todos panel", "Create, complete, and delete todos from .planning/todos/"], ["Blockers panel", "View and resolve blockers from STATE.md"], ["STATE.md editor", "Edit project state, decisions, and session bookmarks inline"]] %}
+### Configuration
+
+Set `worktree_mode` in `.claude/settings.json`:
+
+{% codeblock language="json" %}
+{
+  "worktree_mode": "auto"
+}
+{% /codeblock %}
+
+{% doctable headers=["Value", "Behavior"] rows=[["auto", "MAXSIM decides based on the number of agents dispatched. Single-agent tasks skip worktrees; multi-agent tasks use them. This is the default."], ["always", "Every agent gets its own worktree, even for single-agent tasks."], ["never", "All agents share the main working directory. Use this if your project has issues with worktrees or you prefer sequential execution."]] %}
 {% /doctable %}
 
-The inline CodeMirror editor supports Markdown syntax highlighting and renders a preview alongside the raw text. Task checkboxes in the drill-down view are bidirectional — checking one in the UI writes the change to the PLAN.md on disk.
+### How it works
 
-{% callout type="tip" %}
-Use the STATE.md editor to manually add decisions after ad-hoc conversations with the AI. If you discussed something important outside of MAXSIM's structured workflow, recording it in STATE.md ensures future agents have that context.
+When worktree mode is active, MAXSIM creates a temporary git worktree for each dispatched agent. The agent checks out a branch, makes its changes, and commits. After the agent completes and its work passes verification, MAXSIM merges the worktree branch back into the main branch.
+
+This avoids the most common problem with parallel AI agents: two agents editing the same file simultaneously and producing conflicting changes. With worktrees, conflicts are detected at merge time and can be resolved cleanly.
+
+{% callout type="note" %}
+Worktrees require a git repository. If your project is not a git repo, worktree mode is automatically disabled regardless of the setting.
 {% /callout %}

@@ -1,29 +1,29 @@
 ---
 id: plan-phase
-title: Plan Phase
+title: Go (Auto-Dispatch)
 group: Workflow
 ---
 
-`/maxsim:plan-phase` is where research becomes executable plans. It spawns up to three sequential agents: a phase researcher that studies the codebase and domain, a planner that creates task breakdowns, and a plan-checker that verifies the plan will actually achieve the phase goal.
+`/maxsim:go` is the recommended entry point for most users. It detects your project's current state and automatically runs the right workflow, so you never have to remember which command comes next.
 
 {% codeblock language="bash" %}
-/maxsim:plan-phase 1
-
-# Skip research (already done or small phase)
-/maxsim:plan-phase 1 --skip-research
-
-# Skip verification (speed over thoroughness)
-/maxsim:plan-phase 1 --skip-verify
-
-# Fully autonomous — no pauses for decisions
-/maxsim:plan-phase 1 --auto
+/maxsim:go
 {% /codeblock %}
 
-Each PLAN.md is a structured document with frontmatter (phase, plan number, type, wave, dependencies), an objective, task breakdown with type annotations (auto vs checkpoint), verification criteria, and success conditions. The plan-checker reads this document and validates that it's complete, unambiguous, and correctly scoped.
+### How auto-dispatch works
 
-Plans support wave-based parallelization via the `wave` frontmatter field. Plans in wave 1 run in parallel, then wave 2 runs after all wave 1 plans complete, and so on. The planner infers wave assignments from task dependencies.
+`/maxsim:go` inspects your `.planning/` directory and decides what to do:
 
-### Plan types
-
-{% doctable headers=["Type", "Meaning"] rows=[["auto", "Fully autonomous — executor runs without pausing"], ["checkpoint:human-verify", "Pauses for you to visually verify the result in a browser"], ["checkpoint:decision", "Pauses when an architectural choice needs human input"], ["checkpoint:human-action", "Pauses when a manual step is unavoidable (auth code, email link)"]] %}
+{% doctable headers=["State Detected", "Action Taken"] rows=[["No project initialized", "Runs the init workflow to set up your project"], ["Project exists but no plan for the current phase", "Runs the plan workflow (discussion, research, planning)"], ["Plan exists but not yet executed", "Runs the execute workflow with parallel agents"], ["Execution complete but unverified", "Runs verification"], ["Everything done", "Reports completion and suggests next steps"]] %}
 {% /doctable %}
+
+This means you can run `/maxsim:go` repeatedly throughout your workflow. It always picks up where you left off and moves the project forward.
+
+### When to use something else
+
+For most workflows, `/maxsim:go` is all you need. Use specific commands when you want direct control:
+
+- `/maxsim:plan` to re-plan a phase without executing
+- `/maxsim:execute` to re-run execution with specific flags
+- `/maxsim:quick` for standalone tasks outside the phase workflow
+- `/maxsim:debug` for structured debugging sessions

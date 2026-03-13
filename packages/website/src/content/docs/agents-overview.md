@@ -4,10 +4,10 @@ title: How Agents Work
 group: Agents
 ---
 
-MAXSIM's agents are markdown prompt files stored in `~/.claude/agents/` (for Claude Code). They are not executable binaries — they are specifications that the AI reads and executes as a subagent with a fresh context window.
+MAXSIM uses four generic agents: executor, planner, researcher, and verifier. Each agent is a markdown prompt file stored in `~/.claude/agents/`. They are not executable binaries — they are specifications that the AI reads and executes with a fresh context window.
 
-Each agent has a single responsibility. The executor doesn't research. The researcher doesn't plan. The plan-checker doesn't write code. This separation ensures that each agent can be given exactly the context it needs without contamination from unrelated work.
+Specialization comes from prompts and preloaded skills, not from having many dedicated agents. The planner agent loads brainstorming and roadmap-writing skills. The researcher loads evidence-collection methodology. The executor loads commit conventions and verification rules. This approach keeps the agent count small while allowing each agent to handle a wide range of tasks through its skill set.
 
-Agents call `cli.cjs` — MAXSIM's tools router — via the Bash tool. The tools router dispatches to core modules that handle state management, phase lifecycle, roadmap parsing, and verification. Large outputs (over 50KB) are written to a tmpfile and returned as `@file:/path` to prevent buffer overflow in the Claude Code Bash tool.
+Agents do not spawn subagents. The orchestrator dispatches agents directly — each agent runs in isolation using worktree mode, with only its specific skills loaded. When an agent finishes, control returns to the orchestrator, which decides what happens next.
 
-Agents communicate with each other through filesystem artifacts, not direct messages. The researcher writes RESEARCH.md. The planner reads RESEARCH.md and writes PLAN.md. The executor reads PLAN.md and writes SUMMARY.md. Each hand-off is a structured document that persists in git.
+Agents communicate via the handoff-contract skill. Instead of reading and writing loose markdown files, each agent produces a structured handoff contract that the next agent consumes. This contract defines what was done, what needs to happen next, and any constraints the receiving agent must respect. The handoff contract persists in git alongside the rest of the project state.

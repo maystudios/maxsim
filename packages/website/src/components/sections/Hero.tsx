@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 const FLIP_WORDS = ["Engineering", "Prompting", "Development", "Orchestration"];
 
 const TERMINAL_LINES = [
-  { prompt: true, text: "/maxsim:plan-phase", delay: 0 },
+  { prompt: true, text: "/maxsim:plan", delay: 0 },
   { prompt: false, text: "Planning phase 02-Auth-System...", delay: 0.6 },
   { prompt: false, text: "Spawning researcher agent (claude-sonnet-4-20250514)", delay: 1.0 },
   { prompt: false, text: "Research complete. 4 decisions captured.", delay: 1.6 },
@@ -279,7 +279,7 @@ export default function Hero() {
             transition={{ duration: 0.6, delay: 0.45 }}
           >
             A meta-prompting, context engineering, and spec-driven development
-            system for Claude Code, OpenCode, Gemini CLI, and Codex &mdash;
+            system for Claude Code &mdash;
             solving context rot with fresh-context subagents.
           </motion.p>
 

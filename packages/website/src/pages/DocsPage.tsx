@@ -102,7 +102,6 @@ const GROUP_ORDER = [
   "Introduction",
   "Core Concepts",
   "Workflow",
-  "Dashboard",
   "Commands Reference",
   "Configuration",
   "Agents",

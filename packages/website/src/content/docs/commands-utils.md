@@ -4,20 +4,25 @@ title: Utility Commands
 group: Commands Reference
 ---
 
-{% doctable headers=["Command", "Description", "Flags"] rows=[["/maxsim:health", "Diagnose .planning/ for missing files, bad frontmatter, orphaned phases", "--repair"], ["/maxsim:update", "Update MAXSIM to the latest version", "—"], ["/maxsim:settings", "Configure model profile and toggle workflow agents interactively", "—"], ["/maxsim:set-profile", "Switch model profile: quality, balanced, budget, tokenburner", "—"], ["/maxsim:reapply-patches", "Re-run install patches if templates were updated", "—"]] %}
-{% /doctable %}
+### `/maxsim:settings`
+
+View or modify MAXSIM configuration interactively. Settings include model profile, branching strategy, workflow toggles, and other project-level options.
 
 {% codeblock language="bash" %}
-# Diagnose and auto-repair the .planning/ directory
-/maxsim:health --repair
-
-# Switch to the quality profile for a complex phase
-/maxsim:set-profile quality
-
-# Update MAXSIM to latest
-/maxsim:update
+/maxsim:settings
 {% /codeblock %}
 
-{% callout type="tip" %}
-Run /maxsim:health before starting execution on a new machine or after a team merge. It catches frontmatter corruption, missing phase files, and broken @-references that would otherwise cause cryptic errors during planning or execution.
-{% /callout %}
+Available configuration options:
+
+{% doctable headers=["Setting", "Description"] rows=[["model_profile", "Switch between quality, balanced, budget, or tokenburner profiles"], ["branching_strategy", "Control how branches are created during execution"], ["Workflow toggles", "Enable or disable specific workflow steps (research, verification, etc.)"]] %}
+{% /doctable %}
+
+### `/maxsim:help`
+
+Show all available MAXSIM commands and their usage.
+
+{% codeblock language="bash" %}
+/maxsim:help
+{% /codeblock %}
+
+Use this to see the full list of commands, their descriptions, and available flags. You can also type `/maxsim:` and browse the command list interactively.

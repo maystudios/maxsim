@@ -30,4 +30,4 @@ STATE.md tracks four categories of information: decisions (architectural choices
 | 01    | 01   | 8     | 23    | 45m      |
 {% /codeblock %}
 
-You can edit STATE.md directly in the dashboard's inline editor, or let MAXSIM's CLI tools manage it. The `/maxsim:resume-work` command reads STATE.md to restore full context in a new session.
+You can edit STATE.md directly, or let MAXSIM's agents manage it. The `/maxsim:resume-work` command reads STATE.md to restore full context in a new session.

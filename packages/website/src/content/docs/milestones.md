@@ -4,22 +4,18 @@ title: Milestones
 group: Workflow
 ---
 
-Milestones group phases into shippable deliverables. After completing all phases in a milestone, you audit, gap-close, and archive the milestone. MAXSIM provides three commands for this workflow.
+Milestones group phases into shippable deliverables. The milestone lifecycle — creating, auditing, gap-closing, and completing milestones — is managed through `/maxsim:init`.
 
 {% codeblock language="bash" %}
-# Audit milestone — find gaps before archiving
-/maxsim:audit-milestone
-
-# Create fix phases for all gaps found in the audit
-/maxsim:plan-milestone-gaps
-
-# Archive the milestone and start the next one
-/maxsim:complete-milestone
-
-# Create a new milestone in ROADMAP.md
-/maxsim:new-milestone
+# Launch init to manage milestones
+/maxsim:init
 {% /codeblock %}
 
-The audit command reads all phase SUMMARY.md files and original REQUIREMENTS.md entries for the milestone, then identifies unmet requirements, partially implemented features, and missing deliverables. The result is a structured audit report.
+`/maxsim:init` is the entry point for all milestone lifecycle operations. It handles creating new milestones, auditing completed ones for gaps, planning fixes for those gaps, and archiving milestones when they are done.
 
-`/maxsim:plan-milestone-gaps` reads the audit report and creates one new phase per gap — with full PLAN.md files ready to execute. This converts the qualitative audit into an actionable backlog.
+### Milestone lifecycle
+
+{% doctable headers=["Operation", "What Happens"] rows=[["New milestone", "Adds a new milestone to ROADMAP.md with placeholder phases"], ["Audit milestone", "Reads all phase SUMMARYs and requirements, identifies unmet deliverables"], ["Plan gaps", "Creates one new phase per gap with full PLAN.md files ready to execute"], ["Complete milestone", "Archives milestone phases and advances to the next milestone"]] %}
+{% /doctable %}
+
+The audit reads all phase SUMMARY.md files and original REQUIREMENTS.md entries for the milestone, then identifies unmet requirements, partially implemented features, and missing deliverables. The result is a structured audit report that feeds directly into gap planning.

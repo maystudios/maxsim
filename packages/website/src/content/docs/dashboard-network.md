@@ -1,24 +1,35 @@
 ---
 id: dashboard-network
-title: Network Sharing
-group: Dashboard
+title: Review Gates
+group: Advanced
 ---
 
-Add `--network` to share the dashboard over your local network or Tailscale VPN. This lets teammates view your project progress from their own machines, or lets you check progress from your phone.
+Review gates are automated quality checks that run after an agent completes its work. They catch issues before changes are merged, reducing the chance of regressions or unnecessary complexity reaching your main branch.
 
-{% codeblock language="bash" %}
-npx maxsimcli dashboard --network
+### Configuration
+
+Enable or disable each review type in `.claude/settings.json`:
+
+{% codeblock language="json" %}
+{
+  "review": {
+    "spec_review": true,
+    "code_review": true,
+    "simplify_review": true,
+    "retry_limit": 3
+  }
+}
 {% /codeblock %}
 
-MAXSIM detects your LAN IP and Tailscale IP automatically. It prints both URLs with QR codes in the terminal — scan the QR code from your phone to open the dashboard instantly.
+### Review types
 
-### Firewall automation
-
-Opening a port for LAN access requires a firewall rule on most systems. MAXSIM creates the rule automatically:
-
-{% doctable headers=["Platform", "Method", "Notes"] rows=[["Windows", "netsh advfirewall", "Prompts UAC elevation — accept to allow rule creation"], ["Linux (ufw)", "ufw allow [port]", "Requires sudo — MAXSIM will prompt for password"], ["Linux (iptables)", "iptables -A INPUT", "Fallback if ufw not available"], ["macOS", "No action needed", "macOS allows inbound on LAN by default"]] %}
+{% doctable headers=["Review", "What it checks"] rows=[["spec_review", "Compares the implementation against the phase spec. Catches missing requirements, incomplete features, and deviations from the plan."], ["code_review", "Reviews code quality, security, and correctness. Looks for bugs, anti-patterns, missing error handling, and potential vulnerabilities."], ["simplify_review", "Checks for unnecessary complexity, dead code, over-engineering, and opportunities to simplify. Keeps the codebase lean."]] %}
 {% /doctable %}
 
-{% callout type="note" %}
-Firewall rules created by MAXSIM are scoped to the dashboard port only. They are not removed when you stop the server — you can remove them manually or leave them in place.
+### Retry limit
+
+When a review fails, the executor agent receives the feedback and attempts to fix the issues. The `retry_limit` controls how many times this fix-and-review cycle can repeat before MAXSIM stops and asks for human intervention. The default is 3 retries.
+
+{% callout type="tip" %}
+For exploratory or prototype work, you can set `simplify_review` to false to avoid spending cycles on code cleanliness. Turn it back on before merging to your main branch.
 {% /callout %}

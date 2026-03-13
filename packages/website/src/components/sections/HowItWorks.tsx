@@ -11,19 +11,19 @@ const steps = [
     number: "02",
     title: "Initialize",
     description: "Start a new project with deep context gathering. MAXSIM creates PROJECT.md, REQUIREMENTS.md, and a phased ROADMAP.md.",
-    code: "/maxsim:new-project",
+    code: "/maxsim:init",
   },
   {
     number: "03",
     title: "Plan",
     description: "Research, plan, and verify each phase before execution. Specialized agents handle research, task breakdown, and plan checking.",
-    code: "/maxsim:plan-phase",
+    code: "/maxsim:plan",
   },
   {
     number: "04",
     title: "Execute",
     description: "Executor agents implement your plan with atomic commits, wave-based parallelization, and automatic state tracking.",
-    code: "/maxsim:execute-phase",
+    code: "/maxsim:execute",
   },
 ];
 

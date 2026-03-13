@@ -1,8 +1,8 @@
 import { useState, useRef, type ReactNode } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { Copy, Check, Terminal, Settings, Users, FolderTree, LayoutDashboard, ArrowRight } from "lucide-react";
+import { Copy, Check, Terminal, Settings, Users, FolderTree, ArrowRight } from "lucide-react";
 
-type TabId = "getting-started" | "commands" | "architecture" | "configuration" | "agents" | "dashboard";
+type TabId = "getting-started" | "commands" | "architecture" | "configuration" | "agents";
 
 function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);
@@ -199,10 +199,9 @@ function GettingStarted() {
         <CodeBlock
           language="text"
           code={`~/.claude/
-├── commands/maxsim/   # 31 user-facing commands (/maxsim:*)
-├── agents/            # 11 specialized agent prompts
-├── hooks/             # Pre/post hooks for automation
-└── dashboard/         # Pre-built web dashboard (Vite + Express)`}
+├── commands/maxsim/   # 9 user-facing commands (/maxsim:*)
+├── agents/            # 4 specialized agent prompts
+└── hooks/             # Pre/post hooks for automation`}
         />
       </div>
 
@@ -215,7 +214,7 @@ function GettingStarted() {
         <CodeBlock
           language="bash"
           code={`# In your project directory, use the slash command:
-/maxsim:new-project`}
+/maxsim:init`}
         />
       </div>
     </div>
@@ -234,122 +233,57 @@ interface CommandDef {
 
 const commands: CommandDef[] = [
   {
-    name: "new-project",
-    signature: "/maxsim:new-project",
-    description: "Initialize a new project with deep context gathering. Creates PROJECT.md, REQUIREMENTS.md, and a phased ROADMAP.md.",
-    example: `/maxsim:new-project`,
-  },
-  {
-    name: "discuss-phase",
-    signature: "/maxsim:discuss-phase",
-    description: "Gather phase context through adaptive questioning before planning. Surfaces assumptions and gray areas before a single line is written.",
-    example: `/maxsim:discuss-phase 1`,
-  },
-  {
-    name: "plan-phase",
-    signature: "/maxsim:plan-phase",
-    description: "Research, plan, and verify a phase before execution. Spawns researcher, planner, and plan-checker agents with fresh context each.",
-    flags: ["--auto", "--research", "--skip-research", "--skip-verify"],
-    example: `/maxsim:plan-phase 1`,
-  },
-  {
-    name: "execute-phase",
-    signature: "/maxsim:execute-phase",
-    description: "Execute all plans in a phase with wave-based parallelization, atomic commits per task, and goal-backward verification.",
-    flags: ["--gaps-only"],
-    example: `/maxsim:execute-phase 1`,
-  },
-  {
-    name: "verify-work",
-    signature: "/maxsim:verify-work",
-    description: "Validate built features through conversational UAT. Broken items automatically generate fix plans as decimal phases.",
-    example: `/maxsim:verify-work 1`,
-  },
-  {
-    name: "quick",
-    signature: "/maxsim:quick",
-    description: "Execute an ad-hoc task with atomic commits and state tracking, skipping optional agents for speed. Add --full to enable all agents.",
-    flags: ["--full"],
-    example: `/maxsim:quick`,
-  },
-  {
     name: "debug",
     signature: "/maxsim:debug",
-    description: "Systematic debugging with persistent state across context resets. State is saved so you can continue debugging across sessions.",
+    description: "Start a structured debugging session with persistent state across context resets.",
     example: `/maxsim:debug "auth token not refreshing"`,
+  },
+  {
+    name: "execute",
+    signature: "/maxsim:execute",
+    description: "Execute a phase plan with parallel agents, atomic commits per task, and goal-backward verification.",
+    example: `/maxsim:execute 1`,
+  },
+  {
+    name: "go",
+    signature: "/maxsim:go",
+    description: "Auto-dispatch: detects project state and runs the right workflow automatically.",
+    example: `/maxsim:go`,
+  },
+  {
+    name: "help",
+    signature: "/maxsim:help",
+    description: "Show available commands and usage.",
+    example: `/maxsim:help`,
+  },
+  {
+    name: "init",
+    signature: "/maxsim:init",
+    description: "Initialize a new project, onboard an existing project, or manage milestones.",
+    example: `/maxsim:init`,
+  },
+  {
+    name: "plan",
+    signature: "/maxsim:plan",
+    description: "Plan a phase through discussion, research, and planning stages.",
+    example: `/maxsim:plan 1`,
   },
   {
     name: "progress",
     signature: "/maxsim:progress",
-    description: "Check project progress, show context, and route to the next action — either execute or plan.",
+    description: "Show current phase and milestone progress with status overview.",
     example: `/maxsim:progress`,
   },
   {
-    name: "resume-work",
-    signature: "/maxsim:resume-work",
-    description: "Resume work from the previous session with full context restoration from STATE.md and phase files.",
-    example: `/maxsim:resume-work`,
-  },
-  {
-    name: "roadmap",
-    signature: "/maxsim:roadmap",
-    description: "Display the project roadmap with phase status icons, plan counts, and milestone summary.",
-    example: `/maxsim:roadmap`,
-  },
-  {
-    name: "health",
-    signature: "/maxsim:health",
-    description: "Diagnose the .planning/ directory for missing files, corrupted frontmatter, orphaned phases, and broken references. Use --repair to auto-fix.",
-    flags: ["--repair"],
-    example: `/maxsim:health --repair`,
-  },
-  {
-    name: "audit-milestone",
-    signature: "/maxsim:audit-milestone",
-    description: "Audit milestone completion against original intent. Identifies gaps, incomplete requirements, and missed deliverables before archiving.",
-    example: `/maxsim:audit-milestone`,
-  },
-  {
-    name: "plan-milestone-gaps",
-    signature: "/maxsim:plan-milestone-gaps",
-    description: "After running audit-milestone, creates new phases to close every gap identified — turning the audit report into an actionable plan.",
-    example: `/maxsim:plan-milestone-gaps`,
-  },
-  {
-    name: "map-codebase",
-    signature: "/maxsim:map-codebase",
-    description: "Analyze an existing codebase with parallel mapper agents. Writes structured analysis to .planning/codebase/.",
-    example: `/maxsim:map-codebase`,
-  },
-  {
-    name: "add-todo",
-    signature: "/maxsim:add-todo",
-    description: "Capture an idea or task as a todo from the current conversation context. Stored in .planning/todos/pending/.",
-    example: `/maxsim:add-todo`,
-  },
-  {
-    name: "check-todos",
-    signature: "/maxsim:check-todos",
-    description: "List all pending todos and interactively select one to work on next.",
-    example: `/maxsim:check-todos`,
-  },
-  {
-    name: "dashboard",
-    signature: "npx maxsimcli dashboard",
-    description: "Launch the real-time web dashboard. Phase progress, inline Markdown editor, todos, blockers, STATE.md editor, and LAN/QR sharing.",
-    flags: ["--network", "--stop"],
-    example: `npx maxsimcli dashboard --network`,
-  },
-  {
-    name: "set-profile",
-    signature: "/maxsim:set-profile",
-    description: "Switch the active model profile: quality, balanced, budget, or tokenburner.",
-    example: `/maxsim:set-profile tokenburner`,
+    name: "quick",
+    signature: "/maxsim:quick",
+    description: "Run a quick standalone task outside the phase workflow.",
+    example: `/maxsim:quick`,
   },
   {
     name: "settings",
     signature: "/maxsim:settings",
-    description: "Configure model profile and toggle optional workflow agents (research, plan_checker, verifier, parallelization).",
+    description: "View or modify MAXSIM configuration including model profile and workflow toggles.",
     example: `/maxsim:settings`,
   },
 ];
@@ -400,9 +334,9 @@ function Architecture() {
         </DocText>
         <CodeBlock
           language="text"
-          code={`commands/maxsim/*.md       # User-facing command specs (31 files)
+          code={`commands/maxsim/*.md       # User-facing command specs (9 files)
 maxsim/workflows/*.md      # Implementation workflows
-agents/*.md                # Specialized subagent prompts (11 agents)`}
+agents/*.md                # Specialized subagent prompts (4 agents)`}
         />
       </div>
 
@@ -447,13 +381,18 @@ agents/*.md                # Specialized subagent prompts (11 agents)`}
 
 const configJson = `{
   "model_profile": "balanced",
-  "branching_strategy": "none",
   "commit_docs": true,
-  "research": true,
-  "plan_checker": true,
-  "verifier": true,
+  "search_gitignored": false,
+  "branching_strategy": "none",
+  "phase_branch_template": "maxsim/phase-{phase}-{slug}",
+  "milestone_branch_template": "maxsim/{milestone}-{slug}",
+  "workflow": { "research": true, "plan_checker": true, "verifier": true },
   "parallelization": true,
-  "brave_search": false
+  "brave_search": false,
+  "worktree_mode": "auto",
+  "max_parallel_agents": 10,
+  "review": { "spec_review": true, "code_review": true, "simplify_review": true, "retry_limit": 3 },
+  "model_overrides": {}
 }`;
 
 function Configuration() {
@@ -471,16 +410,14 @@ function Configuration() {
       <div>
         <DocSubheading>Model Profiles</DocSubheading>
         <DocText>
-          Four tiers control which Claude model each of the 11 specialized agents uses.
-          Orchestrators always use leaner models; planners and executors use the heavier ones
-          configured by your profile.
+          Four tiers control which Claude model each of the 4 specialized agents uses.
         </DocText>
         <CodeBlock
           language="text"
-          code={`quality      → Opus for planners/executors, Sonnet for verifiers
-balanced     → Sonnet for planners/executors, Haiku for orchestrators  (default)
-budget       → Sonnet for planners, Haiku for researchers and verifiers
-tokenburner  → Opus for every agent — maximum quality, maximum cost`}
+          code={`quality      → Opus for executor/planner/researcher, Sonnet for verifier/debugger
+balanced     → Sonnet for executor/researcher, Opus for planner, Sonnet for verifier/debugger  (default)
+budget       → Sonnet for executor/planner, Haiku for researcher/verifier/debugger
+tokenburner  → Opus for all agents`}
         />
       </div>
 
@@ -488,10 +425,7 @@ tokenburner  → Opus for every agent — maximum quality, maximum cost`}
         <DocSubheading>Change profile</DocSubheading>
         <CodeBlock
           language="bash"
-          code={`/maxsim:set-profile quality
-/maxsim:set-profile balanced
-/maxsim:set-profile budget
-/maxsim:set-profile tokenburner`}
+          code={`/maxsim:settings`}
         />
       </div>
 
@@ -533,17 +467,10 @@ brave_search   → Brave Search API in research agents         (default: false)`
 // ─── Tab: Agents ──────────────────────────────────────────────────────────────
 
 const agents = [
-  { name: "Phase Researcher", description: "Researches how to implement a phase before planning" },
-  { name: "Planner", description: "Creates executable phase plans with task breakdown and dependencies" },
-  { name: "Plan Checker", description: "Verifies plans will achieve the phase goal before execution" },
-  { name: "Executor", description: "Implements plans with atomic commits and state management" },
-  { name: "Verifier", description: "Checks that codebase delivers what the phase promised" },
-  { name: "Debugger", description: "Investigates bugs using scientific method with checkpoints" },
-  { name: "Integration Checker", description: "Verifies cross-phase integration and E2E flows" },
-  { name: "Project Researcher", description: "Researches domain ecosystem before roadmap creation" },
-  { name: "Research Synthesizer", description: "Synthesizes research outputs into summaries" },
-  { name: "Roadmapper", description: "Creates project roadmaps with phase breakdown" },
-  { name: "Codebase Mapper", description: "Explores codebase and writes structured analysis" },
+  { name: "executor", description: "Implements code changes according to the phase plan. Preloaded skills: tool-priority-guide, commit-conventions, verification-before-completion" },
+  { name: "planner", description: "Creates detailed phase plans from research findings. Preloaded skills: brainstorming, sdd, roadmap-writing" },
+  { name: "researcher", description: "Investigates codebase and gathers context for planning. Preloaded skills: research-methodology, evidence-collection" },
+  { name: "verifier", description: "Reviews completed work against spec and quality gates. Preloaded skills: code-review, verification-gates, input-validation" },
 ];
 
 function Agents() {
@@ -602,69 +529,11 @@ function Agents() {
   );
 }
 
-// ─── Tab: Dashboard ───────────────────────────────────────────────────────────
-
-function Dashboard() {
-  return (
-    <div className="space-y-8">
-      <div>
-        <DocHeading>Live Dashboard</DocHeading>
-        <DocText>
-          MAXSIM ships with a real-time web dashboard bundled inside the CLI — no separate install
-          needed. It auto-launches during /maxsim:execute-phase so you always have a live view.
-        </DocText>
-        <CodeBlock language="bash" code={`npx maxsimcli dashboard`} />
-      </div>
-
-      <div>
-        <DocSubheading>Features</DocSubheading>
-        <DocText>
-          The dashboard watches .planning/ with chokidar and pushes updates over WebSocket
-          the moment any file changes.
-        </DocText>
-        <CodeBlock
-          language="text"
-          code={`Phase overview      → progress bars and milestone stats
-Phase drill-down    → expand phases to see plan tasks + toggleable checkboxes
-Inline editor       → CodeMirror Markdown editor — Ctrl+S to save
-Todos panel         → create, complete, delete todos
-Blockers panel      → view and resolve blockers from STATE.md
-STATE.md editor     → edit project state inline in the browser`}
-        />
-      </div>
-
-      <div>
-        <DocSubheading>LAN & Tailscale Sharing</DocSubheading>
-        <DocText>
-          Add --network to share the dashboard over your local network or Tailscale VPN.
-          MAXSIM detects your LAN and Tailscale IPs, configures firewall rules automatically,
-          and generates a QR code for instant mobile access.
-        </DocText>
-        <CodeBlock language="bash" code={`npx maxsimcli dashboard --network`} />
-      </div>
-
-      <div>
-        <DocSubheading>Firewall automation</DocSubheading>
-        <DocText>
-          On Windows, MAXSIM creates a netsh advfirewall rule (with UAC elevation).
-          On Linux, it runs ufw allow or iptables. On macOS no rules are needed.
-        </DocText>
-      </div>
-
-      <div>
-        <DocSubheading>Stop the server</DocSubheading>
-        <CodeBlock language="bash" code={`npx maxsimcli dashboard --stop`} />
-      </div>
-    </div>
-  );
-}
-
 // ─── Tab definitions ──────────────────────────────────────────────────────────
 
 const tabs: { id: TabId; label: string; Icon: React.ElementType }[] = [
   { id: "getting-started", label: "Getting Started", Icon: Terminal },
   { id: "commands", label: "Commands", Icon: Terminal },
-  { id: "dashboard", label: "Dashboard", Icon: LayoutDashboard },
   { id: "architecture", label: "Architecture", Icon: FolderTree },
   { id: "configuration", label: "Configuration", Icon: Settings },
   { id: "agents", label: "Agents", Icon: Users },
@@ -674,7 +543,6 @@ function tabContent(id: TabId) {
   switch (id) {
     case "getting-started": return <GettingStarted />;
     case "commands": return <Commands />;
-    case "dashboard": return <Dashboard />;
     case "architecture": return <Architecture />;
     case "configuration": return <Configuration />;
     case "agents": return <Agents />;

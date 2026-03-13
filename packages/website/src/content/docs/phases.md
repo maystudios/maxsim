@@ -15,13 +15,13 @@ Phases support decimal and letter suffixes to accommodate gap closure and parall
 {% doctable headers=["Number", "Meaning"] rows=[["01", "First phase"], ["01A", "Parallel track A alongside phase 01"], ["01B", "Parallel track B alongside phase 01"], ["01.1", "Gap closure sub-phase after phase 01 verification"], ["01.2", "Second gap closure sub-phase"], ["02", "Second major phase"]] %}
 {% /doctable %}
 
-Sort order is: 01 < 01A < 01B < 01.1 < 01.2 < 02. The `normalizePhaseName()` function in the MAXSIM CLI handles this ordering for dashboard display and state tracking.
+Sort order is: 01 < 01A < 01B < 01.1 < 01.2 < 02. The `normalizePhaseName()` function in the MAXSIM CLI handles this ordering for state tracking.
 
 ### Phase lifecycle
 
 {% codeblock language="text" %}
 planned     → Phase exists in ROADMAP.md, not yet researched
-researched  → plan-phase has run, RESEARCH.md and PLAN.md exist
-executing   → execute-phase is in progress
+researched  → /maxsim:plan has run, RESEARCH.md and PLAN.md exist
+executing   → /maxsim:execute is in progress
 complete    → All plans have SUMMARY.md, verification passed
 {% /codeblock %}

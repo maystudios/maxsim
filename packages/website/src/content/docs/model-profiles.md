@@ -4,12 +4,12 @@ title: Model Profiles
 group: Configuration
 ---
 
-Model profiles control which Claude model each of the 11 specialized agents uses. Orchestrators always use leaner models to minimize cost on routing and coordination work. Planners, executors, and debuggers use the model tier configured by your profile.
+Model profiles control which Claude model each agent uses. Pick a profile that matches your priorities: best results, cost efficiency, or somewhere in between.
 
-{% doctable headers=["Agent", "quality", "balanced", "budget", "tokenburner"] rows=[["maxsim-planner", "opus", "sonnet", "sonnet", "opus"], ["maxsim-roadmapper", "opus", "sonnet", "sonnet", "opus"], ["maxsim-executor", "opus", "sonnet", "sonnet", "opus"], ["maxsim-phase-researcher", "sonnet", "sonnet", "haiku", "opus"], ["maxsim-project-researcher", "sonnet", "sonnet", "haiku", "opus"], ["maxsim-research-synthesizer", "sonnet", "haiku", "haiku", "opus"], ["maxsim-debugger", "opus", "sonnet", "sonnet", "opus"], ["maxsim-codebase-mapper", "sonnet", "haiku", "haiku", "opus"], ["maxsim-verifier", "sonnet", "sonnet", "haiku", "opus"], ["maxsim-plan-checker", "sonnet", "sonnet", "haiku", "opus"], ["maxsim-integration-checker", "sonnet", "sonnet", "haiku", "opus"]] %}
+{% doctable headers=["Agent", "quality", "balanced", "budget", "tokenburner"] rows=[["executor", "opus", "sonnet", "sonnet", "opus"], ["planner", "opus", "opus", "sonnet", "opus"], ["researcher", "opus", "sonnet", "haiku", "opus"], ["verifier", "sonnet", "sonnet", "haiku", "opus"], ["debugger", "sonnet", "sonnet", "haiku", "opus"]] %}
 {% /doctable %}
 
-The `balanced` profile (default) gives you Sonnet-quality planning and execution with Haiku for lighter tasks. The `quality` profile uses Opus for the heavy-lift agents. The `budget` profile uses Sonnet only for planners and executors. The `tokenburner` profile uses Opus for every agent — maximum quality, maximum cost.
+The `balanced` profile (default) gives you Opus-quality planning with Sonnet for execution and research — a good trade-off between results and cost. The `quality` profile upgrades the executor and researcher to Opus. The `budget` profile uses Sonnet for planning and execution, Haiku for everything else — lowest cost. The `tokenburner` profile uses Opus for every agent — maximum quality, maximum cost.
 
 {% codeblock language="bash" %}
 /maxsim:set-profile quality

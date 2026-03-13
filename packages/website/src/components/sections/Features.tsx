@@ -1,5 +1,5 @@
 import { motion } from "motion/react";
-import { Brain, Layers, Globe, FileText, Users, Gauge, LayoutDashboard, Wifi, GitBranch, Zap } from "lucide-react";
+import { Brain, Layers, FileText, Users, Gauge, GitBranch, Zap, Puzzle } from "lucide-react";
 
 const features = [
   {
@@ -15,18 +15,6 @@ const features = [
       "Solves context rot by offloading work to fresh-context subagents. Never lose track of your project state again.",
   },
   {
-    icon: LayoutDashboard,
-    title: "Live Dashboard",
-    description:
-      "Real-time web UI with phase progress, inline Markdown editor, todos, blockers, STATE.md editor, and LAN/QR sharing. Bundled inside the CLI — launch with one command.",
-  },
-  {
-    icon: Globe,
-    title: "Multi-Runtime Support",
-    description:
-      "Works with Claude Code, OpenCode, Gemini CLI, and Codex. Install once, use with any AI coding agent.",
-  },
-  {
     icon: FileText,
     title: "Spec-Driven Development",
     description:
@@ -34,9 +22,15 @@ const features = [
   },
   {
     icon: Users,
-    title: "11 Specialized Agents",
+    title: "4 Generic Agents",
     description:
-      "Researcher, planner, executor, verifier, debugger, codebase mapper, and more — each agent is an expert at its single task.",
+      "Executor, planner, researcher, and verifier — four focused agents handle every workflow. 21 skills provide the specialization each task needs.",
+  },
+  {
+    icon: Puzzle,
+    title: "21 Skills & 23 Workflows",
+    description:
+      "An extensible skill and workflow system that covers the full development lifecycle. Add your own skills and workflows to tailor MAXSIM to your project.",
   },
   {
     icon: Gauge,
@@ -55,12 +49,6 @@ const features = [
     title: "Branching Strategies",
     description:
       "Auto-create git branches per phase or milestone. Configurable templates like maxsim/phase-{N}-{slug} keep your repo organized.",
-  },
-  {
-    icon: Wifi,
-    title: "LAN & Tailscale Sharing",
-    description:
-      "Share the dashboard over your local network or Tailscale VPN. Auto-configures firewall rules and generates a QR code for instant mobile access.",
   },
 ];
 
