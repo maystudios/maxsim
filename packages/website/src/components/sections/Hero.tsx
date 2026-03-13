@@ -272,6 +272,8 @@ export default function Hero() {
                 href="https://github.com/maystudios/maxsimcli"
                 target="_blank"
                 rel="noopener noreferrer"
+                className="rounded-md"
+                innerClassName="px-8 py-3.5 text-sm font-semibold tracking-wide"
               >
                 GitHub
                 <svg

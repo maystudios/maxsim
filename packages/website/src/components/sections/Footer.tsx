@@ -11,6 +11,7 @@ export function MovingBorderButton({
   rel,
   duration = 3000,
   className,
+  innerClassName,
 }: {
   children: React.ReactNode;
   onClick?: () => void;
@@ -19,6 +20,7 @@ export function MovingBorderButton({
   rel?: string;
   duration?: number;
   className?: string;
+  innerClassName?: string;
 }) {
   const rectRef = useRef<SVGRectElement>(null);
   const progress = useMotionValue(0);
@@ -59,7 +61,7 @@ export function MovingBorderButton({
 
       <span className="absolute inset-0 rounded-lg border border-border/60 group-hover:border-accent/30 transition-colors duration-300" />
 
-      <span className="relative flex items-center gap-2 bg-surface/40 px-5 py-2.5 text-xs font-mono text-muted group-hover:text-foreground transition-colors duration-200">
+      <span className={cn("relative flex items-center gap-2 bg-surface/40 text-muted group-hover:text-foreground transition-colors duration-200", innerClassName || "px-5 py-2.5 text-xs font-mono")}>
         {children}
       </span>
     </>
