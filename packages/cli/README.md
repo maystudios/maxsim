@@ -1,427 +1,514 @@
-<div align="center">
-
 # MAXSIM
 
-**Your AI coding assistant is forgetting things. MAXSIM fixes that.**
+**Spec-driven workflow orchestration for Claude Code — eliminate context rot across AI-assisted development sessions.**
 
-As Claude fills its context window, code quality degrades — wrong decisions, repeated mistakes, lost intent.
-MAXSIM solves this by offloading work to fresh-context subagents, each with a single responsibility and no memory of the mess before.
+[![npm version](https://img.shields.io/npm/v/maxsimcli)](https://www.npmjs.com/package/maxsimcli)
+[![Node.js >=22](https://img.shields.io/badge/node-%3E%3D22-brightgreen)](https://nodejs.org)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
+[![CI](https://github.com/maystudios/maxsim/actions/workflows/release.yml/badge.svg)](https://github.com/maystudios/maxsim/actions)
 
-[![npm version](https://img.shields.io/npm/v/maxsimcli?style=for-the-badge&logo=npm&logoColor=white&color=CB3837)](https://www.npmjs.com/package/maxsimcli)
-[![npm downloads](https://img.shields.io/npm/dm/maxsimcli?style=for-the-badge&logo=npm&logoColor=white&color=CB3837)](https://www.npmjs.com/package/maxsimcli)
-[![GitHub stars](https://img.shields.io/github/stars/maystudios/maxsimcli?style=for-the-badge&logo=github&logoColor=white&color=24292e)](https://github.com/maystudios/maxsimcli)
-[![License](https://img.shields.io/badge/license-MIT-22c55e?style=for-the-badge)](LICENSE)
+---
 
-<br>
+## What is MAXSIM?
 
-[![Website](https://img.shields.io/badge/Website-maxsimcli.dev-3b82f6?style=for-the-badge&logo=googlechrome&logoColor=white)](https://maxsimcli.dev/)
-[![Docs](https://img.shields.io/badge/Docs-maxsimcli.dev%2Fdocs-6366f1?style=for-the-badge&logo=readthedocs&logoColor=white)](https://maxsimcli.dev/docs)
+MAXSIM is a spec-driven workflow orchestration system for Claude Code. It provides a structured layer of planning documents, phase plans, and specialized AI agents that keep your project's intent, decisions, and current state consistently available — session to session, agent to agent.
 
-<br>
+The problem it solves is "context rot": the gradual loss of coherent project state that happens when AI coding assistants start each session from scratch, rediscover the same constraints, and drift from prior decisions. MAXSIM combats this by maintaining a `.planning/` directory of markdown files as the authoritative record of what the project is, where it is going, and what has already been decided. GitHub Issues serve as the single source of truth for discrete work items, keeping planning artifacts and execution history tightly linked.
 
-```bash
+MAXSIM does not call any LLM API directly. It orchestrates Claude Code agents through markdown prompts, workflow definitions, and context documents — so there are no API keys to configure and no additional costs beyond your existing Claude Code usage. It is installed via `npx maxsimcli@latest` into a project's `.claude/` directory, making it immediately available as slash commands inside Claude Code.
+
+---
+
+## Quick Start
+
+Install MAXSIM into your project:
+
+```sh
 npx maxsimcli@latest
 ```
 
-**Works with Claude Code — on Mac, Windows, and Linux.**
-
-> **Early Alpha** — APIs, commands, and workflows may change between releases. Expect rough edges.
-
-</div>
-
----
-
-## The Problem in 30 Seconds
-
-You start a session with Claude. The first 20 minutes are great. Then it starts forgetting your architecture decisions. It repeats the same mistakes. Output quality drops. You start a new session and lose all context.
-
-This is **context rot** — and it gets worse the bigger your project is.
-
-**MAXSIM fixes this** by breaking your build into phases, planning each one independently, and running each task in a fresh subagent with only the context it needs. No rot. No drift. Consistent quality from phase 1 to phase 50.
-
----
-
-## Try It in 1 Minute
-
-```bash
-# Install into your project
-npx maxsimcli@latest
-
-# In Claude Code, initialize:
-/maxsim:init
-
-# Plan the first phase:
-/maxsim:plan 1
-
-# Execute it:
-/maxsim:execute 1
-```
-
-That's the loop. **Init → Plan → Execute → Verify.** Each phase is isolated, each task gets a fresh agent, every change gets an atomic commit.
-
----
-
-## Who Is This For
-
-**Individual developers** who want to ship complex projects with Claude without losing coherence over long sessions.
-
-**Teams** who want a shared structure for AI-assisted development — consistent planning, traceable decisions, reproducible phases.
-
-**AI-heavy projects** (SaaS, CLIs, data pipelines) where a single Claude session can't hold the full project context.
-
-**Not a fit if** your project is a single file, a one-shot script, or you just want quick answers from Claude — MAXSIM is a workflow system, not a chat interface.
-
----
-
-## How It Works
-
-MAXSIM installs 9 slash commands, 19 skills, and an MCP server into Claude Code. Each command is a structured workflow that spawns specialized subagents with fresh context.
-
-### The Core Loop
-
-**1. Initialize your project**
-```
-/maxsim:init
-```
-Answer a few questions → MAXSIM researches your domain, scopes v1/v2, and creates a phased roadmap in `.planning/`. Works for new projects, existing codebases, and milestone transitions.
-
-**2. Plan a phase**
-```
-/maxsim:plan 1
-```
-State-machine workflow: Discussion → Research → Planning. Research agent investigates your domain. Planner creates atomic task plans. Plan-checker verifies them. You get a PLAN.md ready to execute.
-
-**3. Execute**
-```
-/maxsim:execute 1
-```
-Plans run in parallel waves. Each task gets its own fresh executor agent and atomic git commit. Two-stage review (spec compliance → code quality) with automatic retry. Verifier checks the codebase delivered what the phase promised.
-
-**4. Check progress and continue**
-```
-/maxsim:progress
-```
-See where you are, what's next. Intelligent routing to the next action — whether that's planning the next phase, executing, or completing a milestone.
-
-**5. Or just let MAXSIM decide**
-```
-/maxsim:go
-```
-Auto-detects project state, surfaces blockers, and dispatches to the right command. No arguments needed.
-
----
-
-## Real-World CLI Flow
+Then, inside Claude Code:
 
 ```
-You: /maxsim:init
-MAXSIM: Tell me about your project...
-You: A CLI tool that converts PDFs to structured JSON using AI
-MAXSIM: [researches domain, scopes requirements]
-        [creates REQUIREMENTS.md and ROADMAP.md with 8 phases]
-        Phase 1: PDF parsing + text extraction
-        Phase 2: AI-powered structure detection
-        ...
-
-You: /maxsim:plan 1
-MAXSIM: [research agent investigates pdf libraries]
-        [planner creates 3 atomic task plans]
-        [plan-checker verifies feasibility]
-        Ready. Run /maxsim:execute 1
-
-You: /maxsim:execute 1
-MAXSIM: [wave 1: executor installs dependencies, commits]
-        [wave 2: executor implements PDF reader, commits]
-        [wave 3: executor adds tests, commits]
-        [spec review ✓ → code review ✓ → verifier confirms goal achieved]
-        Phase 1 complete. 3 commits.
+/maxsim:init        # Initialize project planning structure
+/maxsim:plan 1      # Plan phase 1
+/maxsim:execute 1   # Execute phase 1
 ```
 
 ---
 
-## Commands
+## Features
 
-9 commands, each backed by state-machine logic:
+### Spec-Driven Development
 
-| Command | Description |
-|---------|-------------|
-| `/maxsim:init` | Initialize: new project, existing codebase, or next milestone |
-| `/maxsim:plan [N]` | Discussion → Research → Planning for a phase |
-| `/maxsim:execute <N>` | Execute plans in parallel waves with two-stage review |
-| `/maxsim:progress` | Where am I? What's next? Routes to the right action. |
-| `/maxsim:go` | Auto-detect state and dispatch — zero arguments |
-| `/maxsim:quick [--todo]` | Ad-hoc task with atomic commits, or todo management |
-| `/maxsim:debug [desc]` | Systematic debugging with persistent state |
-| `/maxsim:settings` | Configure model profile and workflow toggles |
-| `/maxsim:help` | Show command reference |
+All work flows through a `.planning/` directory containing structured markdown files — `PROJECT.md`, `ROADMAP.md`, `STATE.md`, `REQUIREMENTS.md`, and more. The spec is the single source of truth; agents read from and write back to it throughout the development lifecycle.
 
-Every command is **idempotent** — you can re-run it and it picks up where you left off. No work gets lost.
+### 4 Specialized Agents
+
+MAXSIM ships with four purpose-built agents: **executor** (implements plans), **planner** (creates plans), **researcher** (investigates technical questions), and **verifier** (validates completed work). Consolidated from 14 agents in v5.0, each agent is scoped to a single responsibility.
+
+### 4 Model Profiles
+
+Choose a model profile to control cost and quality across all agent types: **quality**, **balanced** (default), **budget**, and **tokenburner**. Each profile maps the five agent types (executor, planner, researcher, verifier, debugger) to an appropriate Claude model tier (Opus, Sonnet, or Haiku).
+
+### GitHub Issues Integration
+
+GitHub Issues is the single source of truth for phase and plan tracking. MAXSIM automatically creates issues, links sub-issues, and maintains a 4-column project board (To Do, In Progress, In Review, Done) that mirrors the state of your `.planning/` directory.
+
+### Wave-Based Parallel Execution
+
+Plans within a phase can execute concurrently using git worktrees and Claude Code Agent Teams. MAXSIM groups plans into dependency-ordered waves, running each wave in parallel to reduce total execution time.
+
+### 21 Built-in Skills
+
+Skills are reusable prompt modules loaded by agents on demand. The 21 built-in skills cover test-driven development, debugging, code review, brainstorming, and more — each delivered as a self-contained markdown file.
+
+### 23 Workflows
+
+Workflows are step-by-step markdown processes for every stage of the lifecycle: init, planning, execution, verification, and more. All 23 workflows are available out of the box and can be extended or overridden per project.
+
+### Configurable Review Gates
+
+Three review gates — `spec_review`, `code_review`, and `simplify_review` — can be enabled or disabled independently. Each gate supports a configurable retry limit before escalating or failing.
+
+### Phase Lifecycle
+
+Phases move through a defined lifecycle: **add → plan → execute → verify → complete → archive**. Decimal phase numbers (e.g., `3.1`) are supported for urgent work that must be inserted between existing phases without renumbering.
+
+### Drift Detection
+
+MAXSIM monitors the codebase against the spec — requirements, conventions, and no-gos — and surfaces divergence before it compounds. Drift reports are written to `.planning/` so the team has a clear record of what has deviated and why.
 
 ---
 
 ## Installation
 
+### Prerequisites
+
+- Node.js >= 22.0.0
+- Claude Code (Anthropic's CLI for Claude)
+- Git (for worktree-based parallel execution)
+- GitHub CLI (`gh`) — optional, for GitHub Issues integration
+
+### Install
+
 ```bash
 npx maxsimcli@latest
 ```
 
-Installs locally into your project's `.claude/` directory. This sets up:
+Run this command from your project root. MAXSIM installs into your project's `.claude/` directory.
 
-- **9 commands** → `.claude/commands/maxsim/`
-- **4 agents** → `.claude/agents/`
-- **19 skills** → `.claude/skills/`
-- **26 workflows** → `.claude/maxsim/workflows/`
-- **3 hooks** → `.claude/hooks/`
-- **MCP server** → `.claude/maxsim/bin/mcp-server.cjs`
+### CLI Flags
 
-Verify with: `/maxsim:help`
+| Flag | Alias | Description |
+|------|-------|-------------|
+| `--local` | `-l` | Install to current project (default) |
+| `--uninstall` | `-u` | Remove all MAXSIM files |
+| `--config-dir <path>` | `-c` | Custom target directory name |
+| `--force-statusline` | | Replace existing statusline config |
+| `--help` | `-h` | Show usage |
+| `--version` | | Print version |
 
-Subsequent runs of `npx maxsimcli@latest` perform an incremental update — your local modifications are preserved via patch backup.
-
-<details>
-<summary><strong>Non-interactive Install (Docker, CI, Scripts)</strong></summary>
+### Skill Management Subcommands
 
 ```bash
-npx maxsimcli --local     # Project-scoped install → ./.claude/
+npx maxsimcli skill-list                # List installed skills
+npx maxsimcli skill-install <name>      # Install a skill
+npx maxsimcli skill-update [name]       # Update one or all skills
 ```
 
-</details>
+### What Gets Installed
 
-**Requirements:** Node.js >= 22, `gh` CLI (for GitHub Issues integration)
+The installer copies files into your project's `.claude/` directory:
+
+- **9 slash commands** (`/maxsim:init`, `/maxsim:plan`, etc.)
+- **4 agent definitions** (executor, planner, researcher, verifier)
+- **21 built-in skills** (TDD, debugging, code review, etc.)
+- **23 workflow files** (step-by-step processes for agents)
+- **14 reference documents**
+- **2 rules files** (conventions, verification protocol)
+- **5 hooks** (statusline, update checker, sounds)
+- **1 tool binary** (`maxsim-tools.cjs`)
+
+### Installed Directory Structure
+
+```
+.claude/
+├── commands/maxsim/          # 9 slash command definitions
+├── maxsim/
+│   ├── bin/maxsim-tools.cjs  # Internal tool binary
+│   ├── workflows/            # 23 workflow files
+│   ├── templates/            # Planning document templates
+│   ├── references/           # 14 reference documents
+│   ├── VERSION               # Installed version
+│   └── CHANGELOG.md
+├── agents/                   # 4 agent definitions (maxsim-*.md)
+├── skills/                   # 21 skill directories
+├── rules/                    # 2 rules files
+├── hooks/                    # 5 hook scripts (.js)
+├── settings.json             # Hook + statusline configuration
+└── package.json              # {"type":"commonjs"}
+```
+
+### Upgrading
+
+Simply re-run `npx maxsimcli@latest`. The installer:
+
+- Backs up your current installation to `.claude/maxsim-backup/`
+- Preserves locally modified files to `.claude/maxsim-local-patches/`
+- Preserves custom (non-MAXSIM) skills and agents
+- Updates all MAXSIM files
+
+### Uninstall
+
+```bash
+npx maxsimcli --uninstall
+```
+
+This removes all MAXSIM-managed files from `.claude/`. Your own skills, agents, and other Claude Code configuration are left untouched.
 
 ---
 
-## Configuration
+## Commands
 
-Project settings live in `.planning/config.json`, created during `/maxsim:init` or editable via `/maxsim:settings`.
+| Command | Description |
+|---------|-------------|
+| `/maxsim:init` | Initialize a new MAXSIM project or onboard an existing codebase |
+| `/maxsim:plan <phase>` | Research, discuss, and create plans for a phase |
+| `/maxsim:execute <phase>` | Execute plans for a phase (serial or parallel) |
+| `/maxsim:go <phase>` | Shortcut: plan + execute in one command |
+| `/maxsim:quick <description>` | Run a quick ad-hoc task outside the phase system |
+| `/maxsim:progress` | Show project progress overview |
+| `/maxsim:debug` | Start a debug session for investigating issues |
+| `/maxsim:settings` | View and modify MAXSIM configuration |
+| `/maxsim:help` | Show available commands and usage |
 
-```json
-{
-  "model_profile": "balanced",
-  "branching_strategy": "none",
-  "commit_docs": true,
-  "search_gitignored": false,
-  "parallelization": true,
-  "worktree_mode": "auto",
-  "max_parallel_agents": 10,
-  "brave_search": false,
-  "workflow": {
-    "research": true,
-    "plan_checker": true,
-    "verifier": true
-  },
-  "review": {
-    "spec_review": true,
-    "code_review": true,
-    "simplify_review": true,
-    "retry_limit": 3
-  }
-}
-```
+## Core Workflow
 
-| Key | Values | Default | Description |
-|-----|--------|---------|-------------|
-| `model_profile` | `quality` \| `balanced` \| `budget` \| `tokenburner` | `balanced` | Which models agents use |
-| `branching_strategy` | `none` \| `phase` \| `milestone` | `none` | Git branch creation per phase or milestone |
-| `commit_docs` | boolean | `true` | Commit documentation changes separately |
-| `parallelization` | boolean | `true` | Enable wave-based parallel plan execution |
-| `worktree_mode` | `auto` \| `always` \| `never` | `auto` | Git worktree isolation for parallel agents |
-| `workflow.research` | boolean | `true` | Enable research agent before planning |
-| `workflow.plan_checker` | boolean | `true` | Enable plan-checker verification before execution |
-| `workflow.verifier` | boolean | `true` | Enable verifier agent after execution |
-| `review.spec_review` | boolean | `true` | Spec compliance review after each plan |
-| `review.code_review` | boolean | `true` | Code quality review after each plan |
-| `review.simplify_review` | boolean | `true` | Simplification pass after reviews |
-| `review.retry_limit` | number | `3` | Max review cycle retries before escalation |
-| `brave_search` | boolean | `false` | Enable Brave Search API in research agents |
+MAXSIM structures development into phases that move through a defined lifecycle. The standard cycle has five stages:
 
-### Model Profiles
+**1. Initialize** — `/maxsim:init`
 
-4 profiles control which Claude model each agent type uses:
+Run once per project. Creates the `.planning/` directory and scaffolds the core planning files: `PROJECT.md`, `ROADMAP.md`, `STATE.md`, `REQUIREMENTS.md`, and `config.json`. Optionally sets up GitHub Issues integration so phase progress is tracked in your repository.
 
-| Agent | `quality` | `balanced` | `budget` | `tokenburner` |
-|-------|-----------|------------|----------|---------------|
-| Executor | Opus | Sonnet | Sonnet | Opus |
-| Planner | Opus | Opus | Sonnet | Opus |
-| Researcher | Opus | Sonnet | Haiku | Opus |
-| Verifier | Sonnet | Sonnet | Haiku | Opus |
+**2. Plan** — `/maxsim:plan <phase>`
 
-> `tokenburner` assigns Opus to every agent. Use it when cost is no concern and you want maximum quality end-to-end.
+Planning runs three sub-stages in sequence:
 
-Switch profiles at any time:
+- **Research** — A researcher agent inspects the codebase to understand the current state, relevant files, and constraints.
+- **Discuss** — Requirements are gathered through conversation, clarifying scope and acceptance criteria before any plans are written.
+- **Create** — A planner agent produces one or more structured plan files in `.planning/phases/<phase>/`, each containing tasks, dependencies, and verification criteria.
+
+**3. Execute** — `/maxsim:execute <phase>`
+
+An executor agent works through the phase plans. For each task it reads the plan, makes the required code changes, commits atomically, and runs the verification step before moving to the next task. On completion, it posts a summary to the linked GitHub Issue.
+
+Plans can be executed serially (one after another) or in parallel across multiple agents when tasks are independent.
+
+**4. Verify**
+
+A verifier agent validates that the phase is fully complete. It checks that every plan has a corresponding summary file, that expected artifacts exist, that requirements have documented evidence, and that the project passes its health checks. Any gaps are surfaced before the phase is closed.
+
+**5. Complete**
+
+The phase is marked done, overall project progress is updated, and the phase can be archived as part of the milestone record. The next phase in the roadmap becomes active.
+
+---
+
+For a combined plan-then-execute flow, use `/maxsim:go <phase>`. For work that does not fit a phase — a quick fix, a one-off investigation, an isolated change — use `/maxsim:quick <description>` to run an ad-hoc task without touching the planning system.
+
+## Phase Lifecycle
+
+Every phase moves through the following states:
 
 ```
-/maxsim:settings
+empty → discussed → researched → planned → partial → complete
 ```
 
-You can also override individual agents in `config.json`:
+| State | Meaning |
+|-------|---------|
+| `empty` | Phase directory exists but no work has started |
+| `discussed` | Requirements have been gathered |
+| `researched` | Codebase research is complete |
+| `planned` | One or more plan files have been written |
+| `partial` | Execution has started but not all plans are done |
+| `complete` | All plans executed and verified |
 
-```json
-{
-  "model_profile": "balanced",
-  "model_overrides": {
-    "planner": "opus",
-    "executor": "opus"
-  }
-}
-```
+Phase numbers are flexible. MAXSIM supports integer phases (`01`, `02`), letter suffixes for parallel tracks (`02A`, `02B`), and decimal insertions for phases added between existing ones (`02.1`).
 
 ---
 
 ## Agents
 
-4 consolidated generic agents, each spawned with fresh context and a single responsibility:
+MAXSIM uses 4 specialized Claude Code agents, each with a distinct role:
 
-| Agent | Role | Replaces (v4.x) |
-|-------|------|------------------|
-| `executor` | Implements plans with atomic commits and deviation handling | maxsim-executor |
-| `planner` | Creates PLAN.md files with task breakdown and goal-backward verification | maxsim-planner, maxsim-roadmapper, maxsim-plan-checker |
-| `researcher` | Investigates domains with source evaluation and confidence levels | maxsim-phase-researcher, maxsim-project-researcher, maxsim-research-synthesizer, maxsim-codebase-mapper |
-| `verifier` | Verifies work against specs with fresh evidence and hard gates | maxsim-verifier, maxsim-code-reviewer, maxsim-spec-reviewer, maxsim-debugger, maxsim-integration-checker, maxsim-drift-checker |
+| Agent | Role | Description |
+|-------|------|-------------|
+| **Executor** | Implements plans | Reads structured plans, makes code changes with atomic commits, handles deviations, runs verification per task |
+| **Planner** | Creates plans | Transforms research and context into structured PLAN.md files with YAML frontmatter, tasks, waves, and dependencies |
+| **Researcher** | Investigates | Explores the codebase and gathers technical context before planning. Can use Brave Search API for web research. |
+| **Verifier** | Validates work | Verifies phase completion: plan structure, artifact existence, requirement evidence, commit validity, project health |
 
-Agents communicate through structured handoff contracts. The orchestrator (your main Claude Code session) carries specialization context — agents themselves are generic. Subagents cannot spawn other subagents; all coordination is orchestrator-mediated.
+Each agent is a markdown file installed at `.claude/agents/maxsim-{name}.md` with YAML frontmatter specifying tools, model tier, and preloaded skills.
+
+A 5th agent type, **Debugger**, exists in the model profile system for debug sessions but does not have a standalone agent definition file.
+
+### Model Profiles
+
+The `model_profile` setting in `.planning/config.json` controls which Claude model tier each agent type uses:
+
+| Agent Type | `quality` | `balanced` (default) | `budget` | `tokenburner` |
+|------------|-----------|---------------------|----------|---------------|
+| executor | opus | sonnet | sonnet | opus |
+| planner | opus | opus | sonnet | opus |
+| researcher | opus | sonnet | haiku | opus |
+| verifier | sonnet | sonnet | haiku | opus |
+| debugger | sonnet | sonnet | haiku | opus |
+
+- **`opus`** maps to `inherit` — uses the Claude Code session model (typically Opus)
+- **`sonnet`** and **`haiku`** are passed directly to subagent invocations
+
+### Per-Agent Overrides
+
+Override individual agent models regardless of profile:
+
+```json
+{
+  "model_profile": "balanced",
+  "model_overrides": {
+    "executor": "opus",
+    "researcher": "haiku"
+  }
+}
+```
+
+---
+
+## GitHub Integration
+
+MAXSIM uses GitHub Issues as the **single source of truth** for phase and plan tracking. Local `.planning/` files store project-level documents (roadmap, state, config), while execution progress lives in GitHub.
+
+### Prerequisites
+- GitHub CLI (`gh`) installed and authenticated (`gh auth login`)
+- Repository hosted on GitHub
+
+### Setup
+GitHub integration is configured during `/maxsim:init`. The setup process:
+1. Creates a "MAXSIM Task Board" project (4 columns: To Do, In Progress, In Review, Done)
+2. Creates labels: `phase` (purple), `task` (blue), `blocker` (red)
+3. Optionally creates a GitHub Milestone
+
+### How It Works
+- Each **phase** gets a tracking issue (labeled `phase`, title: `[Phase 01] Phase Name`)
+- Each **plan/task** becomes a sub-issue linked to its phase issue
+- Plan content is posted as structured comments on phase issues
+- Completion data (commit SHA, files changed) is posted to task issues
+- Progress is computed from open/closed sub-issue counts
+
+### Local Mapping Cache
+A `.planning/github-issues.json` file caches the mapping between phase numbers and GitHub issue numbers. This is a performance cache — the system can rebuild it from GitHub at any time.
+
+### Key Commands (internal tool binary)
+The following `github` subcommands are available through the tools binary:
+
+| Subcommand | Description |
+|---|---|
+| `github setup` | One-shot: create board, labels, milestone |
+| `github create-phase` | Create a phase tracking issue |
+| `github create-task` / `batch-create-tasks` | Create task sub-issues |
+| `github move-issue` | Move issue between board columns |
+| `github status` | Combined dashboard: progress + board overview |
+| `github sync-check` | Verify local cache matches GitHub state |
+| `github all-progress` | Progress for all phases |
+
+---
+
+## Configuration
+
+MAXSIM configuration is stored in `.planning/config.json`. Created during `/maxsim:init` or via the `config-ensure-section` tool command.
+
+### Configuration Reference
+
+| Setting | Type | Default | Description |
+|---------|------|---------|-------------|
+| `model_profile` | `'quality' \| 'balanced' \| 'budget' \| 'tokenburner'` | `'balanced'` | Model tier preset for all agent types |
+| `model_overrides` | `Record<AgentType, ModelTier>` | — | Per-agent model overrides |
+| `commit_docs` | `boolean` | `true` | Auto-commit `.planning/` changes to git |
+| `search_gitignored` | `boolean` | `false` | Include gitignored files in codebase mapping |
+| `branching_strategy` | `'none' \| 'phase' \| 'milestone'` | `'none'` | Git branching strategy |
+| `phase_branch_template` | `string` | `'maxsim/phase-{phase}-{slug}'` | Branch name template for phases |
+| `milestone_branch_template` | `string` | `'maxsim/{milestone}-{slug}'` | Branch name template for milestones |
+| `workflow.research` | `boolean` | `true` | Enable research phase in planning |
+| `workflow.plan_checker` | `boolean` | `true` | Enable plan checker agent |
+| `workflow.verifier` | `boolean` | `true` | Enable verifier agent post-execution |
+| `parallelization` | `boolean` | `true` | Enable parallel plan execution |
+| `worktree_mode` | `'auto' \| 'always' \| 'never'` | `'auto'` | When to use git worktrees |
+| `max_parallel_agents` | `number` | `10` | Max concurrent parallel agents |
+| `brave_search` | `boolean` | `false` | Enable Brave Search for researcher agents |
+| `review.spec_review` | `boolean` | `true` | Enable spec review gate |
+| `review.code_review` | `boolean` | `true` | Enable code review gate |
+| `review.simplify_review` | `boolean` | `true` | Enable simplification review gate |
+| `review.retry_limit` | `number` | `3` | Max review gate retry attempts |
+
+### User-Level Defaults
+
+Place global defaults at `~/.maxsim/defaults.json`. These are merged with hardcoded defaults when a new `.planning/config.json` is created. They do NOT override existing project configs.
+
+### Environment Variables
+
+| Variable | Purpose |
+|----------|---------|
+| `BRAVE_API_KEY` | Brave Search API key (also: `~/.maxsim/brave_api_key` file) |
+| `MAXSIM_DEBUG` | Enable verbose debug logging to stderr |
+| `MAXSIM_SOUND=0` | Disable notification sounds |
+| `CI=true` | Suppress sounds in CI |
+| `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` | Enable Agent Teams for parallel execution |
 
 ---
 
 ## Skills
 
-19 built-in skills provide on-demand context to agents. Skills auto-trigger based on context — they're not optional guidelines, they're active workflow enforcement.
+Skills are reusable markdown prompt modules that agents load on demand. Each skill is a `SKILL.md` file with YAML frontmatter (`name`, `description`) and a markdown body containing methodology, protocols, or reference information.
 
-### Protocol Skills
-| Skill | Description |
-|-------|-------------|
-| `handoff-contract` | Structured format for agent returns |
-| `verification-gates` | Hard gates with evidence requirements |
-| `input-validation` | Input validation patterns |
+### Built-in Skills (21)
 
-### Methodology Skills
-| Skill | Description |
-|-------|-------------|
-| `evidence-collection` | How to gather and validate evidence |
-| `research-methodology` | How to research effectively |
-| `sdd` | Spec-driven development — fresh agent per task |
-| `tdd` | Test-driven development — failing test before implementation |
-| `systematic-debugging` | Reproduce → hypothesize → isolate → verify → fix |
-| `brainstorming` | Multi-approach exploration before design decisions |
-| `code-review` | Security, interfaces, error handling, test coverage |
-| `verification-before-completion` | 5-step verification with evidence requirements |
+| Skill | Category | Description |
+|-------|----------|-------------|
+| `tdd` | Task | Test-driven development: Red-Green-Refactor cycle |
+| `systematic-debugging` | Methodology | Root-cause analysis: reproduce, hypothesize, isolate, verify, fix |
+| `verification-before-completion` | Methodology | Requires evidence before claiming work is done |
+| `maxsim-simplify` | Task | Maintainability pass: finds duplication, dead code, complexity |
+| `code-review` | Task | Correctness gate: security, interfaces, error handling, coverage |
+| `memory-management` | Task | Persists patterns and decisions to project memory files |
+| `using-maxsim` | Task | Routes work through MAXSIM's spec-driven workflow |
+| `brainstorming` | Task | Explores multiple approaches before committing to a design |
+| `roadmap-writing` | Task | Creates structured project roadmaps with phased planning |
+| `sdd` | Task | Spec-driven development: sequential tasks with fresh context |
+| `maxsim-batch` | Task | Decomposes tasks for parallel worktree execution |
+| `agent-system-map` | Reference | Overview of the MAXSIM agent system |
+| `commit-conventions` | Convention | Conventional commit format and version trigger rules |
+| `evidence-collection` | Methodology | Structured evidence gathering for verification |
+| `github-artifact-protocol` | Reference | How to read/write GitHub Issue artifacts |
+| `github-tools-guide` | Reference | Guide to MAXSIM's GitHub CLI commands |
+| `handoff-contract` | Protocol | Agent-to-agent handoff protocol |
+| `input-validation` | Protocol | Input validation rules for agents |
+| `research-methodology` | Methodology | Structured research methodology for agents |
+| `tool-priority-guide` | Reference | Which tools to prefer for which tasks |
+| `verification-gates` | Protocol | Review gate protocol and pass/fail criteria |
 
-### Execution Skills
-| Skill | Description |
-|-------|-------------|
-| `maxsim-batch` | Parallel worktree execution for independent work units |
-| `maxsim-simplify` | Review changed code for reuse, quality, and efficiency |
-| `commit-conventions` | Project git commit standards |
+### Skill Types
 
-### Reference Skills
-| Skill | Description |
-|-------|-------------|
-| `agent-system-map` | Agent capabilities and tool mappings |
-| `tool-priority-guide` | Tool usage priority and best practices |
-| `memory-management` | Persistent memory across sessions |
-| `roadmap-writing` | Guided roadmap and requirements authoring |
-| `using-maxsim` | Guide for effective MAXSIM usage |
+- **Protocol skills** (`user-invocable: false`): Loaded automatically by agents — handoff-contract, verification-gates, input-validation
+- **Methodology skills**: Evidence-collection, research-methodology, systematic-debugging, verification-before-completion
+- **Task skills**: User-invocable workflows like TDD, code review, brainstorming
+- **Reference skills**: Static reference information for agents
+
+### Managing Skills
+
+```bash
+npx maxsimcli skill-list              # List installed skills
+npx maxsimcli skill-install <name>    # Install a specific skill
+npx maxsimcli skill-update [name]     # Update one or all skills
+```
+
+Built-in skills are updated on `npx maxsimcli` upgrades. Custom skills (placed manually in `.claude/skills/`) are preserved during upgrades.
+
+---
+
+## Parallel Execution
+
+MAXSIM can execute multiple plans simultaneously using git worktrees, with each plan running in an isolated working directory.
+
+### How It Works
+1. Plans within a phase are assigned to **waves** (wave 1 runs first, wave 2 after wave 1 completes)
+2. Plans in the same wave can run in parallel if they don't share files
+3. Each parallel plan gets its own git worktree at `.maxsim-worktrees/{planId}/` on a branch `maxsim/worktree-{phase}-{planId}`
+4. After completion, worktrees are cleaned up automatically
+
+### Execution Mode Decision
+In `auto` mode (default), parallel execution activates when:
+- There is exactly **one wave** with **more than 2 plans**
+- `parallelization` is `true` in config
+
+Manual control:
+- `worktree_mode: 'always'` — always use worktrees
+- `worktree_mode: 'never'` — always run sequentially
+- `max_parallel_agents` — cap on concurrent agents (default: 10)
+
+### Prerequisites
+- `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` environment variable set
+- Git repository (for worktree support)
+
+### Plan Independence Validation
+Before parallel execution, MAXSIM validates that plans don't modify the same files. Conflicts are flagged and execution falls back to sequential mode.
 
 ---
 
 ## Hook System
 
-3 compiled hooks installed into Claude Code:
+MAXSIM installs 5 Claude Code hooks that enhance the development experience:
 
-| Hook | Function |
-|------|----------|
-| `maxsim-statusline` | Status bar: model · task · directory · context usage bar (blinks red above 95%) |
-| `maxsim-sync-reminder` | Prompts to sync when `.planning/` files change (PostToolUse hook) |
-| `maxsim-check-update` | Periodic npm update check with automatic backup before updating |
+| Hook | Event | Description |
+|------|-------|-------------|
+| `maxsim-statusline` | `statusLine` | Shows model tier, phase number, board column, milestone progress in the terminal status bar |
+| `maxsim-check-update` | `SessionStart` | Background check for new MAXSIM versions on npm; shows update indicator in statusline |
+| `maxsim-notification-sound` | `PostToolUse` (AskUserQuestion) | Plays a system sound when Claude asks a question |
+| `maxsim-stop-sound` | `Stop` | Plays a sound when Claude finishes working |
+| `maxsim-sync-reminder` | `PostToolUse` (Write\|Edit) | No-op stub (retained for structural reasons after GitHub Issues migration) |
+
+### Statusline Format
+```
+[update] model | P{N} {BoardColumn} | milestone: pct% | dirname
+```
+
+### Sound Control
+Sounds are suppressed when:
+- `MAXSIM_SOUND=0`
+- `CI=true`
+- `SSH_CONNECTION` is set
+
+Platform sounds: Windows (`.wav` via PowerShell), macOS (`.aiff` via `afplay`), Linux (terminal bell).
 
 ---
 
-## MCP Server
+## Architecture
 
-MAXSIM installs an MCP (Model Context Protocol) server that exposes project tools directly to Claude Code. The server is auto-configured during installation via `.mcp.json`.
+### Monorepo Structure
 
-**Exposed tools:**
-- **Phase operations** — list, add, complete, insert, and remove phases
-- **State management** — read/update STATE.md (decisions, blockers, metrics)
-- **Todo operations** — create, list, and complete todos
-- **Roadmap analysis** — phase status, progress calculation, missing details
-- **Context loading** — intelligent file selection based on task topic
-- **Config management** — read/write `.planning/config.json` settings
-- **GitHub integration** — issue creation, board queries, status tracking
-
-The MCP server runs as a stdio process managed by Claude Code — no manual startup needed.
-
----
-
-## Project Structure
-
-When you initialize a project, MAXSIM creates a `.planning/` directory:
+MAXSIM is developed as an npm workspaces monorepo with two packages:
 
 ```
-.planning/
-├── config.json           # Model profile, workflow flags, branching strategy
-├── PROJECT.md            # Vision and scope (always loaded)
-├── REQUIREMENTS.md       # v1/v2/out-of-scope requirements
-├── ROADMAP.md            # Phase structure with goals and dependencies
-├── STATE.md              # Memory: decisions, blockers, metrics, session history
-├── phases/
-│   └── 01-Foundation/
-│       ├── 01-CONTEXT.md        # User decisions from discussion
-│       ├── 01-RESEARCH.md       # Research findings
-│       ├── 01-01-PLAN.md        # Task plan (numbered per attempt)
-│       ├── 01-01-SUMMARY.md     # Completion record with evidence
-│       ├── 01-VERIFICATION.md   # Verification results
-│       └── 01-UAT.md            # User acceptance tests
-└── todos/
-    ├── pending/
-    └── completed/
+maxsim/
+├── packages/
+│   ├── cli/          # maxsimcli — the published npm package
+│   └── website/      # maxsimcli.dev — project website (private)
+├── templates/        # Markdown asset templates (copied into dist during build)
+└── package.json      # Workspace root
 ```
 
----
+Only `packages/cli` is published to npm as `maxsimcli`.
 
-## Architecture (For Contributors)
+### Build Pipeline
 
-MAXSIM is a three-layer system where commands are markdown prompts, not executable code:
-
-```
-templates/commands/maxsim/*.md  ← User-facing commands (9 files, user types /maxsim:*)
-templates/workflows/*.md        ← Implementation workflows (26 files, loaded via @path)
-templates/agents/*.md           ← Subagent prompts (4 agents)
-templates/skills/*/             ← On-demand context modules (19 skills)
+```bash
+npm run build        # tsdown (CJS) → copy-assets → dist/
+npm test             # Vitest unit tests
+npm run e2e          # Vitest e2e tests
+npm run lint         # Biome check
 ```
 
-Commands load workflows which spawn agents. Agents call `cli.cjs` (the tools router) via the Bash tool. The "runtime" for MAXSIM is the AI itself.
-
-The npm package (`maxsimcli`) ships all of this as an installer that copies files into `.claude/`. If you want to improve a workflow or add a command, you're editing markdown.
-
-**Tech stack:** TypeScript 5.9, Node.js 22+, npm workspaces monorepo, tsdown bundler
-
-See [CLAUDE.md](CLAUDE.md) for the full architecture guide.
-
----
+- **tsdown** compiles TypeScript to CJS (`dist/install.cjs`)
+- **copy-assets** bundles templates, workflows, agents, skills, hooks, and references into `dist/assets/`
+- **semantic-release** automates versioning and npm publish on push to `main`
 
 ## Contributing
 
-MAXSIM is open source and contributions are welcome.
+MAXSIM uses [conventional commits](https://www.conventionalcommits.org/). See [CONTRIBUTING.md](CONTRIBUTING.md) for details.
 
-- **Bug reports:** [Open an issue](https://github.com/maystudios/maxsimcli/issues)
-- **Feature requests:** [Start a discussion](https://github.com/maystudios/maxsimcli/discussions)
-- **PRs:** Fork, branch, and open a pull request — see [CLAUDE.md](CLAUDE.md) for architecture overview
-
----
-
-## Acknowledgments
-
-Inspired by [GSD (Get Shit Done)](https://github.com/gsd-build/get-shit-done).
+- `fix:` → patch release
+- `feat:` → minor release
+- `feat!:` or `BREAKING CHANGE:` → major release
 
 ## License
 
-MIT License. See [LICENSE](LICENSE) for details.
-
----
-
-<div align="center">
-
-**Built and maintained by [MayStudios](https://github.com/maystudios).**
-
-</div>
+[MIT](LICENSE)
