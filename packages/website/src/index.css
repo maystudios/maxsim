@@ -53,10 +53,10 @@ body {
 
 @keyframes marquee {
   from { transform: translateX(0); }
-  to   { transform: translateX(-33.333%); }
+  to   { transform: translateX(-12.5%); }
 }
 @keyframes marquee-reverse {
-  from { transform: translateX(-33.333%); }
+  from { transform: translateX(-12.5%); }
   to   { transform: translateX(0); }
 }
 

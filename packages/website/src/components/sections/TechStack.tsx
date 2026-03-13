@@ -28,8 +28,8 @@ const toolchainStack = [
   { name: "npm workspaces", Icon: FolderGit2 },
 ];
 
-const commandMarquee = [...commandLayer, ...commandLayer, ...commandLayer];
-const toolchainMarquee = [...toolchainStack, ...toolchainStack, ...toolchainStack];
+const commandMarquee = Array.from({ length: 8 }, () => commandLayer).flat();
+const toolchainMarquee = Array.from({ length: 8 }, () => toolchainStack).flat();
 
 function Badge({ name, Icon }: { name: string; Icon: ElementType }) {
   return (

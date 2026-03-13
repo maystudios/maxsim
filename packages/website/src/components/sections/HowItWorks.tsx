@@ -55,7 +55,7 @@ export function HowItWorks() {
         <div className="relative">
           {/* Animated gradient timeline line */}
           <motion.div
-            className="absolute left-[19px] top-10 bottom-10 w-px"
+            className="absolute left-[20px] top-10 bottom-10 w-px"
             style={{
               background: "linear-gradient(to bottom, var(--color-accent), var(--color-border))",
             }}
@@ -86,13 +86,13 @@ export function HowItWorks() {
                 </div>
 
                 {/* Horizontal connector line from timeline to card */}
-                <div className="absolute left-[39px] top-[20px] w-[17px] h-px bg-gradient-to-r from-border to-accent/30 hidden md:block" />
+                <div className="absolute left-[40px] top-[20px] w-[17px] h-px bg-gradient-to-r from-border to-accent/30 hidden md:block" />
 
                 {/* Step card */}
                 <div className="relative flex-1">
                   <div className="relative bg-surface border border-border rounded-lg p-6 overflow-hidden">
                     {/* Large watermark step number */}
-                    <span className="absolute -right-2 -top-4 text-7xl font-bold font-mono text-accent/10 select-none pointer-events-none leading-none">
+                    <span className="absolute right-2 top-2 text-7xl font-bold font-mono text-accent/10 select-none pointer-events-none leading-none">
                       {step.number}
                     </span>
 
