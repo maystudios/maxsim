@@ -262,12 +262,13 @@ export default function Hero() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.6 }}
             >
-              <a
+              <MovingBorderButton
                 href="#docs"
-                className="inline-flex items-center justify-center px-8 py-3.5 rounded-md bg-accent text-white font-semibold text-sm tracking-wide hover:bg-accent-light transition-colors duration-200 shadow-[0_0_20px_rgba(59,130,246,0.3)]"
+                className="rounded-md shadow-[0_0_20px_rgba(59,130,246,0.3)]"
+                innerClassName="px-8 py-3.5 text-sm font-semibold tracking-wide bg-accent text-white group-hover:text-white"
               >
                 Get Started
-              </a>
+              </MovingBorderButton>
               <MovingBorderButton
                 href="https://github.com/maystudios/maxsimcli"
                 target="_blank"
