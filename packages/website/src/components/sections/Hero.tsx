@@ -237,7 +237,7 @@ export default function Hero() {
                   backgroundImage: "linear-gradient(to bottom, #ffffff 30%, #3b82f6 100%)",
                 }}
               >
-                MAXSIM
+                MaxsimCLI
               </h1>
               <p className="text-xl sm:text-2xl md:text-3xl font-semibold text-muted leading-tight mt-2">
                 AI-Powered Context{" "}

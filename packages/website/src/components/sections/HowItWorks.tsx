@@ -4,13 +4,13 @@ const steps = [
   {
     number: "01",
     title: "Install",
-    description: "Run a single command to install MAXSIM into your AI runtime. Commands, workflows, and agents are placed into your config directories.",
+    description: "Run a single command to install MaxsimCLI into your AI runtime. Commands, workflows, and agents are placed into your config directories.",
     code: "npx maxsimcli@latest",
   },
   {
     number: "02",
     title: "Initialize",
-    description: "Start a new project with deep context gathering. MAXSIM creates PROJECT.md, REQUIREMENTS.md, and a phased ROADMAP.md.",
+    description: "Start a new project with deep context gathering. MaxsimCLI creates PROJECT.md, REQUIREMENTS.md, and a phased ROADMAP.md.",
     code: "/maxsim:init",
   },
   {

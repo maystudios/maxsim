@@ -148,7 +148,7 @@ export default function Navbar() {
           className="text-lg font-bold tracking-tight text-foreground flex items-center"
         >
           <span className="text-accent font-mono">/</span>
-          <span>MAXSIM</span>
+          <span>MaxsimCLI</span>
         </a>
 
         {/* Desktop Nav */}

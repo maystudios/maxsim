@@ -4,7 +4,7 @@ title: Workflow Toggles
 group: Configuration
 ---
 
-MAXSIM's workflow includes optional agents and review steps you can disable to trade thoroughness for speed. These are configured under the `workflow` and `review` objects in config.json.
+MaxsimCLI's workflow includes optional agents and review steps you can disable to trade thoroughness for speed. These are configured under the `workflow` and `review` objects in config.json.
 
 {% doctable headers=["Toggle", "Agent/Step", "Cost when enabled", "When to disable"] rows=[["workflow.research", "researcher", "1-3 min + tokens", "Small phases, already-researched domains"], ["workflow.plan_checker", "planner (review pass)", "1-2 min + tokens", "Simple plans, rapid iteration"], ["workflow.verifier", "verifier", "2-5 min + tokens", "Speed runs, trusted executors"], ["parallelization", "Concurrent agents", "Varies by wave count", "Sequential debugging, cost control"], ["brave_search", "Web search in researcher", "Per-search API cost", "Offline, cost control"]] %}
 {% /doctable %}

@@ -4,7 +4,7 @@ title: Quick Tasks
 group: Advanced
 ---
 
-`/maxsim:quick` is MAXSIM's escape hatch for ad-hoc work. It runs a single executor with atomic commits and state tracking, but skips the researcher, plan-checker, and verifier agents. Use it for tasks that don't warrant a full phase: small bug fixes, one-off scripts, quick UI tweaks.
+`/maxsim:quick` is MaxsimCLI's escape hatch for ad-hoc work. It runs a single executor with atomic commits and state tracking, but skips the researcher, plan-checker, and verifier agents. Use it for tasks that don't warrant a full phase: small bug fixes, one-off scripts, quick UI tweaks.
 
 {% codeblock language="bash" %}
 # Quick task — minimal agents, fast execution

@@ -13,7 +13,7 @@ Gap closure is handled as part of the execute workflow. After verification ident
 /maxsim:execute
 {% /codeblock %}
 
-The execute workflow detects which plans still need completion and runs only those. You do not need to specify individual fix phases — MAXSIM figures it out from the filesystem by checking which plans lack a SUMMARY.md.
+The execute workflow detects which plans still need completion and runs only those. You do not need to specify individual fix phases — MaxsimCLI figures it out from the filesystem by checking which plans lack a SUMMARY.md.
 
 After closing all gaps, verification re-runs automatically as part of execution to confirm the fixes. The phase is marked complete only when a verification pass finds no broken items.
 

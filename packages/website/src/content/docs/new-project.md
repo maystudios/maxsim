@@ -4,13 +4,13 @@ title: Initialize Project
 group: Workflow
 ---
 
-`/maxsim:init` is the unified entry point for setting up MAXSIM in any project. It acts as a router that detects your project's current state and dispatches to the right workflow: new project setup, existing project onboarding, or milestone lifecycle management.
+`/maxsim:init` is the unified entry point for setting up MaxsimCLI in any project. It acts as a router that detects your project's current state and dispatches to the right workflow: new project setup, existing project onboarding, or milestone lifecycle management.
 
 {% codeblock language="bash" %}
 /maxsim:init
 {% /codeblock %}
 
-When you run `/maxsim:init`, MAXSIM inspects the project directory to determine what to do:
+When you run `/maxsim:init`, MaxsimCLI inspects the project directory to determine what to do:
 
 - **No `.planning/` directory** — starts the new-project workflow. Runs an interactive session that asks about your project vision, constraints, non-goals, and target users. Spawns a project researcher and roadmapper to create PROJECT.md, REQUIREMENTS.md, ROADMAP.md, and STATE.md.
 - **Existing codebase without `.planning/`** — starts the init-existing workflow. Analyzes the existing code, infers architecture and conventions, then creates .planning/ artifacts that reflect the project's current state.

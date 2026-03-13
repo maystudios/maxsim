@@ -6,10 +6,10 @@ group: Introduction
 
 The fastest way to start is `/maxsim:go` — it auto-detects where your project is in the workflow and does the right thing. For a new project, it walks you through initialization. For an existing project, it picks up where you left off.
 
-The core MAXSIM workflow follows five steps. Each step is a slash command that spawns one or more focused subagents with fresh context.
+The core MaxsimCLI workflow follows five steps. Each step is a slash command that spawns one or more focused subagents with fresh context.
 
 {% codeblock language="bash" %}
-# 0. Let MAXSIM figure out what to do next
+# 0. Let MaxsimCLI figure out what to do next
 /maxsim:go
 
 # 1. Initialize project — creates .planning/ with vision, requirements, roadmap

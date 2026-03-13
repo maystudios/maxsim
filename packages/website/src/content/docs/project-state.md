@@ -4,7 +4,7 @@ title: Project State
 group: Core Concepts
 ---
 
-STATE.md is MAXSIM's cross-session memory. Every executor agent writes to it after completing tasks. Every orchestrator reads it before starting a new session. It answers the question: "where are we and why did we make the decisions we made?"
+STATE.md is MaxsimCLI's cross-session memory. Every executor agent writes to it after completing tasks. Every orchestrator reads it before starting a new session. It answers the question: "where are we and why did we make the decisions we made?"
 
 STATE.md tracks four categories of information: decisions (architectural choices and the reasoning behind them), blockers (unresolved issues that need human input), performance metrics (task counts, duration, file counts per plan), and session bookmarks (which plan was last active, what the next action is).
 
@@ -30,4 +30,4 @@ STATE.md tracks four categories of information: decisions (architectural choices
 | 01    | 01   | 8     | 23    | 45m      |
 {% /codeblock %}
 
-You can edit STATE.md directly, or let MAXSIM's agents manage it. The `/maxsim:resume-work` command reads STATE.md to restore full context in a new session.
+You can edit STATE.md directly, or let MaxsimCLI's agents manage it. The `/maxsim:resume-work` command reads STATE.md to restore full context in a new session.

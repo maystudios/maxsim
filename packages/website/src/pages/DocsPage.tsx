@@ -212,7 +212,7 @@ function DocsNavbar({
             onClick={handleHome}
             className="text-base font-bold tracking-tight text-zinc-100"
           >
-            MAXSIM
+            MaxsimCLI
           </a>
           <ChevronRight size={14} className="text-zinc-600" />
           <span className="text-sm text-zinc-500">Docs</span>
@@ -321,23 +321,23 @@ export default function DocsPage() {
   return (
     <>
       <Helmet>
-        <title>Documentation — MAXSIM</title>
+        <title>Documentation — MaxsimCLI</title>
         <meta
           name="description"
-          content="Complete documentation for MAXSIM: installation, commands, workflows, phases, milestones, and the planning directory structure. Get started with AI-powered spec-driven development."
+          content="Complete documentation for MaxsimCLI: installation, commands, workflows, phases, milestones, and the planning directory structure. Get started with AI-powered spec-driven development."
         />
         <link rel="canonical" href="https://maxsimcli.dev/docs" />
         <meta property="og:url" content="https://maxsimcli.dev/docs" />
-        <meta property="og:title" content="Documentation — MAXSIM" />
+        <meta property="og:title" content="Documentation — MaxsimCLI" />
         <meta
           property="og:description"
-          content="Complete documentation for MAXSIM: installation, commands, workflows, phases, milestones, and the planning directory structure."
+          content="Complete documentation for MaxsimCLI: installation, commands, workflows, phases, milestones, and the planning directory structure."
         />
         <meta name="twitter:url" content="https://maxsimcli.dev/docs" />
-        <meta name="twitter:title" content="Documentation — MAXSIM" />
+        <meta name="twitter:title" content="Documentation — MaxsimCLI" />
         <meta
           name="twitter:description"
-          content="Complete documentation for MAXSIM: installation, commands, workflows, phases, milestones, and the planning directory structure."
+          content="Complete documentation for MaxsimCLI: installation, commands, workflows, phases, milestones, and the planning directory structure."
         />
       </Helmet>
       <div className="min-h-screen bg-[#09090b] text-zinc-100 font-sans antialiased">

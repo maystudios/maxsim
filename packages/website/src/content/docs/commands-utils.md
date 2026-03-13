@@ -6,7 +6,7 @@ group: Commands Reference
 
 ### `/maxsim:settings`
 
-View or modify MAXSIM configuration interactively. Settings include model profile, branching strategy, workflow toggles, and other project-level options.
+View or modify MaxsimCLI configuration interactively. Settings include model profile, branching strategy, workflow toggles, and other project-level options.
 
 {% codeblock language="bash" %}
 /maxsim:settings
@@ -19,7 +19,7 @@ Available configuration options:
 
 ### `/maxsim:help`
 
-Show all available MAXSIM commands and their usage.
+Show all available MaxsimCLI commands and their usage.
 
 {% codeblock language="bash" %}
 /maxsim:help

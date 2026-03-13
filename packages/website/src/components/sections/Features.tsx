@@ -30,7 +30,7 @@ const features = [
     icon: Puzzle,
     title: "21 Skills & 23 Workflows",
     description:
-      "An extensible skill and workflow system that covers the full development lifecycle. Add your own skills and workflows to tailor MAXSIM to your project.",
+      "An extensible skill and workflow system that covers the full development lifecycle. Add your own skills and workflows to tailor MaxsimCLI to your project.",
   },
   {
     icon: Gauge,

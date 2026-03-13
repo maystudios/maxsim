@@ -37,15 +37,15 @@ export default function App() {
   return (
     <>
       <Helmet>
-        <title>MAXSIM — Meta-Prompting & Context Engineering for AI Coding Agents</title>
-        <meta name="description" content="MAXSIM is a spec-driven development system for Claude Code, OpenCode, Gemini CLI, and Codex. Solve context rot with fresh-context subagents and structured planning." />
+        <title>MaxsimCLI — Meta-Prompting & Context Engineering for AI Coding Agents</title>
+        <meta name="description" content="MaxsimCLI is a spec-driven development system for Claude Code, OpenCode, Gemini CLI, and Codex. Solve context rot with fresh-context subagents and structured planning." />
         <link rel="canonical" href="https://maxsimcli.dev/" />
         <meta property="og:url" content="https://maxsimcli.dev/" />
-        <meta property="og:title" content="MAXSIM — Meta-Prompting & Context Engineering for AI Coding Agents" />
-        <meta property="og:description" content="MAXSIM is a spec-driven development system for Claude Code, OpenCode, Gemini CLI, and Codex. Solve context rot with fresh-context subagents and structured planning." />
+        <meta property="og:title" content="MaxsimCLI — Meta-Prompting & Context Engineering for AI Coding Agents" />
+        <meta property="og:description" content="MaxsimCLI is a spec-driven development system for Claude Code, OpenCode, Gemini CLI, and Codex. Solve context rot with fresh-context subagents and structured planning." />
         <meta name="twitter:url" content="https://maxsimcli.dev/" />
-        <meta name="twitter:title" content="MAXSIM — Meta-Prompting & Context Engineering for AI Coding Agents" />
-        <meta name="twitter:description" content="MAXSIM is a spec-driven development system for Claude Code, OpenCode, Gemini CLI, and Codex. Solve context rot with fresh-context subagents and structured planning." />
+        <meta name="twitter:title" content="MaxsimCLI — Meta-Prompting & Context Engineering for AI Coding Agents" />
+        <meta name="twitter:description" content="MaxsimCLI is a spec-driven development system for Claude Code, OpenCode, Gemini CLI, and Codex. Solve context rot with fresh-context subagents and structured planning." />
       </Helmet>
       <main className="min-h-screen bg-background text-foreground font-sans antialiased">
         <Navbar />

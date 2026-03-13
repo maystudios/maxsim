@@ -177,7 +177,7 @@ function GettingStarted() {
       <div>
         <DocHeading>Installation</DocHeading>
         <DocText>
-          Requirements: Node.js &gt;= 22. MAXSIM installs markdown files into your
+          Requirements: Node.js &gt;= 22. MaxsimCLI installs markdown files into your
           AI runtime's config directories — no global binary needed.
         </DocText>
       </div>
@@ -193,7 +193,7 @@ function GettingStarted() {
       <div>
         <DocSubheading>What gets installed</DocSubheading>
         <DocText>
-          MAXSIM places commands, workflows, and agent definitions into your AI runtime's
+          MaxsimCLI places commands, workflows, and agent definitions into your AI runtime's
           config directory. For Claude Code that's ~/.claude/.
         </DocText>
         <CodeBlock
@@ -283,7 +283,7 @@ const commands: CommandDef[] = [
   {
     name: "settings",
     signature: "/maxsim:settings",
-    description: "View or modify MAXSIM configuration including model profile and workflow toggles.",
+    description: "View or modify MaxsimCLI configuration including model profile and workflow toggles.",
     example: `/maxsim:settings`,
   },
 ];
@@ -329,7 +329,7 @@ function Architecture() {
       <div>
         <DocHeading>Three-Layer Structure</DocHeading>
         <DocText>
-          MAXSIM commands are markdown prompts, not executable code. The "runtime" is the AI itself.
+          MaxsimCLI commands are markdown prompts, not executable code. The "runtime" is the AI itself.
           Commands load workflows which spawn agents.
         </DocText>
         <CodeBlock
@@ -343,7 +343,7 @@ agents/*.md                # Specialized subagent prompts (4 agents)`}
       <div>
         <DocSubheading>Data Structure in User Projects</DocSubheading>
         <DocText>
-          MAXSIM creates a .planning/ directory in user projects to track all state.
+          MaxsimCLI creates a .planning/ directory in user projects to track all state.
         </DocText>
         <CodeBlock
           language="text"
@@ -401,7 +401,7 @@ function Configuration() {
       <div>
         <DocHeading>.planning/config.json</DocHeading>
         <DocText>
-          Place config.json in your .planning/ directory to customize MAXSIM behavior.
+          Place config.json in your .planning/ directory to customize MaxsimCLI behavior.
           All values have sensible defaults.
         </DocText>
       </div>
@@ -479,7 +479,7 @@ function Agents() {
       <div>
         <DocHeading>Specialized Agents</DocHeading>
         <DocText>
-          MAXSIM spawns specialized subagents — each with fresh context and a single responsibility.
+          MaxsimCLI spawns specialized subagents — each with fresh context and a single responsibility.
           Agents are defined as markdown prompts in the agents/ directory.
         </DocText>
       </div>

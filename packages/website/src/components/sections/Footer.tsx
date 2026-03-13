@@ -157,7 +157,7 @@ export function Footer() {
           {/* Brand column — col-span-2 */}
           <div className="md:col-span-2 flex flex-col gap-5">
             <span className="font-mono font-bold tracking-tight text-foreground text-lg">
-              MAXSIM
+              MaxsimCLI
             </span>
 
             <p className="text-sm text-muted leading-relaxed max-w-sm">
@@ -251,7 +251,7 @@ export function Footer() {
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex flex-col gap-1.5">
             <p className="text-xs font-mono text-muted/60">
-              &copy; {new Date().getFullYear()} May Studios — Build with MAXSIM.
+              &copy; {new Date().getFullYear()} May Studios — Build with MaxsimCLI.
             </p>
             <p className="text-xs font-mono text-muted/40">
               by{" "}

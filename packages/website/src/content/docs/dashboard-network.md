@@ -28,7 +28,7 @@ Enable or disable each review type in `.claude/settings.json`:
 
 ### Retry limit
 
-When a review fails, the executor agent receives the feedback and attempts to fix the issues. The `retry_limit` controls how many times this fix-and-review cycle can repeat before MAXSIM stops and asks for human intervention. The default is 3 retries.
+When a review fails, the executor agent receives the feedback and attempts to fix the issues. The `retry_limit` controls how many times this fix-and-review cycle can repeat before MaxsimCLI stops and asks for human intervention. The default is 3 retries.
 
 {% callout type="tip" %}
 For exploratory or prototype work, you can set `simplify_review` to false to avoid spending cycles on code cleanliness. Turn it back on before merging to your main branch.

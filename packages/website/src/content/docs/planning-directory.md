@@ -4,7 +4,7 @@ title: Planning Directory
 group: Core Concepts
 ---
 
-Every MAXSIM project has a `.planning/` directory at the project root. This directory is the persistent memory of your project — it stores everything from the initial vision through per-task execution summaries.
+Every MaxsimCLI project has a `.planning/` directory at the project root. This directory is the persistent memory of your project — it stores everything from the initial vision through per-task execution summaries.
 
 {% codeblock language="text" %}
 .planning/

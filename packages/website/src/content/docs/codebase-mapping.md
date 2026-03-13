@@ -6,10 +6,10 @@ group: Advanced
 
 Codebase mapping analyzes an existing codebase using parallel mapper agents. It produces structured analysis that subsequent planning agents use as context when working in the project.
 
-Codebase mapping runs automatically as part of the `/maxsim:init --existing` workflow. When you onboard MAXSIM to a project that already has code, the init process dispatches mapper agents to understand the codebase before any planning begins.
+Codebase mapping runs automatically as part of the `/maxsim:init --existing` workflow. When you onboard MaxsimCLI to a project that already has code, the init process dispatches mapper agents to understand the codebase before any planning begins.
 
 {% codeblock language="bash" %}
-# Initialize MAXSIM in an existing project — triggers codebase mapping automatically
+# Initialize MaxsimCLI in an existing project — triggers codebase mapping automatically
 /maxsim:init --existing
 {% /codeblock %}
 

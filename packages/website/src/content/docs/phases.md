@@ -15,7 +15,7 @@ Phases support decimal and letter suffixes to accommodate gap closure and parall
 {% doctable headers=["Number", "Meaning"] rows=[["01", "First phase"], ["01A", "Parallel track A alongside phase 01"], ["01B", "Parallel track B alongside phase 01"], ["01.1", "Gap closure sub-phase after phase 01 verification"], ["01.2", "Second gap closure sub-phase"], ["02", "Second major phase"]] %}
 {% /doctable %}
 
-Sort order is: 01 < 01A < 01B < 01.1 < 01.2 < 02. The `normalizePhaseName()` function in the MAXSIM CLI handles this ordering for state tracking.
+Sort order is: 01 < 01A < 01B < 01.1 < 01.2 < 02. The `normalizePhaseName()` function in the MaxsimCLI CLI handles this ordering for state tracking.
 
 ### Phase lifecycle
 

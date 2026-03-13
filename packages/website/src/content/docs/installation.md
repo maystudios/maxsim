@@ -4,7 +4,7 @@ title: Installation
 group: Introduction
 ---
 
-MAXSIM requires Node.js 22 or later. It installs markdown files into your project's `.claude/` directory — no long-running process, no global binary, no daemon.
+MaxsimCLI requires Node.js 22 or later. It installs markdown files into your project's `.claude/` directory — no long-running process, no global binary, no daemon.
 
 ### Run the installer
 
@@ -18,7 +18,7 @@ The installer detects your project and copies the appropriate files into `.claud
 
 ### What gets installed
 
-MAXSIM installs into `.claude/` at your project root:
+MaxsimCLI installs into `.claude/` at your project root:
 
 {% codeblock language="text" %}
 .claude/
@@ -29,5 +29,5 @@ MAXSIM installs into `.claude/` at your project root:
 {% /codeblock %}
 
 {% callout type="note" %}
-MAXSIM does not modify your project files during install. The .planning/ directory is created per-project when you run /maxsim:init inside a project.
+MaxsimCLI does not modify your project files during install. The .planning/ directory is created per-project when you run /maxsim:init inside a project.
 {% /callout %}

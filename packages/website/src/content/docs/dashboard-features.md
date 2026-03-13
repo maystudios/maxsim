@@ -16,12 +16,12 @@ Set `worktree_mode` in `.claude/settings.json`:
 }
 {% /codeblock %}
 
-{% doctable headers=["Value", "Behavior"] rows=[["auto", "MAXSIM decides based on the number of agents dispatched. Single-agent tasks skip worktrees; multi-agent tasks use them. This is the default."], ["always", "Every agent gets its own worktree, even for single-agent tasks."], ["never", "All agents share the main working directory. Use this if your project has issues with worktrees or you prefer sequential execution."]] %}
+{% doctable headers=["Value", "Behavior"] rows=[["auto", "MaxsimCLI decides based on the number of agents dispatched. Single-agent tasks skip worktrees; multi-agent tasks use them. This is the default."], ["always", "Every agent gets its own worktree, even for single-agent tasks."], ["never", "All agents share the main working directory. Use this if your project has issues with worktrees or you prefer sequential execution."]] %}
 {% /doctable %}
 
 ### How it works
 
-When worktree mode is active, MAXSIM creates a temporary git worktree for each dispatched agent. The agent checks out a branch, makes its changes, and commits. After the agent completes and its work passes verification, MAXSIM merges the worktree branch back into the main branch.
+When worktree mode is active, MaxsimCLI creates a temporary git worktree for each dispatched agent. The agent checks out a branch, makes its changes, and commits. After the agent completes and its work passes verification, MaxsimCLI merges the worktree branch back into the main branch.
 
 This avoids the most common problem with parallel AI agents: two agents editing the same file simultaneously and producing conflicting changes. With worktrees, conflicts are detected at merge time and can be resolved cleanly.
 
