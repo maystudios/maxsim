@@ -228,7 +228,7 @@ export async function getAllPhasesProgress(): Promise<
     // Sequential API calls for sub-issue progress (per plan constraint)
     for (const issue of phaseIssues) {
       // Parse phase number from title: "[Phase 01] Phase Name" -> "01"
-      const phaseMatch = issue.title.match(/\[Phase\s+(\w+)\]/i);
+      const phaseMatch = issue.title.match(/\[Phase\s+(\S+)\]/i);
       if (!phaseMatch) {
         continue; // Skip issues that don't match the phase title pattern
       }

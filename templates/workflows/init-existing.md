@@ -215,7 +215,7 @@ mkdir -p .planning/codebase/
   → Concerns mapper (CONCERNS.md)
 ```
 
-Spawn 4 mapper agents using the Task tool. Follow the EXACT pattern from `templates/workflows/map-codebase.md`.
+Spawn 4 mapper agents using the Task tool.
 
 **CRITICAL:** Spawn mapper agents directly using the Task tool. Do NOT invoke `/maxsim:init (codebase mapping stage)` command (that would exit the current workflow context).
 

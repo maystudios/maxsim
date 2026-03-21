@@ -306,7 +306,12 @@ export async function cmdStateUpdateProgress(cwd: string, raw: boolean): Promise
   } catch { /* GitHub not available — fall back to local */ }
 
   // GitHub is the single source of truth for plan/summary progress.
-  // If GitHub data is unavailable, counts remain 0.
+  // If GitHub data is unavailable, counts remain 0 — skip the write to
+  // avoid destructively overwriting valid progress already in STATE.md.
+  if (totalPlans === 0) {
+    const existingProgress = stateExtractField(content, 'Progress') ?? '';
+    return cmdOk({ updated: false, reason: 'GitHub data unavailable', bar: existingProgress }, raw ? existingProgress : undefined);
+  }
 
   const percent = totalPlans > 0 ? Math.min(100, Math.round(totalSummaries / totalPlans * 100)) : 0;
   const barWidth = 10;

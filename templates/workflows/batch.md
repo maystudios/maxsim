@@ -8,7 +8,7 @@ Before executing any step in this workflow, verify:
 <purpose>
 Decompose a large task into independent units, execute each in an isolated git worktree, and produce one PR per unit. Each unit gets its own branch, worktree, and PR — enabling parallel implementation with zero merge conflicts.
 
-Follows the batch-worktree skill process: Research (decompose) -> Plan (validate independence) -> Spawn (worktree agents) -> Track (progress and failures).
+Follows the maxsim-batch skill process: Research (decompose) -> Plan (validate independence) -> Spawn (worktree agents) -> Track (progress and failures).
 </purpose>
 
 <required_reading>
@@ -92,7 +92,7 @@ Task(
 
 <constraints>
 - Decompose into 3-30 independent units
-- Each unit MUST be independently mergeable (hard gate from batch-worktree skill)
+- Each unit MUST be independently mergeable (hard gate from maxsim-batch skill)
 - If fewer than 3 units are identified, STOP and recommend /maxsim:quick instead
 - No file may appear in more than one unit
 - No runtime dependency between units (unit A output must not be unit B input)
