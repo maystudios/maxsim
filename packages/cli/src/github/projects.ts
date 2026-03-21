@@ -1,47 +1,24 @@
 /**
- * GitHub Projects v2 — Board management via `gh` CLI
+ * GitHub Projects v2 — Board management via Octokit GraphQL
  *
  * Manages GitHub Projects v2 boards for MAXSIM task tracking.
- * Uses `gh project` CLI commands which internally handle the GraphQL API.
+ * Uses octokit.graphql() for all operations — Projects v2 has no REST API.
  *
  * One project board per repo (not per milestone). 4 columns:
  * To Do, In Progress, In Review, Done.
+ *
+ * Falls back to `gh project create` CLI for project creation only,
+ * since the createProjectV2 mutation requires org-level permissions
+ * that personal tokens may not have.
  *
  * CRITICAL: Never call process.exit() — return GhResult instead.
  */
 
 import { execFileSync } from 'node:child_process';
 
-import { getRepoInfo, withGhResult } from './client.js';
+import { getOctokit, getRepoInfo, withGhResult } from './client.js';
 import type { GhResult, IssueStatus } from './types.js';
 import { DEFAULT_STATUS_OPTIONS } from './types.js';
-
-// ---- Helpers ---------------------------------------------------------------
-
-/**
- * Run a `gh` CLI command and parse JSON output.
- * Throws on non-zero exit or invalid JSON.
- */
-function ghJson<T>(args: string[], timeout = 30_000): T {
-  const out = execFileSync('gh', args, {
-    timeout,
-    stdio: 'pipe',
-    encoding: 'utf-8',
-  }).trim();
-  return JSON.parse(out) as T;
-}
-
-/**
- * Run a `gh` CLI command, ignoring output.
- * Throws on non-zero exit.
- */
-function ghExec(args: string[], timeout = 30_000): void {
-  execFileSync('gh', args, {
-    timeout,
-    stdio: 'pipe',
-    encoding: 'utf-8',
-  });
-}
 
 // ---- Status field option ID cache ------------------------------------------
 
@@ -53,141 +30,183 @@ interface StatusFieldCache {
 
 let _statusFieldCache: StatusFieldCache | null = null;
 
-// ---- gh project JSON response types ----------------------------------------
+// ---- GraphQL response types ------------------------------------------------
 
-interface GhProject {
+interface GqlProjectNode {
+  id: string;       // PVT_...
   number: number;
   title: string;
-  id: string; // node_id (PVT_...)
 }
 
-interface GhFieldOption {
-  id: string; // node_id
+interface GqlFieldOption {
+  id: string;       // node_id
   name: string;
 }
 
-interface GhField {
-  id: string; // node_id (PVTF_... or PVTSSF_...)
+interface GqlField {
+  id: string;       // node_id
   name: string;
-  type: string;
-  options?: GhFieldOption[];
+  dataType: string; // SINGLE_SELECT, TEXT, etc.
+  options?: GqlFieldOption[];
 }
 
-interface GhProjectItem {
-  id: string; // node_id (PVTI_...)
+interface GqlProjectItem {
+  id: string;       // PVTI_...
+  type: string;     // ISSUE, PULL_REQUEST, DRAFT_ISSUE
   content?: {
     number?: number;
-    type?: string;
-    repository?: string;
     title?: string;
-    url?: string;
+  } | null;
+  fieldValues: {
+    nodes: Array<{
+      field?: { name: string } | null;
+      name?: string;        // for SingleSelectField values
+      value?: string;       // for other field types
+    }>;
   };
-  // gh project item-list includes field values as top-level keys
-  status?: string;
-  // Some gh versions use fieldValues
-  fieldValues?: { nodes?: Array<{ field?: { name: string }; name?: string }> };
 }
 
-// ---- Project Board Creation ------------------------------------------------
+// ---- GraphQL queries -------------------------------------------------------
 
-/**
- * Ensure a project board exists with the given title, creating it if needed.
- *
- * 1. List existing projects via `gh project list`
- * 2. If not found, create via `gh project create`
- * 3. Load status field info and cache it
- *
- * Returns the project number and node ID.
- */
-export async function ensureProjectBoard(
-  title: string,
-): Promise<GhResult<{ projectNumber: number; projectId: string }>> {
-  return withGhResult(async () => {
-    const { owner } = await getRepoInfo();
-
-    // List existing projects to check if one with the title already exists
-    let existingProject: GhProject | undefined;
-
-    try {
-      const result = ghJson<{ projects: GhProject[] }>(
-        ['project', 'list', '--owner', owner, '--format', 'json', '--limit', '100'],
-      );
-      existingProject = result.projects?.find(p => p.title === title);
-    } catch {
-      // gh project list may fail for various reasons; try @me as fallback
-      try {
-        const result = ghJson<{ projects: GhProject[] }>(
-          ['project', 'list', '--owner', '@me', '--format', 'json', '--limit', '100'],
-        );
-        existingProject = result.projects?.find(p => p.title === title);
-      } catch {
-        // Unable to list projects — will attempt to create
+const QUERY_FIND_PROJECT = `
+  query($owner: String!, $first: Int!) {
+    user(login: $owner) {
+      projectsV2(first: $first) {
+        nodes { id number title }
       }
     }
+  }
+`;
 
-    if (existingProject) {
-      await loadStatusFieldCache(owner, existingProject.number, existingProject.id);
-      return {
-        projectNumber: existingProject.number,
-        projectId: existingProject.id,
-      };
+const QUERY_FIND_PROJECT_ORG = `
+  query($owner: String!, $first: Int!) {
+    organization(login: $owner) {
+      projectsV2(first: $first) {
+        nodes { id number title }
+      }
     }
+  }
+`;
 
-    // No matching project found — create one
-    let created: { number: number; id: string };
-    try {
-      created = ghJson<{ number: number; id: string }>(
-        ['project', 'create', '--owner', '@me', '--title', title, '--format', 'json'],
-      );
-    } catch (e: unknown) {
-      const err = e as { stderr?: string; message?: string };
-      throw new Error(`Failed to create project board: ${err.stderr || err.message}`);
+const QUERY_PROJECT_FIELDS = `
+  query($projectId: ID!) {
+    node(id: $projectId) {
+      ... on ProjectV2 {
+        fields(first: 30) {
+          nodes {
+            ... on ProjectV2Field {
+              id name dataType
+            }
+            ... on ProjectV2SingleSelectField {
+              id name dataType
+              options { id name }
+            }
+          }
+        }
+      }
     }
+  }
+`;
 
-    await loadStatusFieldCache(owner, created.number, created.id);
+const QUERY_PROJECT_ITEMS = `
+  query($projectId: ID!, $first: Int!, $after: String) {
+    node(id: $projectId) {
+      ... on ProjectV2 {
+        items(first: $first, after: $after) {
+          pageInfo { hasNextPage endCursor }
+          nodes {
+            id type
+            content {
+              ... on Issue { number title }
+              ... on PullRequest { number title }
+            }
+            fieldValues(first: 10) {
+              nodes {
+                ... on ProjectV2ItemFieldSingleSelectValue {
+                  field { ... on ProjectV2SingleSelectField { name } }
+                  name
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+`;
 
-    return {
-      projectNumber: created.number,
-      projectId: created.id,
-    };
-  });
+const MUTATION_ADD_ITEM = `
+  mutation($projectId: ID!, $contentId: ID!) {
+    addProjectV2ItemById(input: { projectId: $projectId, contentId: $contentId }) {
+      item { id }
+    }
+  }
+`;
+
+const MUTATION_UPDATE_FIELD = `
+  mutation($projectId: ID!, $itemId: ID!, $fieldId: ID!, $optionId: String!) {
+    updateProjectV2ItemFieldValue(input: {
+      projectId: $projectId
+      itemId: $itemId
+      fieldId: $fieldId
+      value: { singleSelectOptionId: $optionId }
+    }) {
+      projectV2Item { id }
+    }
+  }
+`;
+
+// ---- Helpers ---------------------------------------------------------------
+
+/**
+ * Detect whether the repo owner is a user or organization.
+ */
+async function detectOwnerType(): Promise<'User' | 'Organization'> {
+  const octokit = getOctokit();
+  const { owner, repo } = await getRepoInfo();
+  const response = await octokit.rest.repos.get({ owner, repo });
+  return response.data.owner?.type === 'Organization' ? 'Organization' : 'User';
 }
 
 /**
- * Load the project's Status field info into the module-level cache.
- * Uses `gh project field-list` to enumerate fields and their options.
+ * List projects for an owner, handling user vs org detection.
  */
-async function loadStatusFieldCache(
-  owner: string,
-  projectNumber: number,
-  projectId: string,
-): Promise<void> {
-  let fields: GhField[];
+async function listProjects(owner: string): Promise<GqlProjectNode[]> {
+  const octokit = getOctokit();
+  const ownerType = await detectOwnerType();
 
   try {
-    const result = ghJson<{ fields: GhField[] }>(
-      ['project', 'field-list', String(projectNumber), '--owner', owner, '--format', 'json'],
-    );
-    fields = result.fields ?? [];
-  } catch {
-    // Fallback: try with @me
-    try {
-      const result = ghJson<{ fields: GhField[] }>(
-        ['project', 'field-list', String(projectNumber), '--owner', '@me', '--format', 'json'],
-      );
-      fields = result.fields ?? [];
-    } catch {
-      throw new Error('Failed to list project fields via gh CLI');
+    if (ownerType === 'Organization') {
+      const result = await octokit.graphql<{
+        organization: { projectsV2: { nodes: GqlProjectNode[] } };
+      }>(QUERY_FIND_PROJECT_ORG, { owner, first: 100 });
+      return result.organization.projectsV2.nodes;
+    } else {
+      const result = await octokit.graphql<{
+        user: { projectsV2: { nodes: GqlProjectNode[] } };
+      }>(QUERY_FIND_PROJECT, { owner, first: 100 });
+      return result.user.projectsV2.nodes;
     }
+  } catch {
+    return [];
   }
+}
 
-  // Find the Status field (SingleSelect type)
+/**
+ * Load project fields and populate the status field cache.
+ */
+async function loadStatusFieldCache(projectId: string): Promise<void> {
+  const octokit = getOctokit();
+
+  const result = await octokit.graphql<{
+    node: { fields: { nodes: GqlField[] } };
+  }>(QUERY_PROJECT_FIELDS, { projectId });
+
+  const fields = result.node.fields.nodes;
+
+  // Find the Status field (SINGLE_SELECT type)
   const statusField = fields.find(
-    f => f.name === 'Status' && (
-      f.type === 'ProjectV2SingleSelectField' ||
-      f.type === 'single_select' ||
-      f.type === 'SINGLE_SELECT'
-    ),
+    f => f.name === 'Status' && f.dataType === 'SINGLE_SELECT',
   );
 
   if (!statusField) {
@@ -214,12 +233,12 @@ async function loadStatusFieldCache(
   if (missingOptions.length > 0) {
     // GitHub Projects v2 boards come with "Todo", "In Progress", "Done" by default.
     // "In Review" typically needs to be added manually by the user.
-    // There is no gh CLI command to add a single-select option to an existing field.
-    // We log the missing options but proceed — the user can add them via the GitHub UI.
-    const debugLog = process.env.MAXSIM_DEBUG
-      ? (msg: string) => process.stderr.write(`[maxsim:debug] ${msg}\n`)
-      : () => {};
-    debugLog(`Missing status options on project board: ${missingOptions.join(', ')}. Add them manually in the GitHub Projects settings.`);
+    // The GraphQL API does not support adding single-select options.
+    if (process.env.MAXSIM_DEBUG) {
+      process.stderr.write(
+        `[maxsim:debug] Missing status options on project board: ${missingOptions.join(', ')}. Add them manually in the GitHub Projects settings.\n`,
+      );
+    }
   }
 
   _statusFieldCache = {
@@ -229,14 +248,67 @@ async function loadStatusFieldCache(
   };
 }
 
+// ---- Project Board Creation ------------------------------------------------
+
+/**
+ * Ensure a project board exists with the given title, creating it if needed.
+ *
+ * 1. List existing projects via GraphQL
+ * 2. If not found, create via `gh project create` CLI
+ * 3. Load status field info and cache it
+ *
+ * Returns the project number and node ID.
+ */
+export async function ensureProjectBoard(
+  title: string,
+): Promise<GhResult<{ projectNumber: number; projectId: string }>> {
+  return withGhResult(async () => {
+    const { owner } = await getRepoInfo();
+
+    // List existing projects
+    const projects = await listProjects(owner);
+    const existing = projects.find(p => p.title === title);
+
+    if (existing) {
+      await loadStatusFieldCache(existing.id);
+      return {
+        projectNumber: existing.number,
+        projectId: existing.id,
+      };
+    }
+
+    // No matching project found — create via gh CLI
+    // (createProjectV2 mutation has complex permission requirements)
+    let createOutput: string;
+    try {
+      createOutput = execFileSync(
+        'gh',
+        ['project', 'create', '--owner', '@me', '--title', title, '--format', 'json'],
+        { timeout: 30_000, stdio: 'pipe', encoding: 'utf-8' },
+      ).trim();
+    } catch (e: unknown) {
+      const err = e as { stderr?: string; message?: string };
+      throw new Error(`Failed to create project board: ${err.stderr || err.message}`);
+    }
+
+    const created = JSON.parse(createOutput) as { number: number; id: string };
+    await loadStatusFieldCache(created.id);
+
+    return {
+      projectNumber: created.number,
+      projectId: created.id,
+    };
+  });
+}
+
 // ---- Add Item to Project ---------------------------------------------------
 
 /**
  * Add an issue to the project board.
  *
- * Uses `gh project item-add` to add an issue by its URL.
+ * Uses the addProjectV2ItemById GraphQL mutation.
  *
- * @param projectNumber - The project number
+ * @param projectNumber - The project number (used to resolve project ID if not cached)
  * @param issueNumber - The issue number to add to the project
  * @returns The project item ID (node_id)
  */
@@ -245,34 +317,30 @@ export async function addItemToProject(
   issueNumber: number,
 ): Promise<GhResult<{ itemId: string }>> {
   return withGhResult(async () => {
+    const octokit = getOctokit();
     const { owner, repo } = await getRepoInfo();
 
-    // Construct the issue URL for gh project item-add
-    const issueUrl = `https://github.com/${owner}/${repo}/issues/${issueNumber}`;
-
-    let result: { id: string };
-    try {
-      result = ghJson<{ id: string }>(
-        [
-          'project', 'item-add', String(projectNumber),
-          '--owner', owner,
-          '--url', issueUrl,
-          '--format', 'json',
-        ],
-      );
-    } catch {
-      // Fallback: try with @me as owner
-      result = ghJson<{ id: string }>(
-        [
-          'project', 'item-add', String(projectNumber),
-          '--owner', '@me',
-          '--url', issueUrl,
-          '--format', 'json',
-        ],
-      );
+    // Resolve project ID from cache or by listing projects
+    let projectId = _statusFieldCache?.projectId;
+    if (!projectId) {
+      const projects = await listProjects(owner);
+      const project = projects.find(p => p.number === projectNumber);
+      if (!project) {
+        throw new Error(`Project #${projectNumber} not found`);
+      }
+      projectId = project.id;
+      await loadStatusFieldCache(projectId);
     }
 
-    return { itemId: result.id };
+    // Get the issue's node_id (required for the mutation)
+    const issue = await octokit.rest.issues.get({ owner, repo, issue_number: issueNumber });
+    const contentId = issue.data.node_id;
+
+    const result = await octokit.graphql<{
+      addProjectV2ItemById: { item: { id: string } };
+    }>(MUTATION_ADD_ITEM, { projectId, contentId });
+
+    return { itemId: result.addProjectV2ItemById.item.id };
   });
 }
 
@@ -281,7 +349,7 @@ export async function addItemToProject(
 /**
  * Update the Status field of a project item to the given column.
  *
- * Uses `gh project item-edit` with the cached field and option IDs.
+ * Uses the updateProjectV2ItemFieldValue GraphQL mutation.
  *
  * @param projectNumber - The project number
  * @param itemId - The project item ID (node_id string)
@@ -293,19 +361,17 @@ export async function moveItemToStatus(
   status: IssueStatus,
 ): Promise<GhResult<void>> {
   return withGhResult(async () => {
+    const octokit = getOctokit();
     const { owner } = await getRepoInfo();
 
     // Ensure we have cached status field info
     if (!_statusFieldCache) {
-      // Need to load field cache — fetch project ID first
-      const result = ghJson<{ projects: GhProject[] }>(
-        ['project', 'list', '--owner', owner, '--format', 'json', '--limit', '100'],
-      );
-      const project = result.projects?.find(p => p.number === projectNumber);
+      const projects = await listProjects(owner);
+      const project = projects.find(p => p.number === projectNumber);
       if (!project) {
         throw new Error(`Project #${projectNumber} not found`);
       }
-      await loadStatusFieldCache(owner, projectNumber, project.id);
+      await loadStatusFieldCache(project.id);
     }
 
     if (!_statusFieldCache) {
@@ -319,24 +385,16 @@ export async function moveItemToStatus(
       );
     }
 
-    // gh project item-edit uses node_ids for --project-id, --id, --field-id, --single-select-option-id
-    // If itemId is empty or looks like a legacy numeric ID, we can't proceed
     if (!itemId) {
       throw new Error('Cannot move item: empty item_id. The issue may not have been added to the project board.');
     }
 
-    try {
-      ghExec([
-        'project', 'item-edit',
-        '--project-id', _statusFieldCache.projectId,
-        '--id', itemId,
-        '--field-id', _statusFieldCache.fieldId,
-        '--single-select-option-id', optionId,
-      ]);
-    } catch (e: unknown) {
-      const err = e as { stderr?: string; message?: string };
-      throw new Error(`Failed to move item to "${status}": ${err.stderr || err.message}`);
-    }
+    await octokit.graphql(MUTATION_UPDATE_FIELD, {
+      projectId: _statusFieldCache.projectId,
+      itemId,
+      fieldId: _statusFieldCache.fieldId,
+      optionId,
+    });
   });
 }
 
@@ -345,7 +403,7 @@ export async function moveItemToStatus(
 /**
  * List all items in the project with their current status.
  *
- * Uses `gh project item-list` which returns items with field values.
+ * Uses GraphQL with cursor-based pagination.
  *
  * @param projectNumber - The project number
  */
@@ -353,60 +411,63 @@ export async function getProjectBoard(
   projectNumber: number,
 ): Promise<GhResult<{ items: Array<{ id: string; issueNumber: number; status: IssueStatus }> }>> {
   return withGhResult(async () => {
+    const octokit = getOctokit();
     const { owner } = await getRepoInfo();
 
-    let rawItems: GhProjectItem[];
-    try {
-      const result = ghJson<{ items: GhProjectItem[] }>(
-        [
-          'project', 'item-list', String(projectNumber),
-          '--owner', owner,
-          '--format', 'json',
-          '--limit', '1000',
-        ],
-      );
-      rawItems = result.items ?? [];
-    } catch {
-      // Fallback: try with @me
-      const result = ghJson<{ items: GhProjectItem[] }>(
-        [
-          'project', 'item-list', String(projectNumber),
-          '--owner', '@me',
-          '--format', 'json',
-          '--limit', '1000',
-        ],
-      );
-      rawItems = result.items ?? [];
+    // Resolve project ID
+    let projectId = _statusFieldCache?.projectId;
+    if (!projectId) {
+      const projects = await listProjects(owner);
+      const project = projects.find(p => p.number === projectNumber);
+      if (!project) {
+        throw new Error(`Project #${projectNumber} not found`);
+      }
+      projectId = project.id;
+      await loadStatusFieldCache(projectId);
+    }
+
+    // Paginate through all items
+    const allItems: GqlProjectItem[] = [];
+    let hasNextPage = true;
+    let cursor: string | null = null;
+
+    while (hasNextPage) {
+      const result = await octokit.graphql<{
+        node: {
+          items: {
+            pageInfo: { hasNextPage: boolean; endCursor: string | null };
+            nodes: GqlProjectItem[];
+          };
+        };
+      }>(QUERY_PROJECT_ITEMS, {
+        projectId,
+        first: 100,
+        after: cursor,
+      });
+
+      allItems.push(...result.node.items.nodes);
+      hasNextPage = result.node.items.pageInfo.hasNextPage;
+      cursor = result.node.items.pageInfo.endCursor;
     }
 
     // Map items to output format
     const items: Array<{ id: string; issueNumber: number; status: IssueStatus }> = [];
 
-    for (const item of rawItems) {
-      // Skip non-issue items (e.g. draft items, PRs)
+    for (const item of allItems) {
+      if (item.type !== 'ISSUE') continue;
       const issueNumber = item.content?.number;
       if (!issueNumber) continue;
-      if (item.content?.type && item.content.type !== 'Issue') continue;
 
-      // Extract status — gh may include it as a top-level field or in fieldValues
-      let status: IssueStatus = 'To Do'; // default
-
-      if (item.status) {
-        // gh project item-list may include status as a top-level key
-        status = normalizeStatus(item.status);
-      } else if (item.fieldValues?.nodes) {
-        // Some gh versions nest field values
-        const statusNode = item.fieldValues.nodes.find(n => n.field?.name === 'Status');
-        if (statusNode?.name) {
-          status = normalizeStatus(statusNode.name);
+      // Extract status from field values
+      let status: IssueStatus = 'To Do';
+      for (const fv of item.fieldValues.nodes) {
+        if (fv.field?.name === 'Status' && fv.name) {
+          status = normalizeStatus(fv.name);
+          break;
         }
       }
 
-      items.push({
-        id: item.id,
-        issueNumber,
-        status,
-      });
+      items.push({ id: item.id, issueNumber, status });
     }
 
     return { items };
@@ -414,7 +475,7 @@ export async function getProjectBoard(
 }
 
 /**
- * Normalize a status string from gh CLI output to an IssueStatus value.
+ * Normalize a status string from GitHub to an IssueStatus value.
  * Handles common variations like "Todo" vs "To Do".
  */
 function normalizeStatus(raw: string): IssueStatus {
@@ -423,7 +484,6 @@ function normalizeStatus(raw: string): IssueStatus {
   if (normalized === 'In Progress') return 'In Progress';
   if (normalized === 'In Review') return 'In Review';
   if (normalized === 'Done') return 'Done';
-  // Unknown status — default to "To Do"
   return 'To Do';
 }
 
