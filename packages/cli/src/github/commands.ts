@@ -168,6 +168,20 @@ export async function cmdGitHubSetup(
 
     installIssueTemplates(root);
 
+    // Persist board info to mapping file
+    const mapping = loadMapping(root);
+    if (mapping) {
+      mapping.project_number = boardResult.data.projectNumber;
+      mapping.project_id = boardResult.data.projectId;
+      mapping.status_field_id = boardResult.data.statusFieldId;
+      mapping.status_options = boardResult.data.statusOptions;
+      if (milestoneData) {
+        mapping.milestone_id = milestoneData.number;
+        mapping.milestone_title = milestoneTitle ?? '';
+      }
+      saveMapping(root, mapping);
+    }
+
     const data = {
       board: {
         projectNumber: boardResult.data.projectNumber,
@@ -233,6 +247,13 @@ export async function cmdGitHubCreatePhase(
         if (addResult.ok) {
           data.item_id = addResult.data.itemId;
           data.project_number = mapping.project_number;
+
+          // Persist item_id to mapping for later moveItemToStatus calls
+          const phaseNum = getFlag(args, '--phase-number') ?? '';
+          if (phaseNum && mapping.phases[phaseNum]) {
+            mapping.phases[phaseNum].tracking_issue.item_id = addResult.data.itemId;
+            saveMapping(root, mapping);
+          }
 
           const moveResult = await moveItemToStatus(
             mapping.project_number,
