@@ -187,7 +187,10 @@ async function listProjects(owner: string): Promise<GqlProjectNode[]> {
       }>(QUERY_FIND_PROJECT, { owner, first: 100 });
       return result.user.projectsV2.nodes;
     }
-  } catch {
+  } catch (e) {
+    if (process.env.MAXSIM_DEBUG) {
+      process.stderr.write(`[maxsim:debug] Failed to list projects: ${e instanceof Error ? e.message : String(e)}\n`);
+    }
     return [];
   }
 }
@@ -261,7 +264,7 @@ async function loadStatusFieldCache(projectId: string): Promise<void> {
  */
 export async function ensureProjectBoard(
   title: string,
-): Promise<GhResult<{ projectNumber: number; projectId: string }>> {
+): Promise<GhResult<{ projectNumber: number; projectId: string; statusFieldId: string; statusOptions: Record<string, string> }>> {
   return withGhResult(async () => {
     const { owner } = await getRepoInfo();
 
@@ -274,6 +277,8 @@ export async function ensureProjectBoard(
       return {
         projectNumber: existing.number,
         projectId: existing.id,
+        statusFieldId: _statusFieldCache?.fieldId ?? '',
+        statusOptions: Object.fromEntries(_statusFieldCache?.options ?? new Map()),
       };
     }
 
@@ -297,6 +302,8 @@ export async function ensureProjectBoard(
     return {
       projectNumber: created.number,
       projectId: created.id,
+      statusFieldId: _statusFieldCache?.fieldId ?? '',
+      statusOptions: Object.fromEntries(_statusFieldCache?.options ?? new Map()),
     };
   });
 }

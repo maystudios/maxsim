@@ -242,6 +242,17 @@ export async function withGhResult<T>(fn: () => Promise<T>): Promise<GhResult<T>
       return { ok: false, error: e.message, code };
     }
 
+    // GraphqlResponseError from @octokit/graphql (HTTP 200 with errors array)
+    if (e && typeof e === 'object' && 'errors' in e && Array.isArray((e as Record<string, unknown>).errors)) {
+      const gqlError = e as { errors: Array<{ type?: string; message: string }>; message: string };
+      const errorType = gqlError.errors[0]?.type;
+      const code: GhErrorCode =
+        errorType === 'FORBIDDEN' || errorType === 'INSUFFICIENT_SCOPES' ? 'PERMISSION_DENIED' :
+        errorType === 'NOT_FOUND' ? 'NOT_FOUND' :
+        'UNKNOWN';
+      return { ok: false, error: gqlError.message, code };
+    }
+
     const message = e instanceof Error ? e.message : String(e);
     return { ok: false, error: message, code: 'UNKNOWN' };
   }
