@@ -10,13 +10,14 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 // Mock client.ts — the primary seam
 const mockGraphql = vi.fn();
 const mockReposGet = vi.fn();
+const mockIssuesGet = vi.fn();
 
 vi.mock('../../src/github/client.js', () => ({
   getOctokit: () => ({
     graphql: mockGraphql,
     rest: {
       repos: { get: mockReposGet },
-      issues: { get: vi.fn() },
+      issues: { get: mockIssuesGet },
     },
   }),
   getRepoInfo: vi.fn().mockResolvedValue({ owner: 'test-owner', repo: 'test-repo' }),
@@ -161,8 +162,7 @@ describe('addItemToProject', () => {
     await ensureProjectBoard('MAXSIM Task Board');
 
     // issue.get returns node_id
-    const mockOctokit = (await import('../../src/github/client.js')).getOctokit();
-    (mockOctokit.rest.issues.get as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+    mockIssuesGet.mockResolvedValueOnce({
       data: { node_id: 'I_issue123' },
     });
 
