@@ -7,7 +7,7 @@
 	},
 	"files": {
 		"ignoreUnknown": true,
-		"includes": ["packages/*/src/**/*.ts", "packages/*/src/**/*.tsx", "scripts/**/*.cjs"]
+		"includes": ["packages/cli/src/**/*.ts", "packages/cli/tests/**/*.ts"]
 	},
 	"formatter": {
 		"enabled": false
@@ -15,7 +15,7 @@
 	"linter": {
 		"enabled": true,
 		"rules": {
-			"recommended": false
+			"recommended": true
 		}
 	},
 	"javascript": {
