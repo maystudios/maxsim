@@ -25,7 +25,7 @@ Store as `$DESCRIPTION`. If still empty, re-prompt: "Please provide a task descr
 ## Step 2: Create GitHub Issue
 
 ```bash
-node ~/.claude/maxsim/bin/maxsim-tools.cjs github create-issue \
+node .claude/maxsim/bin/maxsim-tools.cjs github create-issue \
   --title "$DESCRIPTION" \
   --label "type:quick" \
   --body "Quick task: $DESCRIPTION"
@@ -36,7 +36,7 @@ Parse JSON response for `issue_number`. Store as `$ISSUE_NUM`.
 Move issue to "In Progress" on the project board:
 
 ```bash
-node ~/.claude/maxsim/bin/maxsim-tools.cjs github move-issue \
+node .claude/maxsim/bin/maxsim-tools.cjs github move-issue \
   --issue-number $ISSUE_NUM \
   --status "In Progress"
 ```
@@ -68,7 +68,7 @@ GitHub Issue: #$ISSUE_NUM
 <constraints>
 - Implement the task fully
 - Commit changes atomically with message: feat(quick-#$ISSUE_NUM): $DESCRIPTION
-- Do NOT create .planning/ files (quick tasks skip phase ceremony)
+- Do NOT create phase planning files (quick tasks skip phase ceremony)
 - Return a short summary of what was done and the commit hash
 </constraints>
 ",
@@ -116,7 +116,7 @@ If FAIL: display issues, ask user whether to fix or accept as-is.
 Post completion comment to the issue:
 
 ```bash
-node ~/.claude/maxsim/bin/maxsim-tools.cjs github comment-issue \
+node .claude/maxsim/bin/maxsim-tools.cjs github comment-issue \
   --issue-number $ISSUE_NUM \
   --body "Completed. Commit: $COMMIT_HASH\n\nSummary: $SUMMARY\n\nVerification: $VERIFY_STATUS"
 ```
@@ -124,8 +124,8 @@ node ~/.claude/maxsim/bin/maxsim-tools.cjs github comment-issue \
 Close the issue and move to Done:
 
 ```bash
-node ~/.claude/maxsim/bin/maxsim-tools.cjs github close-issue --issue-number $ISSUE_NUM
-node ~/.claude/maxsim/bin/maxsim-tools.cjs github move-issue \
+node .claude/maxsim/bin/maxsim-tools.cjs github close-issue --issue-number $ISSUE_NUM
+node .claude/maxsim/bin/maxsim-tools.cjs github move-issue \
   --issue-number $ISSUE_NUM \
   --status "Done"
 ```

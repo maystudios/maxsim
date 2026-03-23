@@ -9,14 +9,14 @@ Verify MaxsimCLI installation and GitHub connectivity. Report the status of each
 Verify the required files exist:
 
 ```bash
-node ~/.claude/maxsim/bin/maxsim-tools.cjs validate structure
+node .claude/maxsim/bin/maxsim-tools.cjs validate structure
 ```
 
 Expected checks:
 - `~/.claude/` directory exists
-- `~/.claude/maxsim/` directory exists
-- `~/.claude/maxsim/bin/maxsim-tools.cjs` exists
-- `~/.claude/maxsim/config.json` exists (or create with defaults)
+- `.claude/maxsim/` directory exists
+- `.claude/maxsim/bin/maxsim-tools.cjs` exists
+- `.claude/maxsim/config.json` exists (or create with defaults)
 
 Record PASS/FAIL for each.
 
@@ -43,7 +43,7 @@ Record PASS/FAIL.
 ## Step 3: Check GitHub repo
 
 ```bash
-node ~/.claude/maxsim/bin/maxsim-tools.cjs github status
+node .claude/maxsim/bin/maxsim-tools.cjs github status
 ```
 
 If the command returns an error:

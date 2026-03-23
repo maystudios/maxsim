@@ -7,7 +7,7 @@ Show project status from GitHub Issues (sole source of truth) and recommend the 
 ## Step 1: Query GitHub Project Board
 
 ```bash
-node ~/.claude/maxsim/bin/maxsim-tools.cjs github status
+node .claude/maxsim/bin/maxsim-tools.cjs github status
 ```
 
 Parse JSON response for:
