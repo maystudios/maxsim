@@ -1,3 +1,17 @@
+# [5.1.0](https://github.com/maystudios/maxsimcli/compare/v5.0.7...v5.1.0) (2026-03-23)
+
+
+### Features
+
+* **github:** Phase 2a — GitHub types, client, and comment parsing ([68018a9](https://github.com/maystudios/maxsimcli/commit/68018a95205520537c417b7141fdd27c7750a07e))
+* **github:** Phase 2b — issues, projects, milestones, labels ([7964570](https://github.com/maystudios/maxsimcli/commit/79645709beb9a30e5a5c57fa3fee2616927755e7))
+* **install:** Phase 3 — complete install/uninstall system ([9974b2c](https://github.com/maystudios/maxsimcli/commit/9974b2c8706aa3df600c47cf5616fba24b5e13dd))
+* Phase 1 — core types, config, and utilities ([0455288](https://github.com/maystudios/maxsimcli/commit/045528863738f6fac51f4834bee11556f6d35c02))
+* Phase 6+7 — agents, hooks, rules, and references ([50090cc](https://github.com/maystudios/maxsimcli/commit/50090ccd15fcc9b2f2c7e69fac874c410c6c4011))
+* Phase 8+9 — self-improvement system and documentation rewrite ([1a8bd34](https://github.com/maystudios/maxsimcli/commit/1a8bd34468745952f3db1b6c03ba81f332452c51))
+* **skills:** Phase 5 — 14 Anthropic-compliant skills (21→14 consolidation) ([e50d950](https://github.com/maystudios/maxsimcli/commit/e50d950e06aab60be89fce43029ee1bdf33b2170))
+* **templates:** Phase 4 — commands and workflows rewritten for v6 ([2d0a1f9](https://github.com/maystudios/maxsimcli/commit/2d0a1f916da7fd0e7ed4efd86ccd2d6390c946a6))
+
 ## [5.0.7](https://github.com/maystudios/maxsimcli/compare/v5.0.6...v5.0.7) (2026-03-13)
 
 
