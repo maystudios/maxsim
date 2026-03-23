@@ -6,7 +6,7 @@
     "packages/cli",
     "packages/website"
   ],
-  "description": "A meta-prompting, context engineering and spec-driven development system for Claude Code, OpenCode, Gemini and Codex by MayStudios.",
+  "description": "A meta-prompting, context engineering and spec-driven development system for Claude Code by MayStudios.",
   "engines": {
     "node": ">=22.0.0"
   },
