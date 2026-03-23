@@ -12,7 +12,7 @@ body:
     attributes:
       label: Description
       description: A clear and concise description of what the bug is.
-      placeholder: "When I run `npx maxsimcli@latest install`, it fails with..."
+      placeholder: "When I run `npx maxsimcli@latest`, it fails with..."
     validations:
       required: true
 
@@ -22,7 +22,7 @@ body:
       label: Steps to Reproduce
       description: Step-by-step instructions to reproduce the issue.
       placeholder: |
-        1. Run `npx maxsimcli@latest install`
+        1. Run `npx maxsimcli@latest`
         2. Select runtime "Claude Code"
         3. See error output
     validations:

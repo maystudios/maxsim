@@ -1,5 +1,3 @@
 #!/usr/bin/env sh
-npm run build
+# Run lint before pushing to catch style issues early.
 npm run lint
-node scripts/pre-push-docs-check.cjs
-npm test

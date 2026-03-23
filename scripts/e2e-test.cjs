@@ -46,8 +46,8 @@ function checkNpmAuth() {
   }
 }
 
-function runInstall(tmpDir) {
-  const cmd = `npx --yes --ignore-scripts maxsimcli@latest --claude --global --config-dir "${tmpDir}"`;
+function runInstall() {
+  const cmd = `npx --yes maxsimcli@latest`;
   try {
     const output = execSync(cmd, { stdio: ['inherit', 'pipe', 'pipe'], timeout: 120_000, encoding: 'utf8' });
     return { success: true, output: output || '' };
@@ -60,17 +60,17 @@ function runInstall(tmpDir) {
 function checkFiles(configDir) {
   const checks = [];
 
-  // commands/maxsim/ — directory with .md files, spot-check execute-phase.md
+  // commands/maxsim/ — directory with .md files, spot-check execute.md
   const commandsDir = path.join(configDir, 'commands', 'maxsim');
   const commandsExist = fs.existsSync(commandsDir);
   const mdFiles = commandsExist ? fs.readdirSync(commandsDir).filter(f => f.endsWith('.md')) : [];
-  const spotCheck = commandsExist && fs.existsSync(path.join(commandsDir, 'execute-phase.md'));
+  const spotCheck = commandsExist && fs.existsSync(path.join(commandsDir, 'execute.md'));
   checks.push({
     label: 'commands/maxsim/',
     passed: commandsExist && mdFiles.length > 0 && spotCheck,
     detail: !commandsExist ? 'directory missing'
       : mdFiles.length === 0 ? 'no .md files found'
-      : !spotCheck ? 'execute-phase.md not found'
+      : !spotCheck ? 'execute.md not found'
       : `${mdFiles.length} .md files`,
   });
 
@@ -102,14 +102,44 @@ function checkFiles(configDir) {
     detail: fs.existsSync(toolBin) ? 'present' : 'file missing — workflows will fail with "Cannot find module"',
   });
 
-  // hooks/ — directory with at least 1 .js file (install.ts renames .cjs -> .js)
-  const hooksDir = path.join(configDir, 'hooks');
+  // maxsim/hooks/ — directory with at least 1 .cjs file
+  const hooksDir = path.join(configDir, 'maxsim', 'hooks');
   const hooksExist = fs.existsSync(hooksDir);
-  const jsFiles = hooksExist ? fs.readdirSync(hooksDir).filter(f => f.endsWith('.js')) : [];
+  const cjsFiles = hooksExist ? fs.readdirSync(hooksDir).filter(f => f.endsWith('.cjs')) : [];
   checks.push({
-    label: 'hooks/*.js',
-    passed: hooksExist && jsFiles.length > 0,
-    detail: !hooksExist ? 'directory missing' : jsFiles.length === 0 ? 'no .js files found' : `${jsFiles.length} .js files`,
+    label: 'maxsim/hooks/*.cjs',
+    passed: hooksExist && cjsFiles.length > 0,
+    detail: !hooksExist ? 'directory missing' : cjsFiles.length === 0 ? 'no .cjs files found' : `${cjsFiles.length} .cjs files`,
+  });
+
+  // skills/ — directory, non-empty
+  const skillsDir = path.join(configDir, 'skills');
+  const skillsExist = fs.existsSync(skillsDir);
+  const skillsCount = skillsExist ? fs.readdirSync(skillsDir).length : 0;
+  checks.push({
+    label: 'skills/',
+    passed: skillsExist && skillsCount > 0,
+    detail: !skillsExist ? 'directory missing' : skillsCount === 0 ? 'empty directory' : `${skillsCount} files`,
+  });
+
+  // rules/ — directory, non-empty
+  const rulesDir = path.join(configDir, 'rules');
+  const rulesExist = fs.existsSync(rulesDir);
+  const rulesCount = rulesExist ? fs.readdirSync(rulesDir).length : 0;
+  checks.push({
+    label: 'rules/',
+    passed: rulesExist && rulesCount > 0,
+    detail: !rulesExist ? 'directory missing' : rulesCount === 0 ? 'empty directory' : `${rulesCount} files`,
+  });
+
+  // maxsim/references/ — directory, non-empty
+  const referencesDir = path.join(configDir, 'maxsim', 'references');
+  const referencesExist = fs.existsSync(referencesDir);
+  const referencesCount = referencesExist ? fs.readdirSync(referencesDir).length : 0;
+  checks.push({
+    label: 'maxsim/references/',
+    passed: referencesExist && referencesCount > 0,
+    detail: !referencesExist ? 'directory missing' : referencesCount === 0 ? 'empty directory' : `${referencesCount} files`,
   });
 
   // CLAUDE.md — attribution file
@@ -200,7 +230,7 @@ if (mode === '--bump-and-publish') {
     try { execSync('npm cache clean --force', { stdio: 'pipe' }); } catch {}
 
     log(`Running install into ${tmpDir}`, 'info');
-    const installResult = runInstall(tmpDir);
+    const installResult = runInstall();
     const fileChecks = checkFiles(tmpDir);
     const filesOk = fileChecks.every(c => c.passed);
 
