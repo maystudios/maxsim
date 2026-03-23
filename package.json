@@ -24,8 +24,8 @@
   "scripts": {
     "build": "npm run build:cli",
     "build:cli": "cd packages/cli && npx tsdown && node scripts/copy-assets.cjs",
-    "test": "cd packages/cli && npx vitest run --passWithNoTests",
-    "e2e": "cd packages/cli && npx vitest run --config vitest.e2e.config.ts --passWithNoTests",
+    "test": "cd packages/cli && npx vitest run",
+    "e2e": "cd packages/cli && npx vitest run --config vitest.e2e.config.ts",
     "lint": "biome check .",
     "release": "semantic-release",
     "prepare": "husky"

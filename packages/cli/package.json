@@ -11,9 +11,6 @@
     "dist",
     "README.md"
   ],
-  "scripts": {
-    "prepublishOnly": "node -e \"require('fs').copyFileSync('../../README.md', './README.md')\""
-  },
   "engines": {
     "node": ">=22.0.0"
   },
@@ -31,7 +28,7 @@
     "type": "git",
     "url": "git+https://github.com/maystudios/maxsimcli.git"
   },
-  "homepage": "https://maxsimcli.dev/",
+  "homepage": "https://maxsimcli.com",
   "bugs": {
     "url": "https://github.com/maystudios/maxsimcli/issues"
   },
