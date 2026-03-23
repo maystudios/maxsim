@@ -22,7 +22,7 @@ The core MaxsimCLI workflow follows four steps. Each step is a slash command tha
 /maxsim:execute 1
 {% /codeblock %}
 
-After execution, phase state and decisions are tracked as GitHub Issue comments. You can run `/maxsim:progress` any time to see where you are and what to do next.
+After execution, state persists across multiple surfaces in GitHub: phase decisions and blocker notes are recorded as Issue comments, open/closed Issue status reflects whether a phase is active or complete, milestones track overall project completion percentage, and GitHub Project Board columns show the current workflow stage (Backlog, In Progress, Done). You can run `/maxsim:progress` any time to see where you are and what to do next.
 
 {% callout type="tip" %}
 Run /maxsim:plan before /maxsim:execute. The plan command manages discussion, research, and planning stages, surfacing assumptions and gray areas before you start building.
