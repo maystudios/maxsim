@@ -1,35 +1,59 @@
 ---
 id: planning-directory
-title: Planning Directory
+title: GitHub Project Board
 group: Core Concepts
 ---
 
-Every MaxsimCLI project has a `.planning/` directory at the project root. This directory is the persistent memory of your project. It stores everything from the initial vision through per-task execution summaries.
+The GitHub Project Board is MaxsimCLI's persistent memory. There are no local planning files. GitHub is the sole source of truth for project state, phase plans, research findings, decisions, and progress.
 
-{% codeblock language="text" %}
-.planning/
-├── config.json              # model_profile, workflow flags, branching strategy
-├── PROJECT.md               # Vision document (always loaded by agents)
-├── REQUIREMENTS.md          # v1/v2/out-of-scope requirements with traceability
-├── ROADMAP.md               # Phase structure with milestone groupings
-├── STATE.md                 # Live memory: decisions, blockers, metrics, progress
-├── phases/
-│   └── 01-Foundation/
-│       ├── 01-CONTEXT.md        # Decisions made in discuss-phase
-│       ├── 01-RESEARCH.md       # Phase research findings
-│       ├── 01-01-PLAN.md        # First plan (numbered per attempt)
-│       ├── 01-01-SUMMARY.md     # Completion record with deviations
-│       ├── 01-VERIFICATION.md   # Post-execution verification results
-│       └── 01-UAT.md            # User acceptance test transcript
-└── todos/
-    ├── pending/                 # Active todo items
-    └── completed/               # Archived todos
+### Kanban columns
+
+The Project Board uses a five-column Kanban layout that mirrors the phase lifecycle:
+
+{% doctable headers=["Column", "Meaning"] rows=[["Backlog", "Phases defined but not yet started"], ["To Do", "Phases ready to execute — plan approved"], ["In Progress", "Phases currently being executed by agents"], ["In Review", "Execution complete — verification running or awaiting review"], ["Done", "Verification passed — phase closed"]] %}
+{% /doctable %}
+
+Moving an Issue between columns is how MaxsimCLI tracks progress. Agents update column position automatically as they work. You can move Issues manually in GitHub when you make decisions outside the normal flow.
+
+### Issues as phase and task records
+
+Each phase is a GitHub Issue with label `type:phase`. Each task within a phase is a sub-Issue linked to the phase Issue. The Issue body holds the phase description, deliverables, and success criteria. Labels carry status (`status:planned`, `status:executing`, `status:complete`) and type metadata.
+
+### Comments as persistent context
+
+All agent-written context lives in Issue comments. A phase Issue accumulates comments over its lifetime:
+
+{% codeblock language="markdown" %}
+<!-- Discussion agent writes: -->
+## Discussion — Phase 02
+
+Q: Will the API require authentication on all routes?
+A: Yes, JWT with refresh tokens.
+
+---
+
+<!-- Research agent writes: -->
+## Research Findings — Phase 02
+
+Existing auth middleware at src/middleware/auth.ts uses jose 4.x.
+Recommend extending rather than replacing.
+
+---
+
+<!-- Executor agent writes: -->
+## Session Update — 2026-02-15
+
+**Current Position:** task 3 of 7
+**Completed:** JWT middleware
+**Next:** refresh endpoint
 {% /codeblock %}
 
-The `config.json` file controls model selection, workflow agent toggles, and branching strategy. PROJECT.md is loaded into every agent context automatically. It is the one document that every agent reads.
+Each new agent session reads the full comment thread before starting. This is how context survives across sessions, context-window resets, and team handoffs.
 
-Phase directories are named `NN-Name` (e.g., `01-Foundation`). Files within them use the phase number as prefix. This naming scheme makes the directory scannable and supports the decimal gap-closure phases (01.1, 01.2) that verification creates.
+### Milestones group phases
+
+GitHub Milestones group related phase Issues into shippable deliverables. The Milestone completion percentage (open vs. closed Issues) is the roadmap progress indicator. When all phase Issues in a Milestone are closed and verified, the Milestone is marked complete.
 
 {% callout type="tip" %}
-Commit your .planning/ directory to git. It is the institutional memory of your project. SUMMARY.md files, decisions in STATE.md, and RESEARCH.md files are all valuable artifacts that should be versioned alongside your code.
+You never need to create or edit local planning files. Any local planning directory left over from a previous version of MaxsimCLI should be removed. GitHub is the only place project state lives.
 {% /callout %}

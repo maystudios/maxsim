@@ -10,6 +10,10 @@ group: Workflow
 /maxsim:plan 1
 {% /codeblock %}
 
+### Plan Mode approval gate
+
+Before planning output is finalized, `/maxsim:plan` enters Plan Mode (`EnterPlanMode`). The planner presents the proposed task breakdown — Issues, acceptance criteria, wave grouping, dependencies — and waits for your explicit approval before writing anything to GitHub. Approve to proceed or reject to send the planner back for revisions. `ExitPlanMode` fires only when you approve. This gate applies to each stage: discussion, research, and planning each have their own approval step.
+
 ### Discussion stage
 
 The discussion agent reads your roadmap and phase context from GitHub, then asks targeted questions about the phase. Questions adapt based on your answers. If you mention a third-party API, it asks about rate limits and authentication. If you mention real-time features, it asks about WebSocket vs. polling tradeoffs. Discussion output is written as a comment on the phase GitHub Issue.
