@@ -71,10 +71,8 @@ One command. Installs project-locally into `.claude/`. No global installation.
 ```
 .claude/
 ├── settings.json          # Claude Code settings (hooks, permissions, env)
-├── settings.local.json    # Local overrides (not committed)
-├── CLAUDE.md              # → symlinked/copied to project root
 ├── commands/maxsim/       # 9 slash commands
-├── agents/                # 4 agent definitions
+├── agents/                # 4 agent definitions + AGENTS.md registry
 ├── skills/                # 14 skill modules
 ├── rules/                 # Conventions + verification protocol
 ├── maxsim/
@@ -113,7 +111,7 @@ GitHub is not optional. MaxsimCLI requires:
 
 Only `.claude/` exists locally. Additionally:
 
-- `CLAUDE.md` in project root — Auto-generated during init. Brief: project name, that MaxsimCLI is installed, available commands, link to GitHub Project. Claude Code reads this automatically at session start.
+- `CLAUDE.md` in project root — Auto-generated during install. Contains a full command reference table with Quick Start pointing to `/maxsim:go`. Claude Code reads this automatically at session start.
 - No other MaxsimCLI files in the project root or anywhere outside `.claude/`.
 
 ### 5.5 State Tracking
@@ -205,7 +203,7 @@ Executes a planned phase:
 Dedicated debugging:
 - Auto-detected by `/maxsim:go` when issues exist
 - Also callable directly
-- Uses systematic-debugging skill (reproduce → hypothesize → isolate → verify → fix → confirm)
+- Uses systematic-debugging skill (reproduce → hypothesize → isolate → verify → fix → resolve)
 
 ### 6.7 `/maxsim:quick [desc]`
 
@@ -217,13 +215,13 @@ Simplified flow for small tasks:
 ### 6.8 `/maxsim:progress`
 
 Shows:
-- GitHub Project Board status summary
-- Textual project summary
-- Recommendation for what to do next
+- GitHub Project Board status table (phases, tasks, columns)
+- Gap detection (blocked, overdue, or missing tasks)
+- Next-action recommendation with the exact command to run
 
 ### 6.9 Behavior Without a Command
 
-When a user opens Claude Code and describes a task without using `/maxsim:`, Claude sees the CLAUDE.md which contains a soft hint that MaxsimCLI is available. Claude works normally but may suggest using `/maxsim:go` or `/maxsim:quick`.
+When a user opens Claude Code and describes a task without using `/maxsim:`, Claude sees the auto-generated CLAUDE.md which contains a full command reference table with a Quick Start note pointing to `/maxsim:go`. Claude works normally but is aware of all available MaxsimCLI commands.
 
 ---
 
@@ -243,7 +241,7 @@ When a user opens Claude Code and describes a task without using `/maxsim:`, Cla
 **Hybrid approach: Agent Tool + Agent Teams**
 
 - **Agent Tool** (`isolation: "worktree"`) — For parallel execution of independent tasks. Follows Anthropic's batch pattern: all agents spawned in a single message block, self-contained prompts, `run_in_background: true`.
-- **Agent Teams** — For complex tasks requiring inter-agent communication. Teammates can message each other, share a task list, and coordinate. Used within each parallel branch.
+- **Agent Teams** *(planned — requires Anthropic/Claude Code Agent Teams research)* — For complex tasks requiring inter-agent communication. Teammates can message each other, share a task list, and coordinate. Used within each parallel branch. **Note:** This feature depends on Claude Code's experimental Agent Teams API. Active research into Anthropic's evolving Agent Teams capabilities is required before implementation.
 - **Competitive Implementation** — The same task can be assigned to 2-3 executor agents simultaneously. Each works independently. The verifier picks the best implementation.
 
 ### 7.3 Worktrees
@@ -327,7 +325,7 @@ description: What it does. Use when [trigger conditions].
 | 10 | `github-operations` | Infrastructure | **MERGED** from: github-artifact-protocol + github-tools-guide. Unified GitHub interaction: artifact types, comment conventions, CLI commands, lifecycle state machine. |
 | 11 | `research` | Technique | **MERGED** from: research-methodology + tool-priority-guide. Systematic investigation with source hierarchy and Claude Code tool priority. |
 | 12 | `project-memory` | Infrastructure | **NEW** — GitHub-native persistence for project learnings, decisions, and patterns. |
-| 13 | `using-maxsim` | User-facing | Command reference and routing table. Updated for v5 commands. |
+| 13 | `using-maxsim` | User-facing | Command reference and routing table. Updated for v6 commands. |
 | 14 | `maxsim-simplify` | Technique | Code simplification, dead code removal, reuse improvement. |
 
 ### 9.3 Skill Loading
@@ -365,12 +363,16 @@ After every task execution:
 - After 3 failures: escalate to user with diagnostic GitHub Issue
 - autoresearch-style: atomic change → verify → keep/discard
 
+> **Implementation status:** Currently instruction-based (enforced via skill/rule prompts). Code-level enforcement of fresh agent spawning per retry is planned.
+
 ### 10.4 Guard Pattern
 
 Borrowed from autoresearch:
 - **Verify command** — "Did this task accomplish its goal?" (primary metric)
 - **Guard command** — "Did this task break what was already working?" (regression check)
 - If guard fails after verify passes: 2 rework attempts before discarding
+
+> **Implementation status:** Currently instruction-based (enforced via verification skill). Code-level enforcement of the VERIFY+GUARD dual-command pattern is planned.
 
 ---
 
@@ -436,7 +438,9 @@ All improvements are project-local. Two projects using MaxsimCLI never interfere
 | `maxsim-stop-sound` | Stop | Play sound when Claude finishes |
 | `maxsim-capture-learnings` | Stop | Capture session learnings to agent memory |
 
-### 12.2 Agent Team Hooks
+### 12.2 Agent Team Hooks *(planned — requires Agent Teams research)*
+
+> These hooks depend on Claude Code's experimental Agent Teams API. Implementation will follow once Agent Teams capabilities are fully researched and validated.
 
 | Hook | Event | Purpose |
 |------|-------|---------|
@@ -470,7 +474,7 @@ MaxsimCLI decides the branching strategy:
 
 Fully automatic:
 - Conventional commit format: `type(scope): description`
-- Co-author attribution: `Co-Authored-By: Claude <noreply@anthropic.com>`
+- Co-author attribution: configurable via `co_author` config key (default: `Co-Authored-By: Claude <noreply@anthropic.com>`)
 - Atomic commits (one logical change per commit)
 - Automatic push after successful verification
 
@@ -485,14 +489,14 @@ maxsimcli/
 ├── packages/
 │   ├── cli/              # Main CLI package (TypeScript)
 │   │   ├── src/
-│   │   │   ├── core/     # Core logic (config, state, phases, milestones)
+│   │   │   ├── core/     # Core logic (config, types, utilities)
 │   │   │   ├── github/   # GitHub API integration (Projects v2, Issues, etc.)
 │   │   │   ├── hooks/    # Hook scripts
 │   │   │   └── install/  # Install/uninstall logic
 │   │   └── tests/        # Unit + E2E tests (TDD)
 │   └── website/          # Landing page + documentation (React + Vite)
 ├── templates/            # Source templates (copied to .claude/ during install)
-│   ├── agents/           # 4 agent definitions
+│   ├── agents/           # 4 agent definitions + AGENTS.md registry
 │   ├── commands/maxsim/  # 9 slash commands
 │   ├── skills/           # 14 skill modules
 │   ├── workflows/        # Workflow definitions
@@ -513,7 +517,7 @@ maxsimcli/
 | Linting | Biome |
 | CI/CD | GitHub Actions |
 | Releases | semantic-release |
-| Website | React + Vite + Tailwind CSS + Framer Motion |
+| Website | React + Vite + Tailwind CSS + Motion |
 | Documentation | Markdoc |
 
 ### 15.3 Testing Strategy
@@ -594,8 +598,9 @@ MaxsimCLI is successful when:
 ```
 1. src/core/types.ts — All TypeScript interfaces (single source)
 2. src/core/config.ts — Config loading (from .claude/maxsim/config.json)
-3. src/core/cli.ts — CLI entry point (maxsim-tools.cjs)
+3. src/cli.ts — CLI entry point (maxsim-tools.cjs) — lives at src/ root, not src/core/
 4. src/core/utils.ts — Shared utilities (path construction, frontmatter parsing)
+5. src/core/version.ts — Version detection utilities
 5. Tests: unit tests for every exported function
 ```
 **Commit:** `feat: core types and config module`
@@ -604,16 +609,16 @@ MaxsimCLI is successful when:
 **Goal:** Correct GitHub Projects v2 integration from scratch.
 **Spec:** `docs/spec/github-projects-v2-api.md`, `docs/spec/github-structure-design.md`
 ```
-1. src/github/client.ts — Octokit setup, auth, error handling
-2. src/github/projects.ts — Projects v2 (GraphQL + REST, CORRECT APIs)
-3. src/github/issues.ts — Issues + Sub-Issues (correct ID types)
-4. src/github/milestones.ts — Milestones (with pagination)
-5. src/github/labels.ts — Label taxonomy (16 labels in 4 namespaces)
-6. src/github/comments.ts — Structured comments (HTML markers)
-7. src/github/mapping.ts — Local cache (github-issues.json)
-8. src/github/sync.ts — State synchronization
-9. src/github/commands.ts — All GitHub CLI commands
-10. src/github/types.ts — GitHub-specific types
+1. src/github/client.ts — Octokit setup, auth, error handling ✅
+2. src/github/projects.ts — Projects v2 (GraphQL + REST, CORRECT APIs) ✅
+3. src/github/issues.ts — Issues + Sub-Issues (correct ID types) ✅
+4. src/github/milestones.ts — Milestones (with pagination) ✅
+5. src/github/labels.ts — Label taxonomy (16 labels in 4 namespaces) ✅
+6. src/github/comments.ts — Structured comments (HTML markers) ✅
+7. src/github/mapping.ts — Local cache (github-issues.json) ⬚ not yet implemented
+8. src/github/sync.ts — State synchronization ⬚ not yet implemented
+9. src/github/commands.ts — All GitHub CLI commands ⬚ not yet implemented
+10. src/github/types.ts — GitHub-specific types ✅
 11. Tests: unit tests with mocked Octokit, E2E with real API
 ```
 **Commit:** `feat: GitHub Projects v2 integration (correct API)`
@@ -622,12 +627,13 @@ MaxsimCLI is successful when:
 **Goal:** npx maxsimcli@latest works correctly.
 **Spec:** PROJECT.md §5.2, `docs/spec/claude-md-guide.md`
 ```
-1. src/install/index.ts — Main installer orchestrator
-2. src/install/copy.ts — Template file copying (with path replacement)
-3. src/install/hooks.ts — Hook registration in settings.json
-4. src/install/uninstall.ts — Clean uninstall (complete!)
-5. src/install/manifest.ts — Track all installed files
-6. scripts/copy-assets.cjs — Build step: copy templates to dist
+1. src/install/index.ts — Main installer orchestrator ✅
+2. src/install/copy.ts — Template file copying (with path replacement) ✅
+3. src/install/hooks.ts — Hook registration in settings.json ✅
+4. src/install/uninstall.ts — Clean uninstall (complete!) ✅
+5. src/install/claudemd.ts — CLAUDE.md generation ✅ (added, not in original spec)
+6. src/install/manifest.ts — Track all installed files ⬚ not yet implemented
+7. scripts/copy-assets.cjs — Build step: copy templates to dist ✅
 7. Tests: E2E install/uninstall cycle
 ```
 **Commit:** `feat: install system with complete uninstall`
@@ -750,12 +756,12 @@ Each section above has a corresponding deep-dive document in `docs/spec/` with f
 | 11 | Wave Execution Design | [`wave-execution-design.md`](docs/spec/wave-execution-design.md) | 848 | Dependency analysis, Kahn's algorithm, adaptive waves, error recovery |
 | 12 | Competitive Implementation | [`competitive-implementation-design.md`](docs/spec/competitive-implementation-design.md) | 1,136 | Best-of-N sampling, 7 scoring criteria, prompt variation, hybrid strategy |
 | 13 | Verification System | [`verification-system-design.md`](docs/spec/verification-system-design.md) | 1,432 | Gate framework, evidence blocks, anti-rationalization, Guard pattern |
-| 14 | Init Process Design | [`init-process-design.md`](docs/spec/init-process-design.md) | ~1,000 | 5-phase init, 30+ scan agents, adaptive interview, GitHub setup |
-| 15 | Hooks Reference | [`hooks-reference.md`](docs/spec/hooks-reference.md) | ~1,200 | All 22 hook events, settings.json format, 4 handler types, 12 gotchas |
+| 14 | Init Process Design | [`init-process-design.md`](docs/spec/init-process-design.md) | 1,301 | 5-phase init, 30+ scan agents, adaptive interview, GitHub setup |
+| 15 | Hooks Reference | [`hooks-reference.md`](docs/spec/hooks-reference.md) | 2,319 | All 22 hook events, settings.json format, 4 handler types, 12 gotchas |
 | 16 | Git Worktree Strategy | [`git-worktree-strategy.md`](docs/spec/git-worktree-strategy.md) | 2,007 | Worktree lifecycle, merge strategies, conflict resolution, cleanup |
-| 17 | Claude Code SDK Guide | [`claude-code-sdk-guide.md`](docs/spec/claude-code-sdk-guide.md) | ~800 | Claude Agent SDK, headless mode, programmatic sessions, @maxsim/sdk |
+| 17 | Claude Code SDK Guide | [`claude-code-sdk-guide.md`](docs/spec/claude-code-sdk-guide.md) | 1,331 | Claude Agent SDK, headless mode, programmatic sessions, @maxsim/sdk |
 
-**Total specification volume: ~20,000+ lines across 18 documents.**
+**Total specification volume: ~23,936 lines across 17 documents.**
 
 ---
 
