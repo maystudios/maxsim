@@ -13,7 +13,7 @@ GitHub Issues is the sole source of truth. No local RESEARCH.md file is written.
 
 <critical_rules>
 - Tool name is `Agent` (NOT `Task`)
-- Agent spawning: Agent(prompt, model, isolation, run_in_background)
+- Agent spawning: Agent(prompt, subagent_type, model, isolation, run_in_background)
 - Parallel agents use run_in_background=true, then collect results
 - Research is posted to GitHub with <!-- maxsim:type=research -->
 - Use `node .claude/maxsim/bin/maxsim-tools.cjs` for all CLI operations
@@ -162,8 +162,9 @@ Return findings as structured markdown:
 {anything that needs user decision or remains uncertain}
 </output_format>
 </instructions>",
+  subagent_type="researcher",
   model="{researcher_model}",
-  isolation=true,
+  isolation="worktree",
   run_in_background=true
 )
 ```

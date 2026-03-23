@@ -13,7 +13,7 @@ GitHub Issues is the sole source of truth. No local PLAN.md files are written.
 
 <critical_rules>
 - Tool name is `Agent` (NOT `Task`)
-- Agent spawning: Agent(prompt, model, isolation, run_in_background)
+- Agent spawning: Agent(prompt, subagent_type, model, isolation, run_in_background)
 - Plans are posted to GitHub with <!-- maxsim:type=plan -->
 - Use `node .claude/maxsim/bin/maxsim-tools.cjs` for all CLI operations
 - No local PLAN.md files are written -- GitHub is the sole source of truth
@@ -52,18 +52,18 @@ Phase {phase_number} already has plan(s) on GitHub Issue #{phase_issue_number}.
 3. Re-plan from scratch (removes existing plan comments)
 ```
 
-- If "Add more": Continue to Step 4 with existing plans preserved.
+- If "Add more": Continue to Step 3 with existing plans preserved.
 - If "View": Display plan comment contents, then re-offer options.
 - If "Re-plan": Delete existing plan comments from the issue:
   ```bash
   node .claude/maxsim/bin/maxsim-tools.cjs github delete-comments \
     --issue-number $PHASE_ISSUE_NUMBER --type plan
   ```
-  Then continue to Step 4.
+  Then continue to Step 3.
 
-**If no plan comments exist:** Continue to Step 4.
+**If no plan comments exist:** Continue to Step 3.
 
-## Step 4: Read Context and Research from GitHub
+## Step 3: Read Context and Research from GitHub
 
 Fetch the phase issue with all comments to supply the planner with context and research:
 
@@ -79,7 +79,7 @@ Extract:
 
 These are passed directly into the planner prompt. No local files are read for context or research.
 
-## Step 5: Spawn Planner Agent
+## Step 4: Spawn Planner Agent
 
 Display:
 ```
@@ -108,7 +108,7 @@ in its response (not write local files):
 **Phase requirement IDs (every ID MUST appear in a plan's `requirements` field):** {phase_req_ids}
 
 **Project instructions:** Read ./CLAUDE.md if exists -- follow project-specific guidelines
-**Project skills:** Check .skills/ directory (if exists) -- read SKILL.md files, plans should account for project skill rules
+**Project skills:** Check .claude/skills/ directory (if exists) -- read SKILL.md files, plans should account for project skill rules
 </planning_context>
 
 <task_format>
@@ -192,13 +192,14 @@ Spawn the planner:
 ```
 Agent(
   prompt=planner_prompt,
+  subagent_type="planner",
   model="{planner_model}",
-  isolation=true,
+  isolation="worktree",
   run_in_background=false
 )
 ```
 
-## Step 6: Handle Planner Return
+## Step 5: Handle Planner Return
 
 Parse the planner's return message:
 
@@ -209,8 +210,8 @@ Parse the planner's return message:
   If plans found in response:
   - Display plan count.
   - Store plans in memory as `plans_content` array.
-  - If `--skip-verify` flag is set OR `plan_checker_enabled` is false: skip to Step 9.
-  - Otherwise: continue to Step 7 (verification).
+  - If `--skip-verify` flag is set OR `plan_checker_enabled` is false: skip to Step 8.
+  - Otherwise: continue to Step 6 (verification).
 
   If no plans in response:
   - Error: "Planner reported complete but returned no plan content."
@@ -231,7 +232,7 @@ Parse the planner's return message:
   ```
   Handle user choice accordingly.
 
-## Step 7: Spawn Plan Checker
+## Step 6: Spawn Plan Checker
 
 Initialize iteration tracking: `iteration_count = 1`.
 
@@ -248,7 +249,7 @@ Construct the checker prompt. Pass the in-memory `plans_content` directly:
 **Phase Goal:** {goal from GitHub Issue}
 
 <plans_to_verify>
-{plans_content -- the plan(s) returned by the planner in Step 5}
+{plans_content -- the plan(s) returned by the planner in Step 4}
 </plans_to_verify>
 
 <github_context>
@@ -262,7 +263,7 @@ Construct the checker prompt. Pass the in-memory `plans_content` directly:
 **Phase requirement IDs (MUST ALL be covered):** {phase_req_ids}
 
 **Project instructions:** Read ./CLAUDE.md if exists -- verify plans honor project guidelines
-**Project skills:** Check .skills/ directory (if exists) -- verify plans account for project skill rules
+**Project skills:** Check .claude/skills/ directory (if exists) -- verify plans account for project skill rules
 </verification_context>
 
 <expected_output>
@@ -276,20 +277,21 @@ Spawn the checker:
 ```
 Agent(
   prompt="## Task: Verify plans achieve phase goal\n\n## Suggested Skills: verification\n\n" + checker_prompt,
+  subagent_type="verifier",
   model="{checker_model}",
-  isolation=true,
+  isolation="worktree",
   run_in_background=false
 )
 ```
 
-## Step 8: Handle Checker Return and Revision Loop
+## Step 7: Handle Checker Return and Revision Loop
 
 - **`## VERIFICATION PASSED`:**
   Display confirmation:
   ```
   Plan verification passed.
   ```
-  Continue to Step 9.
+  Continue to Step 8.
 
 - **`## ISSUES FOUND`:**
   Display the issues found. Check iteration count.
@@ -332,14 +334,15 @@ Agent(
   ```
   Agent(
     prompt=revision_prompt,
+    subagent_type="verifier",
     model="{planner_model}",
-    isolation=true,
+    isolation="worktree",
     run_in_background=false
   )
   ```
 
   After planner returns: increment `iteration_count`, update `plans_content` with revised content,
-  re-spawn checker (go back to Step 7).
+  re-spawn checker (go back to Step 6).
 
   **If iteration_count >= 3:**
 
@@ -355,12 +358,12 @@ Agent(
 
   Wait for user choice.
 
-  - If "Force proceed": Continue to Step 9.
+  - If "Force proceed": Continue to Step 8.
   - If "Provide guidance": Get user input, re-spawn planner with user guidance appended to
-    revision prompt, reset `iteration_count` to 1, go to Step 7.
+    revision prompt, reset `iteration_count` to 1, go to Step 6.
   - If "Abort": Exit workflow.
 
-## Step 9: Post Plans to GitHub
+## Step 8: Post Plans to GitHub
 
 After verification passes (or is skipped), post each plan as a separate comment on the phase
 GitHub Issue.
@@ -389,7 +392,7 @@ Display:
 Plans posted to GitHub Issue #{phase_issue_number}: {plan_count} plan(s).
 ```
 
-## Step 10: Create Task Sub-Issues
+## Step 9: Create Task Sub-Issues
 
 Parse tasks from the posted plans. For each `<task>` element in the plan XML, extract:
 - `id` (e.g. "1.1", "1.2")
@@ -422,7 +425,7 @@ Display:
 Task sub-issues created: {task_count} tasks linked to Issue #{phase_issue_number}.
 ```
 
-## Step 11: Move Phase to In Progress
+## Step 10: Move Phase to In Progress
 
 After all plans are posted and task sub-issues are created, move the phase issue to "In Progress"
 on the project board:
@@ -437,7 +440,7 @@ Display:
 Phase #{phase_issue_number} moved to "In Progress" on the board.
 ```
 
-## Step 12: Return to Orchestrator
+## Step 11: Return to Orchestrator
 
 After plans are posted, task sub-issues created, and the phase moved to "In Progress", return
 control to the plan.md orchestrator. Do NOT show gate confirmation or next steps -- the
@@ -454,7 +457,7 @@ Planning complete. {plan_count} plan(s) posted to GitHub Issue #{phase_issue_num
 - [ ] Planner and checker models resolved from config
 - [ ] Existing plans detected from GitHub Issue comments and handled (add/view/replan options)
 - [ ] Context and research read from GitHub Issue comments (not local files)
-- [ ] Planner agent spawned with Agent tool (not Task) with isolation=true
+- [ ] Planner agent spawned with Agent tool (not Task) with isolation="worktree"
 - [ ] Plan content returned from planner as in-memory document (no local PLAN.md files written)
 - [ ] Checker verification loop runs (max 3 iterations) unless --skip-verify
 - [ ] Revision loop passes in-memory plan content to planner for targeted fixes
