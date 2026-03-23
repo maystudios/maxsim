@@ -9,9 +9,14 @@ Executor agents run in isolated git worktrees. Each agent executes all tasks in 
 
 <required_reading>
 Read these files immediately upon start, before any other action:
-- .planning/STATE.md — project state and position
-- .planning/config.json — planning behavior settings (if exists)
+- .claude/maxsim/config.json — planning behavior settings (if exists)
 - ./CLAUDE.md — project-specific coding conventions (if exists)
+
+Load phase and plan context from GitHub:
+```bash
+node .claude/maxsim/bin/maxsim-tools.cjs github get-issue \
+  --issue-number {phase_issue_number} --include-comments
+```
 </required_reading>
 
 <process>
@@ -21,12 +26,10 @@ Read these files immediately upon start, before any other action:
 Load execution context:
 
 ```bash
-INIT=$(node ~/.claude/maxsim/bin/maxsim-tools.cjs init execute-phase "${PHASE_NUMBER}")
+INIT=$(node .claude/maxsim/bin/maxsim-tools.cjs init execute-phase "${PHASE_NUMBER}")
 ```
 
 Extract: `phase_dir`, `phase_number`, `phase_name`, `executor_model`, `commit_docs`, `phase_issue_number`.
-
-If `.planning/` is missing: exit immediately with `RESULT: FAIL — .planning/ directory not found`.
 
 Record start time:
 ```bash
@@ -58,7 +61,7 @@ Execute all tasks in sequence. For each task:
 
 Move task sub-issue to "In Progress" on the board:
 ```bash
-node ~/.claude/maxsim/bin/maxsim-tools.cjs github move-issue \
+node .claude/maxsim/bin/maxsim-tools.cjs github move-issue \
   --issue-number {task_issue_number} --status "In Progress"
 ```
 
@@ -122,9 +125,9 @@ Commit type conventions:
 
 Move task sub-issue to Done and close it:
 ```bash
-node ~/.claude/maxsim/bin/maxsim-tools.cjs github move-issue \
+node .claude/maxsim/bin/maxsim-tools.cjs github move-issue \
   --issue-number {task_issue_number} --status "Done"
-node ~/.claude/maxsim/bin/maxsim-tools.cjs github close-issue \
+node .claude/maxsim/bin/maxsim-tools.cjs github close-issue \
   --issue-number {task_issue_number}
 ```
 
@@ -164,7 +167,7 @@ done
 git log --oneline --all --grep="{phase_number}-{plan_id}" 2>/dev/null
 
 # Verify all task sub-issues are closed
-node ~/.claude/maxsim/bin/maxsim-tools.cjs github list-sub-issues \
+node .claude/maxsim/bin/maxsim-tools.cjs github list-sub-issues \
   --phase-issue-number {phase_issue_number}
 ```
 
@@ -220,43 +223,13 @@ key_decisions:
 <!-- maxsim:type=summary -->
 SUMMARY_EOF
 
-node ~/.claude/maxsim/bin/maxsim-tools.cjs github post-comment \
+node .claude/maxsim/bin/maxsim-tools.cjs github post-comment \
   --issue-number {phase_issue_number} \
   --body-file "$SUMMARY_FILE" \
   --type summary
 ```
 
-## Step 7 — Update State Files
-
-```bash
-# Advance plan counter
-node ~/.claude/maxsim/bin/maxsim-tools.cjs state advance-plan
-
-# Recalculate progress
-node ~/.claude/maxsim/bin/maxsim-tools.cjs state update-progress
-
-# Record session metrics
-node ~/.claude/maxsim/bin/maxsim-tools.cjs state record-metric \
-  --phase "{PHASE_NUMBER}" --plan "{PLAN_ID}" --duration "{PLAN_DURATION}" \
-  --tasks "{TASK_COUNT}" --files "{FILE_COUNT}"
-
-# Record session stop position
-node ~/.claude/maxsim/bin/maxsim-tools.cjs state record-session \
-  --stopped-at "Completed {PHASE_NUMBER}-{PLAN_ID} (execute-plan)" \
-  --resume-file "None"
-
-# Update roadmap progress
-node ~/.claude/maxsim/bin/maxsim-tools.cjs roadmap update-plan-progress "{PHASE_NUMBER}"
-```
-
-Commit planning metadata (task code was already committed per-task):
-```bash
-node ~/.claude/maxsim/bin/maxsim-tools.cjs commit \
-  "docs({phase_number}-{plan_id}): complete plan execution" \
-  --files .planning/STATE.md .planning/ROADMAP.md .planning/REQUIREMENTS.md
-```
-
-## Step 8 — Return Result
+## Step 7 — Return Result
 
 The final line of output MUST be exactly one of:
 - `RESULT: PASS`
@@ -276,14 +249,13 @@ Before returning RESULT: PASS, confirm ALL of the following:
 - [ ] All task sub-issues are closed on GitHub
 - [ ] Summary comment posted to phase issue with <!-- maxsim:type=summary -->
 - [ ] Self-check ran and result appended to summary
-- [ ] STATE.md and ROADMAP.md updated
 </verification_checklist>
 
 <failure_handling>
 - **Task tests fail after 2 retries:** Diagnose root cause. If cannot fix, return `RESULT: FAIL — task {N} tests failing: {error}`
 - **File cannot be found:** Check path relative to worktree root. If genuinely missing, create it as specified in the task.
 - **Sub-issue board transition fails:** Log the error, continue execution. Include note in summary.
-- **GitHub post-comment fails:** Retry once with exponential backoff. If still failing, write summary to `.planning/phases/{phase_dir}/{plan_id}-SUMMARY.md` as fallback and report error.
+- **GitHub post-comment fails:** Retry once with exponential backoff. If still failing, report error in output and return `RESULT: FAIL — could not post summary comment`.
 - **Commit fails (merge conflict):** You are in an isolated worktree. Conflicts indicate unexpected overlap. Report immediately: `RESULT: FAIL — merge conflict in worktree: {files}`
 </failure_handling>
 
@@ -295,6 +267,5 @@ Before returning RESULT: PASS, confirm ALL of the following:
 - [ ] Board transitions: In Progress when task starts, Done+closed when task completes
 - [ ] Self-check ran and result recorded in summary
 - [ ] Summary posted as GitHub comment (<!-- maxsim:type=summary -->) — no local SUMMARY.md written
-- [ ] State files updated
 - [ ] Final output line is exactly RESULT: PASS or RESULT: FAIL — {reason}
 </success_criteria>
