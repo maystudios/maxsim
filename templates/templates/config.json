@@ -1,31 +1,31 @@
 {
   "version": "6.0.0",
   "execution": {
-    "modelProfile": "balanced",
+    "model_profile": "balanced",
     "parallelism": {
-      "maxAgentsPerWave": 3,
-      "maxRetries": 3,
-      "competitionStrategy": "none"
+      "max_agents_per_wave": 3,
+      "max_retries": 3,
+      "competition_strategy": "none"
     },
     "verification": {
-      "strictMode": true,
+      "strict_mode": true,
       "gates": ["tests", "build", "lint", "spec", "review"],
-      "requireCodeReview": true,
-      "autoResolveConflicts": true
+      "require_code_review": true,
+      "auto_resolve_conflicts": true
     }
   },
   "worktrees": {
     "basePath": ".maxsim-worktrees/",
-    "autoCleanup": true,
-    "branchPrefix": "maxsim/"
+    "auto_cleanup": true,
+    "branch_prefix": "maxsim/"
   },
   "automation": {
-    "autoCommitOnSuccess": true,
-    "conventionalCommits": true
+    "auto_commit_on_success": true,
+    "conventional_commits": true
   },
   "github": {
     "projectName": "",
-    "autoPush": true
+    "auto_push": true
   },
   "hooks": {
     "enabled": true
