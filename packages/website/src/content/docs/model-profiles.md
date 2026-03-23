@@ -6,10 +6,10 @@ group: Configuration
 
 Model profiles control which Claude model each agent uses. Pick a profile that matches your priorities: best results, cost efficiency, or a middle ground.
 
-{% doctable headers=["Agent", "quality", "balanced", "budget", "tokenburner"] rows=[["executor", "opus", "sonnet", "sonnet", "opus"], ["planner", "opus", "opus", "sonnet", "opus"], ["researcher", "opus", "sonnet", "haiku", "opus"], ["verifier", "sonnet", "sonnet", "haiku", "opus"], ["debugger", "sonnet", "sonnet", "haiku", "opus"]] %}
+{% doctable headers=["Agent", "quality", "balanced", "budget"] rows=[["executor", "opus", "sonnet", "sonnet"], ["planner", "opus", "opus", "sonnet"], ["researcher", "sonnet", "sonnet", "haiku"], ["verifier", "opus", "sonnet", "sonnet"]] %}
 {% /doctable %}
 
-The `balanced` profile (default) gives you Opus-quality planning with Sonnet for execution and research. It is a good trade-off between results and cost. The `quality` profile upgrades the executor and researcher to Opus. The `budget` profile uses Sonnet for planning and execution, Haiku for everything else, giving the lowest cost. The `tokenburner` profile uses Opus for every agent: maximum quality, maximum cost.
+The `balanced` profile (default) gives you Opus-quality planning with Sonnet for execution and research. It is a good trade-off between results and cost. The `quality` profile upgrades the executor, planner, and verifier to Opus. The `budget` profile uses Sonnet for planning and execution, Haiku for research, giving the lowest cost.
 
 To switch profiles, use `/maxsim:settings`:
 
@@ -17,5 +17,4 @@ To switch profiles, use `/maxsim:settings`:
 /maxsim:settings profile quality
 /maxsim:settings profile balanced
 /maxsim:settings profile budget
-/maxsim:settings profile tokenburner
 {% /codeblock %}

@@ -25,7 +25,12 @@ MaxsimCLI installs into `.claude/` at your project root:
 ├── commands/maxsim/      # 9 user-facing commands (/maxsim:*)
 ├── agents/               # 4 specialized subagent prompts
 ├── skills/               # 14 reusable skill modules
+├── rules/                # Standing rules loaded into every session
+├── agent-memory/         # Per-agent persistent memory files
+├── settings.json         # Project-level Claude Code settings
+├── settings.local.json   # Local overrides (gitignored)
 └── maxsim/
+    ├── hooks/            # Lifecycle hooks (maxsim-check-update, maxsim-statusline, etc.)
     ├── workflows/        # Workflow orchestration templates
     ├── references/       # Reference documents for agents
     └── templates/        # Document templates
