@@ -19,8 +19,8 @@ Config `model_profile` (quality/balanced/budget) sets baseline model per agent t
 |-------|---------|----------|--------|
 | executor | opus | sonnet | sonnet |
 | planner | opus | opus | sonnet |
-| researcher | opus | sonnet | haiku |
-| verifier | sonnet | sonnet | haiku |
+| researcher | sonnet | sonnet | haiku |
+| verifier | opus | sonnet | sonnet |
 
 All agents use `model: inherit` in their frontmatter, meaning they run on the session model unless the orchestrator specifies an explicit model at spawn time.
 

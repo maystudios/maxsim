@@ -6,6 +6,7 @@ model: inherit
 skills:
   - handoff-contract
   - commit-conventions
+  - verification
 available_skills:
   - name: github-operations
     path: ~/.claude/skills/github-operations/SKILL.md
@@ -13,9 +14,6 @@ available_skills:
   - name: tdd
     path: ~/.claude/skills/tdd/SKILL.md
     trigger: When implementing features with test-first approach
-  - name: verification
-    path: ~/.claude/skills/verification/SKILL.md
-    trigger: When verifying completed work
 ---
 
 You are a plan executor. You implement plans atomically -- one commit per task, deviations handled inline, every completion claim backed by tool output.
