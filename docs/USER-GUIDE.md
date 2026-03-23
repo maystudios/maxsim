@@ -196,11 +196,22 @@ GitHub Milestones group phases into deliverable versions:
 - Milestone completion percentage reflects how many phase issues are closed
 - The roadmap is visible at a glance in the GitHub Milestones page
 
+### GitHub Wiki
+
+MaxsimCLI uses the GitHub Wiki to store durable project artifacts that apply across all phases: conventions, requirements, and architecture decisions. Unlike issue comments (which belong to a single issue), the Wiki is a persistent reference visible to anyone working on the project.
+
+### GitHub Discussions
+
+GitHub Discussions are used for architecture decisions and design proposals that benefit from an open-ended conversation format. When a decision is made, the outcome is captured in a project Wiki page or issue comment for reference during planning and execution.
+
 ### Labels
 
-MaxsimCLI creates 30+ labels to categorize work:
+MaxsimCLI creates approximately 15 labels across four namespaces:
 
-`phase`, `task`, `blocker`, `bug`, `research`, `verification-failed`, `needs-review`, `in-progress`, `quick`, `competitive`, and more.
+- **`type:`** — `type:phase`, `type:task`, `type:bug`, `type:quick`, `type:user`
+- **`priority:`** — `priority:p0` through `priority:p3`
+- **`status:`** — `status:planning`, `status:ready`, `status:blocked`
+- **`maxsim:`** — `maxsim:managed`, `maxsim:lesson`, `maxsim:decision`
 
 ---
 
@@ -218,27 +229,36 @@ Use `/maxsim:settings` to configure interactively, or edit the file directly.
 
 ```json
 {
-  "model_profile": "balanced",
-  "verification": {
-    "enabled": true,
-    "max_retries": 3,
-    "guard_enabled": true
+  "version": "6.0.0",
+  "execution": {
+    "modelProfile": "balanced",
+    "parallelism": {
+      "maxAgentsPerWave": 3,
+      "maxRetries": 3,
+      "competitionStrategy": "standard"
+    },
+    "verification": {
+      "strictMode": true,
+      "gates": ["tests_pass", "build_succeeds", "lint_clean", "spec_compliance", "code_review"],
+      "requireCodeReview": true,
+      "autoResolveConflicts": true
+    }
   },
-  "parallelism": {
-    "max_agents": 10,
-    "competitive": true,
-    "competitive_n": 2
+  "worktrees": {
+    "basePath": ".maxsim-worktrees/",
+    "autoCleanup": true,
+    "branchPrefix": "maxsim/"
   },
-  "github": {
-    "project_name": "My Project",
-    "auto_push": true
+  "automation": {
+    "autoCommitOnSuccess": true,
+    "conventionalCommits": true
   }
 }
 ```
 
 ### Model Profiles
 
-The `model_profile` setting controls which Claude model is used for each agent type.
+The `execution.modelProfile` setting controls which Claude model is used for each agent type.
 
 | Agent | `quality` | `balanced` (default) | `budget` |
 |-------|-----------|----------------------|----------|
@@ -259,28 +279,24 @@ Switch profiles at any time with `/maxsim:settings`.
 
 | Setting | Default | Description |
 |---------|---------|-------------|
-| `verification.enabled` | `true` | Whether automatic verification runs after each task |
-| `verification.max_retries` | `3` | How many times a failing task is retried before escalation |
-| `verification.guard_enabled` | `true` | Whether the regression guard check runs after the verify check |
+| `execution.verification.strictMode` | `true` | Require all verification gates to pass before marking a task complete |
+| `execution.verification.requireCodeReview` | `true` | Whether the code review gate runs as part of verification |
 
-Disable verification only for rapid prototyping where you plan to verify manually later.
+Disable `strictMode` only for rapid prototyping where you plan to verify manually later.
 
 ### Parallelism Settings
 
 | Setting | Default | Description |
 |---------|---------|-------------|
-| `parallelism.max_agents` | `10` | Maximum concurrent executor agents |
-| `parallelism.competitive` | `true` | Enable competitive implementation (same task solved N ways) |
-| `parallelism.competitive_n` | `2` | Number of competing implementations per task |
+| `execution.parallelism.maxAgentsPerWave` | `3` | Maximum concurrent executor agents per wave |
+| `execution.parallelism.maxRetries` | `3` | How many times a failing task is retried before escalation |
+| `execution.competitionStrategy` | `"standard"` | Competitive implementation strategy: `none`, `quick`, `standard`, or `deep` |
 
-Competitive implementation uses more tokens but produces higher quality output. Disable it with `competitive: false` to reduce cost on straightforward tasks.
+Competitive implementation uses more tokens but produces higher quality output. Set `execution.competitionStrategy` to `"none"` to disable it on straightforward tasks.
 
 ### GitHub Settings
 
-| Setting | Default | Description |
-|---------|---------|-------------|
-| `github.project_name` | (from init) | Name of the GitHub Project board |
-| `github.auto_push` | `true` | Automatically push to remote after successful verification |
+GitHub connection details (repo, project name, push behavior) are configured during `/maxsim:init` and stored in the project's `CLAUDE.md`. They are not part of `config.json`.
 
 ---
 
@@ -314,7 +330,7 @@ This means agents never step on each other. Work that fails verification is disc
 
 ### Competitive Implementation
 
-When `parallelism.competitive` is enabled, the same task is assigned to multiple executor agents simultaneously. Each works independently without knowing about the others. The Verifier scores all implementations across criteria including correctness, test coverage, security, code quality, and spec compliance — and selects the best one.
+When `execution.competitionStrategy` is set to `"quick"`, `"standard"`, or `"deep"`, the same task is assigned to multiple executor agents simultaneously. Each works independently without knowing about the others. The Verifier scores all implementations across criteria including correctness, test coverage, security, code quality, and spec compliance — and selects the best one.
 
 This is the same principle used in ensemble ML methods: multiple independent attempts at a problem produce better results than a single attempt.
 
@@ -404,6 +420,10 @@ This file stores:
 
 This memory is loaded at the start of each session and applied to all subsequent agent behavior.
 
+### Metric Tracking
+
+Session outcomes are also written to `autoresearch-results.tsv` in the project root (gitignored). This tab-separated file records per-session metrics — task success rates, retry counts, verification outcomes — so improvements can be measured over time.
+
 ### What Improves Over Time
 
 | Target | How It Improves |
@@ -440,7 +460,7 @@ This checks that all required components are present and working:
 npx maxsimcli --uninstall
 ```
 
-This removes `.claude/` completely, deregisters all hooks from Claude Code settings, and removes the project-root `CLAUDE.md`. Your code and GitHub Issues are not affected.
+This removes MaxsimCLI-managed files from `.claude/` (custom skills and agents you created are preserved), deregisters all hooks from Claude Code settings, and removes the project-root `CLAUDE.md`. Your code and GitHub Issues are not affected.
 
 ### Common Issues
 
@@ -462,7 +482,7 @@ MaxsimCLI created a diagnostic GitHub Issue with the full error context. Check y
 
 **"Executor agents are slow or timing out"**
 
-Reduce parallelism in `/maxsim:settings`: lower `parallelism.max_agents` to 4-5. Also consider switching to the `budget` model profile to use faster models.
+Reduce parallelism in `/maxsim:settings`: lower `execution.parallelism.maxAgentsPerWave` to 2-3. Also consider switching to the `budget` model profile to use faster models.
 
 **"Plans do not match what I wanted"**
 
@@ -478,7 +498,7 @@ Move the issue card to the correct column on the GitHub Project Board. MaxsimCLI
 
 **"Commits are not being pushed"**
 
-Check `github.auto_push` in `.claude/maxsim/config.json`. If it is `false`, you need to push manually. Set it to `true` via `/maxsim:settings` to restore automatic push.
+Check `automation.autoCommitOnSuccess` in `.claude/maxsim/config.json`. If commits are succeeding but pushes are not happening, verify the GitHub remote is configured correctly and run `gh auth status` to confirm authentication.
 
 **"I need to start over"**
 
