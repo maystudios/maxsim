@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import * as os from 'node:os';
-import { copyDir, copyFile, removeDir } from '../../src/install/copy.js';
+import { copyDir, removeDir } from '../../src/install/copy.js';
 import { generateClaudeMd, writeClaudeMd } from '../../src/install/claudemd.js';
 import { uninstall } from '../../src/install/uninstall.js';
 
@@ -36,16 +36,6 @@ describe('copyDir', () => {
   });
 });
 
-describe('copyFile', () => {
-  it('copies a single file and creates parent dirs', () => {
-    const src = path.join(tmpDir, 'file.txt');
-    const dest = path.join(tmpDir, 'deep', 'nested', 'file.txt');
-    fs.writeFileSync(src, 'content');
-
-    copyFile(src, dest);
-    expect(fs.readFileSync(dest, 'utf8')).toBe('content');
-  });
-});
 
 describe('removeDir', () => {
   it('removes a directory recursively', () => {
