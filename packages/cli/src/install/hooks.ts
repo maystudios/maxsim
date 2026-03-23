@@ -17,7 +17,7 @@ interface HookMatcher {
 
 interface SettingsJson {
   hooks?: Record<string, HookMatcher[]>;
-  statusLine?: { command: string };
+  statusLine?: { type: 'command'; command: string };
   env?: Record<string, string>;
   [key: string]: unknown;
 }
@@ -52,40 +52,38 @@ export function installHooks(projectDir: string): { installed: string[] } {
     settings.hooks = {};
   }
 
-  const hooksDir = path.join(claudeDir, 'maxsim', 'hooks');
-
   // Register SessionStart hook (update check)
-  const updateCheckPath = path.join(hooksDir, 'maxsim-check-update.cjs');
+  const updateCheckPath = path.join(hooksDestDir, 'maxsim-check-update.cjs');
   if (fs.existsSync(updateCheckPath)) {
-    registerHook(settings, 'SessionStart', undefined, `node "${updateCheckPath}"`);
+    registerHook(settings, 'SessionStart', `node "${updateCheckPath}"`);
     installed.push('maxsim-check-update (SessionStart)');
   }
 
   // Register Notification hook (question sound)
-  const notifSoundPath = path.join(hooksDir, 'maxsim-notification-sound.cjs');
+  const notifSoundPath = path.join(hooksDestDir, 'maxsim-notification-sound.cjs');
   if (fs.existsSync(notifSoundPath)) {
-    registerHook(settings, 'Notification', undefined, `node "${notifSoundPath}"`);
+    registerHook(settings, 'Notification', `node "${notifSoundPath}"`);
     installed.push('maxsim-notification-sound (Notification)');
   }
 
   // Register Stop hook (completion sound)
-  const stopSoundPath = path.join(hooksDir, 'maxsim-stop-sound.cjs');
+  const stopSoundPath = path.join(hooksDestDir, 'maxsim-stop-sound.cjs');
   if (fs.existsSync(stopSoundPath)) {
-    registerHook(settings, 'Stop', undefined, `node "${stopSoundPath}"`);
+    registerHook(settings, 'Stop', `node "${stopSoundPath}"`);
     installed.push('maxsim-stop-sound (Stop)');
   }
 
   // Register Stop hook (capture session learnings)
-  const captureLearningsPath = path.join(hooksDir, 'maxsim-capture-learnings.cjs');
+  const captureLearningsPath = path.join(hooksDestDir, 'maxsim-capture-learnings.cjs');
   if (fs.existsSync(captureLearningsPath)) {
-    registerHook(settings, 'Stop', undefined, `node "${captureLearningsPath}"`);
+    registerHook(settings, 'Stop', `node "${captureLearningsPath}"`);
     installed.push('maxsim-capture-learnings (Stop)');
   }
 
   // Register statusLine
-  const statusLinePath = path.join(hooksDir, 'maxsim-statusline.cjs');
+  const statusLinePath = path.join(hooksDestDir, 'maxsim-statusline.cjs');
   if (fs.existsSync(statusLinePath)) {
-    settings.statusLine = { command: `node "${statusLinePath}"` };
+    settings.statusLine = { type: 'command', command: `node "${statusLinePath}"` };
     installed.push('maxsim-statusline (statusLine)');
   }
 
@@ -103,7 +101,6 @@ export function installHooks(projectDir: string): { installed: string[] } {
 function registerHook(
   settings: SettingsJson,
   event: string,
-  _matcher: string | undefined,
   command: string,
 ): void {
   if (!settings.hooks) settings.hooks = {};

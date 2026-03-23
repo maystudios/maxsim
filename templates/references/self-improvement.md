@@ -109,7 +109,7 @@ reference the same task with no intervening commit.
 ## Hook Integration
 
 The capture-learnings hook is registered as a `Stop` event hook during
-`maxsim install`. It only writes to MEMORY.md when `.claude/maxsim/config.json`
+`npx maxsimcli@latest`. It only writes to MEMORY.md when `.claude/maxsim/config.json`
 exists, so it is a no-op in non-MaxsimCLI projects.
 
 To inspect accumulated learnings:

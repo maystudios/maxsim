@@ -52,7 +52,7 @@ Output: [Working, tested feature]
 <context>
 GitHub Issue: #<phase-issue-number> (phase scope and acceptance criteria)
 GitHub Issue: #<feature-issue-number> (feature sub-issue with TDD spec)
-@relevant/source/files.ts
+relevant/source/files.ts
 </context>
 
 <feature>
@@ -77,7 +77,7 @@ GitHub Issue: #<feature-issue-number> (feature sub-issue with TDD spec)
 </success_criteria>
 
 <output>
-After completion, create SUMMARY.md with:
+After completion, post a TDD summary as a GitHub Issue comment on the task sub-issue with:
 - RED: What test was written, why it failed
 - GREEN: What implementation made it pass
 - REFACTOR: What cleanup was done (if any)

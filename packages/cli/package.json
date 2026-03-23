@@ -34,9 +34,6 @@
   },
   "dependencies": {
     "@inquirer/prompts": "^8.3.0",
-    "@octokit/plugin-retry": "^8.1.0",
-    "@octokit/plugin-throttling": "^11.0.3",
-    "@octokit/rest": "^22.0.1",
     "chalk": "^5.6.2",
     "escape-string-regexp": "^5.0.0",
     "figlet": "^1.10.0",
@@ -48,6 +45,9 @@
     "yaml": "^2.8.2"
   },
   "devDependencies": {
+    "@octokit/plugin-retry": "^8.1.0",
+    "@octokit/plugin-throttling": "^11.0.3",
+    "@octokit/rest": "^22.0.1",
     "@types/figlet": "^1.7.0",
     "@types/fs-extra": "^11.0.4",
     "@types/minimist": "^1.2.5",

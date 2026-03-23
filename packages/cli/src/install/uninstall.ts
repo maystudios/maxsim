@@ -31,55 +31,15 @@ export function uninstall(projectDir: string): {
     }
   }
 
-  // Remove agent files
-  const agentsDir = path.join(claudeDir, 'agents');
-  if (fs.existsSync(agentsDir)) {
-    const agentFiles = ['executor.md', 'planner.md', 'researcher.md', 'verifier.md', 'AGENTS.md'];
-    for (const file of agentFiles) {
-      const filePath = path.join(agentsDir, file);
-      if (fs.existsSync(filePath)) {
-        fs.unlinkSync(filePath);
-        removedFiles.push(filePath);
-      }
-    }
-    // Remove agents dir if empty
-    try {
-      const remaining = fs.readdirSync(agentsDir);
-      if (remaining.length === 0) {
-        fs.rmdirSync(agentsDir);
-        removedDirs.push(agentsDir);
-      }
-    } catch { /* ignore */ }
-  }
-
-  // Remove skill directories
-  const skillsDir = path.join(claudeDir, 'skills');
-  if (fs.existsSync(skillsDir)) {
-    const builtInSkills = [
-      'tdd', 'systematic-debugging', 'brainstorming', 'roadmap-writing',
-      'handoff-contract', 'commit-conventions', 'maxsim-batch', 'code-review',
-      'verification', 'github-operations', 'research', 'project-memory',
-      'using-maxsim', 'maxsim-simplify',
-    ];
-    for (const skill of builtInSkills) {
-      const skillDir = path.join(skillsDir, skill);
-      if (fs.existsSync(skillDir)) {
-        removeDir(skillDir);
-        removedDirs.push(skillDir);
-      }
-    }
-  }
-
-  // Remove rules files
-  const rulesDir = path.join(claudeDir, 'rules');
-  if (fs.existsSync(rulesDir)) {
-    const ruleFiles = ['conventions.md', 'verification-protocol.md'];
-    for (const file of ruleFiles) {
-      const filePath = path.join(rulesDir, file);
-      if (fs.existsSync(filePath)) {
-        fs.unlinkSync(filePath);
-        removedFiles.push(filePath);
-      }
+  // Remove agents/, skills/, rules/ wholesale
+  for (const dir of [
+    path.join(claudeDir, 'agents'),
+    path.join(claudeDir, 'skills'),
+    path.join(claudeDir, 'rules'),
+  ]) {
+    if (fs.existsSync(dir)) {
+      fs.rmSync(dir, { recursive: true, force: true });
+      removedDirs.push(dir);
     }
   }
 

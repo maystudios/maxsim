@@ -554,7 +554,7 @@ check_substantive() {
 }
 ```
 
-Run these checks against each must-have artifact. Aggregate results into VERIFICATION.md.
+Run these checks against each must-have artifact. Aggregate results into a structured evidence block and post as a GitHub Issue comment using the verification comment type.
 
 </automated_verification_script>
 
@@ -602,7 +602,7 @@ Some things can't be verified programmatically. Flag these for human testing:
 
 For automation-first checkpoint patterns, server lifecycle management, CLI installation handling, and error recovery protocols, see:
 
-**@~/.claude/maxsim/references/checkpoints.md** → `<automation_reference>` section
+**.claude/maxsim/references/checkpoints.md** → `<automation_reference>` section
 
 Key principles:
 - Claude sets up verification environment BEFORE presenting checkpoints

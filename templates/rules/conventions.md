@@ -34,7 +34,7 @@ Co-author line when AI-assisted: `Co-Authored-By: Claude <noreply@anthropic.com>
 | Rules | `.claude/rules/<topic>.md` |
 | Plans | GitHub Sub-Issues on the phase Issue |
 
-Use kebab-case for directory names. Use UPPER_CASE for protocol files (SKILL.md, PLAN.md).
+Use kebab-case for directory names. Use UPPER_CASE for protocol files (SKILL.md, AGENTS.md).
 
 ## Code Style
 

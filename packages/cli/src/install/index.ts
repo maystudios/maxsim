@@ -14,8 +14,7 @@ import { copyDir, getTemplatesDir } from './copy.js';
 import { installHooks } from './hooks.js';
 import { uninstall } from './uninstall.js';
 import { writeClaudeMd } from './claudemd.js';
-
-const VERSION = '6.0.0-dev';
+import { VERSION } from '../core/version.js';
 
 async function main(): Promise<void> {
   const args = minimist(process.argv.slice(2), {
