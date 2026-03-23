@@ -47,6 +47,8 @@ Use the correct tool for each task. Using the wrong tool produces slower or inco
 | Find files by name/pattern | `Glob` | `find`, `ls` |
 | Multi-step investigation across many files | `Agent` | Sequential Bash loops |
 | Single shell command or script | `Bash` | — |
+| Discover external docs, packages, or resources | `WebSearch` | Guessing URLs |
+| Read a specific external URL or documentation page | `WebFetch` | `curl` in Bash |
 
 **Parallelise where possible.** When multiple files or sources are independent, read or search them in the same tool call batch rather than sequentially.
 

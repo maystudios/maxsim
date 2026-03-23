@@ -1,7 +1,6 @@
 ---
 name: github-operations
 description: Unified GitHub interaction covering artifact types, comment conventions, CLI commands, and issue lifecycle. Use when reading from or writing to GitHub Issues, managing the project board, or posting structured comments.
-user-invocable: false
 ---
 
 ## GitHub as Source of Truth
@@ -76,6 +75,15 @@ Add `--raw` to any command for machine-readable JSON output: `{"ok": true, "resu
 | `all-progress` | All phases progress overview |
 | `ensure-labels` | Create any missing standard labels |
 | `sync-check` | Verify local mapping matches GitHub state |
+
+### Milestone Commands
+
+Direct `gh` CLI commands for milestone management (not routed through maxsim-tools):
+
+| Command | Purpose |
+|---------|---------|
+| `gh api repos/{owner}/{repo}/milestones --method POST -f title="Name" -f description="Desc"` | Create a milestone |
+| `gh api repos/{owner}/{repo}/milestones` | List all milestones |
 
 ### Large Text Arguments
 

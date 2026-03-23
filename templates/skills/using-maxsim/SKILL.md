@@ -7,7 +7,7 @@ description: Routes work through MaxsimCLI commands based on project state and u
 
 MaxsimCLI is a spec-driven development system. Work flows through phases, plans, and tasks — not ad-hoc coding.
 
-**No implementation without a plan.** If there is no `.planning/` directory, run `/maxsim:init` first. If there is no current phase, run `/maxsim:plan N` first. If there is a plan, run `/maxsim:execute N` to execute it.
+**No implementation without a plan.** If MaxsimCLI is not initialized (no GitHub Project Board), run `/maxsim:init` first. If there is no current phase, run `/maxsim:plan N` first. If there is a plan, run `/maxsim:execute N` to execute it.
 
 ---
 
@@ -33,10 +33,9 @@ Determine user intent, then route to the correct command.
 
 Before beginning any task in a session:
 
-1. Check for `.planning/` directory — if missing, run `/maxsim:init`
-2. Read `STATE.md` — if a checkpoint exists, resume from it via `/maxsim:go`
-3. Check `ROADMAP.md` — identify the active phase
-4. Route to the correct command using the table above
+1. Check GitHub Project Board status via `node .claude/maxsim/bin/maxsim-tools.cjs github status`
+2. Identify the active phase from GitHub Issues — if any phase is in progress, resume via `/maxsim:go`
+3. Route to the correct command using the table above
 
 GitHub Issues with label `maxsim:lesson` or `maxsim:decision` are the source of truth for project learnings and architectural decisions. Read them before planning.
 
@@ -63,9 +62,9 @@ All persistent project state lives in GitHub, not in local files that disappear 
 
 | Artifact | Location |
 |----------|---------|
-| Phase plans | `.planning/phases/N/PLAN.md` (committed) |
-| Roadmap | `.planning/ROADMAP.md` (committed) |
-| Session state | `.planning/STATE.md` (committed after each checkpoint) |
+| Phase plans | GitHub Sub-Issues on the phase Issue |
+| Roadmap | GitHub Milestones + Phase Issues |
+| Session state | GitHub Project Board column positions + Issue status |
 | Learnings | GitHub Issues — label `maxsim:lesson` |
 | Decisions | GitHub Issues — label `maxsim:decision` |
 
@@ -73,9 +72,9 @@ All persistent project state lives in GitHub, not in local files that disappear 
 
 ## Common Pitfalls
 
-- Writing implementation code without a `PLAN.md`
+- Writing implementation code without a phase plan on GitHub
 - Skipping `/maxsim:init` because the project seems simple
-- Ignoring `STATE.md` checkpoints from previous sessions
+- Ignoring Project Board state and in-progress issues from previous sessions
 - Working outside the current phase without explicit user approval
 - Making architectural decisions without recording them as `maxsim:decision` issues
 

@@ -112,6 +112,12 @@ This surfaces what changed recently without opening every file. Combine with `gh
 
 ---
 
+## Agent-Memory Storage Layer
+
+MaxsimCLI maintains an automated local memory store for learnings captured by the agent itself. The storage path is `.claude/agent-memory/maxsim-learner/MEMORY.md`. This file is written automatically at session end by the `maxsim-capture-learnings` Stop hook (per §11.4 of PROJECT.md), which extracts key lessons from the session transcript and appends them to the file. Agents should read this file at session start alongside GitHub Issues to surface recently captured patterns before planning.
+
+---
+
 ## Claude Code Memory Integration
 
 When operating as a sub-agent within a MaxsimCLI workflow, scope memory to the project:
