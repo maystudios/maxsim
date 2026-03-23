@@ -111,7 +111,7 @@ export interface GhProjectItem {
 
 /** Machine-readable metadata embedded in issue body as HTML comments. */
 export interface MaxsimIssueMeta {
-  type: 'phase' | 'task' | 'bug' | 'quick' | 'user';
+  type: 'phase' | 'task' | 'bug' | 'quick' | 'user' | 'milestone';
   phase: number | null;
   task: number | null;
   parentIssue: number | null;
@@ -136,7 +136,7 @@ export interface MaxsimIssueState {
 
 /** Structured comment metadata from HTML comment markers. */
 export interface MaxsimCommentMeta {
-  type: 'plan' | 'research' | 'context' | 'progress' | 'verification' | 'summary' | 'error' | 'escalation' | 'handoff';
+  type: 'plan' | 'research' | 'context' | 'progress' | 'verification' | 'summary' | 'error' | 'escalation' | 'handoff' | 'user-intent';
   phase?: number;
   task?: number;
   [key: string]: unknown;
@@ -157,13 +157,14 @@ export const MAXSIM_LABELS: LabelDef[] = [
   { name: 'type:task', description: 'Task sub-issue', color: '0e8a16' },
   { name: 'type:bug', description: 'Bug report', color: 'd73a4a' },
   { name: 'type:quick', description: 'Quick task', color: 'e4e669' },
-  { name: 'type:user', description: 'User-created issue', color: 'c5def5' },
+  { name: 'type:user-issue', description: 'User-created issue', color: 'c5def5' },
   // Priority labels
-  { name: 'priority:p0', description: 'P0 Critical', color: 'b60205' },
-  { name: 'priority:p1', description: 'P1 High', color: 'd93f0b' },
-  { name: 'priority:p2', description: 'P2 Medium', color: 'fbca04' },
-  { name: 'priority:p3', description: 'P3 Low', color: '0e8a16' },
+  { name: 'priority:p0-critical', description: 'P0 Critical', color: 'b60205' },
+  { name: 'priority:p1-high', description: 'P1 High', color: 'd93f0b' },
+  { name: 'priority:p2-medium', description: 'P2 Medium', color: 'fbca04' },
+  { name: 'priority:p3-low', description: 'P3 Low', color: '0e8a16' },
   // Status labels
+  { name: 'status:planned', description: 'Planned', color: 'e1d5f7' },
   { name: 'status:planning', description: 'In planning', color: 'bfd4f2' },
   { name: 'status:ready', description: 'Ready for execution', color: '0075ca' },
   { name: 'status:blocked', description: 'Blocked', color: 'b60205' },
@@ -177,6 +178,7 @@ export const MAXSIM_LABELS: LabelDef[] = [
 
 /** Status column definitions for the Kanban board. */
 export const BOARD_COLUMNS = [
+  { name: 'Backlog', color: 'GRAY' },
   { name: 'To Do', color: 'BLUE' },
   { name: 'In Progress', color: 'YELLOW' },
   { name: 'In Review', color: 'ORANGE' },
@@ -189,6 +191,9 @@ export const BOARD_FIELDS = [
   { name: 'Phase', dataType: 'NUMBER' },
   { name: 'Wave', dataType: 'NUMBER' },
   { name: 'Estimate', dataType: 'NUMBER' },
+  { name: 'Type', dataType: 'SINGLE_SELECT' },
+  { name: 'Status', dataType: 'SINGLE_SELECT' },
+  { name: 'Iteration', dataType: 'ITERATION' },
 ] as const;
 
 // ── Repo Info ─────────────────────────────────────────────────────────
