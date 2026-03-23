@@ -134,7 +134,7 @@ Execute in sequence:
 **4a. Ensure labels:**
 
 ```bash
-node ~/.claude/maxsim/bin/maxsim-tools.cjs github ensure-labels
+node .claude/maxsim/bin/maxsim-tools.cjs github ensure-labels
 ```
 
 This creates the standard MAXSIM label set (phase:N, status:*, priority:*, bug, etc.).
@@ -154,7 +154,7 @@ Capture the project number from the output.
 **4c. Store project board number in config:**
 
 ```bash
-node ~/.claude/maxsim/bin/maxsim-tools.cjs github set-project --number {PROJECT_NUMBER}
+node .claude/maxsim/bin/maxsim-tools.cjs github set-project --number {PROJECT_NUMBER}
 ```
 
 **4d. Create initial milestone:**
@@ -168,6 +168,8 @@ gh api repos/$REPO/milestones \
 ```
 
 ## Phase 5: Local Setup
+
+Call EnterPlanMode before writing any local files.
 
 **5a. Write .claude/maxsim/config.json:**
 
@@ -197,12 +199,12 @@ Create `.claude/maxsim/config.json` with:
 Use the install system to write project-level CLAUDE.md context:
 
 ```bash
-node ~/.claude/maxsim/bin/maxsim-tools.cjs install write-claude-md \
+node .claude/maxsim/bin/maxsim-tools.cjs install write-claude-md \
   --project-name "{project_name}" \
   --description "{description}"
 ```
 
-If the command is unavailable, write `.claude/maxsim/PROJECT.md` directly with the full project context gathered in the interview phase.
+If the command is unavailable, add the project context to the project root `CLAUDE.md` directly, or create a GitHub Wiki page for persistent reference.
 
 **5c. Commit initialization files:**
 
@@ -210,6 +212,8 @@ If the command is unavailable, write `.claude/maxsim/PROJECT.md` directly with t
 git add .claude/
 git commit -m "chore: initialize MAXSIM v6"
 ```
+
+Call ExitPlanMode after committing initialization files.
 
 ## Phase 6: Roadmap (Optional)
 
@@ -246,7 +250,7 @@ After creating all issues, add each one to the GitHub Project Board:
 gh project item-add {PROJECT_NUMBER} --owner {OWNER} --url {issue_url}
 
 Set each issue status to 'To Do' on the board using:
-node ~/.claude/maxsim/bin/maxsim-tools.cjs github set-status --issue-number {N} --status 'To Do'
+node .claude/maxsim/bin/maxsim-tools.cjs github set-status --issue-number {N} --status 'To Do'
 
 Return the list of created issue numbers and titles."
 
@@ -274,8 +278,8 @@ Next step: /maxsim:go
 - Tool name is Agent (NOT Task)
 - No SlashCommand tool
 - GitHub Issues is the SOLE source of truth — no local .planning/ directory
-- Use `node ~/.claude/maxsim/bin/maxsim-tools.cjs` for CLI operations
-- EnterPlanMode must be used before any code-modifying execution steps
+- Use `node .claude/maxsim/bin/maxsim-tools.cjs` for CLI operations
+- EnterPlanMode must be called before Phase 5 (local file writes); ExitPlanMode must be called after the commit
 - Agent spawning uses: Agent tool with isolation:"worktree", run_in_background:true (for parallel research) or run_in_background:false (for sequential work)
 - Self-contained agent prompts — include all context the agent needs inline
 - Maximum 4 questions per AskUserQuestion call

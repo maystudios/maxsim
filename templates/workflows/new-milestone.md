@@ -32,8 +32,10 @@ Store as `$MILESTONE_NAME`, `$MILESTONE_DESCRIPTION`, `$MILESTONE_DUE`.
 
 ## Step 2: Create GitHub Milestone
 
+Call EnterPlanMode before creating any GitHub resources.
+
 ```bash
-node ~/.claude/maxsim/bin/maxsim-tools.cjs github create-milestone \
+node .claude/maxsim/bin/maxsim-tools.cjs github create-milestone \
   --title "$MILESTONE_NAME" \
   --description "$MILESTONE_DESCRIPTION" \
   --due-date "$MILESTONE_DUE"
@@ -106,7 +108,7 @@ For each phase, run `github create-phase` sequentially:
 
 ```bash
 # For each phase (1-indexed):
-node ~/.claude/maxsim/bin/maxsim-tools.cjs github create-phase \
+node .claude/maxsim/bin/maxsim-tools.cjs github create-phase \
   --phase-number "[N]" \
   --phase-name "[Phase Name]" \
   --goal "[Phase Goal]" \
@@ -118,12 +120,14 @@ Track results. If any creation fails, warn and provide the manual creation comma
 After all phases are created, add each issue to the project board in the "To Do" column:
 
 ```bash
-node ~/.claude/maxsim/bin/maxsim-tools.cjs github move-issue \
+node .claude/maxsim/bin/maxsim-tools.cjs github set-status \
   --issue-number [ISSUE_NUM] \
   --status "To Do"
 ```
 
 ---
+
+Call ExitPlanMode after all phase issues are created and added to the board.
 
 ## Step 5: Display completion summary
 
@@ -159,3 +163,12 @@ Start planning the first phase:
 - [ ] All phase issues added to project board as "To Do"
 - [ ] Summary displayed with issue numbers and next step
 </success_criteria>
+
+<constraints>
+- Tool name is Agent (NOT Task)
+- GitHub Issues is the SOLE source of truth — no local planning files are created
+- EnterPlanMode must be used before creating any GitHub resources
+- ExitPlanMode must be called after all GitHub resources are created
+- Use `node .claude/maxsim/bin/maxsim-tools.cjs` for CLI operations
+- Use `github set-status` (not `github move-issue`) to set board column status
+</constraints>

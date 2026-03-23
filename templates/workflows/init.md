@@ -3,8 +3,8 @@ Unified initialization router. Detects current project and repo state, then dele
 
 Routes:
 - Already initialized -> show status, offer reinit
-- GitHub repo exists with code -> @~/.claude/maxsim/workflows/init-existing.md
-- New or empty repo -> @~/.claude/maxsim/workflows/new-project.md
+- GitHub repo exists with code -> .claude/maxsim/workflows/init-existing.md
+- New or empty repo -> .claude/maxsim/workflows/new-project.md
 </purpose>
 
 <process>
@@ -72,7 +72,7 @@ Display:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 
-Delegate to @~/.claude/maxsim/workflows/new-project.md. Execute that workflow end-to-end. Pass through all $ARGUMENTS.
+Delegate to .claude/maxsim/workflows/new-project.md. Execute that workflow end-to-end. Pass through all $ARGUMENTS.
 
 After completion:
 
@@ -90,7 +90,7 @@ Display:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 
-Delegate to @~/.claude/maxsim/workflows/init-existing.md. Execute that workflow end-to-end. Pass through all $ARGUMENTS.
+Delegate to .claude/maxsim/workflows/init-existing.md. Execute that workflow end-to-end. Pass through all $ARGUMENTS.
 
 After completion:
 
@@ -106,6 +106,6 @@ Project initialized. Run /maxsim:go to start working.
 - No SlashCommand tool
 - GitHub Issues is the SOLE source of truth
 - No local .planning/ directory references
-- Use `node ~/.claude/maxsim/bin/maxsim-tools.cjs` for CLI operations
+- Use `node .claude/maxsim/bin/maxsim-tools.cjs` for CLI operations
 - Do not inline or duplicate logic from new-project.md or init-existing.md
 </constraints>
