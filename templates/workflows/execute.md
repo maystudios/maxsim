@@ -182,6 +182,8 @@ For each plan in the wave, read its `objective`. Display:
 
 All Agent calls for the wave are issued simultaneously. Each agent is isolated in its own worktree.
 
+**Branch naming:** Each executor creates a branch named `maxsim/phase-{N}-task-{id}` (e.g., `maxsim/phase-3-task-42`), where `{N}` is the phase number and `{id}` is the task/plan issue number. This aligns with the `maxsim/` branch prefix convention.
+
 For each plan in the wave:
 
 ```
@@ -311,15 +313,15 @@ Plans with `autonomous: false` may pause for user input. When a checkpoint is re
 
 ### 6.7 Merge worktree branches
 
-After all plans in the wave are complete and spot-checks pass, merge each worktree branch back to main:
+After all plans in the wave are complete and spot-checks pass, merge each worktree branch back to main sequentially:
 
 ```bash
-# For each completed worktree branch from this wave:
-git merge --no-ff {worktree_branch_name}
+# For each completed worktree branch from this wave (branch name follows maxsim/phase-{N}-task-{id}):
+git merge --no-ff maxsim/phase-{N}-task-{id}
 # Verify merged result — confirm key files from plan summary are present
 ```
 
-If a merge conflict occurs, report immediately and ask the user to resolve before continuing.
+Branches are merged sequentially to minimize conflicts. If a merge conflict occurs, report immediately and ask the user to resolve before continuing.
 
 ### 6.8 Advance to next wave
 
@@ -587,7 +589,8 @@ Phase issue: #{phase_issue_number} (closed)
 - [ ] All wave agents spawned in a SINGLE message block with isolation="worktree" and run_in_background=true
 - [ ] All spawned agents use the Agent tool (NOT Task)
 - [ ] Spot-checks read GitHub comments and sub-issue status (not local files)
-- [ ] Worktree branches merged back to main after each wave
+- [ ] Worktree branches follow `maxsim/phase-{N}-task-{id}` naming convention
+- [ ] Worktree branches merged back to main sequentially after each wave
 - [ ] Phase issue moved to "In Review" after all tasks complete (before verification)
 - [ ] Phase issue moved to "Done" on verification pass
 - [ ] Summaries posted as GitHub comments: <!-- maxsim:type=summary -->
