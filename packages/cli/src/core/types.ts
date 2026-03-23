@@ -169,31 +169,31 @@ export const MODEL_PROFILES: Record<ModelProfile, ModelAssignment> = {
 export interface MaxsimConfig {
   version: string;
   execution: {
-    modelProfile: ModelProfile;
+    model_profile: ModelProfile;
     parallelism: {
-      maxAgentsPerWave: number;
-      maxRetries: number;
-      competitionStrategy: CompetitionStrategy;
+      max_agents_per_wave: number;
+      max_retries: number;
+      competition_strategy: CompetitionStrategy;
     };
     verification: {
-      strictMode: boolean;
+      strict_mode: boolean;
       gates: VerificationGate[];
-      requireCodeReview: boolean;
-      autoResolveConflicts: boolean;
+      require_code_review: boolean;
+      auto_resolve_conflicts: boolean;
     };
   };
   worktrees: {
     basePath: string;
-    autoCleanup: boolean;
-    branchPrefix: string;
+    auto_cleanup: boolean;
+    branch_prefix: string;
   };
   automation: {
-    autoCommitOnSuccess: boolean;
-    conventionalCommits: boolean;
+    auto_commit_on_success: boolean;
+    conventional_commits: boolean;
   };
   github: {
     projectName: string;
-    autoPush: boolean;
+    auto_push: boolean;
   };
   hooks: {
     enabled: boolean;
@@ -203,14 +203,14 @@ export interface MaxsimConfig {
 export const DEFAULT_CONFIG: MaxsimConfig = {
   version: '6.0.0',
   execution: {
-    modelProfile: ModelProfile.BALANCED,
+    model_profile: ModelProfile.BALANCED,
     parallelism: {
-      maxAgentsPerWave: 3,
-      maxRetries: 3,
-      competitionStrategy: CompetitionStrategy.STANDARD,
+      max_agents_per_wave: 3,
+      max_retries: 3,
+      competition_strategy: CompetitionStrategy.STANDARD,
     },
     verification: {
-      strictMode: true,
+      strict_mode: true,
       gates: [
         VerificationGate.TESTS_PASS,
         VerificationGate.BUILD_SUCCEEDS,
@@ -218,22 +218,22 @@ export const DEFAULT_CONFIG: MaxsimConfig = {
         VerificationGate.SPEC_COMPLIANCE,
         VerificationGate.CODE_REVIEW,
       ],
-      requireCodeReview: true,
-      autoResolveConflicts: true,
+      require_code_review: true,
+      auto_resolve_conflicts: true,
     },
   },
   worktrees: {
     basePath: '.maxsim-worktrees/',
-    autoCleanup: true,
-    branchPrefix: 'maxsim/',
+    auto_cleanup: true,
+    branch_prefix: 'maxsim/',
   },
   automation: {
-    autoCommitOnSuccess: true,
-    conventionalCommits: true,
+    auto_commit_on_success: true,
+    conventional_commits: true,
   },
   github: {
     projectName: '',
-    autoPush: true,
+    auto_push: true,
   },
   hooks: {
     enabled: true,
