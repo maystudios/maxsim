@@ -70,6 +70,34 @@ export async function getLabel(
   });
 }
 
+/** Update an existing label's name, color, or description. */
+export async function updateLabel(
+  name: string,
+  updates: { new_name?: string; color?: string; description?: string },
+  repo?: RepoInfo,
+): Promise<GhResult<GhLabel>> {
+  const { owner, repo: repoName } = repo ?? getRepoInfo();
+  const octokit = getOctokit();
+
+  return withGhResult(async () => {
+    const { data } = await octokit.rest.issues.updateLabel({
+      owner,
+      repo: repoName,
+      name,
+      new_name: updates.new_name,
+      color: updates.color,
+      description: updates.description,
+    });
+    return {
+      id: data.id,
+      nodeId: data.node_id,
+      name: data.name,
+      description: data.description ?? '',
+      color: data.color,
+    };
+  });
+}
+
 /** Create a custom label. */
 export async function createLabel(
   label: LabelDef,

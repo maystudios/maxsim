@@ -108,6 +108,23 @@ export async function ensureMilestone(
   return createMilestone(params, repo);
 }
 
+/** Delete a milestone by its number. */
+export async function deleteMilestone(
+  milestoneNumber: number,
+  repo?: RepoInfo,
+): Promise<GhResult<void>> {
+  const { owner, repo: repoName } = repo ?? getRepoInfo();
+  const octokit = getOctokit();
+
+  return withGhResult(async () => {
+    await octokit.rest.issues.deleteMilestone({
+      owner,
+      repo: repoName,
+      milestone_number: milestoneNumber,
+    });
+  });
+}
+
 /** Update a milestone. */
 export async function updateMilestone(
   milestoneNumber: number,

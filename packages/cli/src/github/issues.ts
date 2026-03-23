@@ -4,7 +4,7 @@
  */
 
 import { getOctokit, getRepoInfo, withGhResult } from './client.js';
-import type { GhIssue, GhComment, GhResult, IssueIds, RepoInfo } from './types.js';
+import type { GhIssue, GhComment, GhResult, RepoInfo } from './types.js';
 
 /** Map Octokit issue response to our GhIssue type. */
 function mapIssue(raw: Record<string, unknown>): GhIssue {
@@ -54,22 +54,29 @@ function mapIssue(raw: Record<string, unknown>): GhIssue {
   };
 }
 
-/** Get all three ID forms for an issue. */
-export async function getIssueIds(issueNumber: number, repo?: RepoInfo): Promise<GhResult<IssueIds>> {
+/** List issues in the repository with optional filtering. */
+export async function listIssues(
+  params: {
+    state?: 'open' | 'closed' | 'all';
+    labels?: string;
+    milestone?: number;
+  } = {},
+  repo?: RepoInfo,
+): Promise<GhResult<GhIssue[]>> {
   const { owner, repo: repoName } = repo ?? getRepoInfo();
   const octokit = getOctokit();
 
   return withGhResult(async () => {
-    const { data } = await octokit.rest.issues.get({
+    const issues = await octokit.paginate(octokit.rest.issues.listForRepo, {
       owner,
       repo: repoName,
-      issue_number: issueNumber,
+      state: params.state ?? 'open',
+      labels: params.labels,
+      milestone: params.milestone !== undefined ? String(params.milestone) : undefined,
+      per_page: 100,
     });
-    return {
-      number: data.number,
-      id: data.id,
-      nodeId: data.node_id,
-    };
+
+    return issues.map((i) => mapIssue(i as unknown as Record<string, unknown>));
   });
 }
 
@@ -131,12 +138,13 @@ export async function updateIssue(
   const octokit = getOctokit();
 
   return withGhResult(async () => {
+    const { stateReason, ...rest } = params;
     const { data } = await octokit.rest.issues.update({
       owner,
       repo: repoName,
       issue_number: issueNumber,
-      ...params,
-      state_reason: params.stateReason,
+      ...rest,
+      state_reason: stateReason,
     });
     return mapIssue(data as unknown as Record<string, unknown>);
   });
@@ -226,8 +234,8 @@ export async function addSubIssue(
     });
     const childInternalId = childResult.data.id;
 
-    // Add as sub-issue using the internal ID
-await (octokit.rest.issues as Record<string, (...args: never[]) => Promise<unknown>>).addSubIssue({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await octokit.request('POST /repos/{owner}/{repo}/issues/{issue_number}/sub_issues' as any, {
       owner,
       repo: repoName,
       issue_number: parentNumber,
@@ -245,15 +253,13 @@ export async function listSubIssues(
   const octokit = getOctokit();
 
   return withGhResult(async () => {
-    const subIssues = await octokit.paginate(
-    (octokit.rest.issues as Record<string, (...args: never[]) => Promise<unknown>>).listSubIssues as Parameters<typeof octokit.paginate>[0],
-      {
-        owner,
-        repo: repoName,
-        issue_number: parentNumber,
-        per_page: 100,
-      },
-    );
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const subIssues = await octokit.paginate('GET /repos/{owner}/{repo}/issues/{issue_number}/sub_issues' as any, {
+      owner,
+      repo: repoName,
+      issue_number: parentNumber,
+      per_page: 100,
+    });
 
     return (subIssues as Record<string, unknown>[]).map(mapIssue);
   });

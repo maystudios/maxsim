@@ -110,7 +110,7 @@ export function ghJson<T>(args: string[]): GhResult<T> {
     try {
       return { ok: true, data: JSON.parse(stdout) as T };
     } catch {
-      return { ok: true, data: stdout.trim() as unknown as T };
+      return { ok: false, error: 'Unexpected non-JSON response', code: 'UNKNOWN' };
     }
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
@@ -159,7 +159,10 @@ export async function withGhResult<T>(
 
     if (status === 404) return { ok: false, error: msg, code: 'NOT_FOUND' };
     if (status === 401) return { ok: false, error: msg, code: 'UNAUTHORIZED' };
-    if (status === 403) return { ok: false, error: msg, code: 'RATE_LIMITED' };
+    if (status === 403) {
+      const code = msg.toLowerCase().includes('rate limit') ? 'RATE_LIMITED' : 'FORBIDDEN';
+      return { ok: false, error: msg, code };
+    }
     if (status === 422) return { ok: false, error: msg, code: 'VALIDATION' };
 
     return { ok: false, error: msg, code: 'UNKNOWN' };
