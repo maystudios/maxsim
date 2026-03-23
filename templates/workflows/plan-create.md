@@ -15,7 +15,7 @@ GitHub Issues is the sole source of truth. No local PLAN.md files are written.
 - Tool name is `Agent` (NOT `Task`)
 - Agent spawning: Agent(prompt, model, isolation, run_in_background)
 - Plans are posted to GitHub with <!-- maxsim:type=plan -->
-- Use `node ~/.claude/maxsim/bin/maxsim-tools.cjs` for all CLI operations
+- Use `node .claude/maxsim/bin/maxsim-tools.cjs` for all CLI operations
 - No local PLAN.md files are written -- GitHub is the sole source of truth
 - Do NOT show gate confirmation or next steps -- the orchestrator handles those
 </critical_rules>
@@ -29,23 +29,15 @@ The orchestrator provides phase context. Verify we have what we need:
 - `phase_number`, `phase_name`, `phase_dir`, `padded_phase`, `phase_slug`
 - `planner_model`, `checker_model`, `plan_checker_enabled`
 - `commit_docs`
-- `state_path`, `roadmap_path`, `requirements_path`
 - `phase_req_ids` (requirement IDs that this phase must address)
 - `phase_issue_number` (GitHub Issue number for the phase)
 - `--skip-verify` flag presence
 
-## Step 2: Resolve Models
-
-```bash
-PLANNER_MODEL=$(node ~/.claude/maxsim/bin/maxsim-tools.cjs resolve-model planner --raw)
-CHECKER_MODEL=$(node ~/.claude/maxsim/bin/maxsim-tools.cjs resolve-model planner --raw)
-```
-
-## Step 3: Check Existing Plans
+## Step 2: Check Existing Plans
 
 Query the phase GitHub Issue for existing plan comments:
 ```bash
-ISSUE_DATA=$(node ~/.claude/maxsim/bin/maxsim-tools.cjs github get-issue \
+ISSUE_DATA=$(node .claude/maxsim/bin/maxsim-tools.cjs github get-issue \
   --issue-number $PHASE_ISSUE_NUMBER --include-comments)
 ```
 
@@ -64,7 +56,7 @@ Phase {phase_number} already has plan(s) on GitHub Issue #{phase_issue_number}.
 - If "View": Display plan comment contents, then re-offer options.
 - If "Re-plan": Delete existing plan comments from the issue:
   ```bash
-  node ~/.claude/maxsim/bin/maxsim-tools.cjs github delete-comments \
+  node .claude/maxsim/bin/maxsim-tools.cjs github delete-comments \
     --issue-number $PHASE_ISSUE_NUMBER --type plan
   ```
   Then continue to Step 4.
@@ -76,7 +68,7 @@ Phase {phase_number} already has plan(s) on GitHub Issue #{phase_issue_number}.
 Fetch the phase issue with all comments to supply the planner with context and research:
 
 ```bash
-ISSUE_DATA=$(node ~/.claude/maxsim/bin/maxsim-tools.cjs github get-issue \
+ISSUE_DATA=$(node .claude/maxsim/bin/maxsim-tools.cjs github get-issue \
   --issue-number $PHASE_ISSUE_NUMBER --include-comments)
 ```
 
@@ -112,12 +104,6 @@ in its response (not write local files):
 **Research Findings (from research comment):**
 {content of the <!-- maxsim:type=research --> comment}
 </github_context>
-
-<local_context>
-**Roadmap:** {roadmap_path}
-**Requirements:** {requirements_path}
-**State:** {state_path}
-</local_context>
 
 **Phase requirement IDs (every ID MUST appear in a plan's `requirements` field):** {phase_req_ids}
 
@@ -273,11 +259,6 @@ Construct the checker prompt. Pass the in-memory `plans_content` directly:
 {content of the <!-- maxsim:type=research --> comment}
 </github_context>
 
-<local_context>
-**Roadmap:** {roadmap_path}
-**Requirements:** {requirements_path}
-</local_context>
-
 **Phase requirement IDs (MUST ALL be covered):** {phase_req_ids}
 
 **Project instructions:** Read ./CLAUDE.md if exists -- verify plans honor project guidelines
@@ -294,7 +275,7 @@ Spawn the checker:
 
 ```
 Agent(
-  prompt="## Task: Verify plans achieve phase goal\n\n## Suggested Skills: verification-gates\n\n" + checker_prompt,
+  prompt="## Task: Verify plans achieve phase goal\n\n## Suggested Skills: verification\n\n" + checker_prompt,
   model="{checker_model}",
   isolation=true,
   run_in_background=false
@@ -392,7 +373,7 @@ cat > "$TMPFILE" << 'BODY_EOF'
 <!-- maxsim:type=plan -->
 {plan_content}
 BODY_EOF
-node ~/.claude/maxsim/bin/maxsim-tools.cjs github post-plan-comment \
+node .claude/maxsim/bin/maxsim-tools.cjs github post-plan-comment \
   --phase-issue-number $PHASE_ISSUE_NUMBER \
   --plan-number "{plan_number}" \
   --plan-content-file "$TMPFILE"
@@ -418,7 +399,7 @@ Parse tasks from the posted plans. For each `<task>` element in the plan XML, ex
 Run `github batch-create-tasks` with the full tasks array and the phase issue number:
 
 ```bash
-node ~/.claude/maxsim/bin/maxsim-tools.cjs github batch-create-tasks \
+node .claude/maxsim/bin/maxsim-tools.cjs github batch-create-tasks \
   --phase-number "$PHASE_NUMBER" \
   --parent-issue-number $PHASE_ISSUE_NUMBER \
   --tasks '[{"task_id":"1.1","title":"Task title","body":"Task body"}, ...]'
@@ -447,7 +428,7 @@ After all plans are posted and task sub-issues are created, move the phase issue
 on the project board:
 
 ```bash
-node ~/.claude/maxsim/bin/maxsim-tools.cjs github move-issue \
+node .claude/maxsim/bin/maxsim-tools.cjs github move-issue \
   --issue-number $PHASE_ISSUE_NUMBER --status "In Progress"
 ```
 

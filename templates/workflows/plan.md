@@ -8,9 +8,9 @@ are read or written by this orchestrator. All state is stored as GitHub Issue co
 by HTML markers: <!-- maxsim:type=context -->, <!-- maxsim:type=research -->, <!-- maxsim:type=plan -->.
 
 This file is the ORCHESTRATOR ONLY. Stage-specific logic lives in:
-- @~/.claude/maxsim/workflows/plan-discuss.md  (Discussion stage)
-- @~/.claude/maxsim/workflows/plan-research.md (Research stage)
-- @~/.claude/maxsim/workflows/plan-create.md   (Planning stage)
+- @.claude/maxsim/workflows/plan-discuss.md  (Discussion stage)
+- @.claude/maxsim/workflows/plan-research.md (Research stage)
+- @.claude/maxsim/workflows/plan-create.md   (Planning stage)
 </purpose>
 
 <critical_rules>
@@ -20,7 +20,7 @@ This file is the ORCHESTRATOR ONLY. Stage-specific logic lives in:
 - Plans are posted as GitHub Issue comments with <!-- maxsim:type=plan -->
 - Context is posted as: <!-- maxsim:type=context -->
 - Research is posted as: <!-- maxsim:type=research -->
-- Use `node ~/.claude/maxsim/bin/maxsim-tools.cjs` for all CLI operations
+- Use `node .claude/maxsim/bin/maxsim-tools.cjs` for all CLI operations
 </critical_rules>
 
 <process>
@@ -43,13 +43,12 @@ Use /maxsim:progress to see available phases.
 Load phase state in one call:
 
 ```bash
-INIT=$(node ~/.claude/maxsim/bin/maxsim-tools.cjs init plan-phase "$PHASE")
+INIT=$(node .claude/maxsim/bin/maxsim-tools.cjs init plan-phase "$PHASE")
 ```
 
 Parse JSON for: `phase_found`, `phase_dir`, `phase_number`, `phase_name`, `phase_slug`,
 `padded_phase`, `commit_docs`, `researcher_model`, `planner_model`, `checker_model`,
-`research_enabled`, `plan_checker_enabled`, `state_path`, `roadmap_path`, `requirements_path`,
-`phase_req_ids`, `phase_issue_number`.
+`research_enabled`, `plan_checker_enabled`, `phase_req_ids`, `phase_issue_number`.
 
 **If `phase_found` is false:**
 ```
@@ -59,13 +58,14 @@ Use /maxsim:progress to see available phases.
 ```
 Exit workflow.
 
-## 3. Resolve Model Profile
+## 3. Enter Plan Mode and Resolve Models
+
+Call `EnterPlanMode` before any research or planning steps.
 
 ```bash
-MODEL_PROFILE=$(cat .planning/config.json 2>/dev/null | grep -o '"model_profile"[[:space:]]*:[[:space:]]*"[^"]*"' | grep -o '"[^"]*"$' | tr -d '"' || echo "balanced")
-RESEARCHER_MODEL=$(node ~/.claude/maxsim/bin/maxsim-tools.cjs resolve-model researcher --raw)
-PLANNER_MODEL=$(node ~/.claude/maxsim/bin/maxsim-tools.cjs resolve-model planner --raw)
-CHECKER_MODEL=$(node ~/.claude/maxsim/bin/maxsim-tools.cjs resolve-model planner --raw)
+RESEARCHER_MODEL=$(node .claude/maxsim/bin/maxsim-tools.cjs resolve-model researcher --raw)
+PLANNER_MODEL=$(node .claude/maxsim/bin/maxsim-tools.cjs resolve-model planner --raw)
+CHECKER_MODEL=$(node .claude/maxsim/bin/maxsim-tools.cjs resolve-model verifier --raw)
 ```
 
 ## 4. Stage Detection (GitHub-First)
@@ -76,7 +76,7 @@ Detect planning stage by querying the phase GitHub Issue.
 
 If no `phase_issue_number` in init context (phase not yet on GitHub):
 ```bash
-CREATE_RESULT=$(node ~/.claude/maxsim/bin/maxsim-tools.cjs github create-phase \
+CREATE_RESULT=$(node .claude/maxsim/bin/maxsim-tools.cjs github create-phase \
   --phase-number "$PHASE_NUMBER" \
   --phase-name "$PHASE_NAME" \
   --goal "$GOAL" \
@@ -87,7 +87,7 @@ PHASE_ISSUE_NUMBER=$(echo "$CREATE_RESULT" | jq -r '.issue_number')
 
 **Step 4b -- Read issue with comments:**
 ```bash
-ISSUE_DATA=$(node ~/.claude/maxsim/bin/maxsim-tools.cjs github get-issue \
+ISSUE_DATA=$(node .claude/maxsim/bin/maxsim-tools.cjs github get-issue \
   --issue-number $PHASE_ISSUE_NUMBER \
   --include-comments)
 ```
@@ -135,7 +135,7 @@ Wait for user choice via natural conversation.
 
 - **View:** Display contents of each `type=plan` comment from the issue, then re-show options.
 - **Re-plan:** Delete existing plan/context/research comments from the phase issue (use
-  `node ~/.claude/maxsim/bin/maxsim-tools.cjs github delete-comments --issue-number $PHASE_ISSUE_NUMBER --type plan,context,research`),
+  `node .claude/maxsim/bin/maxsim-tools.cjs github delete-comments --issue-number $PHASE_ISSUE_NUMBER --type plan,context,research`),
   reset to Discussion stage (Step 6).
 - **Execute:** Display `/maxsim:execute {phase_number}` and exit.
 - **Done:** Exit workflow.
@@ -144,16 +144,16 @@ Wait for user choice via natural conversation.
 
 Delegate to the discussion sub-workflow for full discussion logic:
 
-@~/.claude/maxsim/workflows/plan-discuss.md
+@.claude/maxsim/workflows/plan-discuss.md
 
 Pass context: `phase_number`, `phase_name`, `phase_dir`, `padded_phase`, `phase_slug`,
-`commit_docs`, `roadmap_path`, `state_path`, `phase_issue_number`.
+`commit_docs`, `phase_issue_number`.
 
 **After discussion completes (context posted as GitHub comment):**
 
 Re-query the phase issue to verify the `type=context` comment now exists:
 ```bash
-node ~/.claude/maxsim/bin/maxsim-tools.cjs github get-issue \
+node .claude/maxsim/bin/maxsim-tools.cjs github get-issue \
   --issue-number $PHASE_ISSUE_NUMBER --include-comments
 ```
 
@@ -181,18 +181,18 @@ Wait for user response via natural conversation.
 
 Delegate to the research sub-workflow:
 
-@~/.claude/maxsim/workflows/plan-research.md
+@.claude/maxsim/workflows/plan-research.md
 
 Pass context: `phase_number`, `phase_name`, `phase_dir`, `padded_phase`, `phase_slug`,
-`commit_docs`, `researcher_model`, `research_enabled`, `has_research`, `state_path`,
-`roadmap_path`, `requirements_path`, `phase_req_ids`, `phase_issue_number`.
+`commit_docs`, `researcher_model`, `research_enabled`, `has_research`,
+`phase_req_ids`, `phase_issue_number`.
 Also pass the `--force-research` flag if present in $ARGUMENTS.
 
 **After research completes (research posted as GitHub comment or already exists):**
 
 Re-query the phase issue to verify the `type=research` comment now exists:
 ```bash
-node ~/.claude/maxsim/bin/maxsim-tools.cjs github get-issue \
+node .claude/maxsim/bin/maxsim-tools.cjs github get-issue \
   --issue-number $PHASE_ISSUE_NUMBER --include-comments
 ```
 
@@ -217,18 +217,18 @@ Wait for user response via natural conversation.
 
 Delegate to the planning sub-workflow:
 
-@~/.claude/maxsim/workflows/plan-create.md
+@.claude/maxsim/workflows/plan-create.md
 
 Pass context: `phase_number`, `phase_name`, `phase_dir`, `padded_phase`, `phase_slug`,
-`commit_docs`, `planner_model`, `checker_model`, `plan_checker_enabled`, `state_path`,
-`roadmap_path`, `requirements_path`, `phase_req_ids`, `phase_issue_number`.
+`commit_docs`, `planner_model`, `checker_model`, `plan_checker_enabled`,
+`phase_req_ids`, `phase_issue_number`.
 Also pass the `--skip-verify` flag if present in $ARGUMENTS.
 
 **After planning completes (plans posted as GitHub comments and task sub-issues created):**
 
 Re-query the phase issue to verify `type=plan` comments exist:
 ```bash
-node ~/.claude/maxsim/bin/maxsim-tools.cjs github get-issue \
+node .claude/maxsim/bin/maxsim-tools.cjs github get-issue \
   --issue-number $PHASE_ISSUE_NUMBER --include-comments
 ```
 
@@ -272,7 +272,7 @@ cat > "$TMPFILE" << 'BODY_EOF'
 **Resume from:** {next_stage}
 **Timestamp:** {ISO timestamp}
 BODY_EOF
-node ~/.claude/maxsim/bin/maxsim-tools.cjs github post-comment \
+node .claude/maxsim/bin/maxsim-tools.cjs github post-comment \
   --issue-number $PHASE_ISSUE_NUMBER --body-file "$TMPFILE" --type checkpoint
 ```
 
@@ -287,16 +287,6 @@ from GitHub and resume from {next_stage}.
 
 Stage detection in Step 4 handles resume automatically -- completed stages produce marker
 comments that are detected on re-entry.
-
-## 10. Update State
-
-After all stages complete:
-
-```bash
-node ~/.claude/maxsim/bin/maxsim-tools.cjs state record-session \
-  --stopped-at "Phase ${PHASE} planned" \
-  --resume-file "GitHub Issue #${phase_issue_number}"
-```
 
 </process>
 

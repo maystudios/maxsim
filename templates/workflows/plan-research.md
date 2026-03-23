@@ -16,7 +16,7 @@ GitHub Issues is the sole source of truth. No local RESEARCH.md file is written.
 - Agent spawning: Agent(prompt, model, isolation, run_in_background)
 - Parallel agents use run_in_background=true, then collect results
 - Research is posted to GitHub with <!-- maxsim:type=research -->
-- Use `node ~/.claude/maxsim/bin/maxsim-tools.cjs` for all CLI operations
+- Use `node .claude/maxsim/bin/maxsim-tools.cjs` for all CLI operations
 - No local RESEARCH.md file is written -- GitHub is the sole source of truth
 - Do NOT show gate confirmation or next steps -- the orchestrator handles those
 </critical_rules>
@@ -30,7 +30,6 @@ The orchestrator provides phase context. Verify we have what we need:
 - `phase_number`, `phase_name`, `phase_dir`, `padded_phase`, `phase_slug`
 - `researcher_model`, `research_enabled`
 - `has_research` (whether a research comment already exists on the phase issue)
-- `state_path`, `roadmap_path`, `requirements_path`
 - `phase_req_ids` (requirement IDs that this phase must address)
 - `phase_issue_number` (GitHub Issue number for the phase)
 - `--force-research` flag presence
@@ -38,7 +37,7 @@ The orchestrator provides phase context. Verify we have what we need:
 ## Step 2: Resolve Researcher Model
 
 ```bash
-RESEARCHER_MODEL=$(node ~/.claude/maxsim/bin/maxsim-tools.cjs resolve-model researcher --raw)
+RESEARCHER_MODEL=$(node .claude/maxsim/bin/maxsim-tools.cjs resolve-model researcher --raw)
 ```
 
 ## Step 3: Check Existing Research
@@ -79,7 +78,7 @@ Return control to orchestrator.
 Fetch the phase issue with all comments to extract context for research scoping:
 
 ```bash
-ISSUE_DATA=$(node ~/.claude/maxsim/bin/maxsim-tools.cjs github get-issue \
+ISSUE_DATA=$(node .claude/maxsim/bin/maxsim-tools.cjs github get-issue \
   --issue-number $PHASE_ISSUE_NUMBER --include-comments)
 ```
 
@@ -228,7 +227,7 @@ TMPFILE=$(mktemp)
 cat > "$TMPFILE" << 'BODY_EOF'
 {consolidated_research_document}
 BODY_EOF
-node ~/.claude/maxsim/bin/maxsim-tools.cjs github post-comment \
+node .claude/maxsim/bin/maxsim-tools.cjs github post-comment \
   --issue-number $PHASE_ISSUE_NUMBER --body-file "$TMPFILE" --type research
 ```
 
