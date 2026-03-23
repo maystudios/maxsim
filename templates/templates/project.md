@@ -1,6 +1,6 @@
 # PROJECT.md Template
 
-Template for `.planning/PROJECT.md` — the living project context document.
+Template for the phase GitHub Issue body — the living project context document.
 
 <template>
 
@@ -76,7 +76,7 @@ Common types: Tech stack, Timeline, Budget, Dependencies, Compatibility, Perform
 
 <!-- If no research was conducted, this section may be empty or populated from questioning context. -->
 
-See `.planning/CONVENTIONS.md` for coding standards and file layout conventions.
+See the GitHub Wiki conventions page for coding standards and file layout conventions.
 
 ---
 *Last updated: [date] after [trigger]*
@@ -196,7 +196,7 @@ STATE.md references PROJECT.md:
 ```markdown
 ## Project Reference
 
-See: .planning/PROJECT.md (updated [date])
+See: the phase GitHub Issue body (updated [date])
 
 **Core value:** [One-liner from Core Value section]
 **Current focus:** [Current phase name]

@@ -3,9 +3,9 @@
 > **Note:** Planning methodology is in `agents/planner.md`.
 > This template defines the PLAN.md output format that the agent produces.
 
-Template for `.planning/phases/XX-name/{phase}-{plan}-PLAN.md` - executable phase plans optimized for parallel execution.
+Template for a plan comment on the phase GitHub Issue — executable phase plans optimized for parallel execution.
 
-**Naming:** Use `{phase}-{plan}-PLAN.md` format (e.g., `01-02-PLAN.md` for Phase 1, Plan 2)
+**Naming:** Use `{phase}-{plan}-PLAN` format (e.g., `01-02-PLAN` for Phase 1, Plan 2)
 
 ---
 
@@ -45,9 +45,9 @@ Output: [What artifacts will be created]
 </execution_context>
 
 <context>
-@.planning/PROJECT.md
-@.planning/ROADMAP.md
-@.planning/STATE.md
+the phase GitHub Issue body
+the GitHub Project Board
+the GitHub Project Board status
 
 # Only reference prior plan SUMMARYs if genuinely needed:
 # - This plan uses types/exports from prior plan
@@ -113,7 +113,7 @@ Before declaring plan complete:
   </success_criteria>
 
 <output>
-After completion, create `.planning/phases/XX-name/{phase}-{plan}-SUMMARY.md`
+After completion, create a summary comment on the phase GitHub Issue
 </output>
 ```
 
@@ -208,9 +208,9 @@ Wave 3 runs after Waves 1 and 2. Pauses at checkpoint, orchestrator presents to 
 
 ```markdown
 <context>
-@.planning/PROJECT.md
-@.planning/ROADMAP.md
-@.planning/STATE.md
+the phase GitHub Issue body
+the GitHub Project Board
+the GitHub Project Board status
 
 # Only include SUMMARY refs if genuinely needed:
 # - This plan imports types from prior plan
@@ -227,8 +227,8 @@ Wave 3 runs after Waves 1 and 2. Pauses at checkpoint, orchestrator presents to 
 **Bad pattern (creates false dependencies):**
 ```markdown
 <context>
-@.planning/phases/03-features/03-01-SUMMARY.md  # Just because it's earlier
-@.planning/phases/03-features/03-02-SUMMARY.md  # Reflexive chaining
+the 03-01-SUMMARY comment on the phase Issue  # Just because it's earlier
+the 03-02-SUMMARY comment on the phase Issue  # Reflexive chaining
 </context>
 ```
 
@@ -315,9 +315,9 @@ Output: User model, API endpoints, and UI components.
 </objective>
 
 <context>
-@.planning/PROJECT.md
-@.planning/ROADMAP.md
-@.planning/STATE.md
+the phase GitHub Issue body
+the GitHub Project Board
+the GitHub Project Board status
 </context>
 
 <tasks>
@@ -349,7 +349,7 @@ Output: User model, API endpoints, and UI components.
 </success_criteria>
 
 <output>
-After completion, create `.planning/phases/03-features/03-01-SUMMARY.md`
+After completion, create a summary comment on the phase GitHub Issue
 </output>
 ```
 
@@ -380,10 +380,10 @@ Output: Working dashboard component.
 </execution_context>
 
 <context>
-@.planning/PROJECT.md
-@.planning/ROADMAP.md
-@.planning/phases/03-features/03-01-SUMMARY.md
-@.planning/phases/03-features/03-02-SUMMARY.md
+the phase GitHub Issue body
+the GitHub Project Board
+the 03-01-SUMMARY comment on the phase Issue
+the 03-02-SUMMARY comment on the phase Issue
 </context>
 
 <tasks>
@@ -420,7 +420,7 @@ Output: Working dashboard component.
 </success_criteria>
 
 <output>
-After completion, create `.planning/phases/03-features/03-03-SUMMARY.md`
+After completion, create a summary comment on the phase GitHub Issue
 </output>
 ```
 

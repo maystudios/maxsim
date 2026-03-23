@@ -1,6 +1,6 @@
 # Discovery Template
 
-Template for `.planning/phases/XX-name/DISCOVERY.md` - shallow research for library/option decisions.
+Template for GitHub Issue comment content — shallow research for library/option decisions.
 
 **Purpose:** Answer "which library/option should we use" questions during mandatory discovery in plan-phase.
 
@@ -71,7 +71,7 @@ Before completing discovery, verify:
 
 
 <output_structure>
-Create `.planning/phases/XX-name/DISCOVERY.md`:
+Create a discovery comment on the phase GitHub Issue:
 
 ```markdown
 # [Topic] Discovery

@@ -1,6 +1,6 @@
 # Pitfalls Research Template
 
-Template for `.planning/research/PITFALLS.md` — common mistakes to avoid in the project domain.
+Template for GitHub Issue comment content — common mistakes to avoid in the project domain.
 
 <template>
 

@@ -1,6 +1,6 @@
 # State Template
 
-Template for `.planning/STATE.md` — the project's living memory.
+Template for the GitHub Project Board status — the project's living memory.
 
 ---
 
@@ -11,7 +11,7 @@ Template for `.planning/STATE.md` — the project's living memory.
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated [date])
+See: the phase GitHub Issue body (updated [date])
 
 **Core value:** [One-liner from PROJECT.md Core Value section]
 **Current focus:** [Current phase name]

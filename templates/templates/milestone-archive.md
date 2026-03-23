@@ -1,6 +1,6 @@
 # Milestone Archive Template
 
-This template is used by the complete-milestone workflow to create archive files in `.planning/archive/`.
+This template is used by the complete-milestone workflow to create milestone archive content on the GitHub Project Board.
 
 ---
 
@@ -89,7 +89,7 @@ Plans:
 
 ---
 
-_For current project status, see .planning/ROADMAP.md_
+_For current project status, see the GitHub Project Board_
 
 ---
 
@@ -112,8 +112,8 @@ _For current project status, see .planning/ROADMAP.md_
 
 **Archive location:**
 
-- Save to `.planning/archive/v{VERSION}-{NAME}.md`
-- Example: `.planning/archive/v1.0-mvp.md`
+- Save as a comment on the GitHub Milestone
+- Example: comment on the v1.0-mvp Milestone
 
 **After archiving:**
 

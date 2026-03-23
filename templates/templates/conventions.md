@@ -1,6 +1,6 @@
 # CONVENTIONS.md Template
 
-Template for `.planning/CONVENTIONS.md` — the coding conventions document that agents follow without asking.
+Template for the GitHub Wiki conventions page — the coding conventions document that agents follow without asking.
 
 <template>
 

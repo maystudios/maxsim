@@ -1,6 +1,6 @@
 # Architecture Template
 
-Template for `.planning/codebase/ARCHITECTURE.md` - captures conceptual code organization.
+Template for GitHub Issue comment content capturing conceptual code organization.
 
 **Purpose:** Document how the code is organized at a conceptual level. Complements STRUCTURE.md (which shows physical file locations).
 
@@ -155,7 +155,7 @@ Template for `.planning/codebase/ARCHITECTURE.md` - captures conceptual code org
 7. Process exits with status code
 
 **State Management:**
-- File-based: All state lives in `.planning/` directory
+- Cloud-based: All state lives on GitHub Issues and Project Board
 - No persistent in-memory state
 - Each command execution is independent
 

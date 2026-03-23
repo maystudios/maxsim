@@ -1,6 +1,6 @@
 # UAT Template
 
-Template for `.planning/phases/XX-name/{phase_num}-UAT.md` — persistent UAT session tracking.
+Template for GitHub Issue comment content — persistent UAT session tracking.
 
 ---
 
@@ -129,7 +129,7 @@ skipped: [N]
       issue: "useEffect missing dependency"
   missing:
     - "Add commentCount to useEffect dependency array"
-  debug_session: ".planning/debug/comment-not-refreshing.md"
+  debug_session: "GitHub Issue labeled `bug`: comment-not-refreshing"
 ```
 
 </diagnosis_lifecycle>
@@ -242,6 +242,6 @@ skipped: 0
       issue: "useEffect missing dependency"
   missing:
     - "Add commentCount to useEffect dependency array"
-  debug_session: ".planning/debug/comment-not-refreshing.md"
+  debug_session: "GitHub Issue labeled `bug`: comment-not-refreshing"
 ```
 </good_example>
