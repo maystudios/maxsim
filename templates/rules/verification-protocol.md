@@ -54,4 +54,4 @@ These phrases indicate reasoning without evidence. Replace them with a verificat
 
 ## Retry Protocol
 
-When verification fails: read the error, fix the issue, re-run the command, produce a new evidence block. Maximum 3 total attempts per gate before escalating. The `verification-gates` skill provides detailed methodology for gate types, retry feedback, and escalation.
+When verification fails: read the error, fix the issue, re-run the command, produce a new evidence block. Maximum 3 total attempts per gate before escalating. The `verification` skill provides detailed methodology for gate types, retry feedback, and escalation.

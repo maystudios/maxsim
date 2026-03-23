@@ -1,86 +1,97 @@
 # AGENTS.md -- Agent Registry
 
-4 generic agents replace 14 specialized agents. Specialization comes from orchestrator spawn prompts and skill preloading -- agents themselves are role-generic.
+This document is a reference for orchestrators. It describes the 4 agent types available in MaxsimCLI v6, how to spawn them, and how they communicate.
 
-## Agent Registry
+## Agent Overview
 
-| Agent | Role | Tools | Preloaded Skills | On-Demand Skills |
-|-------|------|-------|-----------------|-----------------|
-| `executor` | Implements plans with atomic commits and deviation handling | Read, Write, Edit, Bash, Grep, Glob | handoff-contract, evidence-collection, commit-conventions | tool-priority-guide, agent-system-map |
-| `planner` | Creates plans (posted as GitHub Issue comments) with task breakdown and goal-backward verification | Read, Write, Bash, Grep, Glob | handoff-contract, input-validation | research-methodology, agent-system-map |
-| `researcher` | Investigates domains with source evaluation and confidence levels | Read, Bash, Grep, Glob, WebFetch | handoff-contract, evidence-collection | research-methodology, tool-priority-guide |
-| `verifier` | Verifies work against specifications with fresh evidence and hard gates | Read, Bash, Grep, Glob | verification-gates, evidence-collection, handoff-contract | agent-system-map, tool-priority-guide |
+| Agent | Role | Tools | Preloaded Skills |
+|-------|------|-------|-----------------|
+| `executor` | Implements plans with atomic commits, test verification, and deviation handling | Read, Write, Edit, Bash, Grep, Glob | handoff-contract, commit-conventions |
+| `planner` | Creates detailed plans with task breakdowns, wave assignments, and dependency graphs | Read, Write, Bash, Grep, Glob | handoff-contract, roadmap-writing |
+| `researcher` | Investigates codebase patterns, evaluates technologies, and gathers information with confidence levels | Read, Bash, Grep, Glob, WebFetch, WebSearch | handoff-contract, research |
+| `verifier` | Reviews completed work for correctness, quality, security, and spec compliance with evidence-based verification | Read, Bash, Grep, Glob | handoff-contract, verification, code-review |
 
-## Consolidation Map
+## Model Profiles
 
-Which old agents map to which new agent:
+Config `model_profile` (quality/balanced/budget) sets baseline model per agent type. Orchestrators can override per-spawn for complex tasks.
 
-| New Agent | Replaces |
-|-----------|----------|
-| `executor` | maxsim-executor |
-| `planner` | maxsim-planner, maxsim-roadmapper, maxsim-plan-checker |
-| `researcher` | maxsim-phase-researcher, maxsim-project-researcher, maxsim-research-synthesizer, maxsim-codebase-mapper |
-| `verifier` | maxsim-verifier, maxsim-code-reviewer, maxsim-spec-reviewer, maxsim-debugger, maxsim-integration-checker, maxsim-drift-checker |
+| Agent | quality | balanced | budget |
+|-------|---------|----------|--------|
+| executor | opus | sonnet | sonnet |
+| planner | opus | opus | sonnet |
+| researcher | opus | sonnet | haiku |
+| verifier | sonnet | sonnet | haiku |
 
-## Orchestrator-Agent Communication
+All agents use `model: inherit` in their frontmatter, meaning they run on the session model unless the orchestrator specifies an explicit model at spawn time.
 
-Orchestrators spawn agents with structured natural-language prompts:
+## Spawn Format
+
+Orchestrators use the `Agent` tool to spawn agents. Pass a structured natural-language prompt:
 
 ```markdown
 ## Task
-[What the agent should do -- specific, actionable]
+[What the agent should do -- specific, actionable, scoped]
 
 ## Context
-[Phase, plan, prior work, constraints]
+[Phase name, plan reference, prior work summary, relevant constraints]
 
 ## Files to Read
-- [file paths the agent should load first]
+- [absolute paths the agent should load before starting]
 
 ## Suggested Skills
-- [skills the orchestrator recommends the agent invoke on-demand]
+- [on-demand skills the orchestrator recommends the agent invoke]
 
 ## Success Criteria
-- [measurable criteria for the agent to verify before returning]
+- [measurable criteria the agent must verify before returning]
 ```
 
-**Key principles:**
-- Orchestrator carries specialization context -- agents are generic
-- Subagents CANNOT spawn other subagents -- orchestrator mediates all agent-to-agent communication
-- Orchestrator can add tools beyond agent's base set at spawn time
-- Agents return results using the handoff-contract format
+**Spawn example (executor):**
 
-## Skill Categories
+```
+Agent(
+  agent: "executor",
+  prompt: "## Task\nImplement the authentication middleware...\n\n## Context\n..."
+)
+```
 
-| Category | Skills | Purpose |
-|----------|--------|---------|
-| Protocol | handoff-contract, verification-gates, input-validation | Structural patterns for how agents operate |
-| Methodology | evidence-collection, research-methodology | Domain knowledge for how to do specific work |
-| Convention | commit-conventions | Project standards and rules |
-| Reference | agent-system-map, tool-priority-guide | Lookup data and system knowledge |
+## Communication
 
-All internal skills use `user-invocable: false` -- only agents auto-invoke them based on description matching.
+Agents do not communicate directly with each other. All inter-agent communication is mediated by the orchestrator:
+
+- Agents return results via the **handoff contract** (see below)
+- The orchestrator reads the handoff result and decides next steps
+- The orchestrator passes prior agent output to subsequent agents in the spawn prompt
+- Use Agent Teams (multi-agent orchestration) when parallel agent execution is needed
 
 ## Handoff Contract
 
-Every agent return MUST include these sections (enforced by the handoff-contract skill):
+Every agent return MUST include these sections, enforced by the `handoff-contract` skill:
 
 | Section | Content |
 |---------|---------|
-| Key Decisions | Decisions made during execution that affect downstream work |
-| Artifacts | Files created or modified (absolute paths from project root) |
-| Status | `complete`, `blocked`, or `partial` with details |
-| Deferred Items | Work discovered but not implemented, categorized |
+| Key Decisions | Decisions made during execution that affect downstream agents |
+| Artifacts | Files created or modified (absolute paths) |
+| Status | `complete`, `blocked`, or `partial` with explanation |
+| Deferred Items | Work discovered but not implemented, categorized by type |
 
-## Model Selection
+Agents load this format via the `handoff-contract` preloaded skill. Orchestrators parse these sections to determine board transitions, next agent spawns, and GitHub comment posting.
 
-Config `model_profile` (quality/balanced/budget/tokenburner) provides baseline model per agent type. Orchestrator can override per-spawn for complex tasks.
+## Available Skills (On-Demand)
 
-| Agent | quality | balanced | budget | tokenburner |
-|-------|---------|----------|--------|-------------|
-| executor | opus | sonnet | sonnet | opus |
-| planner | opus | opus | sonnet | opus |
-| researcher | opus | sonnet | haiku | opus |
-| verifier | sonnet | sonnet | haiku | opus |
-| debugger | sonnet | sonnet | haiku | opus |
+Agents can invoke these skills when their trigger condition is met:
 
-Model is set via `model: inherit` in agent frontmatter (uses session model) or explicit override in orchestrator spawn.
+| Skill | Trigger |
+|-------|---------|
+| github-operations | When reading from or writing to GitHub Issues |
+| tdd | When implementing features with a test-first approach (executor) |
+| verification | When verifying completed work (executor) |
+| brainstorming | When exploring multiple implementation approaches (planner) |
+| systematic-debugging | When investigating test failures or unexpected behavior (verifier) |
+| research | When conducting structured investigation (researcher) |
+| code-review | When evaluating implementation quality (verifier) |
+
+All skills use `user-invocable: false` -- agents auto-invoke them based on description matching, not explicit user commands.
+
+## Planner Read-Only Enforcement
+
+The `planner` agent runs with `permissionMode: plan`. This enforces read-only access to the filesystem -- the planner can analyze the codebase and write plan files, but cannot execute commands that modify source files or run builds. This prevents the planner from accidentally beginning execution during the planning phase.

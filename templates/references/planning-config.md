@@ -47,7 +47,7 @@ INIT=$(node ~/.claude/maxsim/bin/maxsim-tools.cjs state load)
 # commit_docs is available in the JSON output
 
 # Or use init commands which include commit_docs:
-INIT=$(node ~/.claude/maxsim/bin/maxsim-tools.cjs init execute-phase "1")
+INIT=$(node ~/.claude/maxsim/bin/maxsim-tools.cjs init execute "1")
 # commit_docs is included in all init command outputs
 ```
 
@@ -101,7 +101,7 @@ To use uncommitted mode:
    git commit -m "chore: stop tracking planning docs"
    ```
 
-4. **Branch merges:** When using `branching_strategy: phase` or `milestone`, the `complete-milestone` workflow automatically strips `.planning/` files from staging before merge commits when `commit_docs: false`.
+4. **Branch merges:** When using `branching_strategy: phase` or `milestone`, merge commits should be created manually or via git after the phase/milestone completes.
 
 </setup_uncommitted_mode>
 
@@ -112,25 +112,24 @@ To use uncommitted mode:
 | Strategy | When branch created | Branch scope | Merge point |
 |----------|---------------------|--------------|-------------|
 | `none` | Never | N/A | N/A |
-| `phase` | At `execute-phase` start | Single phase | User merges after phase |
-| `milestone` | At first `execute-phase` of milestone | Entire milestone | At `complete-milestone` |
+| `phase` | At `execute` start | Single phase | User merges after phase |
+| `milestone` | At first `execute` of milestone | Entire milestone | User merges after milestone |
 
 **When `git.branching_strategy: "none"` (default):**
 - All work commits to current branch
 - Standard MAXSIM behavior
 
 **When `git.branching_strategy: "phase"`:**
-- `execute-phase` creates/switches to a branch before execution
+- `execute` creates/switches to a branch before execution
 - Branch name from `phase_branch_template` (e.g., `maxsim/phase-03-authentication`)
 - All plan commits go to that branch
 - User merges branches manually after phase completion
-- `complete-milestone` offers to merge all phase branches
 
 **When `git.branching_strategy: "milestone"`:**
-- First `execute-phase` of milestone creates the milestone branch
+- First `execute` of milestone creates the milestone branch
 - Branch name from `milestone_branch_template` (e.g., `maxsim/v1.0-mvp`)
 - All phases in milestone commit to same branch
-- `complete-milestone` offers to merge milestone branch to main
+- User merges milestone branch to main when complete
 
 **Template variables:**
 
@@ -142,9 +141,9 @@ To use uncommitted mode:
 
 **Checking the config:**
 
-Use `init execute-phase` which returns all config as JSON:
+Use `init execute` which returns all config as JSON:
 ```bash
-INIT=$(node ~/.claude/maxsim/bin/maxsim-tools.cjs init execute-phase "1")
+INIT=$(node ~/.claude/maxsim/bin/maxsim-tools.cjs init execute "1")
 # JSON output includes: branching_strategy, phase_branch_template, milestone_branch_template
 ```
 
@@ -172,7 +171,7 @@ if [ "$BRANCHING_STRATEGY" = "milestone" ]; then
 fi
 ```
 
-**Merge options at complete-milestone:**
+**Merge options when completing a milestone:**
 
 | Option | Git command | Result |
 |--------|-------------|--------|
