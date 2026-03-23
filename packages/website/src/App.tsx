@@ -38,14 +38,14 @@ export default function App() {
     <>
       <Helmet>
         <title>MaxsimCLI: Meta-Prompting and Context Engineering for AI Coding Agents</title>
-        <meta name="description" content="MaxsimCLI brings spec-driven development to Claude Code, OpenCode, Gemini CLI, and Codex. Fresh-context subagents and structured planning keep your projects on track." />
+        <meta name="description" content="MaxsimCLI brings spec-driven development to Claude Code. Fresh-context subagents and structured planning keep your projects on track." />
         <link rel="canonical" href="https://maxsimcli.dev/" />
         <meta property="og:url" content="https://maxsimcli.dev/" />
         <meta property="og:title" content="MaxsimCLI: Meta-Prompting and Context Engineering for AI Coding Agents" />
-        <meta property="og:description" content="MaxsimCLI brings spec-driven development to Claude Code, OpenCode, Gemini CLI, and Codex. Fresh-context subagents and structured planning keep your projects on track." />
+        <meta property="og:description" content="MaxsimCLI brings spec-driven development to Claude Code. Fresh-context subagents and structured planning keep your projects on track." />
         <meta name="twitter:url" content="https://maxsimcli.dev/" />
         <meta name="twitter:title" content="MaxsimCLI: Meta-Prompting and Context Engineering for AI Coding Agents" />
-        <meta name="twitter:description" content="MaxsimCLI brings spec-driven development to Claude Code, OpenCode, Gemini CLI, and Codex. Fresh-context subagents and structured planning keep your projects on track." />
+        <meta name="twitter:description" content="MaxsimCLI brings spec-driven development to Claude Code. Fresh-context subagents and structured planning keep your projects on track." />
       </Helmet>
       <main className="min-h-screen bg-background text-foreground font-sans antialiased">
         <Navbar />

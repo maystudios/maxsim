@@ -27,7 +27,7 @@ maxsimcli/                        ← repo root
 │   │   ├── tsdown.config.ts
 │   │   ├── vitest.config.ts
 │   │   └── package.json
-│   └── website/                  ← maxsimcli.com (React + Vite + Tailwind)
+│   └── website/                  ← maxsimcli.dev (React + Vite + Tailwind)
 ├── templates/                    ← source templates (copied to dist/ at build time)
 │   ├── agents/                   ← 4 agent definitions
 │   ├── commands/maxsim/          ← 9 slash commands
