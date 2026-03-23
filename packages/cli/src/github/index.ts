@@ -18,7 +18,7 @@ export {
 
 // Issues
 export {
-  getIssueIds, createIssue, getIssue, updateIssue,
+  listIssues, createIssue, getIssue, updateIssue,
   listComments, addComment, addSubIssue, listSubIssues, closeIssue,
 } from './issues.js';
 
@@ -26,15 +26,15 @@ export {
 export {
   createProject, listProjects, findProject,
   listProjectFields, getStatusField, getFieldOptionId,
-  addItemToProject, moveItemToStatus, setItemNumberField,
+  addItemToProject, moveItemToStatus, listItems,
   ensureProjectBoard,
 } from './projects.js';
 
 // Milestones
 export {
   createMilestone, listMilestones, findMilestone,
-  ensureMilestone, updateMilestone,
+  ensureMilestone, updateMilestone, deleteMilestone,
 } from './milestones.js';
 
 // Labels
-export { ensureLabels, getLabel, createLabel } from './labels.js';
+export { ensureLabels, getLabel, createLabel, updateLabel } from './labels.js';

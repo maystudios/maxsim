@@ -7,6 +7,7 @@ import { getRepoInfo, ghJson, ghExec } from './client.js';
 import type {
   GhProject,
   GhProjectField,
+  GhProjectItem,
   GhResult,
 } from './types.js';
 import { BOARD_COLUMNS } from './types.js';
@@ -224,6 +225,40 @@ export function setItemNumberField(
   return { ok: true, data: undefined };
 }
 
+/** List all items on a project board with their field values. */
+export function listItems(
+  projectNumber: number,
+  owner?: string,
+): GhResult<GhProjectItem[]> {
+  const { owner: repoOwner } = getRepoInfo();
+  const projectOwner = owner ?? repoOwner;
+
+  const result = ghJson<{
+    items: Array<{
+      id: string;
+      content?: { id?: string; type?: string; number?: number; title?: string };
+      title?: string;
+      archived?: boolean;
+    }>;
+  }>(
+    ['project', 'item-list', String(projectNumber), '--owner', projectOwner, '--format', 'json', '--limit', '500'],
+  );
+
+  if (!result.ok) return result;
+
+  return {
+    ok: true,
+    data: (result.data.items ?? []).map((item) => ({
+      id: item.id,
+      contentNodeId: item.content?.id ?? '',
+      contentType: (item.content?.type ?? 'Issue') as GhProjectItem['contentType'],
+      issueNumber: item.content?.number,
+      title: item.content?.title ?? item.title ?? '',
+      isArchived: item.archived ?? false,
+    })),
+  };
+}
+
 // ── Board Setup ───────────────────────────────────────────────────────
 
 /** Ensure a project board exists with the correct Status field options. */
@@ -231,22 +266,24 @@ export async function ensureProjectBoard(
   projectTitle: string,
   owner?: string,
 ): Promise<GhResult<{ project: GhProject; statusField: GhProjectField }>> {
-  // Find or create project
+  const { owner: repoOwner } = getRepoInfo();
+  const projectOwner = owner ?? repoOwner;
+
   let project: GhProject;
 
-  const findResult = findProject(projectTitle, owner);
+  const findResult = findProject(projectTitle, projectOwner);
   if (!findResult.ok) return findResult;
 
   if (findResult.data) {
     project = findResult.data;
   } else {
-    const createResult = createProject(projectTitle, owner);
+    const createResult = createProject(projectTitle, projectOwner);
     if (!createResult.ok) return createResult;
     project = createResult.data;
   }
 
   // Get Status field
-  const statusResult = getStatusField(project.number, owner);
+  const statusResult = getStatusField(project.number, projectOwner);
   if (!statusResult.ok) return statusResult;
 
   if (!statusResult.data) {
@@ -258,12 +295,20 @@ export async function ensureProjectBoard(
   const missingColumns = BOARD_COLUMNS.filter((col) => !existingOptions.has(col.name));
 
   if (missingColumns.length > 0) {
-    // Note: Adding single-select options requires GraphQL updateProjectV2Field mutation.
-    // For now, log a warning. Full implementation will use GraphQL.
-    console.warn(
-      `Warning: Missing board columns: ${missingColumns.map((c) => c.name).join(', ')}. ` +
-      'These must be added manually or via GraphQL updateProjectV2Field mutation.',
-    );
+    for (const col of missingColumns) {
+      const createResult = ghExec([
+        'project', 'field-create', String(project.number),
+        '--owner', projectOwner,
+        '--name', col.name,
+        '--data-type', 'SINGLE_SELECT',
+      ]);
+      if (!createResult.ok) {
+        console.warn(
+          `Warning: Failed to create board column "${col.name}": ${createResult.error}. ` +
+          'You may need to add it manually via the GitHub Projects UI.',
+        );
+      }
+    }
   }
 
   return { ok: true, data: { project, statusField: statusResult.data } };

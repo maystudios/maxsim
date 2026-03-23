@@ -135,7 +135,7 @@ export function formatIssueState(state: MaxsimIssueState): string {
 export function formatCommentHeader(meta: MaxsimCommentMeta): string {
   const entries = Object.entries(meta)
     .filter(([k]) => k !== 'type')
-    .map(([k, v]) => `${k}=${v}`)
+    .map(([k, v]) => /^\w+$/.test(String(v)) ? `${k}=${v}` : `${k}="${v}"`)
     .join(' ');
   return `<!-- maxsim:type=${meta.type}${entries ? ` ${entries}` : ''} -->`;
 }

@@ -206,7 +206,7 @@ export interface RepoInfo {
 
 // ── Operation Results ─────────────────────────────────────────────────
 
-export type GhResultCode = 'NOT_FOUND' | 'UNAUTHORIZED' | 'RATE_LIMITED' | 'VALIDATION' | 'UNKNOWN';
+export type GhResultCode = 'NOT_FOUND' | 'UNAUTHORIZED' | 'RATE_LIMITED' | 'FORBIDDEN' | 'VALIDATION' | 'UNKNOWN';
 
 export type GhResult<T> =
   | { ok: true; data: T }
