@@ -15,6 +15,7 @@ import {
   CompetitionStrategy,
   MODEL_PROFILES,
 } from '../../src/core/types.js';
+import { VERSION } from '../../src/core/version.js';
 
 describe('CmdResult', () => {
   it('cmdOk creates a successful result with data', () => {
@@ -133,5 +134,13 @@ describe('MODEL_PROFILES', () => {
     const budget = MODEL_PROFILES[ModelProfile.BUDGET];
     expect(budget.planner).toBe(Model.SONNET);
     expect(budget.researcher).toBe(Model.HAIKU);
+  });
+});
+
+describe('VERSION', () => {
+  it('is a non-empty string', () => {
+    expect(VERSION).toBeDefined();
+    expect(typeof VERSION).toBe('string');
+    expect(VERSION.length).toBeGreaterThan(0);
   });
 });
