@@ -1,6 +1,6 @@
 {
   "name": "maxsimcli",
-  "version": "5.2.2",
+  "version": "5.2.3",
   "private": false,
   "description": "A meta-prompting, context engineering and spec-driven development system for Claude Code by MayStudios.",
   "bin": {
