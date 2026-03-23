@@ -21,8 +21,5 @@ export {
 // Config
 export { loadConfig, saveConfig, resolveModel, getConfigPath } from './config.js';
 
-// Utils
-export { parseFrontmatter, padPhaseNumber, detectProjectRoot } from './utils.js';
-
 // Version
 export { VERSION } from './version.js';

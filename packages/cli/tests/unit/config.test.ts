@@ -7,9 +7,8 @@ import {
   saveConfig,
   resolveModel,
   getConfigPath,
-  DEFAULT_CONFIG,
 } from '../../src/core/config.js';
-import { Model, ModelProfile, AgentType } from '../../src/core/types.js';
+import { Model, ModelProfile, AgentType, DEFAULT_CONFIG } from '../../src/core/types.js';
 
 let tmpDir: string;
 
