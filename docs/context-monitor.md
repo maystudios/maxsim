@@ -1,5 +1,9 @@
 # Context Window Monitor
 
+> **Removed in v6.** The standalone context monitor hook has been replaced by the `capture-learnings` hook, which handles end-of-session state saving without requiring a bridge file or statusline integration. This document is retained for historical reference only.
+
+---
+
 A PostToolUse hook that warns the agent when context window usage is high.
 
 ## Problem

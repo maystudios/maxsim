@@ -1,24 +1,30 @@
 ---
 id: commands-todos
-title: Todo Commands
+title: Quick Tasks
 group: Commands Reference
 ---
 
-Todos are managed through `/maxsim:quick --todo` and tracked as GitHub Issues with the `todo` label.
-
-{% doctable headers=["Command", "Description"] rows=[["/maxsim:quick --todo [desc]", "Capture an idea or task as a GitHub Issue with the 'todo' label"], ["/maxsim:quick --todo triage", "List pending todos and decide what to work on next"]] %}
-{% /doctable %}
+Use `/maxsim:quick` for small, ad-hoc tasks that fall outside the main phase workflow. Quick tasks are tracked as GitHub Issues with the `quick` label.
 
 {% codeblock language="bash" %}
-# Save an idea as a todo
-/maxsim:quick --todo "Add pagination to the API"
+# Run a quick task with a description
+/maxsim:quick "Add pagination to the API"
 
-# List pending todos
-/maxsim:quick --todo list
-
-# Complete a todo by issue number
-/maxsim:quick --todo done 42
-
-# Triage: prioritize what to work on next
-/maxsim:quick --todo triage
+# Run interactively — MaxsimCLI will ask for a description
+/maxsim:quick
 {% /codeblock %}
+
+### How quick tasks work
+
+`/maxsim:quick` skips research, plan-checker, and verifier by default for speed. It still gives you MaxsimCLI guarantees: atomic commits and GitHub tracking.
+
+1. Gets a task description from the argument or via a clarifying question
+2. Creates a GitHub Issue labeled `quick`
+3. Spawns a planner agent (quick mode) for a concise implementation plan
+4. Spawns executor agent(s) to implement the plan
+5. Commits with an atomic message referencing the GitHub Issue
+6. Closes the Issue with a completion summary
+
+{% callout type="note" %}
+Quick tasks appear on your GitHub project board alongside phase tasks. Use /maxsim:progress to see all open quick tasks alongside phase work.
+{% /callout %}

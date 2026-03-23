@@ -60,4 +60,9 @@ export default defineConfig([
     entry: { 'maxsim-stop-sound': 'src/hooks/maxsim-stop-sound.ts' },
     dts: false,
   },
+  {
+    ...hookShared,
+    entry: { 'maxsim-capture-learnings': 'src/hooks/maxsim-capture-learnings.ts' },
+    dts: false,
+  },
 ]);

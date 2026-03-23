@@ -1,29 +1,27 @@
 ---
 id: plan-phase
-title: Go (Auto-Dispatch)
+title: Plan Phase
 group: Workflow
 ---
 
-`/maxsim:go` is the recommended entry point for most users. It detects your project's current state and runs the correct workflow. You never need to remember which command comes next.
+`/maxsim:plan` is the planning entry point for a phase. It runs discussion, research, and planning stages in sequence, producing GitHub Issues and task breakdowns ready for execution. You can also use `/maxsim:go` to auto-detect the current state and run the right workflow automatically.
 
 {% codeblock language="bash" %}
-/maxsim:go
+/maxsim:plan 1
 {% /codeblock %}
 
-### How auto-dispatch works
+### Discussion stage
 
-`/maxsim:go` inspects your `.planning/` directory and decides what to do:
+The discussion agent reads your roadmap and phase context from GitHub, then asks targeted questions about the phase. Questions adapt based on your answers. If you mention a third-party API, it asks about rate limits and authentication. If you mention real-time features, it asks about WebSocket vs. polling tradeoffs. Discussion output is written as a comment on the phase GitHub Issue.
 
-{% doctable headers=["State Detected", "Action Taken"] rows=[["No project initialized", "Runs the init workflow to set up your project"], ["Project exists but no plan for the current phase", "Runs the plan workflow (discussion, research, planning)"], ["Plan exists but not yet executed", "Runs the execute workflow with parallel agents"], ["Execution complete but unverified", "Runs verification"], ["Everything done", "Reports completion and suggests next steps"]] %}
-{% /doctable %}
+### Research stage
 
-You can run `/maxsim:go` repeatedly throughout your workflow. It picks up where you left off and moves the project forward.
+The researcher agent takes the discussion output and investigates the codebase, dependencies, and technical landscape relevant to the phase. Findings are written as a GitHub Issue comment and used by the planner. Pass `--force-research` to re-run research even if research notes already exist.
 
-### When to use something else
+### Planning stage
 
-For most workflows, `/maxsim:go` is all you need. Use specific commands when you want direct control:
+The planner agent consumes discussion and research to break the phase into task Issues with acceptance criteria and ordering. A plan-checker then validates the plan before marking the phase as ready for execution. Pass `--skip-verify` to bypass plan verification.
 
-- `/maxsim:plan` to re-plan a phase without executing
-- `/maxsim:execute` to re-run execution with specific flags
-- `/maxsim:quick` for standalone tasks outside the phase workflow
-- `/maxsim:debug` for structured debugging sessions
+### GitHub as source of truth
+
+All stage state (discussion, research, plan) is stored as GitHub Issue labels and comments — not local files. Re-entering `/maxsim:plan 1` on an already-planned phase shows current status and offers to view, re-plan, or proceed to execution.

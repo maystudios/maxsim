@@ -1,466 +1,509 @@
-# MAXSIM User Guide
+# MaxsimCLI User Guide
 
-A detailed reference for workflows, troubleshooting, and configuration. For quick-start setup, see the [README](../README.md).
+> **MaxsimCLI** — **MAX**imal **SIM**plicity. One command to install. One command to run. GitHub as the single source of truth.
 
 ---
 
 ## Table of Contents
 
-- [Workflow Diagrams](#workflow-diagrams)
-- [Command Reference](#command-reference)
-- [Configuration Reference](#configuration-reference)
-- [Usage Examples](#usage-examples)
+- [Quick Start](#quick-start)
+- [Commands](#commands)
+- [Workflow](#workflow)
+- [GitHub Integration](#github-integration)
+- [Configuration](#configuration)
+- [Agent System](#agent-system)
+- [Skills](#skills)
+- [Self-Improvement](#self-improvement)
 - [Troubleshooting](#troubleshooting)
-- [Recovery Quick Reference](#recovery-quick-reference)
 
 ---
 
-## Workflow Diagrams
+## Quick Start
 
-### Full Project Lifecycle
+### 1. Install
 
-```
-  ┌──────────────────────────────────────────────────┐
-  │                   NEW PROJECT                    │
-  │  /maxsim:new-project                                │
-  │  Questions -> Research -> Requirements -> Roadmap│
-  └─────────────────────────┬────────────────────────┘
-                            │
-             ┌──────────────▼─────────────┐
-             │      FOR EACH PHASE:       │
-             │                            │
-             │  ┌────────────────────┐    │
-             │  │ /maxsim:discuss-phase │    │  <- Lock in preferences
-             │  └──────────┬─────────┘    │
-             │             │              │
-             │  ┌──────────▼─────────┐    │
-             │  │ /maxsim:plan-phase    │    │  <- Research + Plan + Verify
-             │  └──────────┬─────────┘    │
-             │             │              │
-             │  ┌──────────▼─────────┐    │
-             │  │ /maxsim:execute-phase │    │  <- Parallel execution
-             │  └──────────┬─────────┘    │
-             │             │              │
-             │  ┌──────────▼─────────┐    │
-             │  │ /maxsim:verify-work   │    │  <- Manual UAT
-             │  └──────────┬─────────┘    │
-             │             │              │
-             │     Next Phase?────────────┘
-             │             │ No
-             └─────────────┼──────────────┘
-                            │
-            ┌───────────────▼──────────────┐
-            │  /maxsim:audit-milestone        │
-            │  /maxsim:complete-milestone     │
-            └───────────────┬──────────────┘
-                            │
-                   Another milestone?
-                       │          │
-                      Yes         No -> Done!
-                       │
-               ┌───────▼──────────────┐
-               │  /maxsim:new-milestone  │
-               └──────────────────────┘
+```bash
+npx maxsimcli@latest
 ```
 
-### Planning Agent Coordination
+Run this in your project directory. MaxsimCLI installs project-locally into `.claude/`. Nothing is installed globally.
+
+**Requirements:**
+- Node.js >= 22
+- GitHub CLI (`gh`) installed and authenticated — run `gh auth login` if needed
+- Claude Code
+
+### 2. Start
 
 ```
-  /maxsim:plan-phase N
-         │
-         ├── Phase Researcher (x4 parallel)
-         │     ├── Stack researcher
-         │     ├── Features researcher
-         │     ├── Architecture researcher
-         │     └── Pitfalls researcher
-         │           │
-         │     ┌──────▼──────┐
-         │     │ RESEARCH.md │
-         │     └──────┬──────┘
-         │            │
-         │     ┌──────▼──────┐
-         │     │   Planner   │  <- Reads PROJECT.md, REQUIREMENTS.md,
-         │     │             │     CONTEXT.md, RESEARCH.md
-         │     └──────┬──────┘
-         │            │
-         │     ┌──────▼───────────┐     ┌────────┐
-         │     │   Plan Checker   │────>│ PASS?  │
-         │     └──────────────────┘     └───┬────┘
-         │                                  │
-         │                             Yes  │  No
-         │                              │   │   │
-         │                              │   └───┘  (loop, up to 3x)
-         │                              │
-         │                        ┌─────▼──────┐
-         │                        │ PLAN files │
-         │                        └────────────┘
-         └── Done
+/maxsim:go
 ```
 
-### Validation Architecture (Nyquist Layer)
+That is the entire interface. MaxsimCLI reads your GitHub Project Board, determines what state the project is in, proposes the right next action, waits for your approval, and executes.
 
-During plan-phase research, MAXSIM now maps automated test coverage to each phase
-requirement before any code is written. This ensures that when Claude's executor
-commits a task, a feedback mechanism already exists to verify it within seconds.
+### 3. That is it
 
-The researcher detects your existing test infrastructure, maps each requirement to
-a specific test command, and identifies any test scaffolding that must be created
-before implementation begins (Wave 0 tasks).
+MaxsimCLI detects what to do next automatically:
 
-The plan-checker enforces this as an 8th verification dimension: plans where tasks
-lack automated verify commands will not be approved.
+- No GitHub repo? It offers to create one.
+- No project board? It runs `/maxsim:init` to set one up.
+- A phase is planned and ready? It executes it.
+- Work is in progress? It resumes from where it left off.
+- Something broke? It enters debug mode.
 
-**Output:** `{phase}-VALIDATION.md` -- the feedback contract for the phase.
-
-**Disable:** Set `workflow.nyquist_validation: false` in `/maxsim:settings` for
-rapid prototyping phases where test infrastructure isn't the focus.
-
-### Execution Wave Coordination
-
-```
-  /maxsim:execute-phase N
-         │
-         ├── Analyze plan dependencies
-         │
-         ├── Wave 1 (independent plans):
-         │     ├── Executor A (fresh 200K context) -> commit
-         │     └── Executor B (fresh 200K context) -> commit
-         │
-         ├── Wave 2 (depends on Wave 1):
-         │     └── Executor C (fresh 200K context) -> commit
-         │
-         └── Verifier
-               └── Check codebase against phase goals
-                     │
-                     ├── PASS -> VERIFICATION.md (success)
-                     └── FAIL -> Issues logged for /maxsim:verify-work
-```
-
-### Brownfield Workflow (Existing Codebase)
-
-```
-  /maxsim:map-codebase
-         │
-         ├── Stack Mapper     -> codebase/STACK.md
-         ├── Arch Mapper      -> codebase/ARCHITECTURE.md
-         ├── Convention Mapper -> codebase/CONVENTIONS.md
-         └── Concern Mapper   -> codebase/CONCERNS.md
-                │
-        ┌───────▼──────────┐
-        │ /maxsim:new-project │  <- Questions focus on what you're ADDING
-        └──────────────────┘
-```
+You never need to remember where you were. `/maxsim:go` always knows.
 
 ---
 
-## Command Reference
+## Commands
 
-### Core Workflow
+MaxsimCLI provides 9 slash commands. `/maxsim:go` is the primary interface — use the others when you want explicit control over a specific step.
 
-| Command | Purpose | When to Use |
-|---------|---------|-------------|
-| `/maxsim:new-project` | Full project init: questions, research, requirements, roadmap | Start of a new project |
-| `/maxsim:new-project --auto @idea.md` | Automated init from document | Have a PRD or idea doc ready |
-| `/maxsim:discuss-phase [N]` | Capture implementation decisions | Before planning, to shape how it gets built |
-| `/maxsim:plan-phase [N]` | Research + plan + verify | Before executing a phase |
-| `/maxsim:execute-phase <N>` | Execute all plans in parallel waves | After planning is complete |
-| `/maxsim:verify-work [N]` | Manual UAT with auto-diagnosis | After execution completes |
-| `/maxsim:audit-milestone` | Verify milestone met its definition of done | Before completing milestone |
-| `/maxsim:complete-milestone` | Archive milestone, tag release | All phases verified |
-| `/maxsim:new-milestone [name]` | Start next version cycle | After completing a milestone |
+| Command | Description | Example |
+|---------|-------------|---------|
+| `/maxsim:go` | **Auto-dispatch.** Reads the GitHub Project Board, detects project state, proposes and executes the right next action. The command you will use most. | `/maxsim:go` |
+| `/maxsim:init` | **Initialize** MaxsimCLI in a project. Interviews you about the project, scans existing code (brownfield), creates the GitHub repo, project board, labels, and milestones. | `/maxsim:init` |
+| `/maxsim:plan [N]` | **Plan a specific phase.** Runs parallel research agents, creates a task breakdown as GitHub sub-issues, and enters Plan Mode for your approval. | `/maxsim:plan 3` |
+| `/maxsim:execute [N]` | **Execute a planned phase.** Shows the full plan for approval, then spawns executor agents in parallel waves — each in its own git worktree. Verifies, merges, and pushes automatically. | `/maxsim:execute 3` |
+| `/maxsim:debug [desc]` | **Debug a specific issue.** Runs systematic debugging: reproduce, hypothesize, isolate, verify, fix, confirm. Also triggered automatically by `/maxsim:go` when issues exist. | `/maxsim:debug "login fails on mobile"` |
+| `/maxsim:quick [desc]` | **Quick task.** Simplified single-issue flow for small changes — no multi-phase overhead. Creates a GitHub Issue, plans it, and executes in one pass. | `/maxsim:quick "update the README"` |
+| `/maxsim:progress` | **Show project status.** Reads the GitHub Project Board and displays a summary of what is done, what is in progress, and what to do next. | `/maxsim:progress` |
+| `/maxsim:settings` | **Configure MaxsimCLI.** Change model profiles, verification settings, parallelism, and other options. Writes to `.claude/maxsim/config.json`. | `/maxsim:settings` |
+| `/maxsim:help` | **Show available commands.** Quick reference for all commands. | `/maxsim:help` |
 
-### Navigation
+### When to use explicit commands vs `/maxsim:go`
 
-| Command | Purpose | When to Use |
-|---------|---------|-------------|
-| `/maxsim:progress` | Show status and next steps | Anytime -- "where am I?" |
-| `/maxsim:resume-work` | Restore full context from last session | Starting a new session |
-| `/maxsim:pause-work` | Save context handoff | Stopping mid-phase |
-| `/maxsim:help` | Show all commands | Quick reference |
-| `/maxsim:update` | Update MAXSIM with changelog preview | Check for new versions |
+Use `/maxsim:go` for normal day-to-day work. Use explicit commands when:
 
-### Phase Management
-
-| Command | Purpose | When to Use |
-|---------|---------|-------------|
-| `/maxsim:add-phase` | Append new phase to roadmap | Scope grows after initial planning |
-| `/maxsim:insert-phase [N]` | Insert urgent work (decimal numbering) | Urgent fix mid-milestone |
-| `/maxsim:remove-phase [N]` | Remove future phase and renumber | Descoping a feature |
-| `/maxsim:list-phase-assumptions [N]` | Preview Claude's intended approach | Before planning, to validate direction |
-| `/maxsim:plan-milestone-gaps` | Create phases for audit gaps | After audit finds missing items |
-| `/maxsim:research-phase [N]` | Deep ecosystem research only | Complex or unfamiliar domain |
-
-### Brownfield & Utilities
-
-| Command | Purpose | When to Use |
-|---------|---------|-------------|
-| `/maxsim:map-codebase` | Analyze existing codebase | Before `/maxsim:new-project` on existing code |
-| `/maxsim:quick` | Ad-hoc task with MAXSIM guarantees | Bug fixes, small features, config changes |
-| `/maxsim:debug [desc]` | Systematic debugging with persistent state | When something breaks |
-| `/maxsim:quick --todo [desc]` | Capture an idea as a GitHub Issue | Think of something during a session |
-| `/maxsim:settings` | Configure workflow toggles and model profile | Change model, toggle agents |
-| `/maxsim:set-profile <profile>` | Quick profile switch | Change cost/quality tradeoff |
-| `/maxsim:reapply-patches` | Restore local modifications after update | After `/maxsim:update` if you had local edits |
+- You want to jump to a specific phase out of sequence: `/maxsim:plan 5`
+- You want to re-execute a phase that already ran: `/maxsim:execute 2`
+- You have a quick one-off task that does not belong in the roadmap: `/maxsim:quick`
+- Something specific broke and you want to go straight to debugging: `/maxsim:debug`
 
 ---
 
-## Configuration Reference
+## Workflow
 
-MAXSIM stores project settings in `.planning/config.json`. Configure during `/maxsim:new-project` or update later with `/maxsim:settings`.
+MaxsimCLI enforces a four-step cycle for every phase of work:
 
-### Full config.json Schema
+```
+Init → Plan → Execute → Verify
+```
+
+### Step 1: Init
+
+`/maxsim:init` runs once per project. It:
+
+1. Scans your existing codebase using 30+ parallel Research agents (brownfield support)
+2. Interviews you: project name, goals, tech stack, conventions, testing strategy, acceptance criteria
+3. Creates your GitHub repository if none exists
+4. Sets up the GitHub Project Board (Kanban: To Do → In Progress → In Review → Done)
+5. Creates labels and milestones
+6. Optionally generates an initial roadmap as GitHub Issues
+7. Writes a `CLAUDE.md` in your project root so Claude Code has context at every session start
+
+After init, your project state lives entirely on GitHub. No local planning files, no `.planning/` directory.
+
+### Step 2: Plan
+
+`/maxsim:plan [N]` plans a specific phase:
+
+1. Enters Plan Mode — Claude Code enters read-only mode. No code changes until you approve.
+2. Reads the phase issue from GitHub
+3. Spawns parallel Research agents to investigate the codebase and relevant topics
+4. Creates a task breakdown as GitHub sub-issues attached to the phase issue
+5. Presents the plan for your review
+6. You approve via ExitPlanMode. Only then does execution become possible.
+
+You always see the plan before anything is written.
+
+### Step 3: Execute
+
+`/maxsim:execute [N]` executes a planned phase:
+
+1. Enters Plan Mode — shows all planned tasks for final review
+2. You approve
+3. Executor agents spawn in parallel waves based on task dependencies
+4. Each agent works in its own git worktree (`maxsim/phase-{N}-task-{id}`)
+5. Competitive implementation: the same task may be solved by 2-3 agents independently; the best result is selected
+6. Each task is verified automatically before the worktree is merged
+7. Verified worktrees merge sequentially into main; the merged result is verified again
+8. Changes are pushed to remote
+
+If verification fails, MaxsimCLI retries up to 3 times with fresh executor agents. After 3 failures, it escalates: creates a diagnostic GitHub Issue and asks for your input.
+
+### Step 4: Verify
+
+Verification is automatic and runs after every task. It checks:
+
+- Tests pass
+- Build succeeds
+- Lint is clean
+- All planned tasks were actually implemented (spec compliance)
+- Code review passes (security, quality, efficiency)
+
+Every verification produces a structured evidence block — no completion claims without proof.
+
+The Guard pattern also runs a regression check: "did this task break what was already working?" A task that passes its own verification but breaks existing tests is rejected.
+
+---
+
+## GitHub Integration
+
+GitHub is not optional. MaxsimCLI uses GitHub as the single source of truth for all project state. There are no local planning files.
+
+### Project Board (Kanban)
+
+MaxsimCLI creates and maintains a GitHub Projects v2 board with four columns:
+
+| Column | Meaning |
+|--------|---------|
+| **To Do** | Phases and tasks that are planned but not started |
+| **In Progress** | Work currently being executed |
+| **In Review** | Work completed, awaiting verification or approval |
+| **Done** | Verified and merged |
+
+The column an issue is in IS its status. No sync needed. No local state file.
+
+### Issues and Sub-Issues
+
+Every unit of work is a GitHub Issue:
+
+- **Phase Issues** — One issue per phase. Created during init or planning. Tracks the phase goal, plan, and progress.
+- **Sub-Issues** — One issue per task within a phase. Sub-issues of the phase issue. Created during `/maxsim:plan`.
+- **Quick Issues** — Created by `/maxsim:quick` for small one-off tasks.
+- **Bug/Debug Issues** — Created automatically when verification fails and human input is needed.
+
+You can also write GitHub Issues directly. MaxsimCLI recognizes user-created issues and integrates them into the planning and execution pipeline.
+
+### Issue Comments
+
+MaxsimCLI stores structured data as issue comments with HTML markers so they can be found and updated reliably:
+
+| Comment Type | Content |
+|-------------|---------|
+| Plan comment | Research findings, task breakdown, implementation approach |
+| Research comment | Parallel agent research results |
+| Verification comment | Evidence blocks with test output, build results, lint results |
+| Summary comment | What was done, what was decided, what was learned |
+| Diagnostic comment | Debug context, error details, reproduction steps |
+
+### Milestones
+
+GitHub Milestones group phases into deliverable versions:
+
+- Each milestone has a title (e.g., `v1.0 — Core Features`), due date, and description
+- Milestone completion percentage reflects how many phase issues are closed
+- The roadmap is visible at a glance in the GitHub Milestones page
+
+### Labels
+
+MaxsimCLI creates 30+ labels to categorize work:
+
+`phase`, `task`, `blocker`, `bug`, `research`, `verification-failed`, `needs-review`, `in-progress`, `quick`, `competitive`, and more.
+
+---
+
+## Configuration
+
+MaxsimCLI reads and writes configuration at:
+
+```
+.claude/maxsim/config.json
+```
+
+Use `/maxsim:settings` to configure interactively, or edit the file directly.
+
+### Full Schema
 
 ```json
 {
-  "mode": "interactive",
-  "depth": "standard",
   "model_profile": "balanced",
-  "planning": {
-    "commit_docs": true,
-    "search_gitignored": false
+  "verification": {
+    "enabled": true,
+    "max_retries": 3,
+    "guard_enabled": true
   },
-  "workflow": {
-    "research": true,
-    "plan_check": true,
-    "verifier": true,
-    "nyquist_validation": true
+  "parallelism": {
+    "max_agents": 10,
+    "competitive": true,
+    "competitive_n": 2
   },
-  "git": {
-    "branching_strategy": "none",
-    "phase_branch_template": "maxsim/phase-{phase}-{slug}",
-    "milestone_branch_template": "maxsim/{milestone}-{slug}"
+  "github": {
+    "project_name": "My Project",
+    "auto_push": true
   }
 }
 ```
 
-### Core Settings
+### Model Profiles
 
-| Setting | Options | Default | What it Controls |
-|---------|---------|---------|------------------|
-| `mode` | `interactive`, `yolo` | `interactive` | `yolo` auto-approves decisions; `interactive` confirms at each step |
-| `depth` | `quick`, `standard`, `comprehensive` | `standard` | Planning thoroughness: 3-5, 5-8, or 8-12 phases |
-| `model_profile` | `quality`, `balanced`, `budget` | `balanced` | Model tier for each agent (see table below) |
+The `model_profile` setting controls which Claude model is used for each agent type.
 
-### Planning Settings
+| Agent | `quality` | `balanced` (default) | `budget` |
+|-------|-----------|----------------------|----------|
+| Planner | Opus | Opus | Sonnet |
+| Executor | Opus | Sonnet | Sonnet |
+| Researcher | Sonnet | Sonnet | Haiku |
+| Verifier | Opus | Sonnet | Sonnet |
 
-| Setting | Options | Default | What it Controls |
-|---------|---------|---------|------------------|
-| `planning.commit_docs` | `true`, `false` | `true` | Whether `.planning/` files are committed to git |
-| `planning.search_gitignored` | `true`, `false` | `false` | Add `--no-ignore` to broad searches to include `.planning/` |
+**Profile guidance:**
 
-> **Note:** If `.planning/` is in `.gitignore`, `commit_docs` is automatically `false` regardless of the config value.
+- `quality` — Use when the work is critical and you have token budget. Opus for all decision-making.
+- `balanced` — The default. Opus for planning (where architecture decisions happen), Sonnet for execution and verification.
+- `budget` — Sonnet for code writing, Haiku for research. Use for high-volume or exploratory work.
 
-### Workflow Toggles
+Switch profiles at any time with `/maxsim:settings`.
 
-| Setting | Options | Default | What it Controls |
-|---------|---------|---------|------------------|
-| `workflow.research` | `true`, `false` | `true` | Domain investigation before planning |
-| `workflow.plan_check` | `true`, `false` | `true` | Plan verification loop (up to 3 iterations) |
-| `workflow.verifier` | `true`, `false` | `true` | Post-execution verification against phase goals |
-| `workflow.nyquist_validation` | `true`, `false` | `true` | Validation architecture research during plan-phase; 8th plan-check dimension |
+### Verification Settings
 
-Disable these to speed up phases in familiar domains or when conserving tokens.
+| Setting | Default | Description |
+|---------|---------|-------------|
+| `verification.enabled` | `true` | Whether automatic verification runs after each task |
+| `verification.max_retries` | `3` | How many times a failing task is retried before escalation |
+| `verification.guard_enabled` | `true` | Whether the regression guard check runs after the verify check |
 
-### Git Branching
+Disable verification only for rapid prototyping where you plan to verify manually later.
 
-| Setting | Options | Default | What it Controls |
-|---------|---------|---------|------------------|
-| `git.branching_strategy` | `none`, `phase`, `milestone` | `none` | When and how branches are created |
-| `git.phase_branch_template` | Template string | `maxsim/phase-{phase}-{slug}` | Branch name for phase strategy |
-| `git.milestone_branch_template` | Template string | `maxsim/{milestone}-{slug}` | Branch name for milestone strategy |
+### Parallelism Settings
 
-**Branching strategies explained:**
+| Setting | Default | Description |
+|---------|---------|-------------|
+| `parallelism.max_agents` | `10` | Maximum concurrent executor agents |
+| `parallelism.competitive` | `true` | Enable competitive implementation (same task solved N ways) |
+| `parallelism.competitive_n` | `2` | Number of competing implementations per task |
 
-| Strategy | Creates Branch | Scope | Best For |
-|----------|---------------|-------|----------|
-| `none` | Never | N/A | Solo development, simple projects |
-| `phase` | At each `execute-phase` | One phase per branch | Code review per phase, granular rollback |
-| `milestone` | At first `execute-phase` | All phases share one branch | Release branches, PR per version |
+Competitive implementation uses more tokens but produces higher quality output. Disable it with `competitive: false` to reduce cost on straightforward tasks.
 
-**Template variables:** `{phase}` = zero-padded number (e.g., "03"), `{slug}` = lowercase hyphenated name, `{milestone}` = version (e.g., "v1.0").
+### GitHub Settings
 
-### Model Profiles (Per-Agent Breakdown)
-
-| Agent | `quality` | `balanced` | `budget` |
-|-------|-----------|------------|----------|
-| maxsim-planner | Opus | Opus | Sonnet |
-| maxsim-roadmapper | Opus | Sonnet | Sonnet |
-| maxsim-executor | Opus | Sonnet | Sonnet |
-| maxsim-phase-researcher | Opus | Sonnet | Haiku |
-| maxsim-project-researcher | Opus | Sonnet | Haiku |
-| maxsim-research-synthesizer | Sonnet | Sonnet | Haiku |
-| maxsim-debugger | Opus | Sonnet | Sonnet |
-| maxsim-codebase-mapper | Sonnet | Haiku | Haiku |
-| maxsim-verifier | Sonnet | Sonnet | Haiku |
-| maxsim-plan-checker | Sonnet | Sonnet | Haiku |
-| maxsim-integration-checker | Sonnet | Sonnet | Haiku |
-
-**Profile philosophy:**
-- **quality** -- Opus for all decision-making agents, Sonnet for read-only verification. Use when quota is available and the work is critical.
-- **balanced** -- Opus only for planning (where architecture decisions happen), Sonnet for everything else. The default for good reason.
-- **budget** -- Sonnet for anything that writes code, Haiku for research and verification. Use for high-volume work or less critical phases.
+| Setting | Default | Description |
+|---------|---------|-------------|
+| `github.project_name` | (from init) | Name of the GitHub Project board |
+| `github.auto_push` | `true` | Automatically push to remote after successful verification |
 
 ---
 
-## Usage Examples
+## Agent System
 
-### New Project (Full Cycle)
+MaxsimCLI uses 4 specialized agent types that work together to plan, build, research, and verify your project.
 
-```bash
-claude --dangerously-skip-permissions
-/maxsim:new-project            # Answer questions, configure, approve roadmap
-/clear
-/maxsim:discuss-phase 1        # Lock in your preferences
-/maxsim:plan-phase 1           # Research + plan + verify
-/maxsim:execute-phase 1        # Parallel execution
-/maxsim:verify-work 1          # Manual UAT
-/clear
-/maxsim:discuss-phase 2        # Repeat for each phase
-...
-/maxsim:audit-milestone        # Check everything shipped
-/maxsim:complete-milestone     # Archive, tag, done
+### Agent Types
+
+| Agent | Role | What it Does |
+|-------|------|-------------|
+| **Planner** | Planning | Creates phase plans and task breakdowns. Operates in read-only Plan Mode — it cannot write code. Reads GitHub Issues and produces sub-issue task breakdowns. |
+| **Executor** | Implementation | Writes code. Each executor works in an isolated git worktree on its own branch. Commits atomically using conventional commit format. |
+| **Researcher** | Investigation | Reads the codebase, searches the web, investigates dependencies. Used during init (30+ agents scanning in parallel) and during planning (domain research). |
+| **Verifier** | Quality Control | Reviews completed work. Runs tests, checks build, runs lint, reviews code for security and quality issues, and produces evidence blocks. |
+
+### Parallel Execution with Worktrees
+
+Every executor agent gets its own git worktree:
+
+```
+.maxsim-worktrees/
+  phase-3-task-001/    ← Executor A working here
+  phase-3-task-002/    ← Executor B working here
+  phase-3-task-003/    ← Executor C working here
 ```
 
-### New Project from Existing Document
+Each worktree is an independent branch. After an executor finishes and the Verifier approves its work, the worktree branch is merged back into main. Merges happen sequentially to minimize conflicts. Auto-resolution is attempted; the Verifier checks the merged result.
 
-```bash
-/maxsim:new-project --auto @prd.md   # Auto-runs research/requirements/roadmap from your doc
-/clear
-/maxsim:discuss-phase 1               # Normal flow from here
+This means agents never step on each other. Work that fails verification is discarded without affecting anything else.
+
+### Competitive Implementation
+
+When `parallelism.competitive` is enabled, the same task is assigned to multiple executor agents simultaneously. Each works independently without knowing about the others. The Verifier scores all implementations across criteria including correctness, test coverage, security, code quality, and spec compliance — and selects the best one.
+
+This is the same principle used in ensemble ML methods: multiple independent attempts at a problem produce better results than a single attempt.
+
+### Agent Waves
+
+Executor agents spawn in dependency-ordered waves. Tasks with no dependencies run in parallel in Wave 1. Tasks that depend on Wave 1 results run in Wave 2, and so on. MaxsimCLI uses Kahn's algorithm to build the wave schedule from the task dependency graph in the GitHub sub-issues.
+
+---
+
+## Skills
+
+MaxsimCLI ships with 14 built-in skills. Skills are instruction modules that Claude Code loads on-demand based on semantic matching — Claude reads the skill's description and loads it when the task matches.
+
+### How Skills Are Loaded
+
+You do not need to invoke skills manually. Claude Code:
+
+1. Reads each skill's frontmatter description
+2. When a task matches a skill's trigger conditions, loads the skill automatically
+3. Agent prompts also reference skills explicitly (e.g., the Verifier agent prompt says "use the verification skill")
+
+Skills can also be requested explicitly during init: "use the UX-Pro skill for all design decisions."
+
+### Skill List
+
+| # | Skill | Purpose |
+|---|-------|---------|
+| 1 | `tdd` | Test-Driven Development. Red-green-refactor cycle. Used by executor agents when writing new features. |
+| 2 | `systematic-debugging` | Structured debugging: reproduce, hypothesize, isolate, verify, fix, confirm. Used by `/maxsim:debug`. |
+| 3 | `brainstorming` | Multi-approach design exploration before committing to an implementation. |
+| 4 | `roadmap-writing` | Phase planning with dependencies and success criteria. Used during `/maxsim:plan`. |
+| 5 | `handoff-contract` | Standard output format for all agent results. Ensures consistent handoffs between agents. |
+| 6 | `commit-conventions` | Conventional commit format, atomic changes, co-author attribution. Used by all executor agents. |
+| 7 | `maxsim-batch` | Parallel execution orchestration. Defines the batch pattern for spawning multiple agents in one message. |
+| 8 | `code-review` | Security, quality, and spec-compliance review. Used by Verifier agents. |
+| 9 | `verification` | Gate framework, evidence blocks, anti-rationalization enforcement. The verification protocol all Verifiers follow. |
+| 10 | `github-operations` | GitHub artifact types, comment conventions, CLI commands, issue lifecycle state machine. |
+| 11 | `research` | Systematic investigation with source hierarchy and tool priority. Used by Researcher agents. |
+| 12 | `project-memory` | GitHub-native persistence for project learnings, decisions, and patterns across sessions. |
+| 13 | `using-maxsim` | Command reference and routing table. Loaded when Claude needs to invoke MaxsimCLI commands. |
+| 14 | `maxsim-simplify` | Code simplification, dead code removal, reuse improvement. |
+
+---
+
+## Self-Improvement
+
+MaxsimCLI learns from every session. It is not a static tool — it improves per project over time.
+
+### The Feedback Loop
+
+```
+Session Start
+  → Read git log (last 20 commits) for patterns
+  → Read project memory (MEMORY.md)
+  → Apply learned adjustments to configuration and behavior
+
+Session Work
+  → Execute tasks
+  → Measure results (tests pass, build succeeds, spec compliance)
+  → Log outcomes
+
+Session End (automatic Stop hook)
+  → Capture learnings
+  → Update agent memory
+  → Record what worked and what failed
 ```
 
-### Existing Codebase
+The Stop hook runs automatically when Claude Code ends a session. You do not need to do anything.
 
-```bash
-/maxsim:map-codebase           # Analyze what exists (parallel agents)
-/maxsim:new-project            # Questions focus on what you're ADDING
-# (normal phase workflow from here)
+### Git as Memory
+
+MaxsimCLI reads `git log --oneline -20` at the start of every session. The commit history tells the story of what was tried, what succeeded, and what was rolled back. This gives Claude Code context without any explicit state file.
+
+### Agent Memory
+
+Each project maintains persistent agent memory at:
+
+```
+.claude/agent-memory/maxsim-learner/MEMORY.md
 ```
 
-### Quick Bug Fix
+This file stores:
+- Patterns that worked well (e.g., "this project uses vitest, not jest")
+- Patterns that caused failures (e.g., "circular imports between module A and B")
+- Configuration adjustments (e.g., "executor concurrency reduced because of file lock conflicts")
+- Project-specific conventions discovered during execution
 
-```bash
-/maxsim:quick
-> "Fix the login button not responding on mobile Safari"
-```
+This memory is loaded at the start of each session and applied to all subsequent agent behavior.
 
-### Resuming After a Break
+### What Improves Over Time
 
-```bash
-/maxsim:progress               # See where you left off and what's next
-# or
-/maxsim:resume-work            # Full context restoration from last session
-```
+| Target | How It Improves |
+|--------|----------------|
+| Skills | Instruction adjustments based on success/failure patterns |
+| Configuration | Model profile, parallelism settings, verification thresholds |
+| Workflows | Process steps refined based on what caused failures |
+| Agent behavior | Prompts refined based on output quality |
 
-### Preparing for Release
+### Isolation
 
-```bash
-/maxsim:audit-milestone        # Check requirements coverage, detect stubs
-/maxsim:plan-milestone-gaps    # If audit found gaps, create phases to close them
-/maxsim:complete-milestone     # Archive, tag, done
-```
-
-### Speed vs Quality Presets
-
-| Scenario | Mode | Depth | Profile | Research | Plan Check | Verifier |
-|----------|------|-------|---------|----------|------------|----------|
-| Prototyping | `yolo` | `quick` | `budget` | off | off | off |
-| Normal dev | `interactive` | `standard` | `balanced` | on | on | on |
-| Production | `interactive` | `comprehensive` | `quality` | on | on | on |
-
-### Mid-Milestone Scope Changes
-
-```bash
-/maxsim:add-phase              # Append a new phase to the roadmap
-# or
-/maxsim:insert-phase 3         # Insert urgent work between phases 3 and 4
-# or
-/maxsim:remove-phase 7         # Descope phase 7 and renumber
-```
+All improvements are project-local. Two projects using MaxsimCLI never interfere with each other. Each project has its own `.claude/agent-memory/`, its own `MEMORY.md`, and its own Claude Code session memory.
 
 ---
 
 ## Troubleshooting
 
-### "Project already initialized"
+### How to Check Installation
 
-You ran `/maxsim:new-project` but `.planning/PROJECT.md` already exists. This is a safety check. If you want to start over, delete the `.planning/` directory first.
+```
+/maxsim:health
+```
 
-### Context Degradation During Long Sessions
+This checks that all required components are present and working:
+- GitHub CLI authenticated
+- GitHub repo accessible
+- Project board exists
+- Config file valid
+- Hooks registered correctly
 
-Clear your context window between major commands: `/clear` in Claude Code. MAXSIM is designed around fresh contexts -- every subagent gets a clean 200K window. If quality is dropping in the main session, clear and use `/maxsim:resume-work` or `/maxsim:progress` to restore state.
+### How to Uninstall
 
-### Plans Seem Wrong or Misaligned
+```bash
+npx maxsimcli --uninstall
+```
 
-Run `/maxsim:discuss-phase [N]` before planning. Most plan quality issues come from Claude making assumptions that `CONTEXT.md` would have prevented. You can also run `/maxsim:list-phase-assumptions [N]` to see what Claude intends to do before committing to a plan.
+This removes `.claude/` completely, deregisters all hooks from Claude Code settings, and removes the project-root `CLAUDE.md`. Your code and GitHub Issues are not affected.
 
-### Execution Fails or Produces Stubs
+### Common Issues
 
-Check that the plan was not too ambitious. Plans should have 2-3 tasks maximum. If tasks are too large, they exceed what a single context window can produce reliably. Re-plan with smaller scope.
+**"gh: command not found"**
 
-### Lost Track of Where You Are
+GitHub CLI is not installed. Install it from [cli.github.com](https://cli.github.com), then run `gh auth login`.
 
-Run `/maxsim:progress`. It reads all state files and tells you exactly where you are and what to do next.
+**"Not authenticated with GitHub"**
 
-### Need to Change Something After Execution
+Run `gh auth login` and follow the prompts. MaxsimCLI requires GitHub CLI to be authenticated before it will start.
 
-Do not re-run `/maxsim:execute-phase`. Use `/maxsim:quick` for targeted fixes, or `/maxsim:verify-work` to systematically identify and fix issues through UAT.
+**"/maxsim:go reports no project board found"**
 
-### Model Costs Too High
+The GitHub Project board was not created yet. Run `/maxsim:init` to set up the project board, labels, and milestones.
 
-Switch to budget profile: `/maxsim:set-profile budget`. Disable research and plan-check agents via `/maxsim:settings` if the domain is familiar to you (or to Claude).
+**"Verification failed after 3 retries"**
 
-### Working on a Sensitive/Private Project
+MaxsimCLI created a diagnostic GitHub Issue with the full error context. Check your GitHub Issues for an issue labeled `verification-failed`. It contains the exact test output, build errors, and lint results so you can understand what went wrong. You can fix the issue manually and then run `/maxsim:go` to continue.
 
-Set `commit_docs: false` during `/maxsim:new-project` or via `/maxsim:settings`. Add `.planning/` to your `.gitignore`. Planning artifacts stay local and never touch git.
+**"Executor agents are slow or timing out"**
 
-### MAXSIM Update Overwrote My Local Changes
+Reduce parallelism in `/maxsim:settings`: lower `parallelism.max_agents` to 4-5. Also consider switching to the `budget` model profile to use faster models.
 
-Since v1.17, the installer backs up locally modified files to `maxsim-local-patches/`. Run `/maxsim:reapply-patches` to merge your changes back.
+**"Plans do not match what I wanted"**
 
-### Subagent Appears to Fail but Work Was Done
+Plans are created from the GitHub Issue description. Before running `/maxsim:plan`, edit the phase issue directly on GitHub to add more detail about your requirements, constraints, and preferred approach. MaxsimCLI reads the issue content during planning.
 
-A known workaround exists for a Claude Code classification bug. MAXSIM's orchestrators (execute-phase, quick) spot-check actual output before reporting failure. If you see a failure message but commits were made, check `git log` -- the work may have succeeded.
+**"I accidentally closed a GitHub Issue"**
+
+Reopen it on GitHub. MaxsimCLI reads issue state from GitHub; reopening the issue is sufficient.
+
+**"The project board column is wrong"**
+
+Move the issue card to the correct column on the GitHub Project Board. MaxsimCLI treats the board column as authoritative state. There is no sync conflict — GitHub is always right.
+
+**"Commits are not being pushed"**
+
+Check `github.auto_push` in `.claude/maxsim/config.json`. If it is `false`, you need to push manually. Set it to `true` via `/maxsim:settings` to restore automatic push.
+
+**"I need to start over"**
+
+1. Archive or delete the GitHub Project Board from GitHub Settings
+2. Close or delete the phase issues
+3. Run `/maxsim:init` to set up a fresh project structure
+
+Your code is not touched. Only the planning structure on GitHub is reset.
+
+**"MaxsimCLI is installed but `/maxsim:` commands are not appearing"**
+
+The `.claude/commands/maxsim/` directory must exist. Run `ls .claude/commands/maxsim/` to check. If the directory is missing, reinstall with `npx maxsimcli@latest`.
+
+**"I want to use a different model for a specific agent"**
+
+Use `/maxsim:settings` to configure individual agent overrides. Model profiles set defaults; per-agent overrides take precedence.
+
+### Getting Help
+
+- Run `/maxsim:help` for a command reference within Claude Code
+- Run `/maxsim:progress` to see the current project state
+- Check your GitHub Issues — MaxsimCLI creates diagnostic issues when things go wrong
+- Visit [maxsimcli.com](https://maxsimcli.com) for full documentation
+- Report bugs at [github.com/maystudios/maxsimcli](https://github.com/maystudios/maxsimcli)
 
 ---
 
-## Recovery Quick Reference
-
-| Problem | Solution |
-|---------|----------|
-| Lost context / new session | `/maxsim:resume-work` or `/maxsim:progress` |
-| Phase went wrong | `git revert` the phase commits, then re-plan |
-| Need to change scope | `/maxsim:add-phase`, `/maxsim:insert-phase`, or `/maxsim:remove-phase` |
-| Milestone audit found gaps | `/maxsim:plan-milestone-gaps` |
-| Something broke | `/maxsim:debug "description"` |
-| Quick targeted fix | `/maxsim:quick` |
-| Plan doesn't match your vision | `/maxsim:discuss-phase [N]` then re-plan |
-| Costs running high | `/maxsim:set-profile budget` and `/maxsim:settings` to toggle agents off |
-| Update broke local changes | `/maxsim:reapply-patches` |
-
----
-
-## Project File Structure
-
-For reference, here is what MAXSIM creates in your project:
-
-```
-.planning/
-  PROJECT.md              # Project vision and context (always loaded)
-  REQUIREMENTS.md         # Scoped v1/v2 requirements with IDs
-  ROADMAP.md              # Phase breakdown with status tracking
-  STATE.md                # Decisions, blockers, session memory
-  config.json             # Workflow configuration
-  MILESTONES.md           # Completed milestone archive
-  research/               # Domain research from /maxsim:new-project
-  debug/                  # Active debug sessions
-    resolved/             # Archived debug sessions
-  codebase/               # Brownfield codebase mapping (from /maxsim:map-codebase)
-  phases/
-    XX-phase-name/
-      XX-YY-PLAN.md       # Atomic execution plans
-      XX-YY-SUMMARY.md    # Execution outcomes and decisions
-      CONTEXT.md          # Your implementation preferences
-      RESEARCH.md         # Ecosystem research findings
-      VERIFICATION.md     # Post-execution verification results
-```
+*MaxsimCLI v6 — GitHub is the source of truth. `/maxsim:go` is the interface.*

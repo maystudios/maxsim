@@ -1,27 +1,25 @@
 ---
 id: discuss-phase
-title: Plan Phase
+title: Discuss Phase
 group: Workflow
 ---
 
-`/maxsim:plan` manages the full planning lifecycle for a phase. It follows a state-machine approach with three stages: Discussion, Research, and Planning. Each stage produces artifacts that feed into the next.
+The discussion stage is the first stage of `/maxsim:plan`. It surfaces assumptions, scope questions, and architectural decisions before research or planning begins.
 
 {% codeblock language="bash" %}
 /maxsim:plan 1
 {% /codeblock %}
 
-### Discussion stage
+### What discussion does
 
-The discussion agent reads your ROADMAP.md, PROJECT.md, and REQUIREMENTS.md, then asks targeted questions about the phase. Questions adapt based on your answers. If you mention a third-party API, it asks about rate limits and authentication. If you mention real-time features, it asks about WebSocket vs. polling tradeoffs. At the end, it writes a CONTEXT.md file for the phase.
+The discussion agent reads your roadmap and phase context from GitHub, then asks targeted questions about the phase. Questions adapt based on your answers. If you mention a third-party API, it asks about rate limits and authentication. If you mention real-time features, it asks about WebSocket vs. polling tradeoffs.
 
-### Research stage
+At the end of the discussion stage, output is written as a comment on the phase GitHub Issue and feeds directly into the research stage.
 
-The researcher agent takes the discussion output and investigates the codebase, dependencies, and technical landscape relevant to the phase. It produces a RESEARCH.md file with findings, recommendations, and risk areas.
+### After discussion
 
-### Planning stage
-
-The planner agent consumes CONTEXT.md and RESEARCH.md to create a detailed PLAN.md with task breakdowns, acceptance criteria, and ordering. A plan-checker then validates the plan against the project requirements before marking the phase as ready for execution.
+Once discussion is complete, `/maxsim:plan` shows a gate summary and waits for confirmation before advancing to the research stage. You can review or add to the discussion notes before proceeding.
 
 {% callout type="note" %}
-The planning command is valuable for phases that touch infrastructure, external services, or cross-phase integration points. The questions it asks during discussion are the ones an experienced architect would raise in a pre-sprint meeting.
+The discussion stage is valuable for phases that touch infrastructure, external services, or cross-phase integration points. The questions it raises are the ones an experienced architect would ask in a pre-sprint meeting.
 {% /callout %}

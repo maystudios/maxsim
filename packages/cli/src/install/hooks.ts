@@ -76,6 +76,13 @@ export function installHooks(projectDir: string): { installed: string[] } {
     installed.push('maxsim-stop-sound (Stop)');
   }
 
+  // Register Stop hook (capture session learnings)
+  const captureLearningsPath = path.join(hooksDir, 'maxsim-capture-learnings.cjs');
+  if (fs.existsSync(captureLearningsPath)) {
+    registerHook(settings, 'Stop', undefined, `node "${captureLearningsPath}"`);
+    installed.push('maxsim-capture-learnings (Stop)');
+  }
+
   // Register statusLine
   const statusLinePath = path.join(hooksDir, 'maxsim-statusline.cjs');
   if (fs.existsSync(statusLinePath)) {

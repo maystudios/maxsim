@@ -49,7 +49,7 @@ body:
     attributes:
       label: maxsimcli Version
       description: Run `npx maxsimcli@latest --version` or check your package.json
-      placeholder: "3.10.3"
+      placeholder: "6.0.0"
     validations:
       required: true
 
@@ -71,20 +71,6 @@ body:
         - Linux
         - Windows
         - Other
-    validations:
-      required: true
-
-  - type: dropdown
-    id: runtime
-    attributes:
-      label: AI Runtime
-      description: Which AI runtime are you installing MAXSIM into?
-      options:
-        - Claude Code
-        - OpenCode
-        - Gemini CLI
-        - Codex
-        - Other / Not applicable
     validations:
       required: true
 

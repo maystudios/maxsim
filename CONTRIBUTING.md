@@ -5,7 +5,7 @@ Thank you for your interest in contributing! This guide covers everything you ne
 ## Development Setup
 
 ```bash
-# 1. Fork and clone the repo
+# 1. Fork https://github.com/maystudios/maxsimcli, then clone your fork
 git clone https://github.com/<your-username>/maxsimcli.git
 cd maxsimcli
 
@@ -75,8 +75,8 @@ git commit -m "feat!: rename STATE.md fields — breaks existing projects"
 This project uses **[Biome](https://biomejs.dev/)** for linting and formatting.
 
 ```bash
-npm run lint        # Check
-npm run lint --fix  # Auto-fix
+npm run lint             # Check
+npm run lint -- --fix    # Auto-fix (passes --fix through to Biome)
 ```
 
 Biome runs automatically on CI. PRs with lint failures will not be merged.

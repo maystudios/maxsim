@@ -1,6 +1,8 @@
 # Multi-Runtime Adapter Architecture
 
-> **Status:** This document describes the multi-runtime adapter system as it existed before non-Claude runtimes were removed. It serves as a reference for future developers who might re-add multi-runtime support.
+> **REMOVED FEATURE — MaxsimCLI v6 supports Claude Code only.**
+>
+> This document describes the multi-runtime adapter system that was removed in v6. OpenCode, Gemini CLI, and Codex support no longer exist in the codebase. This document is retained as a reference for developers who might re-add multi-runtime support in the future. Do not rely on any of the interfaces or file paths described here — they have been deleted.
 
 ## Overview
 

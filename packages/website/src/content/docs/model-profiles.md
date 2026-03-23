@@ -11,9 +11,11 @@ Model profiles control which Claude model each agent uses. Pick a profile that m
 
 The `balanced` profile (default) gives you Opus-quality planning with Sonnet for execution and research. It is a good trade-off between results and cost. The `quality` profile upgrades the executor and researcher to Opus. The `budget` profile uses Sonnet for planning and execution, Haiku for everything else, giving the lowest cost. The `tokenburner` profile uses Opus for every agent: maximum quality, maximum cost.
 
+To switch profiles, use `/maxsim:settings`:
+
 {% codeblock language="bash" %}
-/maxsim:set-profile quality
-/maxsim:set-profile balanced
-/maxsim:set-profile budget
-/maxsim:set-profile tokenburner
+/maxsim:settings profile quality
+/maxsim:settings profile balanced
+/maxsim:settings profile budget
+/maxsim:settings profile tokenburner
 {% /codeblock %}

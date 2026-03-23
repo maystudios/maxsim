@@ -37,7 +37,7 @@ body:
       description: Which part of MAXSIM does this affect?
       options:
         - CLI / install
-        - Commands (templates/commands/)
+        - Commands (packages/cli/src/commands/ or templates/)
         - Workflows (templates/workflows/)
         - Agents (templates/agents/)
         - Dashboard

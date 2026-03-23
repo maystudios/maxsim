@@ -22,12 +22,15 @@ MaxsimCLI installs into `.claude/` at your project root:
 
 {% codeblock language="text" %}
 .claude/
-├── commands/maxsim/   # 9 user-facing commands (/maxsim:*)
-├── agents/            # 4 specialized subagent prompts
-├── skills/            # 21 reusable skill modules
-└── workflows/         # Workflow orchestration templates
+├── commands/maxsim/      # 9 user-facing commands (/maxsim:*)
+├── agents/               # 4 specialized subagent prompts
+├── skills/               # 14 reusable skill modules
+└── maxsim/
+    ├── workflows/        # Workflow orchestration templates
+    ├── references/       # Reference documents for agents
+    └── templates/        # Document templates
 {% /codeblock %}
 
 {% callout type="note" %}
-MaxsimCLI does not modify your project files during install. The .planning/ directory is created per-project when you run /maxsim:init inside a project.
+MaxsimCLI does not modify your project files during install. GitHub Issues and milestones are created per-project when you run /maxsim:init inside a project.
 {% /callout %}
