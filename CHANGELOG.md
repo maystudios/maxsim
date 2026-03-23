@@ -1,3 +1,10 @@
+## [5.1.1](https://github.com/maystudios/maxsimcli/compare/v5.1.0...v5.1.1) (2026-03-23)
+
+
+### Bug Fixes
+
+* **install:** remove duplicate shebang causing SyntaxError on npx ([7724ea6](https://github.com/maystudios/maxsimcli/commit/7724ea69bae9697214c77d1cc473c642061814c9))
+
 # [5.1.0](https://github.com/maystudios/maxsimcli/compare/v5.0.7...v5.1.0) (2026-03-23)
 
 
