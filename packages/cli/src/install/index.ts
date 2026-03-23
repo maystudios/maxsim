@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 /**
  * MAXSIM Installer — entry point for `npx maxsimcli`.
  *
