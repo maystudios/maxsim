@@ -18,13 +18,13 @@ figure out implementation yourself.
 <critical_rules>
 - Tool name is `Agent` (NOT `Task`)
 - Context is posted to GitHub as a comment with <!-- maxsim:type=context -->
-- Use `node ~/.claude/maxsim/bin/maxsim-tools.cjs` for all CLI operations
+- Use `node .claude/maxsim/bin/maxsim-tools.cjs` for all CLI operations
 - No local CONTEXT.md file is written -- GitHub is the sole source of truth
 - Do NOT show gate confirmation or next steps -- the orchestrator handles those
 </critical_rules>
 
 <required_reading>
-@~/.claude/maxsim/references/thinking-partner.md
+.claude/maxsim/references/thinking-partner.md
 </required_reading>
 
 <downstream_awareness>
@@ -118,7 +118,7 @@ multiple ways and would change the result.
 Phase number, name, directory, and GitHub issue number come from the orchestrator context.
 
 ```bash
-PHASE_ISSUE=$(node ~/.claude/maxsim/bin/maxsim-tools.cjs github get-issue \
+PHASE_ISSUE=$(node .claude/maxsim/bin/maxsim-tools.cjs github get-issue \
   --issue-number $PHASE_ISSUE_NUMBER)
 ```
 
@@ -133,7 +133,7 @@ Cannot read phase issue #{phase_issue_number}. Check GitHub connection.
 
 Check if a context comment already exists on the phase GitHub Issue:
 ```bash
-ISSUE_DATA=$(node ~/.claude/maxsim/bin/maxsim-tools.cjs github get-issue \
+ISSUE_DATA=$(node .claude/maxsim/bin/maxsim-tools.cjs github get-issue \
   --issue-number $PHASE_ISSUE_NUMBER --include-comments)
 ```
 
@@ -315,7 +315,7 @@ TMPFILE=$(mktemp)
 cat > "$TMPFILE" << 'BODY_EOF'
 {context_content}
 BODY_EOF
-node ~/.claude/maxsim/bin/maxsim-tools.cjs github post-comment \
+node .claude/maxsim/bin/maxsim-tools.cjs github post-comment \
   --issue-number $PHASE_ISSUE_NUMBER --body-file "$TMPFILE" --type context
 ```
 
