@@ -116,6 +116,14 @@ function spawnBackgroundCheck(): void {
   }
 }
 
+function emitUpdateNotice(installed: string, latest: string): void {
+  process.stdout.write(
+    JSON.stringify({
+      additionalContext: `MaxsimCLI update available: v${installed} → v${latest}. Run: npx maxsimcli@latest`,
+    }) + '\n',
+  );
+}
+
 readStdinJson<SessionStartInput>(() => {
   const installed = getInstalledVersion();
   const cache = readCache();
@@ -134,11 +142,7 @@ readStdinJson<SessionStartInput>(() => {
         const latest = JSON.parse(result.stdout.trim()) as string;
         writeCache(latest);
         if (isNewer(installed, latest)) {
-          process.stdout.write(
-            JSON.stringify({
-              additionalContext: `MaxsimCLI update available: v${installed} → v${latest}. Run: npm i -g maxsimcli`,
-            }) + '\n',
-          );
+          emitUpdateNotice(installed, latest);
         }
       } else {
         // npm timed out or failed — schedule a detached background check for next time
@@ -148,11 +152,7 @@ readStdinJson<SessionStartInput>(() => {
       spawnBackgroundCheck();
     }
   } else if (isNewer(installed, cache.latestVersion)) {
-    process.stdout.write(
-      JSON.stringify({
-        additionalContext: `MaxsimCLI update available: v${installed} → v${cache.latestVersion}. Run: npm i -g maxsimcli`,
-      }) + '\n',
-    );
+    emitUpdateNotice(installed, cache.latestVersion);
   }
 
   process.exit(0);
