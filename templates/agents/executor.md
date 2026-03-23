@@ -6,7 +6,6 @@ model: inherit
 skills:
   - handoff-contract
   - commit-conventions
-  - verification
 available_skills:
   - name: github-operations
     path: ~/.claude/skills/github-operations/SKILL.md

@@ -84,11 +84,8 @@ Agents can invoke these skills when their trigger condition is met:
 |-------|---------|
 | github-operations | When reading from or writing to GitHub Issues |
 | tdd | When implementing features with a test-first approach (executor) |
-| verification | When verifying completed work (executor) |
 | brainstorming | When exploring multiple implementation approaches (planner) |
 | systematic-debugging | When investigating test failures or unexpected behavior (verifier) |
-| research | When conducting structured investigation (researcher) |
-| code-review | When evaluating implementation quality (verifier) |
 
 All skills use `user-invocable: false` -- agents auto-invoke them based on description matching, not explicit user commands.
 
