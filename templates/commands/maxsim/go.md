@@ -1,29 +1,30 @@
 ---
 name: maxsim:go
-description: Auto-detect project state and dispatch to the right command
-allowed-tools:
-  - Read
-  - Bash
-  - Glob
-  - Grep
-  - SlashCommand
+description: Auto-detect project state and execute the right action
+allowed-tools: [Read, Bash, Grep, Glob, Agent, AskUserQuestion]
 ---
+
 <objective>
-Auto-detect project state through deep context gathering, surface any problems, and dispatch to the appropriate MAXSIM command.
-
-**How it works:**
-1. Gather deep context (project state, git status, recent commits, blockers)
-2. Surface any problems and block until resolved
-3. Show detection reasoning (what was found)
-4. Act immediately by dispatching to the right command
-
-Show + Act pattern: display detection reasoning, then act. No arguments -- pure auto-detection. User can Ctrl+C if the detection is wrong.
+Auto-detect project state from GitHub and dispatch to the right action. No arguments — pure auto-detection. Show detection reasoning, enter Plan Mode, propose the action, then execute after user approval.
 </objective>
 
-<execution_context>
-@~/.claude/maxsim/workflows/go.md
-</execution_context>
+<context>
+GitHub is the sole source of truth. Read the GitHub Project Board, open Issues, and Milestones to determine current state. Do NOT read .planning/ files.
+
+Detection priority:
+1. No CLAUDE.md or GitHub Milestone → init needed
+2. Active Milestone with no planned phase → plan next phase
+3. Active Milestone with planned phase not executed → execute that phase
+4. Open bug/issue labeled `bug` → debug workflow
+5. All phases done → offer milestone completion
+</context>
 
 <process>
-Execute the go workflow from @~/.claude/maxsim/workflows/go.md end-to-end.
+Follow @~/.claude/maxsim/workflows/go.md end-to-end.
+
+1. Read GitHub Project Board state via `gh` CLI
+2. Detect what's next using the priority list above
+3. Enter Plan Mode — show detection reasoning and proposed action
+4. Wait for user approval (Ctrl+C cancels)
+5. Execute approved action by spawning the appropriate Agent
 </process>

@@ -1,48 +1,47 @@
 <purpose>
-Auto-detect project state through live GitHub queries, surface problems proactively, and dispatch to the appropriate MAXSIM command. Uses the Show + Act pattern: display detection reasoning first, then act immediately.
+Auto-detect project state through live GitHub queries, surface problems proactively, and dispatch to the appropriate MAXSIM command. Uses the Show + Act pattern: display detection reasoning first, then act immediately. GitHub Issues are the sole source of truth — no local .planning/ directory is consulted.
 </purpose>
-
-<required_reading>
-Read all files referenced by the invoking prompt's execution_context before starting.
-</required_reading>
 
 <process>
 
 <step name="immediate_feedback">
-**Show immediate feedback while gathering context:**
+## Step 1: Immediate Feedback
+
+Print immediately so the user knows work is happening:
 
 ```
 Analyzing project state...
 ```
-
-This ensures the user sees something immediately while context gathering runs.
 </step>
 
-<step name="deep_context_gathering">
-**Phase 1: Deep Context Gathering**
+<step name="initialization_check">
+## Step 2: Check Initialization
 
-Gather all project signals in parallel for speed. Run these checks simultaneously:
+Verify MAXSIM is initialized by checking for the config file:
 
-**1. Project existence check:**
 ```bash
-PLANNING_EXISTS=$(test -d .planning && echo "true" || echo "false")
+INITIALIZED=$(test -f .claude/maxsim/config.json && echo "true" || echo "false")
 ```
 
-If `.planning/` does not exist, skip all other checks and go directly to the decision tree (Rule 1: No project found).
+If `INITIALIZED` is `false`, stop immediately and display:
 
-**2. Load local project context (always from local files per WIRE-02):**
-```bash
-# State snapshot (local)
-STATE=$(node ~/.claude/maxsim/bin/maxsim-tools.cjs state-snapshot 2>/dev/null || echo "{}")
+```
+## MAXSIM Not Initialized
+
+No MAXSIM configuration found in this directory (.claude/maxsim/config.json missing).
+
+Run /maxsim:init to set up this project.
 ```
 
-Read local files for project context:
-- `.planning/STATE.md` — blockers, decisions, session continuity
-- `.planning/ROADMAP.md` — phase structure and phase ordering
+Do not proceed further. Exit.
+</step>
 
-**3. Live GitHub state (primary source — always-live, no cached state):**
+<step name="context_gathering">
+## Step 3: Deep Context Gathering
 
-Run `github status` to get current state of all phases and detect interrupted work in one call:
+Gather all signals in parallel for speed. Run these simultaneously:
+
+**1. Live GitHub project board state (primary source of truth):**
 
 ```bash
 node ~/.claude/maxsim/bin/maxsim-tools.cjs github status
@@ -50,210 +49,192 @@ node ~/.claude/maxsim/bin/maxsim-tools.cjs github status
 
 Returns: `phase_number`, `title`, `issue_number`, `total_tasks`, `completed_tasks`, `remaining_tasks`, `status` (GitHub board column: To Do / In Progress / In Review / Done), and any interrupted phase detection.
 
-**4. Git context:**
-```bash
-# Uncommitted changes
-GIT_STATUS=$(git status --porcelain 2>/dev/null | head -20)
+**2. Open bugs and issues:**
 
-# Recent commits
+```bash
+gh issue list --label "bug" --state open --json number,title,createdAt
+```
+
+**3. Git context:**
+
+```bash
+GIT_STATUS=$(git status --porcelain 2>/dev/null | head -20)
 RECENT_COMMITS=$(git log --oneline -5 2>/dev/null)
 ```
+
+If `github status` fails (GitHub CLI not available, not authenticated, no remote), display:
+
+```
+## GitHub Unavailable
+
+GitHub integration is required. Check:
+- gh auth status
+- git remote -v
+
+Fix the issue, then re-run /maxsim:go.
+```
+
+Exit. Do not fall back to local file scanning.
 </step>
 
 <step name="problem_detection">
-**Phase 2: Problem Detection**
+## Step 4: Problem Detection
 
-Check for problems BEFORE suggesting any action. All problems are blocking — no severity tiers.
+Check for problems BEFORE suggesting any action. All problems are blocking — surface each one and wait for user resolution before continuing.
 
-**Check each of these in order:**
+**Problem 1: Failed verification on GitHub**
 
-**1. Uncommitted changes in .planning/**
-```bash
-git status --porcelain .planning/ 2>/dev/null | head -10
-```
-If uncommitted changes exist in `.planning/`:
-```
-## Problem Detected
-
-**Issue:** Uncommitted changes in .planning/ directory
-**Impact:** State drift — local planning files may diverge from team or lose work
-**Resolution:** Commit planning changes to preserve state
-
-**Files with changes:**
-{list of changed files}
-
-Resolve this before continuing. Options:
-1. Commit now (recommended)
-2. Investigate changes first
-3. Skip and continue anyway
-```
-
-Block until user responds.
-
-**2. Blockers in STATE.md**
-Extract blockers from state snapshot. If any exist:
-```
-## Problem Detected
-
-**Issue:** Active blocker recorded in project state
-**Blocker:** {blocker text}
-**Impact:** Execution cannot proceed safely until this is resolved
-**Resolution:** Address the blocker or remove it if no longer relevant
-
-Resolve this before continuing. Options:
-1. Investigate and resolve
-2. Remove blocker (if no longer relevant)
-3. Skip and continue anyway
-```
-
-Block until user responds.
-
-**3. Failed verification on GitHub**
-Check if any phase issue has a verification comment with FAIL status (from live GitHub data via `github all-progress` — look for phases stuck in "In Review" with a known failure, or check recent comments via `github get-issue` for the current phase issue):
+Check if any phase issue is stuck in "In Review" with a verification FAIL comment. Query the current phase issue comments:
 
 ```bash
 node ~/.claude/maxsim/bin/maxsim-tools.cjs github get-issue --issue-number N --include-comments
 ```
+
+If a FAIL is found:
+
 ```
 ## Problem Detected
 
-**Issue:** Phase verification failed
-**Phase:** {phase number and name} (GitHub Issue #{issue_number})
-**Impact:** Phase is not verified as complete — may have gaps
-**Resolution:** Re-run verification or fix identified issues
+Issue: Phase verification failed
+Phase: {phase number and name} (GitHub Issue #{issue_number})
+Impact: Phase is not verified complete — may have gaps
+Resolution: Re-run verification or fix identified issues
 
-Resolve this before continuing. Options:
+Options:
 1. View verification results (check GitHub issue comments)
 2. Re-execute to fix issues
 3. Skip and continue anyway
 ```
 
-Block until user responds.
+Wait for user response before continuing.
 
-**If any problem is found:** Surface it and wait for user resolution. Do NOT proceed to the decision tree until all problems are cleared or explicitly skipped.
+**Problem 2: Open bug issues**
 
-**If no problems found:** Proceed to the decision tree.
+If `gh issue list --label "bug"` returned open issues:
+
+```
+## Problem Detected
+
+Issue: {N} open bug(s) on GitHub
+Bugs:
+  #{number} — {title}
+  ...
+Impact: Active bugs may affect current phase execution
+Resolution: Address bugs or route to /maxsim:debug
+
+Options:
+1. Route to /maxsim:debug
+2. View bugs on GitHub
+3. Skip and continue anyway
+```
+
+Wait for user response before continuing.
+
+If no problems are found, proceed directly to the decision tree.
 </step>
 
 <step name="decision_tree">
-**Phase 3: Decision Tree**
+## Step 5: Decision Tree
 
-Apply rules in strict precedence order. The FIRST matching rule determines the action.
-
-Use live GitHub data from `github status` (gathered in Phase 1) as the primary source of truth for phase state. Use local ROADMAP.md for phase ordering only.
+Apply rules in strict precedence order. The FIRST matching rule determines the action. Use live GitHub data from `github status` as the sole source of truth for phase state.
 
 ```
-Rule 1: No .planning/ directory?
-  -> Action: /maxsim:init
-  -> Reasoning: "No MAXSIM project found in this directory."
+Rule 1: GitHub status returns no phases at all?
+  -> Action: Suggest creating roadmap
+  -> Reasoning: "No phases found on GitHub. Create a roadmap to get started."
+  -> Suggest: /maxsim:plan
 
-Rule 2: Has blockers in STATE.md? (not cleared in problem detection)
-  -> Action: Surface blocker, suggest resolution
-  -> Reasoning: "BLOCKED: {blocker text}"
-
-Rule 3: Interrupted phase detected (from `github status`)?
+Rule 2: Interrupted phase detected (from github status)?
   -> Action: /maxsim:execute {N}
   -> Reasoning: "Phase {N} ({name}) was interrupted. Resuming execution."
 
-Rule 4: Phase "In Progress" on GitHub board with incomplete tasks?
-  -> Check: `github status` returns a phase with status="In Progress" and remaining_tasks > 0
+Rule 3: Phase status = "In Progress" with remaining_tasks > 0?
   -> Action: /maxsim:execute {N}
-  -> Reasoning: "Phase {N} ({name}) has {remaining} tasks remaining. Ready to continue."
+  -> Reasoning: "Phase {N} ({name}) has {remaining} tasks remaining."
 
-Rule 5: Phase "To Do" on GitHub board (not yet started)?
-  -> Check: `github status` returns the next unstarted phase (status="To Do")
+Rule 4: Phase status = "To Do" (next unstarted phase)?
   -> Action: /maxsim:plan {N}
   -> Reasoning: "Phase {N} ({name}) needs planning."
 
-  Sub-check: Does a context comment exist on the phase GitHub Issue?
-  -> If yes: "Discussion complete, ready for research + planning."
-  -> If no: "Starting from discussion stage."
-
-Rule 6: Current phase "In Review" on GitHub board?
-  -> Check: `github status` returns a phase with status="In Review"
+Rule 5: Phase status = "In Review"?
   -> Action: /maxsim:execute {N}
   -> Reasoning: "Phase {N} ({name}) is awaiting verification."
 
-Rule 7: All phases "Done" on GitHub board?
-  -> Check: `github status` — all phases have status="Done"
+Rule 6: All phases status = "Done"?
   -> Action: /maxsim:progress
   -> Reasoning: "All phases complete. Milestone ready for review."
 
-Rule 8: None of the above?
-  -> Action: Show interactive menu
-  -> Reasoning: "Project state is ambiguous. Here are your options."
+Rule 7: None of the above?
+  -> Action: Show interactive menu (see Step 6)
+  -> Reasoning: "Project state is ambiguous."
 ```
 </step>
 
 <step name="show_and_act">
-**Phase 4: Show + Act**
+## Step 6: Show + Act
 
-Once a rule matches, display detection reasoning FIRST, then act immediately.
+Once a rule matches (Rules 1–6), display detection reasoning FIRST, then invoke the Skill tool to run the recommended command. Do NOT ask for confirmation — the user can Ctrl+C if the detection is wrong.
 
-**Format for auto-dispatch (Rules 1-7):**
+**Display format:**
 
 ```
 ## Detected: {summary of what was found}
 
-**Project:** {project name from PROJECT.md, or "New project"}
-**Milestone:** {milestone from ROADMAP.md, or "Not started"}
-**Current phase:** {phase N - name, or "None"} (GitHub Issue #{issue_number})
-**GitHub Status:** {board column from live `github status` data}
-**Tasks:** {completed}/{total} complete
+Project:       {project name from config.json}
+Current phase: Phase {N} — {name} (GitHub Issue #{issue_number})
+GitHub status: {board column}
+Tasks:         {completed}/{total} complete
 
-**Action:** Running /maxsim:{command} {args}...
+Action: Running /maxsim:{command} {args}...
 ```
 
-Then immediately dispatch the command using the SlashCommand tool. The user can Ctrl+C if the detection is wrong.
-
-**Important:** Show the detection block, then dispatch. Do not ask for confirmation — this is Show + Act, not Show + Ask.
+Then invoke the Skill tool with the recommended command.
 </step>
 
 <step name="interactive_menu">
-**Phase 5: Interactive Menu (Rule 8 — no obvious action)**
+## Step 7: Interactive Menu (Rule 7 only)
 
-When no clear action is detected, show a contextual menu. The menu items are NOT static — filter based on what makes sense for the current project state (use live GitHub data from `github status`).
+When no clear action is detected, show a contextual menu. Filter items based on live GitHub data — do not show static options that don't apply.
 
 ```
 ## Project Status
 
-**Project:** {project name}
-**Milestone:** {milestone}
-**GitHub Progress:** {X}/{Y} phases Done on board
+Project:  {project name}
+GitHub:   {X}/{Y} phases Done on board
 
 What would you like to do?
 
 1. /maxsim:plan {next_phase} — Plan next phase
-2. /maxsim:quick — Quick ad-hoc task
-3. /maxsim:progress — View detailed progress
-4. /maxsim:debug — Debug an issue
+2. /maxsim:execute {N} — Continue phase execution
+3. /maxsim:quick — Quick ad-hoc task
+4. /maxsim:progress — View detailed progress
 
 Or describe what you'd like to do:
 ```
 
-**Contextual filtering rules:**
-- If phases are "In Progress" on GitHub: show execute options prominently
-- If all phases are "Done" on GitHub: show `/maxsim:progress` (offers milestone completion)
-- If recent git activity suggests debugging: show `/maxsim:debug` prominently
-- If no phases exist on board: show `/maxsim:plan` prominently
-- Always include `/maxsim:quick` as it is always relevant
-- Always include an open-ended fallback ("Or describe what you'd like to do")
-- If GitHub not available (CLI calls fail): show error: "GitHub integration required. Run `/maxsim:init` to configure GitHub." Do NOT fall back to local file scanning.
+**Filtering rules:**
 
-Wait for user selection, then dispatch the chosen command.
+- Show `/maxsim:execute {N}` only if an in-progress phase exists on GitHub
+- Show `/maxsim:plan {N}` only if an unstarted phase exists on GitHub
+- Show `/maxsim:progress` if all phases are Done
+- Always show `/maxsim:quick`
+- Always include the open-ended fallback
+
+Wait for user selection, then invoke the Skill tool for the chosen command.
 </step>
 
 </process>
 
 <constraints>
+- Tool name is Agent (NOT Task)
+- No SlashCommand tool — use the Skill tool to invoke commands
+- GitHub Issues is the SOLE source of truth for phase state
+- No local .planning/ directory references anywhere
+- Use `node ~/.claude/maxsim/bin/maxsim-tools.cjs` for all CLI operations
 - Never ask for confirmation before dispatching (Show + Act, not Show + Ask)
 - Always surface problems BEFORE suggesting actions
-- All problems block — no severity tiers, no "warnings"
+- All problems are blocking — no warnings, no severity tiers
 - No arguments accepted — this is pure auto-detection
-- No mention of old commands (plan, execute-phase, etc.)
-- Keep initial feedback fast — show "Analyzing..." before heavy operations
-- Primary source for phase state: live GitHub (`github status`)
-- Local reads: STATE.md for blockers/decisions, ROADMAP.md for phase ordering only
-- If context gathering fails (tools not available, etc.), fall back to the interactive menu
+- Show "Analyzing..." before heavy operations
+- If GitHub is unavailable, fail explicitly — do not fall back to local files
 </constraints>
-</output>

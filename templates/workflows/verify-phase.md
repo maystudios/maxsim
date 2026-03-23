@@ -1,358 +1,396 @@
-<sanity_check>
-Before executing any step in this workflow, verify:
-1. The current directory contains a `.planning/` folder — if not, stop and tell the user to run `/maxsim:init` first.
-2. `.planning/ROADMAP.md` exists — if not, stop and tell the user to initialize the project.
-</sanity_check>
-
 <purpose>
-Verify phase goal achievement through goal-backward analysis. Check that the codebase delivers what the phase promised, not just that tasks completed. Posts verification results as GitHub comments on the phase issue (no local VERIFICATION.md or UAT.md files are written).
+Verify that a completed phase achieved its GOAL — not just that tasks were marked done. Spawns parallel review agents (security, quality, efficiency), aggregates results into evidence blocks, posts verification results as a GitHub Issue comment, and returns PASS/FAIL to the orchestrator.
 
-Executed by a verification subagent spawned from execute-phase.md.
+Task completion does not equal goal achievement. This workflow checks the codebase against observable, testable criteria.
 </purpose>
 
 <core_principle>
-**Task completion ≠ Goal achievement**
+Verify goal achievement, not task completion. A task "create chat component" can be marked done when the component is a placeholder. The task is done — the goal "working chat interface" is not.
 
-A task "create chat component" can be marked complete when the component is a placeholder. The task was done — but the goal "working chat interface" was not achieved.
-
-Goal-backward verification:
-1. What must be TRUE for the goal to be achieved?
-2. What must EXIST for those truths to hold?
-3. What must be WIRED for those artifacts to function?
-
-Then verify each level against the actual codebase.
+Evidence-first: every PASS or FAIL verdict must cite specific file paths, line numbers, or command output.
 </core_principle>
-
-<required_reading>
-@~/.claude/maxsim/references/verification-patterns.md
-@~/.claude/maxsim/templates/verification-report.md
-</required_reading>
 
 <process>
 
-<step name="load_context" priority="first">
-Load phase operation context:
+## Step 1 — Load Phase Context
 
 ```bash
 INIT=$(node ~/.claude/maxsim/bin/maxsim-tools.cjs init phase-op "${PHASE_ARG}")
 ```
 
-Extract from init JSON: `phase_dir`, `phase_number`, `phase_name`, `has_plans`, `plan_count`.
+Extract: `phase_dir`, `phase_number`, `phase_name`, `has_plans`, `plan_count`.
 
-Then load phase details:
-```bash
-node ~/.claude/maxsim/bin/maxsim-tools.cjs roadmap get-phase "${phase_number}"
-grep -E "^| ${phase_number}" .planning/REQUIREMENTS.md 2>/dev/null
-```
-
-**Get the phase issue number from GitHub (live):**
-
-Run `github all-progress` and find the entry where `phase_number` matches. Extract `issue_number` — this is used for posting all verification results as GitHub comments.
-
+Get the phase issue number from GitHub:
 ```bash
 node ~/.claude/maxsim/bin/maxsim-tools.cjs github all-progress
 ```
+Find entry where `phase_number` matches. Extract `issue_number` — all verification results are posted here as comments.
 
-Extract **phase goal** from ROADMAP.md (the outcome to verify, not tasks) and **requirements** from REQUIREMENTS.md if it exists.
-</step>
-
-<step name="establish_must_haves">
-**Option A: Must-haves in PLAN frontmatter**
-
-Use maxsim-tools to extract must_haves from each PLAN:
-
+Load phase goal and requirements:
 ```bash
-for plan in "$PHASE_DIR"/*-PLAN.md; do
-  MUST_HAVES=$(node ~/.claude/maxsim/bin/maxsim-tools.cjs frontmatter get "$plan" --field must_haves)
-  echo "=== $plan ===" && echo "$MUST_HAVES"
-done
+node ~/.claude/maxsim/bin/maxsim-tools.cjs roadmap get-phase "${PHASE_NUMBER}"
 ```
 
-Returns JSON: `{ truths: [...], artifacts: [...], key_links: [...] }`
+Extract `success_criteria` array and `goal` from ROADMAP.md. These are the contract.
 
-Aggregate all must_haves across plans for phase-level verification.
+## Step 2 — Establish Must-Haves
 
-**Option B: Use Success Criteria from ROADMAP.md**
+**Priority order:**
 
-If no must_haves in frontmatter (MUST_HAVES returns error or empty), check for Success Criteria:
+1. **Success Criteria from ROADMAP.md** — if `success_criteria` array is non-empty, use it directly. Each criterion is an observable, testable truth. These override plan-level must_haves.
 
-```bash
-PHASE_DATA=$(node ~/.claude/maxsim/bin/maxsim-tools.cjs roadmap get-phase "${phase_number}" --raw)
-```
+2. **Must-haves from plan frontmatter** — if no ROADMAP success criteria, extract from each plan comment on the phase issue:
+   ```bash
+   node ~/.claude/maxsim/bin/maxsim-tools.cjs github get-issue \
+     --issue-number $PHASE_ISSUE_NUMBER --include-comments
+   ```
+   For each plan comment, parse frontmatter `must_haves` field: `{ truths, artifacts, key_links }`.
 
-Parse the `success_criteria` array from the JSON output. If non-empty:
-1. Use each Success Criterion directly as a **truth** (they are already written as observable, testable behaviors)
-2. Derive **artifacts** (concrete file paths for each truth)
-3. Derive **key links** (critical wiring where stubs hide)
-4. Document the must-haves before proceeding
+3. **Derive from phase goal (fallback)** — if neither source has must-haves, derive:
+   - 3–7 observable truths (each testable without human interaction)
+   - Concrete artifact file paths per truth
+   - Critical wiring points where stubs commonly hide
 
-Success Criteria from ROADMAP.md are the contract — they override PLAN-level must_haves when both exist.
+Document the must-haves before running any checks.
 
-**Option C: Derive from phase goal (fallback)**
+## Step 3 — Run Automated Checks
 
-If no must_haves in frontmatter AND no Success Criteria in ROADMAP:
-1. State the goal from ROADMAP.md
-2. Derive **truths** (3-7 observable behaviors, each testable)
-3. Derive **artifacts** (concrete file paths for each truth)
-4. Derive **key links** (critical wiring where stubs hide)
-5. Document derived must-haves before proceeding
-</step>
-
-<step name="verify_truths">
-For each observable truth, determine if the codebase enables it.
-
-**Status:** ✓ VERIFIED (all supporting artifacts pass) | ✗ FAILED (artifact missing/stub/unwired) | ? UNCERTAIN (needs human)
-
-For each truth: identify supporting artifacts → check artifact status → check wiring → determine truth status.
-
-**Example:** Truth "User can see existing messages" depends on Chat.tsx (renders), /api/chat GET (provides), Message model (schema). If Chat.tsx is a stub or API returns hardcoded [] → FAILED. If all exist, are substantive, and connected → VERIFIED.
-</step>
-
-<step name="verify_artifacts">
-Use maxsim-tools for artifact verification against must_haves in each PLAN:
+### 3a — Detect and run test suite
 
 ```bash
-for plan in "$PHASE_DIR"/*-PLAN.md; do
-  ARTIFACT_RESULT=$(node ~/.claude/maxsim/bin/maxsim-tools.cjs verify artifacts "$plan")
-  echo "=== $plan ===" && echo "$ARTIFACT_RESULT"
-done
+# Detect test runner
+if [ -f package.json ]; then
+  TEST_SCRIPT=$(node -e "const p=require('./package.json'); console.log(p.scripts?.test || '')")
+  [ -n "$TEST_SCRIPT" ] && npm test 2>&1
+elif [ -f pytest.ini ] || [ -f pyproject.toml ]; then
+  python -m pytest 2>&1
+elif [ -f Cargo.toml ]; then
+  cargo test 2>&1
+fi
 ```
 
-Parse JSON result: `{ all_passed, passed, total, artifacts: [{path, exists, issues, passed}] }`
+Record: PASS / FAIL + output excerpt (last 30 lines if failure).
 
-**Artifact status from result:**
-- `exists=false` → MISSING
-- `issues` not empty → STUB (check issues for "Only N lines" or "Missing pattern")
-- `passed=true` → VERIFIED (Levels 1-2 pass)
+### 3b — Detect and run build
 
-**Level 3 — Wired (manual check for artifacts that pass Levels 1-2):**
 ```bash
-grep -r "import.*$artifact_name" src/ --include="*.ts" --include="*.tsx"  # IMPORTED
-grep -r "$artifact_name" src/ --include="*.ts" --include="*.tsx" | grep -v "import"  # USED
+if [ -f package.json ]; then
+  BUILD_SCRIPT=$(node -e "const p=require('./package.json'); console.log(p.scripts?.build || '')")
+  [ -n "$BUILD_SCRIPT" ] && npm run build 2>&1
+elif [ -f Cargo.toml ]; then
+  cargo build 2>&1
+fi
 ```
-WIRED = imported AND used. ORPHANED = exists but not imported/used.
 
+Record: PASS / FAIL + error output.
+
+### 3c — Detect and run linter
+
+```bash
+if [ -f biome.json ]; then
+  npx biome check . 2>&1 | tail -20
+elif [ -f .eslintrc* ] || [ -f eslint.config* ]; then
+  npx eslint . 2>&1 | tail -20
+elif [ -f .ruff.toml ] || grep -q ruff pyproject.toml 2>/dev/null; then
+  ruff check . 2>&1 | tail -20
+fi
+```
+
+Record: PASS / FAIL + lint violations count.
+
+### 3d — Verify artifacts
+
+For each artifact in must-haves:
+
+| Level | Check | Method |
+|-------|-------|--------|
+| 1 — Exists | File present on disk | `[ -f {path} ]` |
+| 2 — Substantive | File has real content | Line count > threshold, no placeholder patterns |
+| 3 — Wired | File is imported and used | `grep -r "import.*{name}" src/` AND used outside import |
+
+Status matrix:
 | Exists | Substantive | Wired | Status |
 |--------|-------------|-------|--------|
-| ✓ | ✓ | ✓ | ✓ VERIFIED |
-| ✓ | ✓ | ✗ | ⚠️ ORPHANED |
-| ✓ | ✗ | - | ✗ STUB |
-| ✗ | - | - | ✗ MISSING |
-</step>
+| yes | yes | yes | VERIFIED |
+| yes | yes | no | ORPHANED |
+| yes | no | — | STUB |
+| no | — | — | MISSING |
 
-<step name="verify_wiring">
-Use maxsim-tools for key link verification against must_haves in each PLAN:
-
+Scan for anti-patterns in modified files:
 ```bash
-for plan in "$PHASE_DIR"/*-PLAN.md; do
-  LINKS_RESULT=$(node ~/.claude/maxsim/bin/maxsim-tools.cjs verify key-links "$plan")
-  echo "=== $plan ===" && echo "$LINKS_RESULT"
-done
+grep -n -E "TODO|FIXME|XXX|HACK" {modified_files} 2>/dev/null
+grep -n -iE "placeholder|coming soon|will be here" {modified_files} 2>/dev/null
+grep -n -E "return null|return \{\}|return \[\]" {modified_files} 2>/dev/null
 ```
 
-Parse JSON result: `{ all_verified, verified, total, links: [{from, to, via, verified, detail}] }`
+Categorize: Blocker (prevents goal achievement) or Warning (incomplete but not blocking).
 
-**Link status from result:**
-- `verified=true` → WIRED
-- `verified=false` with "not found" → NOT_WIRED
-- `verified=false` with "Pattern not found" → PARTIAL
+### 3e — Verify key links (wiring)
 
-**Fallback patterns (if key_links not in must_haves):**
+For each key link in must-haves:
 
-| Pattern | Check | Status |
-|---------|-------|--------|
-| Component → API | fetch/axios call to API path, response used (await/.then/setState) | WIRED / PARTIAL (call but unused response) / NOT_WIRED |
-| API → Database | Prisma/DB query on model, result returned via res.json() | WIRED / PARTIAL (query but not returned) / NOT_WIRED |
-| Form → Handler | onSubmit with real implementation (fetch/axios/mutate/dispatch), not console.log/empty | WIRED / STUB (log-only/empty) / NOT_WIRED |
-| State → Render | useState variable appears in JSX (`{stateVar}` or `{stateVar.property}`) | WIRED / NOT_WIRED |
-
-Record status and evidence for each key link.
-</step>
-
-<step name="verify_requirements">
-If REQUIREMENTS.md exists:
-```bash
-grep -E "Phase ${PHASE_NUM}" .planning/REQUIREMENTS.md 2>/dev/null
-```
-
-For each requirement: parse description → identify supporting truths/artifacts → status: ✓ SATISFIED / ✗ BLOCKED / ? NEEDS HUMAN.
-</step>
-
-<step name="scan_antipatterns">
-Extract files modified in this phase from local plan files, scan each:
-
-| Pattern | Search | Severity |
-|---------|--------|----------|
-| TODO/FIXME/XXX/HACK | `grep -n -E "TODO\|FIXME\|XXX\|HACK"` | ⚠️ Warning |
-| Placeholder content | `grep -n -iE "placeholder\|coming soon\|will be here"` | 🛑 Blocker |
-| Empty returns | `grep -n -E "return null\|return \{\}\|return \[\]\|=> \{\}"` | ⚠️ Warning |
-| Log-only functions | Functions containing only console.log | ⚠️ Warning |
-
-Categorize: 🛑 Blocker (prevents goal) | ⚠️ Warning (incomplete) | ℹ️ Info (notable).
-</step>
-
-<step name="identify_human_verification">
-**Always needs human:** Visual appearance, user flow completion, real-time behavior (WebSocket/SSE), external service integration, performance feel, error message clarity.
-
-**Needs human if uncertain:** Complex wiring grep can't trace, dynamic state-dependent behavior, edge cases.
-
-Format each as: Test Name → What to do → Expected result → Why can't verify programmatically.
-</step>
-
-<step name="determine_status">
-**passed:** All truths VERIFIED, all artifacts pass levels 1-3, all key links WIRED, no blocker anti-patterns.
-
-**gaps_found:** Any truth FAILED, artifact MISSING/STUB, key link NOT_WIRED, or blocker found.
-
-**human_needed:** All automated checks pass but human verification items remain.
-
-**Score:** `verified_truths / total_truths`
-</step>
-
-<step name="generate_fix_plans">
-If gaps_found:
-
-1. **Cluster related gaps:** API stub + component unwired → "Wire frontend to backend". Multiple missing → "Complete core implementation". Wiring only → "Connect existing components".
-
-2. **Generate plan per cluster:** Objective, 2-3 tasks (files/action/verify each), re-verify step. Keep focused: single concern per plan.
-
-3. **Order by dependency:** Fix missing → fix stubs → fix wiring → verify.
-</step>
-
-<step name="post_verification_to_github">
-**Post verification results as a GitHub comment (primary output — no local file written).**
-
-Build the verification content in memory using the same structured format as the verification report template. Then run `github post-comment` with `type: 'verification'` on the phase issue.
-
-Write the body content to a tmpfile first, then post:
+| Pattern | Check |
+|---------|-------|
+| Component → API | fetch/axios call to API path, response used |
+| API → Database | Prisma/DB query on model, result returned |
+| Form → Handler | onSubmit with real implementation (not console.log) |
+| State → Render | useState variable appears in JSX |
 
 ```bash
-# Write body to tmpfile (JSON with status, score, phase, timestamp, truths_checked, artifacts_verified, etc.)
-BODY_FILE=$(mktemp)
-cat > "$BODY_FILE" << 'VERIFICATION_EOF'
-{
-  "status": "passed | gaps_found | human_needed",
-  "score": "{verified}/{total}",
-  "phase": "{phase_number} — {phase_name}",
-  "timestamp": "{ISO timestamp}",
-  "truths_checked": [
-    { "truth": "...", "status": "VERIFIED | FAILED | UNCERTAIN", "evidence": "..." }
-  ],
-  "artifacts_verified": [
-    { "path": "...", "exists": true, "substantive": true, "wired": true, "status": "VERIFIED | STUB | MISSING | ORPHANED" }
-  ],
-  "key_links_validated": [
-    { "from": "...", "to": "...", "via": "...", "status": "WIRED | PARTIAL | NOT_WIRED" }
-  ],
-  "antipatterns": [
-    { "file": "...", "line": 0, "pattern": "...", "severity": "Blocker | Warning | Info" }
-  ],
-  "human_verification_items": [
-    { "name": "...", "steps": "...", "expected": "...", "reason": "..." }
-  ],
-  "gaps": [
-    { "description": "...", "fix_plan": "..." }
-  ],
-  "fix_plans": [
-    { "name": "...", "objective": "...", "tasks": ["..."] }
-  ]
-}
-VERIFICATION_EOF
-
-node ~/.claude/maxsim/bin/maxsim-tools.cjs github post-comment --issue-number {PHASE_ISSUE_NUMBER} --body-file "$BODY_FILE" --type verification
+# Example: component imports and uses API endpoint
+grep -r "fetch.*{api_path}\|axios.*{api_path}" src/ --include="*.ts" --include="*.tsx"
 ```
 
-The comment is the canonical record of this verification run.
-</step>
+Record: WIRED / PARTIAL / NOT_WIRED with evidence.
 
-<step name="run_uat">
-**User Acceptance Testing (UAT):**
+## Step 4 — Spawn Parallel Review Agents
 
-Present the human verification items to the user and walk through each one. After the user completes UAT:
+Spawn three review agents simultaneously in a SINGLE message block (foreground, no worktree needed):
 
-Build the UAT results in memory, then post as a GitHub comment by running `github post-comment` with `type: 'uat'` on the phase issue:
+```
+Agent(
+  subagent_type="verifier",
+  model="{verifier_model}",
+  prompt="
+    Security review for phase {phase_number}: {phase_name}.
+
+    Read the files modified in this phase (from summary comments on issue #{phase_issue_number}).
+    Check for:
+    - Unsanitized user input (injection risks)
+    - Exposed secrets or credentials
+    - Missing authentication/authorization checks
+    - Insecure data handling or transmission
+    - Dependency vulnerabilities (if package.json changed)
+
+    Evidence format:
+    CLAIM: {what was checked}
+    EVIDENCE: {file:line or command run}
+    OUTPUT: {actual result}
+    VERDICT: PASS | FAIL — {reason}
+
+    Return: SECURITY REVIEW: PASS or SECURITY REVIEW: FAIL — {issues list}
+  "
+)
+
+Agent(
+  subagent_type="verifier",
+  model="{verifier_model}",
+  prompt="
+    Code quality review for phase {phase_number}: {phase_name}.
+
+    Read the files modified in this phase (from summary comments on issue #{phase_issue_number}).
+    Check for:
+    - Bugs and logical errors
+    - Unhandled edge cases and error paths
+    - Missing or inadequate error handling
+    - Dead code or unreachable branches
+    - Overly complex logic that could be simplified
+
+    Evidence format:
+    CLAIM: {what was checked}
+    EVIDENCE: {file:line or command run}
+    OUTPUT: {actual result}
+    VERDICT: PASS | FAIL — {reason}
+
+    Return: QUALITY REVIEW: PASS or QUALITY REVIEW: FAIL — {issues list}
+  "
+)
+
+Agent(
+  subagent_type="verifier",
+  model="{verifier_model}",
+  prompt="
+    Efficiency review for phase {phase_number}: {phase_name}.
+
+    Read the files modified in this phase (from summary comments on issue #{phase_issue_number}).
+    Check for:
+    - Obvious N+1 query patterns
+    - Unnecessary re-renders or recomputations
+    - Missing memoization for expensive operations
+    - Unbounded loops or recursion
+    - Large bundle additions without justification
+
+    Evidence format:
+    CLAIM: {what was checked}
+    EVIDENCE: {file:line or command run}
+    OUTPUT: {actual result}
+    VERDICT: PASS | FAIL — {reason}
+
+    Return: EFFICIENCY REVIEW: PASS or EFFICIENCY REVIEW: FAIL — {issues list}
+  "
+)
+```
+
+Wait for all three review agents to complete before proceeding.
+
+## Step 5 — Identify Human Verification Items
+
+Some checks cannot be automated. Flag these for human review:
+
+- Visual appearance and layout
+- User flow completion (multi-step interactions)
+- Real-time behavior (WebSocket, SSE, animations)
+- External service integrations
+- Performance feel under real conditions
+- Accessibility
+
+Format each item:
+```
+Test: {name}
+Steps: {what to do}
+Expected: {what should happen}
+Why manual: {why automated checks cannot cover this}
+```
+
+## Step 6 — Determine Overall Status
+
+**PASS** — All of the following:
+- All must-have truths: VERIFIED
+- All artifacts: not MISSING or STUB
+- All key links: WIRED or ORPHANED (not NOT_WIRED)
+- Tests: PASS
+- Build: PASS
+- Lint: PASS or warnings only (no errors)
+- No Blocker anti-patterns
+- Security review: PASS
+- Quality review: PASS (no blockers)
+- Efficiency review: PASS (no blockers)
+
+**FAIL** — Any of:
+- Any must-have truth: FAILED
+- Any artifact: MISSING or STUB
+- Any key link: NOT_WIRED
+- Tests: FAIL
+- Build: FAIL
+- Any Blocker anti-pattern
+- Security or Quality review: FAIL with blockers
+
+**HUMAN_NEEDED** — All automated checks PASS but human verification items remain unreviewed.
+
+Score: `{verified_truths}/{total_truths} must-haves verified`
+
+## Step 7 — Post Verification Result to GitHub
+
+Build the verification content in memory and post as a comment. This is the canonical record — no local VERIFICATION.md is written.
 
 ```bash
-# Write UAT body to tmpfile
-UAT_FILE=$(mktemp)
-cat > "$UAT_FILE" << 'UAT_EOF'
-{
-  "status": "passed | gaps_found",
-  "phase": "{phase_number} — {phase_name}",
-  "timestamp": "{ISO timestamp}",
-  "items": [
-    { "name": "...", "result": "pass | fail", "notes": "..." }
-  ],
-  "gaps": [
-    { "description": "...", "severity": "Blocker | Warning" }
-  ]
-}
-UAT_EOF
+VERIFY_FILE=$(mktemp)
+cat > "$VERIFY_FILE" << 'VERIFY_EOF'
+---
+phase: {phase_number}
+plan: all
+status: passed | fail | human_needed
+score: {verified}/{total}
+timestamp: {ISO timestamp}
+checks:
+  tests: pass | fail | skipped
+  build: pass | fail | skipped
+  lint: pass | fail | skipped
+  security_review: pass | fail
+  quality_review: pass | fail
+  efficiency_review: pass | fail
+---
 
-node ~/.claude/maxsim/bin/maxsim-tools.cjs github post-comment --issue-number {PHASE_ISSUE_NUMBER} --body-file "$UAT_FILE" --type uat
+## Verification: Phase {phase_number} — {phase_name}
+
+**Status:** {PASS | FAIL | HUMAN NEEDED}
+**Score:** {verified}/{total} must-haves verified
+**Timestamp:** {ISO timestamp}
+
+## Must-Have Verification
+
+| Truth | Status | Evidence |
+|-------|--------|----------|
+| {truth} | VERIFIED / FAILED / UNCERTAIN | {file:line or command output} |
+
+## Artifact Status
+
+| Artifact | Exists | Substantive | Wired | Status |
+|----------|--------|-------------|-------|--------|
+| {path} | yes/no | yes/no | yes/no | VERIFIED/STUB/MISSING/ORPHANED |
+
+## Key Links
+
+| From | To | Via | Status | Evidence |
+|------|----|-----|--------|----------|
+| {component} | {api} | fetch | WIRED | {grep output} |
+
+## Automated Checks
+
+| Check | Status | Notes |
+|-------|--------|-------|
+| Tests | {PASS/FAIL/SKIPPED} | {runner used, error if fail} |
+| Build | {PASS/FAIL/SKIPPED} | {error if fail} |
+| Lint | {PASS/FAIL/SKIPPED} | {violation count} |
+| Security | {PASS/FAIL} | {issues if fail} |
+| Quality | {PASS/FAIL} | {blockers if fail} |
+| Efficiency | {PASS/FAIL} | {blockers if fail} |
+
+## Anti-Patterns Found
+
+{Blocker anti-patterns with file:line}
+{Warning anti-patterns with file:line}
+{"None." if clean}
+
+## Human Verification Items
+
+{numbered list of items requiring human testing}
+{"None." if fully automated}
+
+## Gaps (if status = fail)
+
+{numbered list of gaps with fix recommendations}
+
+<!-- maxsim:type=verification -->
+VERIFY_EOF
+
+node ~/.claude/maxsim/bin/maxsim-tools.cjs github post-comment \
+  --issue-number {PHASE_ISSUE_NUMBER} \
+  --body-file "$VERIFY_FILE" \
+  --type verification
 ```
 
-Do NOT write a UAT.md file to `.planning/phases/`.
-</step>
+## Step 8 — Update Board and Return
 
-<step name="board_transition">
-**Update GitHub board based on verification outcome.**
-
-**If verification passes AND PR is merged:**
-1. Run `github move-issue` to move the phase issue to the "Done" column on the board
-2. Run `github close-issue` to close the phase issue
-3. Report to orchestrator: phase complete, issue closed
-
+**If PASS:**
 ```bash
-node ~/.claude/maxsim/bin/maxsim-tools.cjs github move-issue --issue-number N --status "Done"
-node ~/.claude/maxsim/bin/maxsim-tools.cjs github close-issue --issue-number N
+node ~/.claude/maxsim/bin/maxsim-tools.cjs github move-issue \
+  --issue-number $PHASE_ISSUE_NUMBER --status "Done"
+node ~/.claude/maxsim/bin/maxsim-tools.cjs github close-issue \
+  --issue-number $PHASE_ISSUE_NUMBER
 ```
 
-**If verification passes but PR not yet merged:**
-1. Keep the phase issue in "In Review" on the board
-2. Note: board will be updated when PR merges
-
-**If verification fails (gaps_found):**
-1. Check current board column for the phase issue
-2. If in "In Review": run `github move-issue` to move back to "In Progress"
-3. Post failure details as a verification comment (already done in post_verification_to_github step)
-4. Note which gaps need fixing before re-verification
-
+**If FAIL:**
 ```bash
-node ~/.claude/maxsim/bin/maxsim-tools.cjs github move-issue --issue-number N --status "In Progress"
+node ~/.claude/maxsim/bin/maxsim-tools.cjs github move-issue \
+  --issue-number $PHASE_ISSUE_NUMBER --status "In Progress"
 ```
 
-**If human_needed:**
-1. Keep the phase issue in its current column (do not move)
-2. The UAT comment posted above documents what needs human testing
-</step>
+**If HUMAN_NEEDED:** Leave issue in current column. The verification comment documents what needs testing.
 
-<step name="return_to_orchestrator">
-Return status (`passed` | `gaps_found` | `human_needed`), score (N/M must-haves), GitHub issue number and comment URL.
-
-If gaps_found: list gaps + recommended fix plan names. Phase issue has been moved back to "In Progress" on the board.
-If human_needed: list items requiring human testing. UAT comment posted to GitHub issue.
-If passed: phase issue moved to "Done" and closed on GitHub.
-
-Orchestrator routes: `passed` → update_roadmap | `gaps_found` → create/execute fixes, re-verify | `human_needed` → present to user.
-</step>
+Return to orchestrator:
+- Status: `passed` | `gaps_found` | `human_needed`
+- Score: N/M must-haves verified
+- GitHub issue number and comment URL
+- If gaps_found: gap list and recommended fix plan names
+- If human_needed: items requiring human testing
 
 </process>
 
 <success_criteria>
-- [ ] Phase issue number retrieved from live GitHub via `github all-progress`
-- [ ] Must-haves established (from frontmatter or derived)
-- [ ] All truths verified with status and evidence
-- [ ] All artifacts checked at all three levels
-- [ ] All key links verified
-- [ ] Requirements coverage assessed (if applicable)
-- [ ] Anti-patterns scanned and categorized
+- [ ] Phase issue number retrieved from GitHub via all-progress
+- [ ] Must-haves established from ROADMAP success_criteria, plan frontmatter, or derived from goal
+- [ ] All must-have truths verified with status and evidence
+- [ ] All artifacts checked at three levels (exists, substantive, wired)
+- [ ] All key links verified with grep evidence
+- [ ] Tests, build, and lint detected and executed
+- [ ] Anti-patterns scanned and categorized as Blocker or Warning
+- [ ] Three review agents (security, quality, efficiency) spawned in a SINGLE message block using Agent tool
+- [ ] All review agent results aggregated before determining overall status
 - [ ] Human verification items identified
-- [ ] Overall status determined
-- [ ] Fix plans generated (if gaps_found)
-- [ ] Verification results posted as GitHub comment via `github post-comment` (type: 'verification') — NO local VERIFICATION.md written
-- [ ] UAT results posted as GitHub comment via `github post-comment` (type: 'uat') — NO local UAT.md written
-- [ ] Board transition executed: `github move-issue` + `github close-issue` on pass; `github move-issue` back to In Progress on fail
-- [ ] Results returned to orchestrator
+- [ ] Overall status determined (PASS / FAIL / HUMAN_NEEDED)
+- [ ] Verification result posted as GitHub comment: <!-- maxsim:type=verification -->
+- [ ] No local VERIFICATION.md written
+- [ ] Board transition executed: Done + closed on pass, In Progress on fail
+- [ ] Results returned to orchestrator with status, score, and gap details
 </success_criteria>
-</output>

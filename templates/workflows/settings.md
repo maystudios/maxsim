@@ -1,40 +1,51 @@
 <purpose>
-Interactive configuration of MAXSIM workflow agents (research, plan_checker, verifier) and model profile selection via multi-question prompt. Includes integrated profile management with detailed model assignment descriptions per tier. Updates .planning/config.json with user preferences. Optionally saves settings as global defaults (~/.maxsim/defaults.json) for future projects.
+View and modify MaxsimCLI configuration stored in .claude/maxsim/config.json.
 </purpose>
-
-<required_reading>
-Read all files referenced by the invoking prompt's execution_context before starting.
-</required_reading>
 
 <process>
 
-<step name="ensure_and_load_config">
-Ensure config exists and load current state:
+## Step 1: Load current config
 
 ```bash
 node ~/.claude/maxsim/bin/maxsim-tools.cjs config-ensure-section
-INIT=$(node ~/.claude/maxsim/bin/maxsim-tools.cjs state load)
 ```
 
-Creates `.planning/config.json` with defaults if missing and loads current config values.
-</step>
+Then read the current config:
 
-<step name="read_current">
 ```bash
-cat .planning/config.json
+node ~/.claude/maxsim/bin/maxsim-tools.cjs state load
 ```
 
-Parse current values (default to `true` if not present):
-- `workflow.research` — spawn researcher during /maxsim:plan
-- `workflow.plan_checker` — spawn plan checker during /maxsim:plan
-- `workflow.verifier` — spawn verifier during /maxsim:execute
-- `workflow.nyquist_validation` — validation architecture research during planning
-- `model_profile` — which model each agent uses (default: `balanced`)
-- `git.branching_strategy` — branching approach (default: `"none"`)
-</step>
+Parse current values (use defaults if field is absent):
+- `model_profile` — "quality" | "balanced" | "budget" (default: "balanced")
+- `workflow.research` — true | false (default: true)
+- `workflow.plan_checker` — true | false (default: true)
+- `workflow.verifier` — true | false (default: true)
+- `workflow.auto_advance` — true | false (default: false)
+- `parallelism` — "conservative" | "standard" | "aggressive" (default: "standard")
+- `git.branching_strategy` — "none" | "phase" | "milestone" (default: "none")
 
-<step name="present_settings">
-Use AskUserQuestion with current values pre-selected:
+Display current settings before prompting for changes:
+
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ MAXSIM ► CURRENT SETTINGS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+| Setting           | Current Value      |
+|-------------------|--------------------|
+| Model Profile     | [quality/balanced/budget] |
+| Researcher        | [On/Off] |
+| Plan Checker      | [On/Off] |
+| Verifier          | [On/Off] |
+| Auto-Advance      | [On/Off] |
+| Parallelism       | [conservative/standard/aggressive] |
+| Git Branching     | [none/phase/milestone] |
+```
+
+---
+
+## Step 2: Prompt user for changes
 
 ```
 AskUserQuestion([
@@ -43,54 +54,56 @@ AskUserQuestion([
     header: "Model Profile",
     multiSelect: false,
     options: [
-      { label: "Quality", description: "Opus for planning/execution/debugging, Sonnet for verification. Best results, highest cost." },
-      { label: "Balanced (Recommended)", description: "Opus for planning, Sonnet for execution/verification. Good balance of quality and cost." },
-      { label: "Budget", description: "Sonnet for planning/execution, Haiku for research/verification. Lowest cost, good for rapid iteration." }
+      { label: "Quality", description: "Opus for all agents. Best results, highest cost." },
+      { label: "Balanced (Recommended)", description: "Opus for planning, Sonnet for execution/verification." },
+      { label: "Budget", description: "Sonnet for all agents. Fastest and cheapest." }
     ]
   },
   {
-    question: "Spawn Plan Researcher? (researches domain before planning)",
+    question: "Spawn Research agent during planning?",
     header: "Research",
     multiSelect: false,
     options: [
-      { label: "Yes", description: "Research phase goals before planning" },
-      { label: "No", description: "Skip research, plan directly" }
+      { label: "Yes (Recommended)", description: "Research domain before planning each phase." },
+      { label: "No", description: "Skip research, plan directly." }
     ]
   },
   {
-    question: "Spawn Plan Checker? (verifies plans before execution)",
+    question: "Spawn Plan Checker agent?",
     header: "Plan Check",
     multiSelect: false,
     options: [
-      { label: "Yes", description: "Verify plans meet phase goals" },
-      { label: "No", description: "Skip plan verification" }
+      { label: "Yes (Recommended)", description: "Verify plans meet phase goals before execution." },
+      { label: "No", description: "Skip plan verification." }
     ]
   },
   {
-    question: "Spawn Execution Verifier? (verifies phase completion)",
+    question: "Spawn Verifier agent after execution?",
     header: "Verifier",
     multiSelect: false,
     options: [
-      { label: "Yes", description: "Verify must-haves after execution" },
-      { label: "No", description: "Skip post-execution verification" }
+      { label: "Yes (Recommended)", description: "Verify phase completion against must-haves." },
+      { label: "No", description: "Skip post-execution verification." }
     ]
   },
   {
-    question: "Auto-advance pipeline? (discuss → plan → execute automatically)",
-    header: "Auto",
+    question: "Parallelism — how many executor agents run at once?",
+    header: "Parallelism",
     multiSelect: false,
     options: [
-      { label: "No (Recommended)", description: "Manual /clear + paste between stages" },
-      { label: "Yes", description: "Chain stages via Task() subagents (same isolation)" }
+      { label: "Conservative", description: "1 executor at a time. Lowest resource use." },
+      { label: "Standard (Recommended)", description: "Parallel within waves (respects plan dependencies)." },
+      { label: "Aggressive", description: "Maximum parallel execution. Fastest, highest cost." }
     ]
   },
   {
-    question: "Enable Nyquist Validation? (researches test coverage during planning)",
-    header: "Nyquist",
+    question: "Competition strategy — how do agents compete on a task?",
+    header: "Competition",
     multiSelect: false,
     options: [
-      { label: "Yes (Recommended)", description: "Research automated test coverage during planning. Adds validation requirements to plans. Blocks approval if tasks lack automated verify." },
-      { label: "No", description: "Skip validation research. Good for rapid prototyping or no-test phases." }
+      { label: "None (Recommended)", description: "Single agent per task." },
+      { label: "Best-of-2", description: "Two agents race, orchestrator picks winner." },
+      { label: "Best-of-3", description: "Three agents race, orchestrator picks winner." }
     ]
   },
   {
@@ -98,82 +111,58 @@ AskUserQuestion([
     header: "Branching",
     multiSelect: false,
     options: [
-      { label: "None (Recommended)", description: "Commit directly to current branch" },
-      { label: "Per Phase", description: "Create branch for each phase (maxsim/phase-{N}-{name})" },
-      { label: "Per Milestone", description: "Create branch for entire milestone (maxsim/{version}-{name})" }
+      { label: "None (Recommended)", description: "Commit directly to current branch." },
+      { label: "Per Phase", description: "Create branch for each phase." },
+      { label: "Per Milestone", description: "Create branch for the entire milestone." }
     ]
   }
 ])
 ```
-</step>
 
-<step name="update_config">
-Merge new settings into existing config.json:
+---
 
-```json
-{
-  ...existing_config,
-  "model_profile": "quality" | "balanced" | "budget",
-  "workflow": {
-    "research": true/false,
-    "plan_checker": true/false,
-    "verifier": true/false,
-    "auto_advance": true/false,
-    "nyquist_validation": true/false
-  },
-  "git": {
-    "branching_strategy": "none" | "phase" | "milestone"
-  }
-}
+## Step 3: Save updated config
+
+Merge new settings into config.json:
+
+```bash
+node ~/.claude/maxsim/bin/maxsim-tools.cjs config-set model_profile "[value]"
+node ~/.claude/maxsim/bin/maxsim-tools.cjs config-set workflow.research [true/false]
+node ~/.claude/maxsim/bin/maxsim-tools.cjs config-set workflow.plan_checker [true/false]
+node ~/.claude/maxsim/bin/maxsim-tools.cjs config-set workflow.verifier [true/false]
+node ~/.claude/maxsim/bin/maxsim-tools.cjs config-set workflow.auto_advance [true/false]
+node ~/.claude/maxsim/bin/maxsim-tools.cjs config-set parallelism "[value]"
+node ~/.claude/maxsim/bin/maxsim-tools.cjs config-set competition "[none/best-of-2/best-of-3]"
+node ~/.claude/maxsim/bin/maxsim-tools.cjs config-set git.branching_strategy "[value]"
 ```
 
-Write updated config to `.planning/config.json`.
-</step>
+---
 
-<step name="save_as_defaults">
-Ask whether to save these settings as global defaults for future projects:
+## Step 4: Confirm and offer global save
+
+Display updated settings table, then ask:
 
 ```
 AskUserQuestion([
   {
-    question: "Save these as default settings for all new projects?",
+    question: "Save these as global defaults for all new projects?",
     header: "Defaults",
     multiSelect: false,
     options: [
-      { label: "Yes", description: "New projects start with these settings (saved to ~/.maxsim/defaults.json)" },
-      { label: "No", description: "Only apply to this project" }
+      { label: "Yes", description: "New projects start with these settings (~/.maxsim/defaults.json)." },
+      { label: "No", description: "Only apply to this project." }
     ]
   }
 ])
 ```
 
-If "Yes": write the same config object (minus project-specific fields like `brave_search`) to `~/.maxsim/defaults.json`:
+If "Yes":
 
 ```bash
 mkdir -p ~/.maxsim
+node ~/.claude/maxsim/bin/maxsim-tools.cjs config-save-defaults ~/.maxsim/defaults.json
 ```
 
-Write `~/.maxsim/defaults.json` with:
-```json
-{
-  "mode": <current>,
-  "depth": <current>,
-  "model_profile": <current>,
-  "commit_docs": <current>,
-  "parallelization": <current>,
-  "branching_strategy": <current>,
-  "workflow": {
-    "research": <current>,
-    "plan_checker": <current>,
-    "verifier": <current>,
-    "auto_advance": <current>,
-    "nyquist_validation": <current>
-  }
-}
-```
-</step>
-
-<step name="confirm">
 Display:
 
 ```
@@ -181,37 +170,18 @@ Display:
  MAXSIM ► SETTINGS UPDATED
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-| Setting              | Value |
-|----------------------|-------|
-| Model Profile        | {quality/balanced/budget} |
-| Plan Researcher      | {On/Off} |
-| Plan Checker         | {On/Off} |
-| Execution Verifier   | {On/Off} |
-| Auto-Advance         | {On/Off} |
-| Nyquist Validation   | {On/Off} |
-| Git Branching        | {None/Per Phase/Per Milestone} |
-| Saved as Defaults    | {Yes/No} |
-
-These settings apply to future /maxsim:plan and /maxsim:execute runs.
-
-Profile Details ({quality/balanced/budget}):
-| Agent Role | Model |
-|------------|-------|
-| Planner | {model from MODEL_PROFILES} |
-| Executor | {model from MODEL_PROFILES} |
-| Researcher | {model from MODEL_PROFILES} |
-| Verifier | {model from MODEL_PROFILES} |
+Settings saved to .planning/config.json
+[If global: Also saved to ~/.maxsim/defaults.json]
 
 Re-run /maxsim:settings anytime to change these.
 ```
-</step>
 
 </process>
 
 <success_criteria>
-- [ ] Current config read
-- [ ] User presented with 7 settings (profile + 5 workflow toggles + git branching)
-- [ ] Config updated with model_profile, workflow, and git sections
-- [ ] User offered to save as global defaults (~/.maxsim/defaults.json)
-- [ ] Changes confirmed to user
+- [ ] Current config loaded and displayed
+- [ ] User presented with all 7 settings
+- [ ] Config updated via maxsim-tools config-set commands
+- [ ] User offered to save as global defaults
+- [ ] Confirmation displayed after save
 </success_criteria>

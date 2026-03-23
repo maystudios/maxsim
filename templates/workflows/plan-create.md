@@ -1,8 +1,24 @@
 <purpose>
-Planning stage sub-workflow for /maxsim:plan. Spawns the planner agent to create plan content, posts plans to GitHub as comments on the phase issue, creates task sub-issues, and moves the phase board card to "In Progress". Optionally spawns the planner (in plan-checking mode) for verification with a revision loop.
+Planning stage sub-workflow for /maxsim:plan. Spawns a Planner agent (using Agent tool) to
+create the task breakdown plan, optionally spawns a Checker agent for verification with a
+revision loop, posts plans to GitHub as comments on the phase issue, creates task sub-issues,
+and moves the phase board card to "In Progress".
 
-This file is loaded by the plan.md orchestrator. It does NOT handle gate confirmations or stage routing -- the orchestrator handles that. This sub-workflow focuses ONLY on creating, verifying, and publishing plans to GitHub.
+This file is loaded by the plan.md orchestrator. It does NOT handle gate confirmations or
+stage routing -- the orchestrator handles that. This sub-workflow focuses ONLY on creating,
+verifying, and publishing plans to GitHub.
+
+GitHub Issues is the sole source of truth. No local PLAN.md files are written.
 </purpose>
+
+<critical_rules>
+- Tool name is `Agent` (NOT `Task`)
+- Agent spawning: Agent(prompt, model, isolation, run_in_background)
+- Plans are posted to GitHub with <!-- maxsim:type=plan -->
+- Use `node ~/.claude/maxsim/bin/maxsim-tools.cjs` for all CLI operations
+- No local PLAN.md files are written -- GitHub is the sole source of truth
+- Do NOT show gate confirmation or next steps -- the orchestrator handles those
+</critical_rules>
 
 <process>
 
@@ -13,7 +29,7 @@ The orchestrator provides phase context. Verify we have what we need:
 - `phase_number`, `phase_name`, `phase_dir`, `padded_phase`, `phase_slug`
 - `planner_model`, `checker_model`, `plan_checker_enabled`
 - `commit_docs`
-- `state_path`, `roadmap_path`, `requirements_path`, `context_path`, `research_path`
+- `state_path`, `roadmap_path`, `requirements_path`
 - `phase_req_ids` (requirement IDs that this phase must address)
 - `phase_issue_number` (GitHub Issue number for the phase)
 - `--skip-verify` flag presence
@@ -29,7 +45,8 @@ CHECKER_MODEL=$(node ~/.claude/maxsim/bin/maxsim-tools.cjs resolve-model planner
 
 Query the phase GitHub Issue for existing plan comments:
 ```bash
-node ~/.claude/maxsim/bin/maxsim-tools.cjs github get-issue --issue-number $PHASE_ISSUE_NUMBER --include-comments
+ISSUE_DATA=$(node ~/.claude/maxsim/bin/maxsim-tools.cjs github get-issue \
+  --issue-number $PHASE_ISSUE_NUMBER --include-comments)
 ```
 
 Look for comments that contain `<!-- maxsim:type=plan -->`.
@@ -40,54 +57,108 @@ Phase {phase_number} already has plan(s) on GitHub Issue #{phase_issue_number}.
 
 1. Add more plans (keep existing)
 2. View existing plans
-3. Re-plan from scratch (deletes existing plan comments)
+3. Re-plan from scratch (removes existing plan comments)
 ```
 
 - If "Add more": Continue to Step 4 with existing plans preserved.
 - If "View": Display plan comment contents, then re-offer options.
-- If "Re-plan": Delete existing plan comments from the issue, continue to Step 4.
+- If "Re-plan": Delete existing plan comments from the issue:
+  ```bash
+  node ~/.claude/maxsim/bin/maxsim-tools.cjs github delete-comments \
+    --issue-number $PHASE_ISSUE_NUMBER --type plan
+  ```
+  Then continue to Step 4.
 
 **If no plan comments exist:** Continue to Step 4.
 
-## Step 4: Gather Context Paths
+## Step 4: Read Context and Research from GitHub
 
-Extract file paths and GitHub context from the orchestrator context (provided via init JSON):
+Fetch the phase issue with all comments to supply the planner with context and research:
 
 ```bash
-STATE_PATH=$(echo "$INIT" | jq -r '.state_path // empty')
-ROADMAP_PATH=$(echo "$INIT" | jq -r '.roadmap_path // empty')
-REQUIREMENTS_PATH=$(echo "$INIT" | jq -r '.requirements_path // empty')
+ISSUE_DATA=$(node ~/.claude/maxsim/bin/maxsim-tools.cjs github get-issue \
+  --issue-number $PHASE_ISSUE_NUMBER --include-comments)
 ```
 
-Context and research content will be read from GitHub Issue #{phase_issue_number} comments (identified by `<!-- maxsim:type=context -->` and `<!-- maxsim:type=research -->` markers) rather than from local files.
+Extract:
+- Context comment content (from `<!-- maxsim:type=context -->` comment)
+- Research comment content (from `<!-- maxsim:type=research -->` comment)
+- Issue body (phase goal, description, success criteria)
 
-## Step 5: Spawn Planner
+These are passed directly into the planner prompt. No local files are read for context or research.
+
+## Step 5: Spawn Planner Agent
 
 Display:
 ```
 Planning Phase {phase_number}: {phase_name}...
 ```
 
-Construct the planner prompt. The planner must return plan content as structured markdown in its response (not write local files):
+Construct the planner prompt. The planner must return plan content as structured markdown
+in its response (not write local files):
 
 ```markdown
 <planning_context>
-**Phase:** {phase_number}
+**Phase:** {phase_number} -- {phase_name}
 **Mode:** standard
 
-<context_sources>
-- GitHub Issue #{phase_issue_number} context comment (USER DECISIONS -- locked choices from discussion stage)
-- GitHub Issue #{phase_issue_number} research comment (Technical Research findings)
-- {state_path} (Project State)
-- {roadmap_path} (Roadmap)
-- {requirements_path} (Requirements)
-</context_sources>
+<github_context>
+**Phase Issue:** #{phase_issue_number}
+**Phase Goal:** {phase_goal from issue body}
+
+**User Decisions (from context comment):**
+{content of the <!-- maxsim:type=context --> comment}
+
+**Research Findings (from research comment):**
+{content of the <!-- maxsim:type=research --> comment}
+</github_context>
+
+<local_context>
+**Roadmap:** {roadmap_path}
+**Requirements:** {requirements_path}
+**State:** {state_path}
+</local_context>
 
 **Phase requirement IDs (every ID MUST appear in a plan's `requirements` field):** {phase_req_ids}
 
 **Project instructions:** Read ./CLAUDE.md if exists -- follow project-specific guidelines
 **Project skills:** Check .skills/ directory (if exists) -- read SKILL.md files, plans should account for project skill rules
 </planning_context>
+
+<task_format>
+Every task must include:
+- `id` and `type` (auto or checkpoint)
+- `<files>` -- list of files created or modified with CREATE/MODIFY/DELETE
+- `<action>` -- detailed implementation instructions the executor can follow without ambiguity
+- `<verify>` -- automated verification command (must be runnable via Bash)
+- `<done>` -- bullet list of completion criteria (each independently verifiable)
+</task_format>
+
+<plan_frontmatter>
+Every plan must have valid YAML frontmatter:
+---
+phase: {phase-name}
+plan: {number}
+type: execute
+wave: {wave-number}
+depends_on: [{prior-plan-ids}]
+files_modified: [{key-files}]
+autonomous: true|false
+requirements: [{req-ids}]
+must_haves:
+  truths: [{invariant-statements}]
+  artifacts: [{path, provides, min_lines}]
+  key_links: [{from, to, via, pattern}]
+---
+</plan_frontmatter>
+
+<wave_design>
+Break the phase into atomic tasks (2-5 minutes each for an AI agent).
+Group independent tasks into the same wave for parallel execution.
+Tasks that depend on prior task outputs go in later waves.
+Each plan covers one logical deliverable.
+Plans within the same wave can execute in parallel.
+</wave_design>
 
 <downstream_consumer>
 Output consumed by /maxsim:execute via GitHub Issue comments. Plans need:
@@ -98,38 +169,46 @@ Output consumed by /maxsim:execute via GitHub Issue comments. Plans need:
 </downstream_consumer>
 
 <output_format>
-Return each plan as a separate fenced code block with a plan number header.
+Return each plan as a separate section with a plan number header.
 Do NOT write local PLAN.md files -- plans will be posted to GitHub by the orchestrator.
 
 Example structure:
 ## Plan 01
 
 ```yaml
-# frontmatter here
+{frontmatter}
 ```
 
 <tasks>
-...
+<task id="1.1" type="auto">
+  <files>...</files>
+  <action>...</action>
+  <verify>...</verify>
+  <done>...</done>
+</task>
 </tasks>
 </output_format>
 
 <quality_gate>
+Before returning:
 - [ ] Each plan returned in response with valid frontmatter
-- [ ] Tasks are specific and actionable
+- [ ] Tasks are specific and actionable (2-5 min each)
 - [ ] Dependencies correctly identified
 - [ ] Waves assigned for parallel execution
 - [ ] must_haves derived from phase goal
+- [ ] Every phase_req_id appears in at least one plan's requirements field
+- [ ] Goal-backward verification passes (completing all tasks achieves the phase goal)
 </quality_gate>
 ```
 
 Spawn the planner:
 
 ```
-Task(
+Agent(
   prompt=planner_prompt,
-  subagent_type="planner",
   model="{planner_model}",
-  description="Plan Phase {phase_number}"
+  isolation=true,
+  run_in_background=false
 )
 ```
 
@@ -138,7 +217,8 @@ Task(
 Parse the planner's return message:
 
 - **`## PLANNING COMPLETE`:**
-  Extract the plan content from the planner's response. Parse out individual plans (each is a separate fenced block with a plan number header).
+  Extract the plan content from the planner's response. Parse out individual plans
+  (each is a separate section with a plan number header).
 
   If plans found in response:
   - Display plan count.
@@ -151,7 +231,8 @@ Parse the planner's return message:
   - Offer: retry or abort.
 
 - **`## CHECKPOINT REACHED`:**
-  Present checkpoint to user, get response, spawn continuation agent with checkpoint context. If planner needs a decision, relay it to the user.
+  Present checkpoint to user, get response, spawn continuation Agent with checkpoint context.
+  If planner needs a decision, relay it to the user.
 
 - **`## PLANNING INCONCLUSIVE`:**
   Display what was attempted. Offer:
@@ -177,19 +258,25 @@ Construct the checker prompt. Pass the in-memory `plans_content` directly:
 
 ```markdown
 <verification_context>
-**Phase:** {phase_number}
-**Phase Goal:** {goal from ROADMAP}
+**Phase:** {phase_number} -- {phase_name}
+**Phase Goal:** {goal from GitHub Issue}
 
 <plans_to_verify>
-{plans_content -- the plan(s) returned by the planner in step 5}
+{plans_content -- the plan(s) returned by the planner in Step 5}
 </plans_to_verify>
 
-<context_sources>
-- GitHub Issue #{phase_issue_number} context comment (USER DECISIONS)
-- GitHub Issue #{phase_issue_number} research comment (Technical Research)
-- {roadmap_path} (Roadmap)
-- {requirements_path} (Requirements)
-</context_sources>
+<github_context>
+**User Decisions (from context comment):**
+{content of the <!-- maxsim:type=context --> comment}
+
+**Research Findings (from research comment):**
+{content of the <!-- maxsim:type=research --> comment}
+</github_context>
+
+<local_context>
+**Roadmap:** {roadmap_path}
+**Requirements:** {requirements_path}
+</local_context>
 
 **Phase requirement IDs (MUST ALL be covered):** {phase_req_ids}
 
@@ -199,18 +286,18 @@ Construct the checker prompt. Pass the in-memory `plans_content` directly:
 
 <expected_output>
 - ## VERIFICATION PASSED -- all checks pass
-- ## ISSUES FOUND -- structured issue list
+- ## ISSUES FOUND -- structured issue list with specific problems and which plan/task they affect
 </expected_output>
 ```
 
 Spawn the checker:
 
 ```
-Task(
+Agent(
   prompt="## Task: Verify plans achieve phase goal\n\n## Suggested Skills: verification-gates\n\n" + checker_prompt,
-  subagent_type="planner",
   model="{checker_model}",
-  description="Verify Phase {phase_number} plans"
+  isolation=true,
+  run_in_background=false
 )
 ```
 
@@ -244,9 +331,10 @@ Task(
   {plans_content -- current in-memory plan content}
   </existing_plans>
 
-  <context_sources>
-  - GitHub Issue #{phase_issue_number} context comment (USER DECISIONS)
-  </context_sources>
+  <github_context>
+  **User Decisions (from context comment):**
+  {content of the <!-- maxsim:type=context --> comment}
+  </github_context>
 
   **Checker issues:** {structured_issues_from_checker}
   </revision_context>
@@ -254,22 +342,23 @@ Task(
   <instructions>
   Make targeted updates to address checker issues.
   Do NOT replan from scratch unless issues are fundamental.
-  Return the full revised plan content (same format as original -- one fenced block per plan).
+  Return the full revised plan content (same format as original -- one section per plan).
   </instructions>
   ```
 
   Spawn planner for revision:
 
   ```
-  Task(
+  Agent(
     prompt=revision_prompt,
-    subagent_type="planner",
     model="{planner_model}",
-    description="Revise Phase {phase_number} plans"
+    isolation=true,
+    run_in_background=false
   )
   ```
 
-  After planner returns: increment `iteration_count`, re-spawn checker (go back to Step 7).
+  After planner returns: increment `iteration_count`, update `plans_content` with revised content,
+  re-spawn checker (go back to Step 7).
 
   **If iteration_count >= 3:**
 
@@ -286,12 +375,14 @@ Task(
   Wait for user choice.
 
   - If "Force proceed": Continue to Step 9.
-  - If "Provide guidance": Get user input, re-spawn planner with user guidance, reset iteration_count, go to Step 7.
+  - If "Provide guidance": Get user input, re-spawn planner with user guidance appended to
+    revision prompt, reset `iteration_count` to 1, go to Step 7.
   - If "Abort": Exit workflow.
 
 ## Step 9: Post Plans to GitHub
 
-After verification passes (or is skipped), post each plan as a separate comment on the phase GitHub Issue.
+After verification passes (or is skipped), post each plan as a separate comment on the phase
+GitHub Issue.
 
 For each plan in `plans_content`:
 
@@ -301,7 +392,10 @@ cat > "$TMPFILE" << 'BODY_EOF'
 <!-- maxsim:type=plan -->
 {plan_content}
 BODY_EOF
-node ~/.claude/maxsim/bin/maxsim-tools.cjs github post-plan-comment --phase-issue-number $PHASE_ISSUE_NUMBER --plan-number "{plan_number}" --plan-content-file "$TMPFILE"
+node ~/.claude/maxsim/bin/maxsim-tools.cjs github post-plan-comment \
+  --phase-issue-number $PHASE_ISSUE_NUMBER \
+  --plan-number "{plan_number}" \
+  --plan-content-file "$TMPFILE"
 ```
 
 If posting any plan comment fails:
@@ -318,16 +412,24 @@ Plans posted to GitHub Issue #{phase_issue_number}: {plan_count} plan(s).
 
 Parse tasks from the posted plans. For each `<task>` element in the plan XML, extract:
 - `id` (e.g. "1.1", "1.2")
-- `title`
-- `description` / body content
+- `title` (from action summary or first line of action)
+- `body` content (full task details: action, verify, done criteria)
 
 Run `github batch-create-tasks` with the full tasks array and the phase issue number:
 
 ```bash
-node ~/.claude/maxsim/bin/maxsim-tools.cjs github batch-create-tasks --phase-number "$PHASE_NUMBER" --parent-issue-number $PHASE_ISSUE_NUMBER --tasks '[{"task_id":"1.1","title":"Task title","body":"Task body"}, ...]'
+node ~/.claude/maxsim/bin/maxsim-tools.cjs github batch-create-tasks \
+  --phase-number "$PHASE_NUMBER" \
+  --parent-issue-number $PHASE_ISSUE_NUMBER \
+  --tasks '[{"task_id":"1.1","title":"Task title","body":"Task body"}, ...]'
 ```
 
-Each task becomes a GitHub sub-issue linked to the phase issue.
+Each task becomes a GitHub sub-issue linked to the phase issue. The task body should include:
+- Wave number
+- Dependencies (depends_on)
+- Full action description
+- Verify command
+- Done criteria
 
 **If batch creation fails (partial or total):**
 - Report which task IDs failed to create.
@@ -341,10 +443,12 @@ Task sub-issues created: {task_count} tasks linked to Issue #{phase_issue_number
 
 ## Step 11: Move Phase to In Progress
 
-After all plans are posted and task sub-issues are created, move the phase issue to "In Progress" on the project board:
+After all plans are posted and task sub-issues are created, move the phase issue to "In Progress"
+on the project board:
 
 ```bash
-node ~/.claude/maxsim/bin/maxsim-tools.cjs github move-issue --issue-number $PHASE_ISSUE_NUMBER --status "In Progress"
+node ~/.claude/maxsim/bin/maxsim-tools.cjs github move-issue \
+  --issue-number $PHASE_ISSUE_NUMBER --status "In Progress"
 ```
 
 Display:
@@ -354,7 +458,9 @@ Phase #{phase_issue_number} moved to "In Progress" on the board.
 
 ## Step 12: Return to Orchestrator
 
-After plans are posted, task sub-issues created, and the phase moved to "In Progress", return control to the plan.md orchestrator. Do NOT show gate confirmation or next steps -- the orchestrator handles the final gate.
+After plans are posted, task sub-issues created, and the phase moved to "In Progress", return
+control to the plan.md orchestrator. Do NOT show gate confirmation or next steps -- the
+orchestrator handles the final gate.
 
 Display a brief completion message:
 ```
@@ -364,15 +470,18 @@ Planning complete. {plan_count} plan(s) posted to GitHub Issue #{phase_issue_num
 </process>
 
 <success_criteria>
-- Planner and checker models resolved from config
-- Existing plans detected from GitHub Issue comments and handled (add/view/replan options)
-- Planner agent spawned with context from GitHub Issue comments (context + research) and local files (state, roadmap, requirements)
-- Plan content returned from planner as in-memory document (no local PLAN.md files written)
-- Checker verification loop runs (max 3 iterations) unless --skip-verify
-- Revision loop passes in-memory plan content to planner for targeted fixes
-- Plans posted to GitHub Issue #{phase_issue_number} as comments with <!-- maxsim:type=plan --> markers
-- Task sub-issues created via `github batch-create-tasks` linked to phase issue
-- Phase issue moved to "In Progress" via `github move-issue`
-- Failed task creation surfaced with retry option (WIRE-07)
-- Control returned to orchestrator without showing gate or next steps
+- [ ] Planner and checker models resolved from config
+- [ ] Existing plans detected from GitHub Issue comments and handled (add/view/replan options)
+- [ ] Context and research read from GitHub Issue comments (not local files)
+- [ ] Planner agent spawned with Agent tool (not Task) with isolation=true
+- [ ] Plan content returned from planner as in-memory document (no local PLAN.md files written)
+- [ ] Checker verification loop runs (max 3 iterations) unless --skip-verify
+- [ ] Revision loop passes in-memory plan content to planner for targeted fixes
+- [ ] Agent tool used (not Task) for planner, checker, and revision spawning
+- [ ] Plans posted to GitHub Issue #{phase_issue_number} as comments with <!-- maxsim:type=plan --> markers
+- [ ] Task sub-issues created via `github batch-create-tasks` linked to phase issue
+  - Sub-issue bodies include: wave, dependencies, action, verify command, done criteria
+- [ ] Phase issue moved to "In Progress" via `github move-issue`
+- [ ] Failed task creation surfaced with retry option
+- [ ] Control returned to orchestrator without showing gate or next steps
 </success_criteria>

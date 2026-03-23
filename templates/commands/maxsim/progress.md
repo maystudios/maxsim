@@ -1,25 +1,24 @@
 ---
 name: maxsim:progress
-description: Check project progress, milestone status, and route to next action
-allowed-tools:
-  - Read
-  - Bash
-  - Grep
-  - Glob
-  - Task
-  - SlashCommand
+description: Show project status from GitHub Project Board with next-action recommendation
+allowed-tools: [Read, Bash, Grep, Glob]
 ---
-<objective>
-Check project progress, milestone status, and offer milestone completion when all phases are done. Shows GitHub Issues-based progress alongside local ROADMAP.md progress for cross-validation.
 
-Provides situational awareness before continuing work, detects phase gaps, and intelligently routes to the next action.
+<objective>
+Show current project progress from GitHub and recommend the next action. Provides situational awareness, detects gaps, and routes to the appropriate next command.
 </objective>
 
-<execution_context>
-@~/.claude/maxsim/workflows/progress.md
-</execution_context>
+<context>
+GitHub is the sole source of truth. Read the GitHub Project Board, Milestone progress, and open Issues to build the status view — no .planning/ or ROADMAP.md files.
+</context>
 
 <process>
-Execute the progress workflow from @~/.claude/maxsim/workflows/progress.md end-to-end.
-Preserve all routing logic (Routes A through F) and edge case handling.
+Follow @~/.claude/maxsim/workflows/progress.md end-to-end.
+
+1. Read active GitHub Milestone and its completion percentage
+2. Read GitHub Project Board columns to get phase/task states
+3. List open Issues by label (bug, quick, debug, blocked)
+4. Render a status table: phases with planned/executed/verified state
+5. Detect gaps (planned but not executed, executed but not verified)
+6. Recommend next action with the exact command to run
 </process>

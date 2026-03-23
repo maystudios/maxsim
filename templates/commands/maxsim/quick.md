@@ -1,41 +1,30 @@
 ---
 name: maxsim:quick
-description: Execute a quick task with MAXSIM guarantees
-argument-hint: "[--full]"
-allowed-tools:
-  - Read
-  - Write
-  - Edit
-  - Glob
-  - Grep
-  - Bash
-  - Task
-  - AskUserQuestion
+description: Quick task - create GitHub Issue and execute in simplified flow
+argument-hint: "[task description]"
+allowed-tools: [Read, Write, Edit, Bash, Grep, Glob, Agent, AskUserQuestion]
 ---
+
 <objective>
-Execute small, ad-hoc tasks with MAXSIM guarantees (atomic commits, STATE.md tracking).
-
-Quick mode is the same system with a shorter path:
-- Spawns planner (quick mode) + executor(s)
-- Quick tasks are tracked via GitHub Issues (label: "quick"), separate from planned phases
-- Updates STATE.md "Quick Tasks Completed" table (NOT ROADMAP.md)
-
-**Default:** Skips research, plan-checker, verifier. Use when you know exactly what to do.
-
-**`--full` flag:** Enables plan-checking (max 2 iterations) and post-execution verification. Use when you want quality guarantees without full milestone ceremony.
+Execute small, ad-hoc tasks with MaxsimCLI guarantees (atomic commits, GitHub tracking). Skips research, plan-checker, and verifier by default for speed.
 </objective>
 
-<execution_context>
-@~/.claude/maxsim/workflows/quick.md
-</execution_context>
-
 <context>
-$ARGUMENTS
+Arguments: $ARGUMENTS
 
-Context files are resolved inside the workflow (`init quick`) and delegated via `<files_to_read>` blocks.
+If $ARGUMENTS is provided, treat it as the task description.
+
+Quick tasks are tracked as GitHub Issues (label: `quick`) — separate from planned phase Issues. GitHub is the sole source of truth — no STATE.md or .planning/ files.
 </context>
 
 <process>
-Execute the quick workflow from @~/.claude/maxsim/workflows/quick.md end-to-end.
-Preserve all workflow gates (validation, task description, planning, execution, state updates, commits).
+Follow @~/.claude/maxsim/workflows/quick.md end-to-end.
+
+1. Get task description from $ARGUMENTS or via AskUserQuestion
+2. Clarify scope if ambiguous (one focused question)
+3. Create a GitHub Issue labeled `quick` for the task
+4. Spawn a planner Agent (quick mode) to produce a concise implementation plan
+5. Spawn executor Agent(s) to implement the plan
+6. Commit with atomic message referencing the GitHub Issue
+7. Close the GitHub Issue with completion summary
 </process>

@@ -1,47 +1,41 @@
 <purpose>
-Display the complete MAXSIM command reference. Output ONLY the reference content. Do NOT add project-specific analysis, git status, next-step suggestions, or any commentary beyond the reference.
+Display all available MaxsimCLI commands with descriptions, syntax, and examples. Output ONLY the reference content — no project analysis, no git status, no commentary.
 </purpose>
 
 <reference>
 # MAXSIM Command Reference
 
-MAXSIM is a spec-driven development system for Claude Code. It structures work into milestones, phases, plans, and tasks -- each backed by state-machine logic that tracks progress and resumes automatically.
-
-## Table of Contents
-
-1. [Getting Started](#getting-started)
-2. [Commands](#commands)
-3. [Plan Flow](#plan-flow)
-4. [Execute Flow](#execute-flow)
-5. [Project Structure](#project-structure)
-6. [Quick Reference](#quick-reference)
-
----
-
-## Getting Started
-
-**First time?** Run `/maxsim:init` to initialize your project.
-
-**Returning?** Run `/maxsim:go` to auto-detect where you left off.
-
-**Core loop:**
-```
-/maxsim:init --> /maxsim:plan 1 --> /maxsim:execute 1 --> /maxsim:plan 2 --> ...
-```
+MAXSIM is a spec-driven development system for Claude Code. It structures work into milestones, phases, plans, and tasks — each backed by GitHub Issues as the sole source of truth.
 
 ---
 
 ## Commands
 
+| Command | Description |
+|---------|-------------|
+| `/maxsim:init` | Initialize a new project or start a new milestone |
+| `/maxsim:plan [N]` | Plan a phase (discussion → research → planning) |
+| `/maxsim:execute [N]` | Execute all plans in a phase |
+| `/maxsim:go` | Auto-detect state and dispatch to the right command |
+| `/maxsim:progress` | Show project status and recommend next action |
+| `/maxsim:quick` | Run a small ad-hoc task without phase ceremony |
+| `/maxsim:settings` | View and modify MaxsimCLI configuration |
+| `/maxsim:health` | Verify installation and GitHub connectivity |
+| `/maxsim:help` | Show this command reference |
+
+---
+
 ### /maxsim:init
 
-Initialize a new project or manage milestone lifecycle.
+Initialize a new project or start a new milestone cycle.
 
-- **New project:** Deep questioning, optional domain research, requirements definition, roadmap creation
-- **Existing project:** Scans codebase, creates planning docs from existing code
-- **Active project:** Detects current state, offers milestone lifecycle options (complete, start new)
+- **New project:** Questioning → research → requirements → roadmap → GitHub Issues
+- **Existing project:** Detects current state, offers milestone lifecycle options
 
-Usage: `/maxsim:init` or `/maxsim:init --auto`
+```
+/maxsim:init
+/maxsim:init --auto
+```
 
 ---
 
@@ -49,91 +43,104 @@ Usage: `/maxsim:init` or `/maxsim:init --auto`
 
 Plan a phase through three stages: Discussion, Research, Planning.
 
-- **Discussion:** Gather implementation decisions via conversation, creates CONTEXT.md
-- **Research:** Spawn researcher agent for domain analysis, creates RESEARCH.md
-- **Planning:** Spawn planner agent to create executable PLAN.md files
-- Auto-detects current stage and resumes from there
-- Gate confirmation between each stage
+- Gather implementation decisions via conversation (creates CONTEXT.md)
+- Spawn researcher agent for domain analysis (creates RESEARCH.md)
+- Spawn planner agent to create executable PLAN.md files
+- Auto-detects current stage and resumes from checkpoint
 
-Usage: `/maxsim:plan 3` or `/maxsim:plan` (auto-detects next unplanned phase)
-
-Flags: `--force-research` (re-run research), `--skip-verify` (skip plan verification)
+```
+/maxsim:plan 3
+/maxsim:plan          (auto-detects next unplanned phase)
+/maxsim:plan 3 --force-research
+```
 
 ---
 
 ### /maxsim:execute [N]
 
-Execute all plans in a phase with auto-verification.
+Execute all plans in a phase using wave-ordered parallel agents.
 
-- Runs plans in wave order (parallel within waves)
-- Auto-verifies after execution completes
+- Runs plans in wave order (parallel within waves, sequential across waves)
+- Auto-verifies after execution via GitHub Issue task completion
 - Retries failed verification (max 2 retries, 3 total attempts)
-- On final failure, reports what failed and lets you decide
 
-Usage: `/maxsim:execute 3`
+```
+/maxsim:execute 3
+```
 
 ---
 
 ### /maxsim:go
 
-Auto-detect project state and dispatch to the right command.
+Auto-detect project state from GitHub Issues and dispatch to the right command.
 
-- Deep context analysis: project state, git status, recent commits
-- Surfaces problems proactively before suggesting actions
-- Show + Act pattern: displays what was detected, then acts immediately
-- No arguments -- pure auto-detection
+- Reads live GitHub board to determine current position
+- Surfaces blockers and anomalies before suggesting an action
+- No arguments — pure auto-detection
 
-Usage: `/maxsim:go`
+```
+/maxsim:go
+```
 
 ---
 
 ### /maxsim:progress
 
-View project progress and milestone status.
+Show project status from GitHub Issues and recommend the next action.
 
-- Phase completion overview with visual progress
-- Recent activity summary from SUMMARY files
-- Current position and what comes next
-- Offers milestone completion when all phases are done
+- Overall progress percentage and phase breakdown by status
+- Current milestone and its completion %
+- Open blockers and bugs
+- Recommends the correct next command
 
-Usage: `/maxsim:progress`
-
----
-
-### /maxsim:debug [description]
-
-Systematic debugging with persistent state across context resets.
-
-- Scientific method: gather symptoms, hypothesize, test, verify
-- Persistent debug sessions in `.planning/debug/` -- survives `/clear`
-- Spawns isolated verifier agent (fresh 200K context per investigation)
-- Run with no args to resume an active session
-
-Usage: `/maxsim:debug login form returns 500` or `/maxsim:debug` (resume)
+```
+/maxsim:progress
+```
 
 ---
 
-### /maxsim:quick [--full]
+### /maxsim:quick
 
-Ad-hoc tasks with MAXSIM guarantees.
+Run a small ad-hoc task without full phase planning.
 
-- Atomic commits, state tracking
-- `--full` flag enables plan-checking and verification agents
+- Creates a GitHub Issue with label "type:quick"
+- Executes the task directly (no plan files, no wave scheduling)
+- Runs verification, commits, closes the issue
 
-Usage: `/maxsim:quick` or `/maxsim:quick --full`
+```
+/maxsim:quick
+/maxsim:quick refactor the auth module to remove dead code
+```
 
 ---
 
 ### /maxsim:settings
 
-Configure MAXSIM workflow and model profile.
+View and modify MaxsimCLI configuration.
 
 - Model profile: quality, balanced, or budget
 - Toggle agents: researcher, plan checker, verifier
-- Branching strategy configuration
-- Updates `.planning/config.json`
+- Parallelism and competition strategy
+- Git branching strategy
 
-Usage: `/maxsim:settings`
+```
+/maxsim:settings
+```
+
+---
+
+### /maxsim:health
+
+Verify MaxsimCLI installation and GitHub connectivity.
+
+- Checks .claude/ directory structure
+- Verifies gh CLI is installed and authenticated
+- Confirms GitHub repo and project board are accessible
+- Reports status of each check with fix instructions
+
+```
+/maxsim:health
+```
 
 ---
 
@@ -141,89 +148,19 @@ Usage: `/maxsim:settings`
 
 Show this command reference.
 
-Usage: `/maxsim:help`
+```
+/maxsim:help
+```
 
 ---
 
-## Plan Flow
+## Core Loop
 
 ```
-/maxsim:plan N
-     |
-     v
- Discussion -- gather decisions via conversation
-     |
-     | Gate: "N decisions captured. Continue?"
-     v
-  Research -- spawn researcher agent
-     |
-     | Gate: "Research complete. Continue?"
-     v
-  Planning -- spawn planner agent
-     |
-     | Gate: "N plans in M waves. Ready?"
-     v
-   Done -- CONTEXT.md + RESEARCH.md + PLAN.md files created
+/maxsim:init → /maxsim:plan 1 → /maxsim:execute 1 → /maxsim:plan 2 → /maxsim:execute 2 → ...
 ```
 
-**Artifacts produced at each stage:**
-
-| Stage | Artifact | Contains |
-|-------|----------|----------|
-| Discussion | CONTEXT.md | Locked decisions, constraints, boundaries |
-| Research | RESEARCH.md | Domain findings, patterns, recommendations |
-| Planning | PLAN.md (1+) | Executable tasks with verification criteria |
-
-**Re-entry:** Running `/maxsim:plan` on an already-planned phase shows status and offers options (view plans, re-plan, execute).
-
----
-
-## Execute Flow
-
-```
-/maxsim:execute N
-     |
-     v
-  Execute -- run plans in wave order
-     |      (parallel within waves)
-     v
-  Verify -- spawn verifier agent
-     |
-     +--> PASS --> Phase complete!
-     |
-     +--> FAIL --> Retry (max 2)
-               |
-               v
-           Fix --> Re-verify
-               |
-               +--> PASS --> Done
-               +--> FAIL --> Report to user
-```
-
-**Wave execution:** Plans declare wave numbers in their frontmatter. All plans in wave 1 run first (in parallel), then wave 2, etc. This respects dependencies between plans.
-
----
-
-## Project Structure
-
-```
-.planning/
-  PROJECT.md           # Project vision and context
-  REQUIREMENTS.md      # Scoped requirements with IDs
-  ROADMAP.md           # Phase structure and progress
-  STATE.md             # Project memory: decisions, blockers, metrics
-  config.json          # Workflow preferences
-  phases/
-    01-foundation/
-      01-CONTEXT.md    # Discussion decisions
-      01-RESEARCH.md   # Domain research
-      01-01-PLAN.md    # Execution plan
-      01-01-SUMMARY.md # Completion record
-    02-features/
-      ...
-  debug/               # Active debug sessions
-  quick/               # Quick task plans and summaries
-```
+**Returning?** Run `/maxsim:go` — it reads GitHub Issues and resumes automatically.
 
 ---
 
@@ -237,17 +174,18 @@ Usage: `/maxsim:help`
 | Plan a specific phase | `/maxsim:plan N` |
 | Execute a phase | `/maxsim:execute N` |
 | Check progress | `/maxsim:progress` |
-| Debug an issue | `/maxsim:debug description` |
 | Quick ad-hoc task | `/maxsim:quick` |
 | Change settings | `/maxsim:settings` |
+| Check installation | `/maxsim:health` |
 | See this help | `/maxsim:help` |
 
 ---
 
-## Staying Updated
+## Documentation
 
-Update MAXSIM to the latest version:
+Full docs: https://github.com/maystudios/maxsim
 
+Update to latest:
 ```bash
 npx maxsimcli@latest
 ```

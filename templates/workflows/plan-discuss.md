@@ -1,10 +1,27 @@
 <purpose>
-Discussion stage sub-workflow for /maxsim:plan. Extracts implementation decisions that downstream agents (researcher, planner) need. Analyzes the phase to identify gray areas, lets the user choose what to discuss, then deep-dives each selected area until satisfied.
+Discussion stage sub-workflow for /maxsim:plan. Extracts implementation decisions that
+downstream agents (researcher, planner) need by analyzing the phase, presenting gray areas
+to the user, and conducting a focused dialogue. Posts the resulting context as a GitHub
+Issue comment with <!-- maxsim:type=context -->.
 
-This file is loaded by the plan.md orchestrator. It does NOT handle gate confirmations or stage routing -- the orchestrator handles that. This sub-workflow focuses ONLY on running the discussion and posting the context decisions to GitHub.
+This file is loaded by the plan.md orchestrator. It does NOT handle gate confirmations or
+stage routing -- the orchestrator handles that. This sub-workflow focuses ONLY on running
+the discussion and posting the context decisions to GitHub.
 
-You are a thinking partner, not an interviewer. The user is the visionary -- you are the builder. Your job is to capture decisions that will guide research and planning, not to figure out implementation yourself.
+GitHub Issues is the sole source of truth. No local CONTEXT.md file is written.
+
+You are a thinking partner, not an interviewer. The user is the visionary -- you are the
+builder. Your job is to capture decisions that will guide research and planning, not to
+figure out implementation yourself.
 </purpose>
+
+<critical_rules>
+- Tool name is `Agent` (NOT `Task`)
+- Context is posted to GitHub as a comment with <!-- maxsim:type=context -->
+- Use `node ~/.claude/maxsim/bin/maxsim-tools.cjs` for all CLI operations
+- No local CONTEXT.md file is written -- GitHub is the sole source of truth
+- Do NOT show gate confirmation or next steps -- the orchestrator handles those
+</critical_rules>
 
 <required_reading>
 @~/.claude/maxsim/references/thinking-partner.md
@@ -21,9 +38,11 @@ You are a thinking partner, not an interviewer. The user is the visionary -- you
    - "Pull-to-refresh on mobile" -> planner includes that in task specs
    - "Claude's Discretion: loading skeleton" -> planner can decide approach
 
-**Your job:** Capture decisions clearly enough that downstream agents can act on them without asking the user again.
+**Your job:** Capture decisions clearly enough that downstream agents can act on them without
+asking the user again.
 
-**Not your job:** Figure out HOW to implement. That's what research and planning do with the decisions you capture.
+**Not your job:** Figure out HOW to implement. That's what research and planning do with the
+decisions you capture.
 </downstream_awareness>
 
 <philosophy>
@@ -50,26 +69,13 @@ Ask about vision and implementation choices. Capture decisions for downstream ag
 - **Make consequences visible** -- "Infinite scroll means no shareable page positions."
 - **Disagree constructively** -- If an approach has risks, name them.
 - **Follow the thread** -- Build on what they just said. Don't jump topics.
-
-Apply these behaviors within each discussion area. The user should feel like they're thinking through decisions with a collaborator, not answering a survey.
 </philosophy>
 
 <scope_guardrail>
 **CRITICAL: No scope creep.**
 
-The phase boundary comes from ROADMAP.md and is FIXED. Discussion clarifies HOW to implement what's scoped, never WHETHER to add new capabilities.
-
-**Allowed (clarifying ambiguity):**
-- "How should posts be displayed?" (layout, density, info shown)
-- "What happens on empty state?" (within the feature)
-- "Pull to refresh or manual?" (behavior choice)
-
-**Not allowed (scope creep):**
-- "Should we also add comments?" (new capability)
-- "What about search/filtering?" (new capability)
-- "Maybe include bookmarking?" (new capability)
-
-**The heuristic:** Does this clarify how we implement what's already in the phase, or does it add a new capability that could be its own phase?
+The phase boundary comes from ROADMAP.md and is FIXED. Discussion clarifies HOW to implement
+what's scoped, never WHETHER to add new capabilities.
 
 **When user suggests scope creep:**
 ```
@@ -83,34 +89,18 @@ Capture the idea in a "Deferred Ideas" section. Don't lose it, don't act on it.
 </scope_guardrail>
 
 <gray_area_identification>
-Gray areas are **implementation decisions the user cares about** -- things that could go multiple ways and would change the result.
+Gray areas are **implementation decisions the user cares about** -- things that could go
+multiple ways and would change the result.
 
 **How to identify gray areas:**
-
-1. **Read the phase goal** from ROADMAP.md
-2. **Understand the domain** -- What kind of thing is being built?
+1. Read the phase goal from the GitHub Issue description
+2. Understand the domain -- What kind of thing is being built?
    - Something users SEE -> visual presentation, interactions, states matter
    - Something users CALL -> interface contracts, responses, errors matter
    - Something users RUN -> invocation, output, behavior modes matter
    - Something users READ -> structure, tone, depth, flow matter
    - Something being ORGANIZED -> criteria, grouping, handling exceptions matter
-3. **Generate phase-specific gray areas** -- Not generic categories, but concrete decisions for THIS phase
-
-**Don't use generic category labels** (UI, UX, Behavior). Generate specific gray areas:
-
-```
-Phase: "User authentication"
--> Session handling, Error responses, Multi-device policy, Recovery flow
-
-Phase: "Organize photo library"
--> Grouping criteria, Duplicate handling, Naming convention, Folder structure
-
-Phase: "CLI for database backups"
--> Output format, Flag design, Progress reporting, Error recovery
-
-Phase: "API documentation"
--> Structure/navigation, Code examples depth, Versioning approach, Interactive elements
-```
+3. Generate phase-specific gray areas -- Not generic categories, but concrete decisions for THIS phase
 
 **The key question:** What decisions would change the outcome that the user should weigh in on?
 
@@ -128,37 +118,41 @@ Phase: "API documentation"
 Phase number, name, directory, and GitHub issue number come from the orchestrator context.
 
 ```bash
-INIT=$(node ~/.claude/maxsim/bin/maxsim-tools.cjs init phase-op "${PHASE}")
+PHASE_ISSUE=$(node ~/.claude/maxsim/bin/maxsim-tools.cjs github get-issue \
+  --issue-number $PHASE_ISSUE_NUMBER)
 ```
 
-Parse JSON for: `commit_docs`, `phase_found`, `phase_dir`, `phase_number`, `phase_name`, `phase_slug`, `padded_phase`, `has_research`, `has_context`, `has_plans`, `plan_count`, `roadmap_exists`, `planning_exists`.
+Extract `phase_goal` and `phase_description` from the issue body for use in gray area analysis.
 
-Also extract `phase_issue_number` passed from the orchestrator.
-
-**If `phase_found` is false:** Error -- the orchestrator should have caught this, but fail safe.
+**If issue fetch fails:** Error -- the orchestrator should have caught this, but fail safe:
+```
+Cannot read phase issue #{phase_issue_number}. Check GitHub connection.
+```
 
 ## Step 2: Check Existing Context
 
-Check if a context comment already exists on the phase GitHub Issue by calling:
+Check if a context comment already exists on the phase GitHub Issue:
 ```bash
-node ~/.claude/maxsim/bin/maxsim-tools.cjs github get-issue --issue-number $PHASE_ISSUE_NUMBER --include-comments
+ISSUE_DATA=$(node ~/.claude/maxsim/bin/maxsim-tools.cjs github get-issue \
+  --issue-number $PHASE_ISSUE_NUMBER --include-comments)
 ```
 
-Look for a comment that contains `<!-- maxsim:type=context -->`.
+Look for a comment containing `<!-- maxsim:type=context -->`.
 
 **If a context comment exists:**
 
 Ask the user (via natural conversation):
 ```
 Phase {phase_number} already has context on GitHub Issue #{phase_issue_number}. What would you like to do?
+
 1. Update it -- review and revise existing context
 2. View it -- show me what's there
 3. Use as-is -- keep existing context and return to orchestrator
 ```
 
-- If "Update": Load existing context comment content, continue to Step 3.
+- If "Update": Load existing context comment content, continue to Step 3 with it pre-loaded.
 - If "View": Display context comment contents, then offer update/use-as-is.
-- If "Use as-is": Return control to orchestrator.
+- If "Use as-is": Return control to orchestrator (display "Using existing context from Issue #{phase_issue_number}.").
 
 **If no context comment exists:** Continue to Step 3.
 
@@ -166,15 +160,22 @@ Phase {phase_number} already has context on GitHub Issue #{phase_issue_number}. 
 
 Analyze the phase to identify gray areas worth discussing.
 
-**Read the phase description from ROADMAP.md and determine:**
+**Read the phase description from the GitHub Issue and determine:**
 
 1. **Domain boundary** -- What capability is this phase delivering? State it clearly.
 
-2. **Gray areas by category** -- For each relevant category, identify 1-2 specific ambiguities that would change implementation.
+2. **Gray areas** -- For each relevant decision area, identify 1-2 specific ambiguities
+   that would change implementation. Generate phase-specific areas, not generic labels.
 
-3. **Skip assessment** -- If no meaningful gray areas exist (pure infrastructure, clear-cut implementation), note this but still present options.
+   Examples:
+   - Phase "User authentication": Session handling, Error responses, Multi-device policy, Recovery flow
+   - Phase "CLI for database backups": Output format, Flag design, Progress reporting, Error recovery
+   - Phase "API documentation": Structure/navigation, Code examples depth, Versioning approach
 
-**Output your analysis internally, then present to user.**
+3. **Skip assessment** -- If no meaningful gray areas exist (pure infrastructure, clear-cut
+   implementation), note this but still present options.
+
+Output your analysis internally, then proceed to Step 4.
 
 ## Step 4: Present Gray Areas
 
@@ -198,10 +199,10 @@ Which areas do you want to discuss for {phase_name}?
 3. {Specific area 3} -- {what decisions this covers}
 4. {Specific area 4} -- {what decisions this covers}
 
-Select by number (e.g., "1, 3" or "all").
+Select by number (e.g., "1, 3" or "all"). Or say "skip" to proceed without discussion.
 ```
 
-Generate 3-4 **phase-specific** gray areas, not generic categories. Each should be a concrete decision area.
+Generate 3-4 **phase-specific** gray areas -- concrete decision areas, not generic labels.
 
 ## Step 5: Discuss Areas
 
@@ -209,7 +210,8 @@ For each selected area, conduct a focused discussion loop.
 
 **Philosophy: 4 questions, then check.**
 
-Ask 4 questions per area before offering to continue or move on. Each answer often reveals the next question.
+Ask 4 questions per area before offering to continue or move on. Each answer often reveals
+the next question.
 
 **For each area:**
 
@@ -226,6 +228,8 @@ Ask 4 questions per area before offering to continue or move on. Each answer oft
 3. **After 4 questions, check:**
    ```
    More questions about {area}, or move to next?
+   1. More questions
+   2. Next area
    ```
    - If "More" -> ask 4 more, then check again
    - If "Next" -> proceed to next selected area
@@ -242,18 +246,12 @@ Ask 4 questions per area before offering to continue or move on. Each answer oft
    - If "Ready": Proceed to Step 6.
 
 **Adaptive probing (thinking-partner mode):**
-
-Within each area, adapt your questioning based on the user's certainty level:
 - **User is confident** (picks options quickly) -- probe deeper: "You chose X -- have you considered how that interacts with Y?"
 - **User is uncertain** (hedges) -- propose alternatives: "Here are 3 approaches with trade-offs..."
 - **User defers** (picks "You decide") -- accept but name consequences: "I'll go with X because [reason]. That means Y."
 
-Challenge decisions that may have hidden costs. If the user picks something that conflicts with an earlier decision, surface it: "Earlier you said A, but this implies B. Which takes priority?"
-
-**Question design:**
-- Options should be concrete, not abstract ("Cards" not "Option A")
-- Each answer should inform the next question
-- If user gives free text, reflect it back and confirm
+Challenge decisions that may have hidden costs. If the user picks something that conflicts
+with an earlier decision, surface it: "Earlier you said A, but this implies B. Which takes priority?"
 
 **Scope creep handling:**
 If user mentions something outside the phase domain:
@@ -265,19 +263,18 @@ Back to [current area]: [return to current question]"
 ```
 
 Track deferred ideas internally.
-</process>
 
 ## Step 6: Post Context to GitHub
 
 Build the context content in memory, then post it as a comment on the phase GitHub Issue.
 
-**Structure the content by what was discussed:**
+**Structure the context content:**
 
 ```markdown
 <!-- maxsim:type=context -->
 # Phase {X} Context: {Name}
 
-**Phase Goal:** {goal from ROADMAP.md}
+**Phase Goal:** {goal from GitHub Issue}
 **Created:** {date}
 **Requirements:** {requirement IDs if any}
 
@@ -315,29 +312,39 @@ Build the context content in memory, then post it as a comment on the phase GitH
 Post the comment to GitHub:
 ```bash
 TMPFILE=$(mktemp)
-echo "$CONTEXT_CONTENT" > "$TMPFILE"
-node ~/.claude/maxsim/bin/maxsim-tools.cjs github post-comment --issue-number $PHASE_ISSUE_NUMBER --body-file "$TMPFILE" --type context
+cat > "$TMPFILE" << 'BODY_EOF'
+{context_content}
+BODY_EOF
+node ~/.claude/maxsim/bin/maxsim-tools.cjs github post-comment \
+  --issue-number $PHASE_ISSUE_NUMBER --body-file "$TMPFILE" --type context
 ```
 
-Context decisions are posted as a GitHub comment on phase issue #{phase_issue_number}. No local CONTEXT.md file is written.
+Context decisions are posted as a GitHub comment on phase issue #{phase_issue_number}.
+No local CONTEXT.md file is written.
 
 ## Step 7: Return to Orchestrator
 
-After posting the context comment to GitHub, return control to the plan.md orchestrator. Do NOT show gate confirmation or next steps -- the orchestrator handles the gate between Discussion and Research.
+After posting the context comment to GitHub, return control to the plan.md orchestrator.
+Do NOT show gate confirmation or next steps -- the orchestrator handles the gate between
+Discussion and Research.
 
 Display a brief completion message:
 ```
 Discussion complete. Context decisions posted to GitHub Issue #{phase_issue_number}.
 ```
 
+</process>
+
 <success_criteria>
-- Phase validated against roadmap
-- Gray areas identified through intelligent analysis (not generic questions)
-- User selected which areas to discuss
-- Each selected area explored until user satisfied
-- Scope creep redirected to deferred ideas
-- Context comment captures actual decisions (not vague vision) with <!-- maxsim:type=context --> marker
-- Context posted to GitHub Issue #{phase_issue_number} as a comment (no local CONTEXT.md written)
-- Deferred ideas preserved for future phases
-- Control returned to orchestrator without showing gate or next steps
+- [ ] Phase description read from GitHub Issue (not local ROADMAP.md)
+- [ ] Existing context comment detected from GitHub Issue and handled (update/view/use-as-is)
+- [ ] Gray areas identified through intelligent phase analysis (not generic questions)
+- [ ] User selected which areas to discuss
+- [ ] Each selected area explored with 4-question depth, adaptive probing applied
+- [ ] Scope creep redirected to deferred ideas
+- [ ] Context comment captures actual decisions (not vague vision) with <!-- maxsim:type=context --> marker
+- [ ] Context posted to GitHub Issue #{phase_issue_number} as a comment (no local CONTEXT.md written)
+- [ ] Deferred ideas preserved in context comment
+- [ ] Control returned to orchestrator without showing gate or next steps
+- [ ] Agent tool used (not Task) for any agent spawning
 </success_criteria>

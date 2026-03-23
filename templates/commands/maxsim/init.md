@@ -1,52 +1,30 @@
 ---
 name: maxsim:init
-description: Initialize a new project or manage milestone lifecycle
+description: Initialize MaxsimCLI in current project with GitHub integration
 argument-hint: "[--auto]"
-allowed-tools:
-  - Read
-  - Bash
-  - Write
-  - Task
-  - AskUserQuestion
-  - Glob
-  - Grep
-  - WebFetch
-  - mcp__context7__resolve-library-id
-  - mcp__context7__get-library-docs
+allowed-tools: [Read, Write, Edit, Bash, Grep, Glob, Agent, AskUserQuestion, WebFetch]
 ---
-<context>
-**Flags:**
-- `--auto` -- Automatic mode. After config questions, runs the appropriate flow without further interaction. For new projects, expects idea document via @ reference.
-</context>
 
 <objective>
-Unified project initialization. Detects whether this is a new project, existing project, or milestone lifecycle and routes to the appropriate workflow.
-
-**Creates (depending on scenario):**
-- `.planning/PROJECT.md` -- project context
-- `.planning/config.json` -- workflow preferences
-- `.planning/REQUIREMENTS.md` -- scoped requirements
-- `.planning/ROADMAP.md` -- phase structure
-- `.planning/STATE.md` -- project memory
-- `.planning/DECISIONS.md` -- key decisions with rationale
-- `.planning/ACCEPTANCE-CRITERIA.md` -- measurable success criteria
-- `.planning/NO-GOS.md` -- explicit exclusions and anti-patterns
-- `.planning/codebase/` -- codebase analysis (existing projects only)
-- `.planning/research/` -- domain research (optional)
-
-**After this command:** Run `/maxsim:plan 1` to start phase planning.
+Initialize MaxsimCLI for the current project. Scans the repo, interviews the user, sets up GitHub Milestone and Project Board, writes CLAUDE.md, and optionally generates a Roadmap.
 </objective>
 
-<execution_context>
-@~/.claude/maxsim/workflows/init.md
-@~/.claude/maxsim/references/questioning.md
-@~/.claude/maxsim/references/thinking-partner.md
-@~/.claude/maxsim/references/ui-brand.md
-@~/.claude/maxsim/templates/project.md
-@~/.claude/maxsim/templates/requirements.md
-</execution_context>
+<context>
+Arguments: $ARGUMENTS
+
+Flags:
+- `--auto` — Skip confirmations after config questions. For new projects, expects an idea document via @ reference.
+
+GitHub is the sole source of truth. Init creates GitHub Milestones and Issues — no .planning/ files.
+</context>
 
 <process>
-Execute the init workflow from @~/.claude/maxsim/workflows/init.md end-to-end.
-Pass $ARGUMENTS through to the workflow for flag handling (--auto).
+Follow @~/.claude/maxsim/workflows/init.md end-to-end.
+
+1. Scan repo structure (language, framework, existing CI)
+2. Interview user: project goal, scope, constraints, success criteria
+3. Create GitHub Milestone for this project/version
+4. Write CLAUDE.md with project context and MaxsimCLI config
+5. Optionally generate Roadmap as GitHub Issues (phases)
+6. Confirm setup and suggest `/maxsim:plan 1` as next step
 </process>

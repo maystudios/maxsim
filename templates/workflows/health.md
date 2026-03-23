@@ -1,156 +1,113 @@
 <purpose>
-Validate `.planning/` directory integrity and report actionable issues. Checks for missing files, invalid configurations, inconsistent state, and orphaned plans. Optionally repairs auto-fixable issues.
+Verify MaxsimCLI installation and GitHub connectivity. Report the status of each check with actionable fix instructions.
 </purpose>
-
-<required_reading>
-Read all files referenced by the invoking prompt's execution_context before starting.
-</required_reading>
 
 <process>
 
-<step name="parse_args">
-**Parse arguments:**
+## Step 1: Check .claude/ directory structure
 
-Check if `--repair` flag is present in the command arguments.
-
-```
-REPAIR_FLAG=""
-if arguments contain "--repair"; then
-  REPAIR_FLAG="--repair"
-fi
-```
-</step>
-
-<step name="run_health_check">
-**Run health validation:**
+Verify the required files exist:
 
 ```bash
-node ~/.claude/maxsim/bin/maxsim-tools.cjs validate health $REPAIR_FLAG
+node ~/.claude/maxsim/bin/maxsim-tools.cjs validate structure
 ```
 
-Parse JSON output:
-- `status`: "healthy" | "degraded" | "broken"
-- `errors[]`: Critical issues (code, message, fix, repairable)
-- `warnings[]`: Non-critical issues
-- `info[]`: Informational notes
-- `repairable_count`: Number of auto-fixable issues
-- `repairs_performed[]`: Actions taken if --repair was used
-</step>
+Expected checks:
+- `~/.claude/` directory exists
+- `~/.claude/maxsim/` directory exists
+- `~/.claude/maxsim/bin/maxsim-tools.cjs` exists
+- `~/.claude/maxsim/config.json` exists (or create with defaults)
 
-<step name="format_output">
-**Format and display results:**
+Record PASS/FAIL for each.
 
-```
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
- MAXSIM Health Check
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-Status: HEALTHY | DEGRADED | BROKEN
-Errors: N | Warnings: N | Info: N
-```
-
-**If repairs were performed:**
-```
-## Repairs Performed
-
-- ✓ config.json: Created with defaults
-- ✓ STATE.md: Regenerated from roadmap
-```
-
-**If errors exist:**
-```
-## Errors
-
-- [E001] config.json: JSON parse error at line 5
-  Fix: Run /maxsim:progress (health check) --repair to reset to defaults
-
-- [E002] PROJECT.md not found
-  Fix: Run /maxsim:init to create
-```
-
-**If warnings exist:**
-```
-## Warnings
-
-- [W001] STATE.md references phase 5, but only phases 1-3 exist
-  Fix: Run /maxsim:progress (health check) --repair to regenerate
-
-- [W005] Phase directory "1-setup" doesn't follow NN-name format
-  Fix: Rename to match pattern (e.g., 01-setup)
-```
-
-**If info exists:**
-```
-## Info
-
-- [I001] 02-implementation/02-01-PLAN.md has no SUMMARY.md
-  Note: May be in progress
-```
-
-**Footer (if repairable issues exist and --repair was NOT used):**
-```
 ---
-N issues can be auto-repaired. Run: /maxsim:progress (health check) --repair
-```
-</step>
 
-<step name="offer_repair">
-**If repairable issues exist and --repair was NOT used:**
-
-Ask user if they want to run repairs:
-
-```
-Would you like to run /maxsim:progress (health check) --repair to fix N issues automatically?
-```
-
-If yes, re-run with --repair flag and display results.
-</step>
-
-<step name="verify_repairs">
-**If repairs were performed:**
-
-Re-run health check without --repair to confirm issues are resolved:
+## Step 2: Check gh CLI
 
 ```bash
-node ~/.claude/maxsim/bin/maxsim-tools.cjs validate health
+gh --version
 ```
 
-Report final status.
-</step>
+If not found: FAIL — "gh CLI not installed. Install from: https://cli.github.com"
+
+```bash
+gh auth status
+```
+
+If not authenticated: FAIL — "Not authenticated. Run: gh auth login"
+
+Record PASS/FAIL.
+
+---
+
+## Step 3: Check GitHub repo
+
+```bash
+node ~/.claude/maxsim/bin/maxsim-tools.cjs github status
+```
+
+If the command returns an error:
+- Check if the current directory is a git repo: `git remote get-url origin`
+- If no remote: FAIL — "No GitHub remote found. Add one or run /maxsim:init in a GitHub repo."
+- If remote exists but API fails: FAIL — "GitHub API unreachable. Check: gh auth status"
+
+Record PASS/FAIL.
+
+---
+
+## Step 4: Check project board
+
+From the `github status` output, verify a project board is configured.
+
+If no project board: WARN — "No GitHub Project board linked. Run /maxsim:init to configure."
+
+Record PASS/WARN/FAIL.
+
+---
+
+## Step 5: Report results
+
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ MAXSIM ► HEALTH CHECK
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+| Check                        | Status | Notes |
+|------------------------------|--------|-------|
+| .claude/ structure           | PASS   |       |
+| maxsim-tools.cjs present     | PASS   |       |
+| gh CLI installed             | PASS   | v2.x  |
+| gh CLI authenticated         | PASS   | user@github.com |
+| GitHub repo accessible       | PASS   | org/repo |
+| Project board linked         | PASS   | Project #N |
+
+Overall: HEALTHY / DEGRADED / BROKEN
+```
+
+**If any check FAILed**, list fix instructions after the table:
+
+```
+## Issues Found
+
+- [Check Name]: [Error message]
+  Fix: [exact command or instruction to resolve]
+```
+
+**If all checks PASS:**
+
+```
+All systems operational. MAXSIM is ready to use.
+
+Run /maxsim:go to resume your project.
+```
 
 </process>
 
-<error_codes>
-
-| Code | Severity | Description | Repairable |
-|------|----------|-------------|------------|
-| E001 | error | .planning/ directory not found | No |
-| E002 | error | PROJECT.md not found | No |
-| E003 | error | ROADMAP.md not found | No |
-| E004 | error | STATE.md not found | Yes |
-| E005 | error | config.json parse error | Yes |
-| W001 | warning | PROJECT.md missing required section | No |
-| W002 | warning | STATE.md references invalid phase | Yes |
-| W003 | warning | config.json not found | Yes |
-| W004 | warning | config.json invalid field value | No |
-| W005 | warning | Phase directory naming mismatch | No |
-| W006 | warning | Phase in ROADMAP but no directory | No |
-| W007 | warning | Phase on disk but not in ROADMAP | No |
-| I001 | info | Plan without SUMMARY (may be in progress) | No |
-
-</error_codes>
-
-<repair_actions>
-
-| Action | Effect | Risk |
-|--------|--------|------|
-| createConfig | Create config.json with defaults | None |
-| resetConfig | Delete + recreate config.json | Loses custom settings |
-| regenerateState | Create STATE.md from ROADMAP structure | Loses session history |
-
-**Not repairable (too risky):**
-- PROJECT.md, ROADMAP.md content
-- Phase directory renaming
-- Orphaned plan cleanup
-
-</repair_actions>
+<success_criteria>
+- [ ] .claude/ directory structure verified
+- [ ] gh CLI installation and authentication checked
+- [ ] GitHub repo accessibility confirmed
+- [ ] Project board existence confirmed
+- [ ] Status of each check reported with fix instructions for failures
+- [ ] Overall health status (HEALTHY / DEGRADED / BROKEN) displayed
+</success_criteria>

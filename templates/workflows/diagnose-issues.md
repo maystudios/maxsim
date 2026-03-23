@@ -1,219 +1,293 @@
 <purpose>
-Orchestrate parallel debug agents to investigate UAT gaps and find root causes.
-
-After UAT finds gaps, spawn one debug agent per gap. Each agent investigates autonomously with symptoms pre-filled from UAT. Collect root causes, update UAT.md gaps with diagnosis, then hand off to plan --gaps with actual diagnoses.
-
-Orchestrator stays lean: parse gaps, spawn agents, collect results, update UAT.
+Systematic debugging of a reported issue. Spawns parallel Research agents to investigate, hypothesizes root cause, spawns an executor to implement a fix, verifies the fix, and posts results to GitHub.
 </purpose>
-
-<paths>
-DEBUG_DIR=.planning/debug
-
-Debug files use the `.planning/debug/` path (hidden directory with leading dot).
-</paths>
-
-<core_principle>
-**Diagnose before planning fixes.**
-
-UAT tells us WHAT is broken (symptoms). Debug agents find WHY (root cause). plan --gaps then creates targeted fixes based on actual causes, not guesses.
-
-Without diagnosis: "Comment doesn't refresh" → guess at fix → maybe wrong
-With diagnosis: "Comment doesn't refresh" → "useEffect missing dependency" → precise fix
-</core_principle>
 
 <process>
 
-<step name="parse_gaps">
-**Extract gaps from UAT.md:**
+## Step 1: Accept issue description
 
-Read the "Gaps" section (YAML format):
-```yaml
-- truth: "Comment appears immediately after submission"
-  status: failed
-  reason: "User reported: works but doesn't show until I refresh the page"
-  severity: major
-  test: 2
-  artifacts: []
-  missing: []
-```
+Parse `$ARGUMENTS` for the issue description.
 
-For each gap, also read the corresponding test from "Tests" section to get full context.
-
-Build gap list:
-```
-gaps = [
-  {truth: "Comment appears immediately...", severity: "major", test_num: 2, reason: "..."},
-  {truth: "Reply button positioned correctly...", severity: "minor", test_num: 5, reason: "..."},
-  ...
-]
-```
-</step>
-
-<step name="report_plan">
-**Report diagnosis plan to user:**
+If empty, prompt:
 
 ```
-## Diagnosing {N} Gaps
-
-Spawning parallel debug agents to investigate root causes:
-
-| Gap (Truth) | Severity |
-|-------------|----------|
-| Comment appears immediately after submission | major |
-| Reply button positioned correctly | minor |
-| Delete removes comment | blocker |
-
-Each agent will:
-1. Create DEBUG-{slug}.md with symptoms pre-filled
-2. Investigate autonomously (read code, form hypotheses, test)
-3. Return root cause
-
-This runs in parallel - all gaps investigated simultaneously.
-```
-</step>
-
-<step name="spawn_agents">
-**Spawn debug agents in parallel:**
-
-For each gap, fill the debug-subagent-prompt template and spawn:
-
-```
-Task(
-  prompt="## Task: Diagnose root cause of test failure\n\n## Suggested Skills: systematic-debugging\n\n" + filled_debug_subagent_prompt + "\n\n<files_to_read>\n- {phase_dir}/{phase_num}-UAT.md\n- .planning/STATE.md\n</files_to_read>",
-  subagent_type="verifier",
-  description="Debug: {truth_short}"
+AskUserQuestion(
+  header: "Debug Issue",
+  question: "Describe the issue to diagnose.",
+  followUp: "Include: what's broken, any error messages, how to reproduce it."
 )
 ```
 
-**All agents spawn in single message** (parallel execution).
+Store as `$ISSUE_DESCRIPTION`.
 
-Template placeholders:
-- `{truth}`: The expected behavior that failed
-- `{expected}`: From UAT test
-- `{actual}`: Verbatim user description from reason field
-- `{errors}`: Any error messages from UAT (or "None reported")
-- `{reproduction}`: "Test {test_num} in UAT"
-- `{timeline}`: "Discovered during UAT"
-- `{goal}`: `find_root_cause_only` (UAT flow - plan --gaps handles fixes)
-- `{slug}`: Generated from truth
-</step>
+Create a GitHub Issue to track the debug session:
 
-<step name="collect_results">
-**Collect root causes from agents:**
-
-Each agent returns with:
-```
-## ROOT CAUSE FOUND
-
-**Debug Session:** ${DEBUG_DIR}/{slug}.md
-
-**Root Cause:** {specific cause with evidence}
-
-**Evidence Summary:**
-- {key finding 1}
-- {key finding 2}
-- {key finding 3}
-
-**Files Involved:**
-- {file1}: {what's wrong}
-- {file2}: {related issue}
-
-**Suggested Fix Direction:** {brief hint for plan --gaps}
-```
-
-Parse each return to extract:
-- root_cause: The diagnosed cause
-- files: Files involved
-- debug_path: Path to debug session file
-- suggested_fix: Hint for gap closure plan
-
-If agent returns `## INVESTIGATION INCONCLUSIVE`:
-- root_cause: "Investigation inconclusive - manual review needed"
-- Note which issue needs manual attention
-- Include remaining possibilities from agent return
-</step>
-
-<step name="update_uat">
-**Update UAT.md gaps with diagnosis:**
-
-For each gap in the Gaps section, add artifacts and missing fields:
-
-```yaml
-- truth: "Comment appears immediately after submission"
-  status: failed
-  reason: "User reported: works but doesn't show until I refresh the page"
-  severity: major
-  test: 2
-  root_cause: "useEffect in CommentList.tsx missing commentCount dependency"
-  artifacts:
-    - path: "src/components/CommentList.tsx"
-      issue: "useEffect missing dependency"
-  missing:
-    - "Add commentCount to useEffect dependency array"
-    - "Trigger re-render when new comment added"
-  debug_session: .planning/debug/comment-not-refreshing.md
-```
-
-Update status in frontmatter to "diagnosed".
-
-Commit the updated UAT.md:
 ```bash
-node ~/.claude/maxsim/bin/maxsim-tools.cjs commit "docs({phase_num}): add root causes from diagnosis" --files ".planning/phases/XX-name/{phase_num}-UAT.md"
+node ~/.claude/maxsim/bin/maxsim-tools.cjs github create-issue \
+  --title "Debug: $ISSUE_DESCRIPTION" \
+  --label "type:bug" \
+  --body "Debug session started.\n\nSymptoms: $ISSUE_DESCRIPTION"
 ```
-</step>
 
-<step name="report_results">
-**Report diagnosis results and hand off:**
+Store response as `$DEBUG_ISSUE_NUM`.
 
 Display:
+
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ MAXSIM ► DIAGNOSING ISSUE #$DEBUG_ISSUE_NUM
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Symptoms: $ISSUE_DESCRIPTION
+
+Spawning 3 research agents in parallel...
+```
+
+---
+
+## Step 2: Spawn parallel Research agents
+
+Launch all three agents simultaneously in a single message:
+
+**Agent A — Error logs and stack traces:**
+
+```
+Agent(
+  prompt="
+## Task: Investigate error logs and stack traces
+
+## Suggested Skills: systematic-debugging
+
+Issue: $ISSUE_DESCRIPTION
+
+Search for:
+- Recent error messages in logs, console output, or test output
+- Stack traces related to the reported symptoms
+- Any exception types or error codes
+
+Report: What errors exist and where they originate.
+",
+  subagent_type="researcher",
+  description="Investigate error logs for: $ISSUE_DESCRIPTION"
+)
+```
+
+**Agent B — Recent changes:**
+
+```
+Agent(
+  prompt="
+## Task: Investigate recent code changes
+
+## Suggested Skills: systematic-debugging
+
+Issue: $ISSUE_DESCRIPTION
+
+Examine:
+- git log --oneline -20 (last 20 commits)
+- git diff HEAD~5 for files related to the symptom area
+- Any recent dependency changes (package.json, lock files)
+
+Report: What changed recently that could cause these symptoms?
+",
+  subagent_type="researcher",
+  description="Investigate recent changes for: $ISSUE_DESCRIPTION"
+)
+```
+
+**Agent C — Related code paths:**
+
+```
+Agent(
+  prompt="
+## Task: Investigate related code paths
+
+## Suggested Skills: systematic-debugging
+
+Issue: $ISSUE_DESCRIPTION
+
+Trace:
+- The code path triggered when the issue occurs
+- Any data transformations, state mutations, or async flows involved
+- Interfaces and contracts between components in that path
+
+Report: Where in the code could this symptom originate?
+",
+  subagent_type="researcher",
+  description="Investigate code paths for: $ISSUE_DESCRIPTION"
+)
+```
+
+Collect findings from all three agents. Store as `$LOGS_FINDINGS`, `$CHANGES_FINDINGS`, `$CODE_FINDINGS`.
+
+---
+
+## Step 3: Hypothesize root cause
+
+Synthesize findings into a hypothesis:
+
+```
+## Investigation Summary
+
+**Symptoms:** $ISSUE_DESCRIPTION
+
+**Logs/Errors:** $LOGS_FINDINGS
+
+**Recent Changes:** $CHANGES_FINDINGS
+
+**Code Path:** $CODE_FINDINGS
+
+**Hypothesis:** [State the most likely root cause based on the three investigations]
+
+**Files likely involved:**
+- [file]: [why it's relevant]
+```
+
+Display the hypothesis to the user and ask:
+
+```
+AskUserQuestion(
+  header: "Root Cause Hypothesis",
+  question: "Does this hypothesis look correct? Proceed with fix?",
+  options: [
+    { label: "Yes, implement the fix" },
+    { label: "No, my hypothesis is different" },
+    { label: "Abort" }
+  ]
+)
+```
+
+If "No, my hypothesis is different": capture user's hypothesis, use it instead.
+
+---
+
+## Step 4: Implement fix
+
+Spawn executor agent to implement the fix:
+
+```
+Agent(
+  prompt="
+Fix this issue: $ISSUE_DESCRIPTION
+
+Root cause hypothesis: $HYPOTHESIS
+
+Files likely involved: $FILES
+
+<constraints>
+- Make a minimal, targeted fix
+- Do not refactor unrelated code
+- Commit with message: fix: $ISSUE_DESCRIPTION (closes #$DEBUG_ISSUE_NUM)
+- Return the commit hash and a 2-3 sentence summary of what was changed
+</constraints>
+",
+  subagent_type="executor",
+  description="Fix: $ISSUE_DESCRIPTION"
+)
+```
+
+Extract `$FIX_COMMIT` and `$FIX_SUMMARY`.
+
+---
+
+## Step 5: Verify fix
+
+```
+Agent(
+  prompt="
+Verify this fix resolves the reported issue.
+
+Issue: $ISSUE_DESCRIPTION
+Fix commit: $FIX_COMMIT
+Fix summary: $FIX_SUMMARY
+
+Check:
+1. Does the fix address the stated root cause?
+2. Are there any regressions introduced?
+3. Does it match the expected behavior described in the issue?
+
+Return: PASS or FAIL with evidence.
+",
+  subagent_type="verifier",
+  description="Verify fix for: $ISSUE_DESCRIPTION"
+)
+```
+
+Store `$VERIFY_STATUS`.
+
+If FAIL: display verification failures, ask user whether to iterate or accept.
+
+---
+
+## Step 6: Post results to GitHub
+
+Post a comment with full diagnosis and fix details:
+
+```bash
+node ~/.claude/maxsim/bin/maxsim-tools.cjs github comment-issue \
+  --issue-number $DEBUG_ISSUE_NUM \
+  --body "## Diagnosis Complete
+
+**Root Cause:** $HYPOTHESIS
+
+**Fix:** $FIX_SUMMARY
+**Commit:** $FIX_COMMIT
+**Verification:** $VERIFY_STATUS
+
+### Investigation Findings
+- Logs: $LOGS_FINDINGS
+- Recent Changes: $CHANGES_FINDINGS
+- Code Path: $CODE_FINDINGS"
+```
+
+Close the issue if verification passed:
+
+```bash
+node ~/.claude/maxsim/bin/maxsim-tools.cjs github close-issue --issue-number $DEBUG_ISSUE_NUM
+node ~/.claude/maxsim/bin/maxsim-tools.cjs github move-issue \
+  --issue-number $DEBUG_ISSUE_NUM \
+  --status "Done"
+```
+
+Display:
+
 ```
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
  MAXSIM ► DIAGNOSIS COMPLETE
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-| Gap (Truth) | Root Cause | Files |
-|-------------|------------|-------|
-| Comment appears immediately | useEffect missing dependency | CommentList.tsx |
-| Reply button positioned correctly | CSS flex order incorrect | ReplyButton.tsx |
-| Delete removes comment | API missing auth header | api/comments.ts |
-
-Debug sessions: ${DEBUG_DIR}/
-
-Proceeding to plan fixes...
+Issue: #$DEBUG_ISSUE_NUM
+Root Cause: $HYPOTHESIS
+Fix Commit: $FIX_COMMIT
+Verification: $VERIFY_STATUS
 ```
-
-Return to verify-work orchestrator for automatic planning.
-Do NOT offer manual next steps - verify-work handles the rest.
-</step>
 
 </process>
 
-<context_efficiency>
-Agents start with symptoms pre-filled from UAT (no symptom gathering).
-Agents only diagnose—plan --gaps handles fixes (no fix application).
-</context_efficiency>
-
 <failure_handling>
-**Agent fails to find root cause:**
-- Mark gap as "needs manual review"
-- Continue with other gaps
-- Report incomplete diagnosis
 
-**Agent times out:**
-- Check DEBUG-{slug}.md for partial progress
-- Can resume with /maxsim:debug
+**If research agent returns inconclusive:**
+- Mark that research dimension as "inconclusive"
+- Continue with other agents' findings
+- Note the gap in the hypothesis
 
-**All agents fail:**
-- Something systemic (permissions, git, etc.)
-- Report for manual investigation
-- Fall back to plan --gaps without root causes (less precise)
+**If fix verification fails twice:**
+- Report remaining failures
+- Ask user: 1) Try a different fix approach, 2) Accept current state, 3) Escalate to manual review
+
+**If all agents fail:**
+- Post collected partial findings to the GitHub Issue
+- Leave issue open with label "needs-manual-review"
+
 </failure_handling>
 
 <success_criteria>
-- [ ] Gaps parsed from UAT.md
-- [ ] Debug agents spawned in parallel
-- [ ] Root causes collected from all agents
-- [ ] UAT.md gaps updated with artifacts and missing
-- [ ] Debug sessions saved to ${DEBUG_DIR}/
-- [ ] Hand off to verify-work for automatic planning
+- [ ] GitHub Issue created for the debug session
+- [ ] Three research agents spawned in parallel (logs, changes, code paths)
+- [ ] Root cause hypothesis synthesized from all findings
+- [ ] User confirms hypothesis before fix is implemented
+- [ ] Executor agent implements targeted fix
+- [ ] Verifier agent confirms fix resolves the issue
+- [ ] Full results posted to GitHub Issue
+- [ ] Issue closed and moved to Done on verification pass
 </success_criteria>

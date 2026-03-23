@@ -1,50 +1,35 @@
 ---
 name: maxsim:plan
-description: State-machine plan command — Discussion, Research, Planning stages with gate confirmations
-argument-hint: "[phase-number] [--force-research] [--skip-verify]"
-allowed-tools:
-  - Read
-  - Write
-  - Bash
-  - Glob
-  - Grep
-  - Task
-  - WebFetch
-  - mcp__context7__*
+description: Plan a specific phase with discussion, research, and task breakdown
+argument-hint: "<phase-number> [--force-research] [--skip-verify]"
+allowed-tools: [Read, Write, Bash, Grep, Glob, Agent, AskUserQuestion, WebFetch]
 ---
+
 <objective>
-Execute the plan state machine: Discussion -> Research -> Planning. Each stage produces artifacts, shows a gate summary, and waits for user confirmation before advancing.
-
-**How it works:**
-1. Detect current stage from phase artifacts (CONTEXT.md, RESEARCH.md, PLAN.md)
-2. Start at the earliest incomplete stage
-3. Run each stage via dedicated sub-workflow
-4. Show rich gate summary after each stage — wait for user confirmation
-5. Advance to next stage on confirmation
-
-**Re-entry:** If phase is already planned, show status and offer options (view, re-plan, execute).
-
-**Flags:**
-- `--force-research` — Re-run research even if RESEARCH.md exists
-- `--skip-verify` — Skip plan verification loop after planning stage
+Run the plan state machine for a phase: Discussion → Research → Planning. Each stage produces GitHub Issues/comments as artifacts, shows a gate summary, and waits for confirmation before advancing.
 </objective>
 
-<execution_context>
-@~/.claude/maxsim/workflows/plan.md
-@~/.claude/maxsim/references/ui-brand.md
-</execution_context>
-
 <context>
-Phase number: $ARGUMENTS (optional — auto-detects next unplanned phase if omitted)
+Arguments: $ARGUMENTS
 
-**Flags:**
-- `--force-research` — Re-run research even if RESEARCH.md exists
-- `--skip-verify` — Skip plan verification loop after planning stage
+Phase number is required. Auto-detects next unplanned phase if omitted.
 
-Context files are resolved inside the workflow via `maxsim-tools init plan-phase` and per-subagent context assembly.
+Flags:
+- `--force-research` — Re-run research even if research notes already exist on the GitHub Issue
+- `--skip-verify` — Skip plan verification loop after the planning stage
+
+GitHub is the sole source of truth. Stage state is read from GitHub Issue labels and comments — no .planning/ files.
+
+Re-entry: If phase is already planned, show status and offer options (view, re-plan, execute).
 </context>
 
 <process>
-Execute the plan workflow from @~/.claude/maxsim/workflows/plan.md end-to-end.
-Preserve all workflow gates (stage detection, discussion, research, planning, gate confirmations, re-entry flow).
+Follow @~/.claude/maxsim/workflows/plan.md end-to-end.
+
+1. Detect current stage from GitHub Issue labels on the phase Issue
+2. Start at earliest incomplete stage
+3. Discussion stage: clarify scope with user via AskUserQuestion
+4. Research stage: spawn Agent for domain/codebase research (skipped if notes exist and no --force-research)
+5. Planning stage: spawn Agent to break phase into task Issues with acceptance criteria
+6. Show gate summary after each stage — wait for confirmation before advancing
 </process>

@@ -5,278 +5,296 @@ Before executing any step in this workflow, verify:
 </sanity_check>
 
 <purpose>
-Execute phase plans sequentially using fresh-context subagents with mandatory 2-stage review between every task. Each task agent receives only the minimum context it needs. Review is a hard gate — no task starts until the previous task passes both review stages.
+Spec-Driven Dispatch: fresh-agent-per-task execution for maximum context isolation. Each task gets a new executor agent with only the minimum context it needs. After each task, two reviewer agents check spec compliance and code quality. Review is a hard gate — the next task never starts until the current task passes both reviews. Max 3 fix attempts per task before escalation.
+
+GitHub Issues is the SOLE source of truth for plan content, task status, and completion.
 </purpose>
 
 <core_principle>
-Fresh context per task. No context bleeding between tasks. Review is mandatory, never skippable. Previous task's full diff and conversation are NEVER passed to the next task agent.
+Fresh context per task. No context bleeding between tasks. Review is mandatory and never skippable. Previous task diffs and agent conversations are NEVER passed to subsequent agents.
 </core_principle>
-
-<required_reading>
-Read STATE.md before any operation to load project context.
-</required_reading>
 
 <process>
 
-<step name="initialize" priority="first">
-Reuse the execute-phase init to load phase directory, plans, and model configuration:
+## Step 1 — Initialize
 
 ```bash
+EXECUTOR_MODEL=$(node ~/.claude/maxsim/bin/maxsim-tools.cjs resolve-model executor --raw)
 INIT=$(node ~/.claude/maxsim/bin/maxsim-tools.cjs init execute-phase "${PHASE_ARG}")
 ```
 
-Parse JSON for: `executor_model`, `verifier_model`, `commit_docs`, `phase_found`, `phase_dir`, `phase_number`, `phase_name`, `phase_slug`, `plans`, `incomplete_plans`, `plan_count`, `incomplete_count`, `state_exists`, `roadmap_exists`, `phase_req_ids`.
+Parse JSON: `executor_model`, `verifier_model`, `phase_found`, `phase_dir`, `phase_number`, `phase_name`, `phase_issue_number`, `plan_count`, `incomplete_count`.
 
-**If `phase_found` is false:** Error — phase directory not found.
-**If `plan_count` is 0:** Error — no plans found in phase.
-</step>
+If `phase_found` is false: error — phase not found.
+If `plan_count` is 0: error — no plans found. Run `/maxsim:plan {phase}` first.
 
-<step name="discover_plans">
-Find incomplete plans by querying GitHub Issues (the source of truth for plans and completion status):
+## Step 2 — Load Plans from GitHub Issues
+
+GitHub Issues is the sole source of truth. Fetch phase issue and its plan comments:
 
 ```bash
-node ~/.claude/maxsim/bin/maxsim-tools.cjs github get-issue --issue-number ${phase_issue_number} --include-comments
-node ~/.claude/maxsim/bin/maxsim-tools.cjs github list-sub-issues --phase-issue-number ${phase_issue_number}
+node ~/.claude/maxsim/bin/maxsim-tools.cjs github get-issue \
+  --issue-number $PHASE_ISSUE_NUMBER --include-comments
+
+node ~/.claude/maxsim/bin/maxsim-tools.cjs github list-sub-issues \
+  --phase-issue-number $PHASE_ISSUE_NUMBER
 ```
 
-Parse plan comments (`<!-- maxsim:type=plan -->`) from the phase issue. A plan is complete when all its task sub-issues are closed.
+Parse plan comments (`<!-- maxsim:type=plan -->`). A plan is complete when all its task sub-issues are closed.
 
-**Filtering:** Skip plans where all task sub-issues are closed. If all plans complete: "All plans in phase are already complete" — exit.
+Skip plans where all task sub-issues are closed (resume support).
+
+If all plans are complete: exit with "All plans in phase are already complete."
 
 Report:
 ```
 ## SDD Execution Plan
 
-**Phase {X}: {Name}** — {incomplete_count} plans to execute
+Phase {phase_number}: {phase_name} — {incomplete_count} plans to execute
 
 | Plan | Tasks | Objective |
 |------|-------|-----------|
-| 01-01 | 5 | {from plan objective, 5-10 words} |
-| 01-02 | 3 | ... |
+| {plan_id} | {task_count} | {objective, 5-10 words} |
 
-**Mode:** Spec-Driven Dispatch — fresh agent per task, 2-stage review between tasks
+Mode: Spec-Driven Dispatch — fresh agent per task, 2-stage review gate between tasks
 ```
-</step>
 
-<step name="load_plan">
-For each incomplete plan, read the plan content from the GitHub Issue comment (loaded in discover_plans) and extract the ordered task list.
+## Step 3 — Dispatch Loop
 
-Extract for each task:
-- **Task number** (sequential order in plan)
-- **Task name**
-- **Description** (what to implement)
-- **Acceptance criteria** (done criteria from plan)
-- **Relevant files** (files to read and/or modify)
-- **Done criteria** (verification steps)
+For each incomplete plan, execute all tasks in sequence.
 
-Store as structured task list for the dispatch loop.
-</step>
+### Step 3a — Parse plan tasks
 
-<step name="dispatch_loop">
-For each task in order within the current plan:
+From the plan comment body, extract an ordered task list. For each task:
+- Task number
+- Task name
+- Description
+- Files to read and/or modify
+- Acceptance criteria
+- Done criteria
 
-**4a — Assemble Context**
+### Step 3b — For each task: Assemble minimal context
 
-Build minimal context for the task agent. Include ONLY:
-- Task description and acceptance criteria
-- Relevant files list (files to read and modify)
-- Previous task commit hashes and files modified (NOT full diffs, NOT previous agent conversations)
-- Project CLAUDE.md (if exists) for coding conventions
-- .skills/ SKILL.md files (if exist) for relevant project rules
+Build the minimum context for this task executor. Include ONLY:
 
-Context table (SDD principle):
 | Item | Include? |
 |------|----------|
 | Task description + acceptance criteria | ALWAYS |
-| Relevant files list | ALWAYS |
+| Files to read and modify | ALWAYS |
 | Project CLAUDE.md | ALWAYS (if exists) |
-| Previous task commit hash + files modified | YES (minimal summary only) |
+| Previous task commit hash + files modified | YES — minimal summary only |
 | Previous task full diff | NEVER |
 | Previous agent conversation | NEVER |
-| Full plan file | NO (only current task extracted) |
+| Full plan content | NO — only current task extracted |
 
-**4b — Spawn Executor**
-
-Fresh executor agent with minimal context:
+### Step 3c — Spawn executor (fresh agent per task)
 
 ```
-Task(
+Agent(
   subagent_type="executor",
   model="{executor_model}",
+  isolation="worktree",
   prompt="
+    You are executing a single task in a Spec-Driven Dispatch workflow.
+    You receive only the context for THIS task. Do not ask about other tasks.
+
     <objective>
-    Execute task {task_number} of plan {plan_id} in phase {phase_number}-{phase_name}.
-    Commit atomically when done.
+    Execute task {task_number} of plan {plan_id} in phase {phase_number}: {phase_name}.
+    Commit atomically when complete.
+    Move the task sub-issue on the board: In Progress when starting, Done when complete.
     </objective>
 
     <task>
     Name: {task_name}
     Description: {task_description}
-    Acceptance criteria: {acceptance_criteria}
-    Done criteria: {done_criteria}
+    Acceptance criteria:
+    {acceptance_criteria}
+    Done criteria:
+    {done_criteria}
     </task>
 
     <files_to_read>
-    Read these files at execution start using the Read tool:
-    - {relevant_files list}
-    - ./CLAUDE.md (Project instructions, if exists — follow coding conventions)
-    - .skills/ (Project skills, if exists — read SKILL.md for each, follow relevant rules)
+    Read these files at execution start:
+    {relevant_files_list}
+    - ./CLAUDE.md (if exists — follow coding conventions)
+    - .skills/ (if exists — read SKILL.md for each relevant skill)
     </files_to_read>
 
     <previous_task_context>
     {If first task: 'This is the first task in the plan.'}
-    {If not first: 'Previous task committed as {commit_hash}. Files modified: {file_list}. Do NOT re-read or re-implement previous work.'}
+    {If not first: 'Previous task: {task_name}, commit: {commit_hash}, files modified: {file_list}. Do NOT re-read or re-implement previous work.'}
     </previous_task_context>
+
+    <board_transition>
+    Task sub-issue number: {task_issue_number}
+    Mark In Progress when starting:
+      node ~/.claude/maxsim/bin/maxsim-tools.cjs github move-issue --issue-number {task_issue_number} --status 'In Progress'
+    Mark Done when complete (before committing):
+      node ~/.claude/maxsim/bin/maxsim-tools.cjs github move-issue --issue-number {task_issue_number} --status 'Done'
+      node ~/.claude/maxsim/bin/maxsim-tools.cjs github close-issue --issue-number {task_issue_number}
+    </board_transition>
 
     <commit_protocol>
     After implementation:
     1. Run tests relevant to changed files
-    2. Stage files individually (NEVER git add . or git add -A)
-    3. Commit: {type}({phase}-{plan}): {description}
-    4. Report: commit hash, files modified, tests run
+    2. Stage specific files only (NEVER git add . or git add -A)
+    3. Commit: {type}({phase_number}-{plan_id}): {task_description_as_message}
+    4. Report exactly: COMMIT: {hash} | FILES: {comma-separated list}
     </commit_protocol>
 
     <success_criteria>
     - [ ] All acceptance criteria met
     - [ ] Done criteria verified
     - [ ] Tests pass
+    - [ ] Task sub-issue marked In Progress then Done and closed
     - [ ] Atomic commit created
+    - [ ] Final output includes: COMMIT: {hash} | FILES: {list}
     </success_criteria>
   "
 )
 ```
 
-Record the commit hash from the executor's output.
+Record the commit hash from executor output.
 
-**4c — Review Stage 1: Spec Compliance**
+### Step 3d — Review Stage 1: Spec Compliance
 
-Spawn verifier to check implementation matches task spec:
+Spawn reviewer immediately after executor completes (foreground, no worktree):
 
 ```
-Task(
+Agent(
   subagent_type="verifier",
   model="{executor_model}",
   prompt="
-    ## Task: Review for spec compliance
-
-    ## Suggested Skills: verification-gates, evidence-collection
-
-    <objective>
-    Review task {task_number} of plan {plan_id} for spec compliance.
-    </objective>
+    Review task {task_number} of plan {plan_id} for SPEC COMPLIANCE.
 
     <task_spec>
     Name: {task_name}
     Description: {task_description}
     Acceptance criteria: {acceptance_criteria}
     Done criteria: {done_criteria}
-    Relevant files: {relevant_files}
+    Files to modify: {relevant_files}
     </task_spec>
 
     <commit>
     Commit hash: {task_commit_hash}
     </commit>
 
-    <instructions>
+    Instructions:
     1. Read each file in the relevant files list
-    2. Verify every acceptance criterion is met in the implementation
-    3. Verify done criteria pass
-    4. Check that ONLY specified files were modified (run: git diff --name-only {task_commit_hash}^..{task_commit_hash})
-    5. Report verdict: PASS or FAIL
-    6. If FAIL: list each unmet criterion with specific details
-    </instructions>
+    2. Run: git diff --name-only {task_commit_hash}^..{task_commit_hash}
+    3. Verify every acceptance criterion is met in the implementation
+    4. Verify done criteria pass
+    5. Verify ONLY the specified files were modified (no extra files)
+    6. If FAIL: list each unmet criterion with specific file:line evidence
+
+    Evidence format (use for each criterion):
+    CLAIM: {criterion text}
+    EVIDENCE: {file:line or command run}
+    OUTPUT: {what was found}
+    VERDICT: PASS | FAIL — {reason if fail}
+
+    Final line must be exactly:
+    SPEC REVIEW: PASS or SPEC REVIEW: FAIL — {unmet criteria list}
   "
 )
 ```
 
-**4d — Review Stage 2: Code Quality**
+### Step 3e — Review Stage 2: Code Quality
 
-Spawn verifier to check for bugs, edge cases, and conventions:
+Spawn second reviewer in parallel with stage 1 or immediately after (foreground, no worktree):
 
 ```
-Task(
+Agent(
   subagent_type="verifier",
   model="{executor_model}",
   prompt="
-    ## Task: Review for code quality
-
-    ## Suggested Skills: code-review
-
-    <objective>
-    Review task {task_number} of plan {plan_id} for code quality.
-    Spec compliance already verified.
-    </objective>
+    Review task {task_number} of plan {plan_id} for CODE QUALITY.
+    Spec compliance is being checked separately.
 
     <commit>
     Commit hash: {task_commit_hash}
     Files modified: {files_from_commit}
     </commit>
 
-    <instructions>
-    1. Read CLAUDE.md for project conventions
+    Instructions:
+    1. Read ./CLAUDE.md for project conventions (if exists)
     2. Read each modified file
-    3. Check for: bugs, unhandled edge cases, missing error handling, convention violations, security issues
-    4. Categorize: BLOCKER (must fix) or ADVISORY (note for later)
-    5. Report verdict: PASS (no blockers) or FAIL (list blocking issues)
-    </instructions>
+    3. Check for BLOCKERS:
+       - Bugs or logical errors
+       - Unhandled error paths
+       - Missing error handling for I/O or network calls
+       - Security issues (unsanitized input, exposed secrets)
+       - Convention violations (from CLAUDE.md)
+    4. Check for ADVISORIES:
+       - Minor style inconsistencies
+       - Missing edge case handling (non-critical)
+       - Optimization opportunities
+
+    Evidence format:
+    CLAIM: {what was checked}
+    EVIDENCE: {file:line}
+    OUTPUT: {what was found}
+    VERDICT: PASS | FAIL — BLOCKER: {reason}
+
+    Final line must be exactly:
+    CODE REVIEW: PASS or CODE REVIEW: FAIL — {blocker list}
   "
 )
 ```
 
-**4e — Handle Failure**
+### Step 3f — Handle Review Failure (Max 3 Fix Attempts)
 
-If EITHER review stage returns FAIL:
+If EITHER review returns FAIL:
 
-1. Spawn a NEW fresh executor agent with:
-   - Original task spec (description + acceptance criteria)
-   - Review feedback (specific failures from reviewer)
-   - Current file state (files to read, NOT previous agent conversation)
-   - Instruction: fix ONLY the review issues, do NOT add new features
+Spawn a fresh fix executor with only what is needed:
 
 ```
-Task(
+Agent(
   subagent_type="executor",
   model="{executor_model}",
+  isolation="worktree",
   prompt="
-    <objective>
     Fix review failures for task {task_number} of plan {plan_id}.
-    Fix ONLY the issues listed below. Do NOT add new features or refactor beyond what is required.
-    </objective>
+    Fix ONLY the issues listed. Do NOT add features or refactor beyond what is required.
 
     <original_task>
     Name: {task_name}
-    Description: {task_description}
     Acceptance criteria: {acceptance_criteria}
     </original_task>
 
     <review_failures>
-    {spec_review_failures if any}
-    {code_review_failures if any}
+    {spec_failures if any — each as: CRITERION: {text} | VERDICT: FAIL — {reason}}
+    {code_failures if any — each as: BLOCKER: {description} | EVIDENCE: {file:line}}
     </review_failures>
 
     <files_to_read>
-    {files modified by previous attempt — read current state}
+    {files modified by failed attempt — read current state from disk}
     </files_to_read>
 
-    <commit_protocol>
-    Stage and commit fixes: fix({phase}-{plan}): address review feedback for task {task_number}
-    </commit_protocol>
+    Instructions:
+    1. Read each file in files_to_read to see current state
+    2. Fix each listed issue precisely
+    3. Run tests after fixing
+    4. Commit: fix({phase_number}-{plan_id}): address review feedback for task {task_number}
+    5. Report: COMMIT: {hash} | FILES: {list}
   "
 )
 ```
 
-2. Re-run BOTH review stages (4c and 4d) on the fix commit
-3. **Cap at 3 fix attempts.** If still failing after 3 attempts: STOP and escalate to user.
+Re-run BOTH review stages (3d and 3e) on the fix commit.
+
+**Cap at 3 fix attempts total.** If still failing after 3 attempts, hard-stop and escalate:
 
 ```
 ## TASK BLOCKED — Review Failed After 3 Fix Attempts
 
-**Task:** {task_number} - {task_name}
-**Plan:** {plan_id}
-**Phase:** {phase_number} - {phase_name}
+Task: {task_number} — {task_name}
+Plan: {plan_id}
+Phase: {phase_number}: {phase_name}
 
-### Unresolved Review Failures
-{remaining failures from last review}
+### Unresolved Failures
+{remaining spec failures}
+{remaining code blockers}
 
 ### Fix Attempt History
 | Attempt | Spec Review | Code Review | Commit |
@@ -286,150 +304,142 @@ Task(
 | 3 | {PASS/FAIL} | {PASS/FAIL} | {hash} |
 
 Options:
-- "fix manually" — You fix the issues, then resume
-- "skip task" — Mark incomplete, continue to next task
-- "stop" — Halt SDD execution
+- "fix manually" — fix issues yourself, then type "resume" to continue
+- "skip task" — mark incomplete, continue to next task
+- "stop" — halt SDD execution
 ```
 
-**4f — Advance**
+### Step 3g — Advance to next task
 
-After both reviews PASS, record task completion:
-- Commit hash
-- Files modified
-
-Pass ONLY this minimal summary to the next task context. Do NOT pass:
-- Full diff output
-- Review conversation content
-- Previous agent's reasoning or approach
-
-**4g — Report Task**
+After both reviews PASS:
+- Record commit hash and files-modified list
+- Pass ONLY this minimal summary to the next task's `previous_task_context`
+- Do NOT pass diffs, review content, or agent reasoning
 
 Display task completion:
-
 ```
 ---
 ## Task {N}/{total}: {task_name} — COMPLETE
 
-**Commit:** {commit_hash}
-**Files:** {files_modified_count} modified
-**Spec Review:** PASS
-**Code Review:** PASS
-{If fix iterations > 0: **Fix Iterations:** {count}}
+Commit: {commit_hash}
+Files modified: {count}
+Spec Review: PASS
+Code Review: PASS
+{If fix_iterations > 0: Fix iterations: {count}}
 
-{If more tasks: Dispatching next task...}
+{If more tasks remain: Dispatching task {N+1}...}
 ---
 ```
-</step>
 
-<step name="create_summary">
-After all tasks in a plan complete, build the summary content in memory and post it as a GitHub comment on the phase issue. Include:
+Repeat step 3b–3g for the next task.
 
-**Frontmatter:** phase, plan, subsystem, tags, requires/provides/affects, tech-stack, key-files.created/modified, key-decisions, requirements-completed (copy from PLAN.md frontmatter), duration, completed date.
+## Step 4 — Post Plan Summary to GitHub
 
-**Body:**
-- One-liner: substantive description of what was built
-- Per-task status table:
+After all tasks in a plan complete, post a summary comment on the phase issue:
 
-```markdown
+```bash
+SUMMARY_FILE=$(mktemp)
+cat > "$SUMMARY_FILE" << 'SUMMARY_EOF'
+---
+phase: {phase_number}
+plan: {plan_id}
+execution_mode: sdd
+completed: {ISO timestamp}
+---
+
+## {Plan ID}: {Objective}
+
+{One-liner: substantive description of what was built}
+
 ## Task Execution (SDD)
 
 | Task | Name | Status | Commit | Fix Iterations |
 |------|------|--------|--------|----------------|
-| 1 | {name} | PASS | {hash} | 0 |
-| 2 | {name} | PASS | {hash} | 1 |
-| 3 | {name} | PASS | {hash} | 0 |
+| 1 | {name} | PASS | {hash} | {count} |
+| 2 | {name} | PASS | {hash} | 0 |
 
-**Execution mode:** Spec-Driven Dispatch (fresh agent per task, 2-stage review)
-```
+**Execution mode:** Spec-Driven Dispatch — fresh agent per task, 2-stage review gate
 
-- Review summary per task
-- Deviations (if any)
-- Issues encountered
+## Deviations
+{List any departures from plan spec with rationale. "None." if clean.}
 
-Post summary to GitHub:
-```bash
-# Write summary content to tmpfile
-SUMMARY_FILE=$(mktemp)
-cat > "$SUMMARY_FILE" << 'SUMMARY_EOF'
-{summary_content}
+## Issues Encountered
+{List problems and resolutions. "None." if clean.}
+
+## Self-Check
+{Verify first 2 created files exist: [ -f {file} ]}
+{Verify commits: git log --oneline --all --grep="{phase_number}-{plan_id}"}
+## Self-Check: PASSED | ## Self-Check: FAILED — {reason}
+
+<!-- maxsim:type=summary -->
 SUMMARY_EOF
 
-node ~/.claude/maxsim/bin/maxsim-tools.cjs github post-comment --issue-number ${phase_issue_number} --body-file "$SUMMARY_FILE" --type summary
+node ~/.claude/maxsim/bin/maxsim-tools.cjs github post-comment \
+  --issue-number {phase_issue_number} \
+  --body-file "$SUMMARY_FILE" \
+  --type summary
 ```
 
-Self-check:
-- Verify first 2 files from `key-files.created` exist on disk
-- Check `git log --oneline --all --grep="{phase}-{plan}"` returns commits
-- Append `## Self-Check: PASSED` or `## Self-Check: FAILED` to summary content before posting
-</step>
-
-<step name="update_state">
-Standard state updates after plan completion:
+## Step 5 — Update State Files
 
 ```bash
-# Advance plan counter
 node ~/.claude/maxsim/bin/maxsim-tools.cjs state advance-plan
-
-# Recalculate progress
 node ~/.claude/maxsim/bin/maxsim-tools.cjs state update-progress
-
-# Record execution metrics
-node ~/.claude/maxsim/bin/maxsim-tools.cjs state record-metric \
-  --phase "${PHASE}" --plan "${PLAN}" --duration "${DURATION}" \
-  --tasks "${TASK_COUNT}" --files "${FILE_COUNT}"
-
-# Record session
 node ~/.claude/maxsim/bin/maxsim-tools.cjs state record-session \
-  --stopped-at "Completed ${PHASE}-${PLAN}-PLAN.md (SDD)" \
+  --stopped-at "Completed {phase_number}-{plan_id} (SDD)" \
   --resume-file "None"
+node ~/.claude/maxsim/bin/maxsim-tools.cjs roadmap update-plan-progress "{phase_number}"
 
-# Update roadmap progress
-node ~/.claude/maxsim/bin/maxsim-tools.cjs roadmap update-plan-progress "${PHASE}"
-
-# Mark requirements complete (if plan has requirements field)
-node ~/.claude/maxsim/bin/maxsim-tools.cjs requirements mark-complete ${REQ_IDS}
+# Task code committed per-task; commit only planning artifacts
+node ~/.claude/maxsim/bin/maxsim-tools.cjs commit \
+  "docs({phase_number}-{plan_id}): complete SDD execution" \
+  --files .planning/STATE.md .planning/ROADMAP.md .planning/REQUIREMENTS.md
 ```
-</step>
 
-<step name="git_commit_metadata">
-Task code already committed per-task. Commit planning artifacts:
+## Step 6 — Completion Check and Next Steps
+
+After all plans are processed:
 
 ```bash
-node ~/.claude/maxsim/bin/maxsim-tools.cjs commit "docs({phase}-{plan}): complete SDD execution" --files .planning/STATE.md .planning/ROADMAP.md .planning/REQUIREMENTS.md
+node ~/.claude/maxsim/bin/maxsim-tools.cjs github list-sub-issues \
+  --phase-issue-number $PHASE_ISSUE_NUMBER
 ```
 
-Note: No local SUMMARY.md is committed -- summary was posted to GitHub as a comment.
-</step>
+| Condition | Action |
+|-----------|--------|
+| Open sub-issues remain | Suggest `/maxsim:execute {phase}` (SDD mode) to continue |
+| All sub-issues closed, more phases exist | Suggest `/maxsim:execute {phase}` (verification) then `/maxsim:plan {next}` |
+| All sub-issues closed, last phase | Show completion banner, suggest `/maxsim:progress` |
 
-<step name="offer_next">
-After all plans in the phase are processed:
-
-Check completion by querying the phase issue's task sub-issues:
-```bash
-node ~/.claude/maxsim/bin/maxsim-tools.cjs github list-sub-issues --phase-issue-number ${phase_issue_number}
-```
-
-Count open vs closed sub-issues to determine completion.
-
-| Condition | Route | Action |
-|-----------|-------|--------|
-| open sub-issues remain | **A: More plans** | Find next incomplete plan (by open sub-issues). Show next plan, suggest `/maxsim:execute {phase}` (SDD mode) to continue. |
-| all sub-issues closed, more phases exist | **B: Phase done** | Show completion, suggest `/maxsim:execute {phase}` (verification) then `/maxsim:plan {next}`. |
-| all sub-issues closed, last phase | **C: Milestone done** | Show banner, suggest `/maxsim:progress` (milestone completion) + `/maxsim:execute` (verification). |
-
-All routes: recommend `/clear` first for fresh context.
-</step>
+Always recommend `/clear` before continuing to next phase.
 
 </process>
 
+<success_criteria>
+- [ ] Plan content loaded from GitHub Issue comments (not local PLAN.md)
+- [ ] Plans with all closed task sub-issues skipped (resume support)
+- [ ] Each task gets a FRESH executor agent with minimal context (no diff bleed)
+- [ ] Previous task context is commit hash + files only (never full diff)
+- [ ] Each executor uses isolation="worktree" and the Agent tool (not Task)
+- [ ] Task sub-issues moved: In Progress when starting, Done+closed when complete
+- [ ] Spec compliance review spawned after each executor
+- [ ] Code quality review spawned after each executor
+- [ ] Both reviews must PASS before next task starts (hard gate)
+- [ ] Fix agents cap at 3 attempts before escalation to user
+- [ ] Summary posted as GitHub comment: <!-- maxsim:type=summary -->
+- [ ] No local SUMMARY.md written
+- [ ] State files updated after each plan completes
+</success_criteria>
+
 <failure_handling>
-- **Task agent fails (no commit):** Report failure, ask user: retry task or skip
-- **Review agent fails to return verdict:** Treat as FAIL, re-run review
-- **3 fix attempts exhausted:** Hard stop on task, escalate to user with full history
-- **classifyHandoffIfNeeded bug:** If agent reports "failed" with `classifyHandoffIfNeeded is not defined` — Claude Code runtime bug. Spot-check (commit exists, files modified) — if pass, treat as success
-- **All tasks in plan blocked:** Stop plan, report to user, suggest manual intervention
+- **Executor returns no commit:** Ask user — retry task or skip
+- **Review agent fails to return PASS/FAIL line:** Treat as FAIL, re-run review
+- **3 fix attempts exhausted:** Hard stop on task, present full failure history to user
+- **classifyHandoffIfNeeded error:** Claude Code runtime bug. Check if commit exists. If yes, treat as success and extract hash from git log.
+- **All tasks in a plan blocked:** Stop plan, report to user, suggest manual intervention
+- **GitHub sub-issue transition fails:** Log error, continue execution, note in summary
 </failure_handling>
 
 <resumption>
-Re-run `/maxsim:execute {phase}` (SDD mode) — discover_plans queries GitHub for task sub-issue status, skips plans with all sub-issues closed, resumes from first incomplete plan. Within a plan, completed tasks (those with commits matching the plan pattern) can be detected and skipped.
+Re-run `/maxsim:execute {phase}` — load_plans queries GitHub for task sub-issue status, skips plans with all sub-issues closed. Within a plan, completed tasks (commits matching `{phase}-{plan}` grep) can be detected and skipped if needed.
 </resumption>

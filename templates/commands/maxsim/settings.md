@@ -1,37 +1,29 @@
 ---
 name: maxsim:settings
-description: Configure MAXSIM workflow toggles and model profile
-allowed-tools:
-  - Read
-  - Write
-  - Bash
-  - AskUserQuestion
+description: View and modify MaxsimCLI configuration
+allowed-tools: [Read, Write, Edit, Bash, AskUserQuestion]
 ---
 
 <objective>
-Interactive configuration of MAXSIM workflow agents, model profile, and pipeline settings via multi-question prompt. Includes integrated profile management with model assignment details per tier.
-
-Routes to the settings workflow which handles:
-- Config existence ensuring
-- Current settings reading and parsing
-- Interactive prompt (model profile, research, plan_checker, verifier, auto-advance, nyquist, branching)
-- Profile description showing actual model assignments per profile tier
-- Config merging and writing
-- Confirmation display
+Interactively view and modify MaxsimCLI configuration: model profile, pipeline toggles (research, plan-checker, verifier, auto-advance), and branching strategy.
 </objective>
 
-<execution_context>
-@~/.claude/maxsim/workflows/settings.md
-</execution_context>
+<context>
+Configuration is stored in CLAUDE.md (project-level) and `~/.claude/maxsim/config.json` (global). Present current values as pre-selections in each prompt.
+</context>
 
 <process>
-**Follow the settings workflow** from `@~/.claude/maxsim/workflows/settings.md`.
+Follow @~/.claude/maxsim/workflows/settings.md end-to-end.
 
-The workflow handles all logic including:
-1. Config file creation with defaults if missing
-2. Current config reading
-3. Interactive settings presentation with pre-selection
-4. Answer parsing and config merging
-5. File writing
-6. Confirmation display
+1. Read current config from CLAUDE.md and `~/.claude/maxsim/config.json`
+2. Display current settings with descriptions
+3. Use AskUserQuestion to interactively configure:
+   - Model profile (with per-tier model assignment details)
+   - Research stage enabled/disabled
+   - Plan-checker enabled/disabled
+   - Verifier enabled/disabled
+   - Auto-advance between stages
+   - Branching strategy (per-phase / per-task / none)
+4. Merge answers and write updated config
+5. Display confirmation of saved settings
 </process>
