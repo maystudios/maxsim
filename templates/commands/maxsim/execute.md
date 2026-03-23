@@ -2,7 +2,7 @@
 name: maxsim:execute
 description: Execute all plans in a phase with parallel agents and auto-verification
 argument-hint: "<phase-number>"
-allowed-tools: [Read, Write, Edit, Bash, Grep, Glob, Agent]
+allowed-tools: [Read, Write, Edit, Bash, Grep, Glob, Agent, EnterPlanMode, ExitPlanMode]
 ---
 
 <objective>
@@ -20,7 +20,7 @@ Re-entry: If phase is already executed and verified, show status and offer optio
 </context>
 
 <process>
-Follow @~/.claude/maxsim/workflows/execute.md end-to-end.
+Follow @.claude/maxsim/workflows/execute.md end-to-end.
 
 1. Detect phase state from GitHub Project Board (already done / partially executed / ready)
 2. Group task Issues by wave — execute parallel Agents within each wave, sequential across waves

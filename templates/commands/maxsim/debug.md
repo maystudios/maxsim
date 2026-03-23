@@ -2,7 +2,7 @@
 name: maxsim:debug
 description: Systematic debugging with reproduce-hypothesize-isolate-verify-fix cycle
 argument-hint: "[issue description]"
-allowed-tools: [Read, Write, Edit, Bash, Grep, Glob, Agent, AskUserQuestion]
+allowed-tools: [Read, Write, Edit, Bash, Grep, Glob, Agent, AskUserQuestion, EnterPlanMode, ExitPlanMode]
 ---
 
 <objective>
@@ -18,7 +18,7 @@ GitHub is the sole source of truth. Check for open Issues labeled `debug` to det
 </context>
 
 <process>
-Follow @~/.claude/maxsim/workflows/debug.md end-to-end.
+Follow @.claude/maxsim/workflows/debug.md end-to-end. Invoke the `systematic-debugging` skill at step 4 to drive the reproduce-hypothesize-isolate-verify-fix cycle.
 
 1. Check GitHub for open Issues labeled `debug` (active sessions)
    - If active sessions exist and no $ARGUMENTS: list them, let user pick to resume or start new

@@ -9,13 +9,13 @@ Interactively view and modify MaxsimCLI configuration: model profile, pipeline t
 </objective>
 
 <context>
-Configuration is stored in CLAUDE.md (project-level) and `~/.claude/maxsim/config.json` (global). Present current values as pre-selections in each prompt.
+Configuration is stored in CLAUDE.md (project-level) and `.claude/maxsim/config.json` (global). Present current values as pre-selections in each prompt.
 </context>
 
 <process>
-Follow @~/.claude/maxsim/workflows/settings.md end-to-end.
+Follow @.claude/maxsim/workflows/settings.md end-to-end.
 
-1. Read current config from CLAUDE.md and `~/.claude/maxsim/config.json`
+1. Read current config from CLAUDE.md and `.claude/maxsim/config.json`
 2. Display current settings with descriptions
 3. Use AskUserQuestion to interactively configure:
    - Model profile (with per-tier model assignment details)
