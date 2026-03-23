@@ -9,6 +9,7 @@ tools:
   - Grep
   - Glob
 model: inherit
+isolation: worktree
 skills:
   - handoff-contract
   - commit-conventions

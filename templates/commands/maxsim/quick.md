@@ -6,7 +6,7 @@ allowed-tools: [Read, Write, Edit, Bash, Grep, Glob, Agent, AskUserQuestion, Ent
 ---
 
 <objective>
-Execute small, ad-hoc tasks with MaxsimCLI guarantees (atomic commits, GitHub tracking). Skips research, plan-checker, and verifier by default for speed.
+Execute small, ad-hoc tasks with MaxsimCLI guarantees (atomic commits, GitHub tracking). Skips research and plan-checker for speed; runs a verifier after execution.
 </objective>
 
 <context>
@@ -14,7 +14,7 @@ Arguments: $ARGUMENTS
 
 If $ARGUMENTS is provided, treat it as the task description.
 
-Quick tasks are tracked as GitHub Issues (label: `quick`) — separate from planned phase Issues. GitHub is the sole source of truth — no .planning/ files.
+Quick tasks are tracked as GitHub Issues (label: `type:quick`) — separate from planned phase Issues. GitHub is the sole source of truth — no .planning/ files.
 </context>
 
 <process>
@@ -22,7 +22,7 @@ Follow @.claude/maxsim/workflows/quick.md end-to-end.
 
 1. Get task description from $ARGUMENTS or via AskUserQuestion
 2. Clarify scope if ambiguous (one focused question)
-3. Create a GitHub Issue labeled `quick` for the task
+3. Create a GitHub Issue labeled `type:quick` for the task
 4. Spawn a planner Agent (quick mode) to produce a concise implementation plan
 5. Spawn executor Agent(s) to implement the plan
 6. Commit with atomic message referencing the GitHub Issue

@@ -71,8 +71,8 @@ function makeRawLabel(overrides: Partial<{
 // ── MAXSIM_LABELS constant ────────────────────────────────────────────────────
 
 describe('MAXSIM_LABELS constant', () => {
-  it('has exactly 17 entries', () => {
-    expect(MAXSIM_LABELS).toHaveLength(17);
+  it('has exactly 19 entries', () => {
+    expect(MAXSIM_LABELS).toHaveLength(19);
   });
 
   it('contains all type: namespace labels (5 entries)', () => {
@@ -96,22 +96,24 @@ describe('MAXSIM_LABELS constant', () => {
     expect(names).toContain('priority:p3-low');
   });
 
-  it('contains all status: namespace labels (5 entries)', () => {
+  it('contains all status: namespace labels (6 entries)', () => {
     const statusLabels = MAXSIM_LABELS.filter((l) => l.name.startsWith('status:'));
-    expect(statusLabels).toHaveLength(5);
+    expect(statusLabels).toHaveLength(6);
     const names = statusLabels.map((l) => l.name);
-    expect(names).toContain('status:planned');
     expect(names).toContain('status:planning');
-    expect(names).toContain('status:ready');
+    expect(names).toContain('status:planned');
+    expect(names).toContain('status:in-progress');
+    expect(names).toContain('status:in-review');
     expect(names).toContain('status:blocked');
-    expect(names).toContain('status:backlog');
+    expect(names).toContain('status:escalated');
   });
 
-  it('contains all maxsim: namespace labels (3 entries)', () => {
+  it('contains all maxsim: namespace labels (4 entries)', () => {
     const maxsimLabels = MAXSIM_LABELS.filter((l) => l.name.startsWith('maxsim:'));
-    expect(maxsimLabels).toHaveLength(3);
+    expect(maxsimLabels).toHaveLength(4);
     const names = maxsimLabels.map((l) => l.name);
-    expect(names).toContain('maxsim:managed');
+    expect(names).toContain('maxsim:auto-created');
+    expect(names).toContain('maxsim:needs-triage');
     expect(names).toContain('maxsim:lesson');
     expect(names).toContain('maxsim:decision');
   });
@@ -121,8 +123,8 @@ describe('MAXSIM_LABELS constant', () => {
     const priorityCount = MAXSIM_LABELS.filter((l) => l.name.startsWith('priority:')).length;
     const statusCount = MAXSIM_LABELS.filter((l) => l.name.startsWith('status:')).length;
     const maxsimCount = MAXSIM_LABELS.filter((l) => l.name.startsWith('maxsim:')).length;
-    // 5 type + 4 priority + 5 status (incl. backlog) + 3 maxsim = 17
-    expect(typeCount + priorityCount + statusCount + maxsimCount).toBe(17);
+    // 5 type + 4 priority + 6 status + 4 maxsim = 19
+    expect(typeCount + priorityCount + statusCount + maxsimCount).toBe(19);
   });
 
   it('every entry has non-empty name, description, and color', () => {
@@ -145,9 +147,9 @@ describe('MAXSIM_LABELS constant', () => {
     }
   });
 
-  it('contains status:backlog in the status: namespace', () => {
+  it('contains status:escalated in the status: namespace', () => {
     const names = MAXSIM_LABELS.map((l) => l.name);
-    expect(names).toContain('status:backlog');
+    expect(names).toContain('status:escalated');
   });
 });
 
@@ -359,7 +361,7 @@ describe('ensureLabels', () => {
     vi.clearAllMocks();
   });
 
-  it('creates all 17 labels when the repo has none', async () => {
+  it('creates all 19 labels when the repo has none', async () => {
     mockPaginate.mockResolvedValue([]); // No existing labels
     mockCreateLabel.mockResolvedValue({ data: makeRawLabel() });
 
@@ -368,14 +370,14 @@ describe('ensureLabels', () => {
     expect(result.ok).toBe(true);
     if (!result.ok) throw new Error('Expected ok:true');
 
-    expect(result.data.created).toHaveLength(17);
+    expect(result.data.created).toHaveLength(19);
     expect(result.data.existing).toHaveLength(0);
-    expect(mockCreateLabel).toHaveBeenCalledTimes(17);
+    expect(mockCreateLabel).toHaveBeenCalledTimes(19);
   });
 
   it('skips existing labels and only creates missing ones', async () => {
     // Simulate 4 labels already on the repo
-    const alreadyPresent = ['type:phase', 'type:task', 'priority:p0-critical', 'maxsim:managed'];
+    const alreadyPresent = ['type:phase', 'type:task', 'priority:p0-critical', 'maxsim:auto-created'];
     mockPaginate.mockResolvedValue(alreadyPresent.map((name) => makeRawLabel({ name })));
     mockCreateLabel.mockResolvedValue({ data: makeRawLabel() });
 
@@ -387,11 +389,11 @@ describe('ensureLabels', () => {
     expect(result.data.existing).toHaveLength(4);
     expect(result.data.existing).toEqual(expect.arrayContaining(alreadyPresent));
 
-    expect(result.data.created).toHaveLength(13); // 17 - 4
-    expect(mockCreateLabel).toHaveBeenCalledTimes(13);
+    expect(result.data.created).toHaveLength(15); // 19 - 4
+    expect(mockCreateLabel).toHaveBeenCalledTimes(15);
   });
 
-  it('skips all labels when all 17 already exist on the repo', async () => {
+  it('skips all labels when all 19 already exist on the repo', async () => {
     mockPaginate.mockResolvedValue(MAXSIM_LABELS.map((l) => makeRawLabel({ name: l.name })));
 
     const result = await ensureLabels();
@@ -399,7 +401,7 @@ describe('ensureLabels', () => {
     expect(result.ok).toBe(true);
     if (!result.ok) throw new Error('Expected ok:true');
 
-    expect(result.data.existing).toHaveLength(17);
+    expect(result.data.existing).toHaveLength(19);
     expect(result.data.created).toHaveLength(0);
     expect(mockCreateLabel).not.toHaveBeenCalled();
   });

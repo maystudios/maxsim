@@ -74,5 +74,5 @@ Required YAML frontmatter:
 - Be specific enough that a fresh Claude instance understands immediately
 - Include WHY decisions were made, not just what
 - The `<next_action>` should be actionable without reading anything else
-- This file gets DELETED after resume - it's not permanent storage
+- This GitHub comment should be edited to mark it resolved (or deleted) after resume — it is not permanent storage
 </guidelines>

@@ -1,7 +1,7 @@
 # Phase Prompt Template
 
 > **Note:** Planning methodology is in `agents/planner.md`.
-> This template defines the PLAN.md output format that the agent produces.
+> This template defines the plan comment format posted to the phase GitHub Issue by the planner agent.
 
 Template for a plan comment on the phase GitHub Issue — executable phase plans optimized for parallel execution.
 
@@ -560,7 +560,7 @@ Task completion ≠ Goal achievement. A task "create chat component" can complet
 **Verification flow:**
 
 1. Plan-phase derives must_haves from phase goal (goal-backward)
-2. Must_haves written to PLAN.md frontmatter
+2. Must_haves written to the plan comment frontmatter on the phase GitHub Issue
 3. Execute-phase runs all plans
 4. Verification subagent checks must_haves against codebase
 5. Gaps found → fix plans created → execute → re-verify

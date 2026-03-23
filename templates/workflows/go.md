@@ -52,14 +52,14 @@ Returns: `phase_number`, `title`, `issue_number`, `total_tasks`, `completed_task
 **2. Open bugs and issues:**
 
 ```bash
-gh issue list --label "bug" --state open --json number,title,createdAt
+gh issue list --label "type:bug" --state open --json number,title,createdAt
 ```
 
 **3. Git context:**
 
 ```bash
 GIT_STATUS=$(git status --porcelain 2>/dev/null | head -20)
-RECENT_COMMITS=$(git log --oneline -5 2>/dev/null)
+RECENT_COMMITS=$(git log --oneline -20 2>/dev/null)
 ```
 
 If `github status` fails (GitHub CLI not available, not authenticated, no remote), display:
@@ -110,7 +110,7 @@ Wait for user response before continuing.
 
 **Problem 2: Open bug issues**
 
-If `gh issue list --label "bug"` returned open issues:
+If `gh issue list --label "type:bug"` returned open issues:
 
 ```
 ## Problem Detected

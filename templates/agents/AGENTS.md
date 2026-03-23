@@ -49,7 +49,7 @@ Orchestrators use the `Agent` tool to spawn agents. Pass a structured natural-la
 
 ```
 Agent(
-  agent: "executor",
+  subagent_type: "executor",
   prompt: "## Task\nImplement the authentication middleware...\n\n## Context\n..."
 )
 ```
@@ -91,4 +91,4 @@ All skills use `user-invocable: false` -- agents auto-invoke them based on descr
 
 ## Planner Read-Only Enforcement
 
-The `planner` agent runs with `permissionMode: plan`. This enforces read-only access to the filesystem -- the planner can analyze the codebase and write plan files, but cannot execute commands that modify source files or run builds. This prevents the planner from accidentally beginning execution during the planning phase.
+The `planner` agent runs with `permissionMode: plan`. This enforces read-only access to the filesystem -- the planner can analyze the codebase and return plan content, but cannot execute commands that modify source files or run builds. This prevents the planner from accidentally beginning execution during the planning phase.

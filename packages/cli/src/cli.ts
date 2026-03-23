@@ -1,10 +1,9 @@
 /**
  * MAXSIM Tools — CLI dispatcher.
- * Usage: node maxsim-tools.cjs <command> [args]
+ * Usage: node cli.cjs <command> [args]
  */
 
-import { loadConfig, saveConfig, resolveModel } from './core/index.js';
-import { AgentType, type ModelProfile } from './core/index.js';
+import { loadConfig, saveConfig, resolveModel, AgentType, type ModelProfile } from './core/index.js';
 
 const args = process.argv.slice(2);
 const command = args[0];

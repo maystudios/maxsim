@@ -107,10 +107,10 @@ rm "$TMPFILE"
 Valid values for `--status`:
 
 ```
-To Do  →  In Progress  →  In Review  →  Done
+Backlog  →  To Do  →  In Progress  →  In Review  →  Done
 ```
 
-- Phase issues move through all four columns
+- Phase issues move through all five columns
 - Task sub-issues move: To Do → In Progress → Done (skip In Review unless a PR is involved)
 - On review failure: Done → In Progress via `bounce-issue`
 
@@ -122,9 +122,8 @@ To Do  →  In Progress  →  In Review  →  Done
 | `type:task` | Task sub-issues |
 | `type:bug` | Bug reports |
 | `type:quick` | Quick tasks |
-| `priority:p0` through `priority:p3` | All issues (p0 = critical) |
+| `priority:p0-critical`, `priority:p1-high`, `priority:p2-medium`, `priority:p3-low` | All issues |
 | `status:blocked` | Blocked issues |
-| `status:needs-review` | Awaiting review |
 | `maxsim:managed` | All issues created by MAXSIM |
 
 ## Write Order

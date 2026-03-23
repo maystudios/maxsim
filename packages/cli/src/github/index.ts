@@ -5,7 +5,7 @@ export type {
   MaxsimIssueMeta, MaxsimIssueState, MaxsimCommentMeta,
   LabelDef, RepoInfo, GhResult, GhResultCode,
 } from './types.js';
-export { MAXSIM_LABELS, BOARD_COLUMNS, BOARD_FIELDS } from './types.js';
+export { MAXSIM_LABELS, BOARD_COLUMNS } from './types.js';
 
 // Client
 export { getOctokit, getRepoInfo, ghJson, ghExec, withGhResult, resetClient } from './client.js';

@@ -14,7 +14,7 @@ View or modify MaxsimCLI configuration interactively. Settings include model pro
 
 Available configuration options:
 
-{% doctable headers=["Setting", "Description"] rows=[["model_profile", "Switch between quality, balanced, budget, or tokenburner profiles"], ["Workflow toggles", "Enable or disable specific workflow steps (research, verification, etc.)"]] %}
+{% doctable headers=["Setting", "Description"] rows=[["model_profile", "Switch between quality, balanced, or budget profiles"], ["Workflow toggles", "Enable or disable specific workflow steps (research, verification, etc.)"]] %}
 {% /doctable %}
 
 ### `/maxsim:help`

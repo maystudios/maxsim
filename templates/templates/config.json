@@ -5,7 +5,7 @@
     "parallelism": {
       "max_agents_per_wave": 3,
       "max_retries": 3,
-      "competition_strategy": "best-of-3"
+      "competition_strategy": "standard"
     },
     "verification": {
       "strict_mode": true,
@@ -21,7 +21,8 @@
   },
   "automation": {
     "auto_commit_on_success": true,
-    "conventional_commits": true
+    "conventional_commits": true,
+    "co_author": "Co-Authored-By: Claude <noreply@anthropic.com>"
   },
   "github": {
     "projectName": "",

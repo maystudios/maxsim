@@ -622,7 +622,7 @@ describe('ensureProjectBoard', () => {
     expect(result.error).toContain('Status field not found');
   });
 
-  it('creates missing board columns via field-create', async () => {
+  it('updates Status field with missing board columns via GraphQL', async () => {
     // Status field exists but is missing columns
     const partialFields = {
       fields: [
@@ -631,20 +631,17 @@ describe('ensureProjectBoard', () => {
           name: 'Status',
           type: 'SINGLE_SELECT',
           options: [
-            { id: 'opt_backlog', name: 'Backlog' },
+            { id: 'opt_backlog', name: 'Backlog', color: 'GRAY' },
           ],
         },
       ],
     };
     const projectList = { projects: [MOCK_PROJECT] };
-    // After field-create calls for missing 4 columns, we return '' for each
+    // After GraphQL mutation call, return empty string (success)
     setupExecMock(
       JSON.stringify(projectList),
       JSON.stringify(partialFields),
-      '', // field-create: To Do
-      '', // field-create: In Progress
-      '', // field-create: In Review
-      '', // field-create: Done
+      '', // GraphQL updateProjectV2Field mutation
     );
 
     const result = await ensureProjectBoard('My Board', 'testorg');
@@ -652,11 +649,11 @@ describe('ensureProjectBoard', () => {
     expect(result.ok).toBe(true);
 
     const calls = execFileSyncMock.mock.calls;
-    const createCalls = calls.filter(
-      (c) => c[0] === 'gh' && (c[1] as string[])?.[1] === 'field-create',
+    const graphqlCalls = calls.filter(
+      (c) => c[0] === 'gh' && (c[1] as string[])?.[0] === 'api' && (c[1] as string[])?.[1] === 'graphql',
     );
-    // Should attempt to create 4 missing columns
-    expect(createCalls.length).toBe(4);
+    // Should make one GraphQL call to update Status field options
+    expect(graphqlCalls.length).toBe(1);
   });
 
   it('propagates error from findProject', async () => {

@@ -12,7 +12,7 @@ Run the plan state machine for a phase: Discussion → Research → Planning. Ea
 <context>
 Arguments: $ARGUMENTS
 
-Phase number is required. Auto-detects next unplanned phase if omitted.
+Phase number is required.
 
 Flags:
 - `--force-research` — Re-run research even if research notes already exist on the GitHub Issue
@@ -33,4 +33,3 @@ Follow @.claude/maxsim/workflows/plan.md end-to-end.
 5. Planning stage: spawn Agent to break phase into task Issues with acceptance criteria
 6. Show gate summary after each stage — wait for confirmation before advancing
 </process>
-</output>

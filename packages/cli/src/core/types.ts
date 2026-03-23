@@ -203,7 +203,7 @@ export interface MaxsimConfig {
 }
 
 export const DEFAULT_CONFIG: MaxsimConfig = {
-  version: '6.0.0',
+  version: '5.2.2',
   execution: {
     model_profile: ModelProfile.BALANCED,
     parallelism: {

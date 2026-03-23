@@ -24,7 +24,7 @@ const features = [
     icon: Users,
     title: "4 Generic Agents",
     description:
-      "Executor, planner, researcher, verifier. Four agents cover every workflow. 21 skills give each task the specialization it needs.",
+      "Executor, planner, researcher, verifier. Four agents cover every workflow. 14 skills give each task the specialization it needs.",
   },
   {
     icon: Puzzle,
@@ -34,9 +34,9 @@ const features = [
   },
   {
     icon: Gauge,
-    title: "4 Model Profiles",
+    title: "3 Model Profiles",
     description:
-      "Quality, balanced, budget, and tokenburner. Orchestrators use lean models, planners and executors get powerful ones. Override per agent and project.",
+      "Quality, balanced, and budget. Orchestrators use lean models, planners and executors get powerful ones. Override per agent and project.",
   },
   {
     icon: Zap,

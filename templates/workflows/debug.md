@@ -10,11 +10,11 @@ Parse `$ARGUMENTS` for an issue description.
 
 If `$ARGUMENTS` is provided, treat it as the symptom description and skip to step 2.
 
-If `$ARGUMENTS` is empty, check GitHub for open Issues labeled `debug`:
+If `$ARGUMENTS` is empty, check GitHub for open Issues labeled `type:bug`:
 
 ```bash
 node .claude/maxsim/bin/maxsim-tools.cjs github list-issues \
-  --label "debug" \
+  --label "type:bug" \
   --state open
 ```
 
@@ -50,12 +50,12 @@ Store:
 - `$ERROR` — full error output (if any)
 - `$REPRO_STEPS` — reproduction steps
 
-Create a GitHub Issue labeled `debug` to track this session:
+Create a GitHub Issue labeled `type:bug` to track this session:
 
 ```bash
 node .claude/maxsim/bin/maxsim-tools.cjs github create-issue \
   --title "Debug: $DESCRIPTION" \
-  --label "debug" \
+  --label "type:bug" \
   --body "## Debug Session\n\n**Description:** $DESCRIPTION\n\n**Expected:** $EXPECTED\n\n**Actual:** $ACTUAL\n\n**Error:** $ERROR\n\n**Reproduction steps:**\n$REPRO_STEPS"
 ```
 
@@ -345,7 +345,7 @@ Verification: $VERIFY_STATUS
 <success_criteria>
 - [ ] Issue description gathered from $ARGUMENTS or via AskUserQuestion
 - [ ] Open debug Issues checked on GitHub before starting a new session
-- [ ] GitHub Issue created with label "debug" and moved to "In Progress"
+- [ ] GitHub Issue created with label "type:bug" and moved to "In Progress"
 - [ ] EnterPlanMode called before presenting the debugging plan
 - [ ] Verifier agent spawned with subagent_type="verifier" and isolation="worktree"
 - [ ] Verifier drives systematic-debugging steps 1–4 (Reproduce, Hypothesize, Isolate, Verify)

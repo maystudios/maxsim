@@ -23,7 +23,7 @@ Scope reflects the area of change: `fix(install):`, `feat(phase-04):`, `refactor
 
 Atomic commits: one logical change per commit. Do not bundle unrelated changes.
 
-Co-author line when AI-assisted: `Co-Authored-By: Claude <noreply@anthropic.com>`
+Co-author line when AI-assisted: value comes from the `co_author` key in `.claude/maxsim/config.json` (default: `Co-Authored-By: Claude <noreply@anthropic.com>`).
 
 ## File Naming
 
@@ -50,6 +50,14 @@ Use kebab-case for directory names. Use UPPER_CASE for protocol files (SKILL.md,
 - Skill descriptions use third-person voice (e.g., "Runs verification..." not "Run verification...").
 - No `@` imports inside skill files.
 - Planner agents set `permissionMode: plan`.
+
+## Maximum Parallelism
+
+Use as many parallel agents as the task allows. When 3 or more independent units of work exist, prefer batch execution over sequential execution. Idle agents are wasted throughput.
+
+## Full Automation
+
+Commits, merges, and pushes happen automatically as part of execution — no manual git steps. Human gates are limited to plan approval (`ExitPlanMode`) and explicit escalations. Everything else runs unattended.
 
 ## GitHub-First
 

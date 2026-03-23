@@ -218,7 +218,7 @@ Each agent is a markdown file at `.claude/agents/{name}.md` with YAML frontmatte
 
 ### Model Profiles
 
-Set `execution.modelProfile` in `.claude/maxsim/config.json` to control which Claude model each agent uses:
+Set `execution.model_profile` in `.claude/maxsim/config.json` to control which Claude model each agent uses:
 
 | Profile | Planner | Executor | Researcher | Verifier |
 |---------|---------|----------|------------|----------|
@@ -243,7 +243,7 @@ MAXSIM tracks phase and plan progress through GitHub Issues. Execution progress 
 Configured during `/maxsim:init`:
 
 1. Creates a "MAXSIM Task Board" project with 5 columns (Backlog, To Do, In Progress, In Review, Done)
-2. Creates labels: `phase` (purple), `task` (blue), `blocker` (red)
+2. Creates 19 labels in 4 namespaces (`type:phase`, `type:task`, `type:bug`, `priority:p0-critical`, `status:planning`, `status:in-progress`, etc.)
 3. Optionally creates a GitHub Milestone
 
 ### How It Works
@@ -276,61 +276,58 @@ Project config lives in `.claude/maxsim/config.json`, created during `/maxsim:in
 
 | Setting | Type | Default | What it does |
 |---------|------|---------|-------------|
-| `version` | `number` | `6` | Config schema version |
-| `execution.modelProfile` | `'quality' \| 'balanced' \| 'budget'` | `'balanced'` | Model tier for all agents |
-| `execution.parallelism.maxAgentsPerWave` | `number` | `3` | Cap on concurrent agents per wave |
-| `execution.parallelism.maxRetries` | `number` | `3` | Max retries per failed plan |
-| `execution.parallelism.competitionStrategy` | `'none' \| 'quick' \| 'standard' \| 'deep'` | `'standard'` | Parallel competition strategy |
-| `execution.verification.strictMode` | `boolean` | `true` | Enforce all verification gates |
-| `execution.verification.requireCodeReview` | `boolean` | `true` | Code review gate |
-| `execution.verification.autoResolveConflicts` | `boolean` | `true` | Auto-resolve merge conflicts |
+| `version` | `string` | `"5.2.2"` | Config schema version |
+| `execution.model_profile` | `'quality' \| 'balanced' \| 'budget'` | `'balanced'` | Model tier for all agents |
+| `execution.parallelism.max_agents_per_wave` | `number` | `3` | Cap on concurrent agents per wave |
+| `execution.parallelism.max_retries` | `number` | `3` | Max retries per failed plan |
+| `execution.parallelism.competition_strategy` | `'none' \| 'quick' \| 'standard' \| 'deep'` | `'standard'` | Parallel competition strategy |
+| `execution.verification.strict_mode` | `boolean` | `true` | Enforce all verification gates |
+| `execution.verification.require_code_review` | `boolean` | `true` | Code review gate |
+| `execution.verification.auto_resolve_conflicts` | `boolean` | `true` | Auto-resolve merge conflicts |
 | `worktrees.basePath` | `string` | `'.maxsim-worktrees/'` | Worktree base directory |
-| `worktrees.autoCleanup` | `boolean` | `true` | Remove worktrees after completion |
-| `worktrees.branchPrefix` | `string` | `'maxsim/'` | Branch prefix for worktree branches |
-| `automation.autoCommitOnSuccess` | `boolean` | `true` | Auto-commit config changes |
-| `automation.conventionalCommits` | `boolean` | `true` | Enforce conventional commit format |
-| `github.owner` | `string` | | GitHub repository owner |
-| `github.repo` | `string` | | GitHub repository name |
-| `github.projectId` | `string` | | GitHub Project Board ID |
-| `hooks.statusline` | `boolean` | `true` | Enable statusline hook |
-| `hooks.sounds` | `boolean` | `true` | Enable notification sounds |
-| `hooks.captureLearnings` | `boolean` | `true` | Enable capture-learnings hook |
+| `worktrees.auto_cleanup` | `boolean` | `true` | Remove worktrees after completion |
+| `worktrees.branch_prefix` | `string` | `'maxsim/'` | Branch prefix for worktree branches |
+| `automation.auto_commit_on_success` | `boolean` | `true` | Auto-commit on successful plan execution |
+| `automation.conventional_commits` | `boolean` | `true` | Enforce conventional commit format |
+| `automation.co_author` | `string` | `'Co-Authored-By: Claude <noreply@anthropic.com>'` | Co-author trailer added to commits |
+| `github.projectName` | `string` | `''` | GitHub Project Board name |
+| `github.auto_push` | `boolean` | `true` | Auto-push branches after execution |
+| `hooks.enabled` | `boolean` | `true` | Enable all MAXSIM hooks |
 
 ### Config Example
 
 ```json
 {
-  "version": 6,
+  "version": "5.2.2",
   "execution": {
-    "modelProfile": "balanced",
+    "model_profile": "balanced",
     "parallelism": {
-      "maxAgentsPerWave": 3,
-      "maxRetries": 3,
-      "competitionStrategy": "standard"
+      "max_agents_per_wave": 3,
+      "max_retries": 3,
+      "competition_strategy": "standard"
     },
     "verification": {
-      "strictMode": true,
-      "requireCodeReview": true,
-      "autoResolveConflicts": true
+      "strict_mode": true,
+      "require_code_review": true,
+      "auto_resolve_conflicts": true
     }
   },
   "worktrees": {
     "basePath": ".maxsim-worktrees/",
-    "autoCleanup": true,
-    "branchPrefix": "maxsim/"
+    "auto_cleanup": true,
+    "branch_prefix": "maxsim/"
   },
   "automation": {
-    "autoCommitOnSuccess": true,
-    "conventionalCommits": true
+    "auto_commit_on_success": true,
+    "conventional_commits": true,
+    "co_author": "Co-Authored-By: Claude <noreply@anthropic.com>"
   },
   "github": {
-    "owner": "your-org",
-    "repo": "your-repo"
+    "projectName": "MAXSIM Task Board",
+    "auto_push": true
   },
   "hooks": {
-    "statusline": true,
-    "sounds": true,
-    "captureLearnings": true
+    "enabled": true
   }
 }
 ```
@@ -390,7 +387,7 @@ Each parallel plan gets a worktree at `.maxsim-worktrees/{planId}/` on its own b
 
 ### When It Activates
 
-Parallel execution kicks in when a wave has at least `parallelization.min_plans_for_parallel` plans (default 2). `execution.parallelism.maxAgentsPerWave` caps concurrent agents per wave (default 3). `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` is set automatically in `settings.json` during installation.
+Parallel execution kicks in when a wave has at least `parallelization.min_plans_for_parallel` plans (default 2). `execution.parallelism.max_agents_per_wave` caps concurrent agents per wave (default 3). `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` is set automatically in `settings.json` during installation.
 
 Before running in parallel, MAXSIM checks that plans do not modify the same files. If there is a conflict, it falls back to sequential mode.
 

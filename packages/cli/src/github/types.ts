@@ -11,7 +11,7 @@
  * - Numeric ID (integer like 123456789): used in REST URL paths and some REST bodies
  * Issue `.number` (e.g., #42) is NEITHER — it's the human-readable reference.
  */
-export interface IssueIds {
+interface IssueIds {
   number: number;    // Human-readable: #42
   id: number;        // Internal numeric ID (REST bodies)
   nodeId: string;    // Base64 node ID (GraphQL)
@@ -152,27 +152,29 @@ export interface LabelDef {
 
 /** Complete label taxonomy for MaxsimCLI projects. */
 export const MAXSIM_LABELS: LabelDef[] = [
-  // Type labels
-  { name: 'type:phase', description: 'Phase issue', color: '1f6feb' },
-  { name: 'type:task', description: 'Task sub-issue', color: '0e8a16' },
-  { name: 'type:bug', description: 'Bug report', color: 'd73a4a' },
-  { name: 'type:quick', description: 'Quick task', color: 'e4e669' },
-  { name: 'type:user-issue', description: 'User-created issue', color: 'c5def5' },
-  // Priority labels
-  { name: 'priority:p0-critical', description: 'P0 Critical', color: 'b60205' },
-  { name: 'priority:p1-high', description: 'P1 High', color: 'd93f0b' },
-  { name: 'priority:p2-medium', description: 'P2 Medium', color: 'fbca04' },
-  { name: 'priority:p3-low', description: 'P3 Low', color: '0e8a16' },
-  // Status labels
-  { name: 'status:planned', description: 'Planned', color: 'e1d5f7' },
-  { name: 'status:planning', description: 'In planning', color: 'bfd4f2' },
-  { name: 'status:ready', description: 'Ready for execution', color: '0075ca' },
-  { name: 'status:blocked', description: 'Blocked', color: 'b60205' },
-  // MaxsimCLI labels
-  { name: 'maxsim:managed', description: 'Managed by MaxsimCLI', color: '5319e7' },
-  { name: 'maxsim:lesson', description: 'Project learning', color: 'f9d0c4' },
-  { name: 'maxsim:decision', description: 'Architecture decision', color: 'd4c5f9' },
-  { name: 'status:backlog', color: '808080', description: 'In backlog, not yet scheduled' },
+  // Type labels (5)
+  { name: 'type:phase', description: 'A Phase Issue representing a major deliverable', color: '0075ca' },
+  { name: 'type:task', description: 'A Task sub-issue within a phase', color: '1d76db' },
+  { name: 'type:bug', description: 'Something is broken', color: 'd73a4a' },
+  { name: 'type:quick', description: 'A quick, self-contained task', color: '5319e7' },
+  { name: 'type:user-issue', description: 'Created by the user, not by MaxsimCLI', color: '0e8a16' },
+  // Priority labels (4)
+  { name: 'priority:p0-critical', description: 'Blocks all other work; must fix immediately', color: 'b60205' },
+  { name: 'priority:p1-high', description: 'Important; schedule for next execution window', color: 'e4e669' },
+  { name: 'priority:p2-medium', description: 'Standard priority', color: 'fbca04' },
+  { name: 'priority:p3-low', description: 'Nice to have; deferred if needed', color: 'c5def5' },
+  // Status labels (6) — matches spec §8.1
+  { name: 'status:planning', description: 'In the planning stage', color: 'bfd4f2' },
+  { name: 'status:planned', description: 'Plan approved, ready to execute', color: '0e8a16' },
+  { name: 'status:in-progress', description: 'Execution underway', color: 'e4e669' },
+  { name: 'status:in-review', description: 'Undergoing verification', color: 'd4c5f9' },
+  { name: 'status:blocked', description: 'Cannot proceed; dependency not met', color: 'ee0701' },
+  { name: 'status:escalated', description: 'Failed 3 retries; needs human intervention', color: 'b60205' },
+  // MaxsimCLI meta labels (4) — auto-created/needs-triage from spec, lesson/decision kept for project-memory
+  { name: 'maxsim:auto-created', description: 'Created by MaxsimCLI automation', color: 'ededed' },
+  { name: 'maxsim:needs-triage', description: 'User issue awaiting integration into plan', color: 'ededed' },
+  { name: 'maxsim:lesson', description: 'Project learning captured for project-memory', color: 'f9d0c4' },
+  { name: 'maxsim:decision', description: 'Architecture decision captured for project-memory', color: 'd4c5f9' },
 ];
 
 // ── Board Configuration ───────────────────────────────────────────────
@@ -187,7 +189,7 @@ export const BOARD_COLUMNS = [
 ] as const;
 
 /** Custom fields to create on every MaxsimCLI project board. */
-export const BOARD_FIELDS = [
+const BOARD_FIELDS = [
   { name: 'Priority', dataType: 'SINGLE_SELECT', options: ['P0 Critical', 'P1 High', 'P2 Medium', 'P3 Low'] },
   { name: 'Phase', dataType: 'NUMBER' },
   { name: 'Wave', dataType: 'NUMBER' },

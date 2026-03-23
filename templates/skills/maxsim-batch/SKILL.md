@@ -85,7 +85,9 @@ When all agents complete:
 
 ## Agent Teams (Intra-Branch Coordination)
 
-For tasks that benefit from competitive implementation, use Agent Teams: spawn 2-3 agents on the same task within the same branch, then have a verifier agent pick the best result. This is useful when solution quality matters more than speed and multiple valid approaches exist. The verifier reads each agent's output, evaluates against acceptance criteria, and promotes the winner. See PROJECT.md section 7.2 for the full Agent Teams specification.
+**Planned/experimental — pending API research. Not yet implemented.**
+
+Agent Teams is a future capability for competitive implementation: spawn 2-3 agents on the same task within the same branch, then have a verifier agent pick the best result. This is intended for cases where solution quality matters more than speed and multiple valid approaches exist. The verifier would read each agent's output, evaluate against acceptance criteria, and promote the winner. See PROJECT.md section 7.2 for the planned Agent Teams specification.
 
 ## Limits
 

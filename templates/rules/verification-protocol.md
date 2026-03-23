@@ -58,10 +58,10 @@ These phrases indicate reasoning without evidence. Replace them with a verificat
 
 The `verification` skill defines the authoritative 4-gate structure all verification must pass through:
 
-1. **Exists** — artifact is present at the expected path.
-2. **Substantive** — content is a real implementation, not a stub or placeholder.
-3. **Wired** — artifact is connected to the rest of the system.
-4. **Functional** — artifact actually works when invoked.
+1. **Input Gate** — spec exists, acceptance criteria are stated, required inputs are present, scope is defined.
+2. **Pre-Action Gate** — git state is clean, dependencies match the lockfile, no blocking state from a prior run.
+3. **Completion Gate** — all tests pass, build exits 0, lint is clean, every acceptance criterion is addressed with an evidence block, spec compliance is confirmed.
+4. **Quality Gate** — code review concerns resolved, no regressions (GUARD command passes), evidence blocks are complete and attached.
 
 Each gate must produce its own evidence block. Gates are sequential: a failure at any gate stops progression.
 

@@ -56,9 +56,9 @@ AskUserQuestion([
     header: "Model Profile",
     multiSelect: false,
     options: [
-      { label: "Quality", description: "Opus for all agents. Best results, highest cost." },
-      { label: "Balanced (Recommended)", description: "Opus for planning, Sonnet for execution/verification." },
-      { label: "Budget", description: "Sonnet for all agents. Fastest and cheapest." }
+      { label: "Quality", description: "Opus for planner/executor/verifier, Sonnet for researcher." },
+      { label: "Balanced (Recommended)", description: "Opus for planner, Sonnet for executor/researcher/verifier." },
+      { label: "Budget", description: "Sonnet for planner/executor/verifier, Haiku for researcher." }
     ]
   },
   {
@@ -103,9 +103,10 @@ AskUserQuestion([
     header: "Competition",
     multiSelect: false,
     options: [
-      { label: "None (Recommended)", description: "Single agent per task." },
-      { label: "Best-of-2", description: "Two agents race, orchestrator picks winner." },
-      { label: "Best-of-3", description: "Three agents race, orchestrator picks winner." }
+      { label: "None", description: "Single agent per task. No competition." },
+      { label: "Quick (Recommended)", description: "Two agents compete, orchestrator picks winner." },
+      { label: "Standard", description: "Three agents compete, orchestrator picks winner." },
+      { label: "Deep", description: "Maximum competition. Highest quality, highest cost." }
     ]
   },
   {
@@ -114,8 +115,8 @@ AskUserQuestion([
     multiSelect: false,
     options: [
       { label: "None (Recommended)", description: "Commit directly to current branch." },
-      { label: "Per Phase", description: "Create branch for each phase." },
-      { label: "Per Milestone", description: "Create branch for the entire milestone." }
+      { label: "Phase", description: "Create branch for each phase." },
+      { label: "Milestone", description: "Create branch for the entire milestone." }
     ]
   }
 ])
@@ -125,17 +126,24 @@ AskUserQuestion([
 
 ## Step 3: Save updated config
 
+Call `ExitPlanMode` before writing to config.json.
+
 Merge new settings into config.json:
 
 ```bash
-node .claude/maxsim/bin/maxsim-tools.cjs config-set model_profile "[value]"
-node .claude/maxsim/bin/maxsim-tools.cjs config-set workflow.research [true/false]
-node .claude/maxsim/bin/maxsim-tools.cjs config-set workflow.plan_checker [true/false]
-node .claude/maxsim/bin/maxsim-tools.cjs config-set workflow.verifier [true/false]
-node .claude/maxsim/bin/maxsim-tools.cjs config-set workflow.auto_advance [true/false]
-node .claude/maxsim/bin/maxsim-tools.cjs config-set parallelism "[value]"
-node .claude/maxsim/bin/maxsim-tools.cjs config-set competition "[none/best-of-2/best-of-3]"
-node .claude/maxsim/bin/maxsim-tools.cjs config-set git.branching_strategy "[value]"
+node .claude/maxsim/bin/maxsim-tools.cjs config-set execution.model_profile "[quality/balanced/budget]"
+node .claude/maxsim/bin/maxsim-tools.cjs config-set execution.parallelism.max_agents_per_wave [number]
+node .claude/maxsim/bin/maxsim-tools.cjs config-set execution.parallelism.competition_strategy "[none/quick/standard/deep]"
+node .claude/maxsim/bin/maxsim-tools.cjs config-set execution.parallelism.max_retries [number]
+node .claude/maxsim/bin/maxsim-tools.cjs config-set execution.verification.strict_mode [true/false]
+node .claude/maxsim/bin/maxsim-tools.cjs config-set execution.verification.require_code_review [true/false]
+node .claude/maxsim/bin/maxsim-tools.cjs config-set execution.verification.auto_resolve_conflicts [true/false]
+node .claude/maxsim/bin/maxsim-tools.cjs config-set worktrees.auto_cleanup [true/false]
+node .claude/maxsim/bin/maxsim-tools.cjs config-set worktrees.branch_prefix "[value]"
+node .claude/maxsim/bin/maxsim-tools.cjs config-set automation.auto_commit_on_success [true/false]
+node .claude/maxsim/bin/maxsim-tools.cjs config-set automation.conventional_commits [true/false]
+node .claude/maxsim/bin/maxsim-tools.cjs config-set automation.co_author "[value]"
+node .claude/maxsim/bin/maxsim-tools.cjs config-set hooks.enabled [true/false]
 ```
 
 ---

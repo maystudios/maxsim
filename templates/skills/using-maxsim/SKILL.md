@@ -48,9 +48,10 @@ Skills are matched to agents by semantic description. Each agent type is associa
 | Agent | Primary Skills |
 |-------|---------------|
 | Planner | `handoff-contract`, `roadmap-writing` |
-| Executor | `handoff-contract`, `commit-conventions` |
+| Executor | `handoff-contract`, `commit-conventions`, `maxsim-batch` |
 | Verifier | `handoff-contract`, `verification`, `code-review` |
 | Researcher | `handoff-contract`, `research` |
+| Orchestrator | `handoff-contract`, `maxsim-batch` |
 
 Skills are auto-loaded by Claude Code based on semantic description matching.
 

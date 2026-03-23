@@ -154,6 +154,7 @@ Located at `templates/workflows/`. Key workflows:
 | `new-milestone.md`  | `init.md`         | Milestone management                 |
 | `quick.md`          | `/maxsim:quick`   | Quick task flow                      |
 | `progress.md`       | `/maxsim:progress`| Board status + routing               |
+| `debug.md`          | `/maxsim:debug`   | Systematic debugging flow            |
 | `health.md`         | internal          | Health checks                        |
 | `settings.md`       | `/maxsim:settings`| Interactive configuration            |
 | `help.md`           | `/maxsim:help`    | Help reference                       |
@@ -225,19 +226,19 @@ Milestone CRUD using `octokit.paginate` for listing.
 
 ### labels.ts
 
-Enforces the 16-label taxonomy defined in `github/types.ts::MAXSIM_LABELS`.
+Enforces the 19-label taxonomy defined in `github/types.ts::MAXSIM_LABELS`.
 
 - `ensureLabels` — paginates existing labels, creates any that are missing.
 - `getLabel`, `createLabel` — individual label operations.
 
-Label taxonomy (16 labels, 4 namespaces):
+Label taxonomy (19 labels, 4 namespaces):
 
 | Namespace   | Labels                                                      |
 |-------------|-------------------------------------------------------------|
 | `type:`     | phase, task, bug, quick, user-issue                         |
 | `priority:` | p0, p1, p2, p3                                              |
-| `status:`   | planned, planning, ready, blocked                           |
-| `maxsim:`   | managed, lesson, decision                                   |
+| `status:`   | planning, planned, in-progress, in-review, blocked, escalated |
+| `maxsim:`   | auto-created, needs-triage, lesson, decision                |
 
 ### comments.ts
 
@@ -345,6 +346,7 @@ interface MaxsimConfig {
   automation: {
     auto_commit_on_success: boolean;   // default: true
     conventional_commits: boolean;     // default: true
+    co_author: string;                 // default: "Co-Authored-By: Claude <noreply@anthropic.com>"
   };
   github: {
     projectName: string;               // default: ""

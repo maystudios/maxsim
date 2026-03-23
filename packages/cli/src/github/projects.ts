@@ -217,24 +217,50 @@ export async function ensureProjectBoard(
     return { ok: false, error: 'Status field not found after project creation', code: 'NOT_FOUND' };
   }
 
-  // Verify all required columns exist
-  const existingOptions = new Set(statusResult.data.options?.map((o) => o.name) ?? []);
-  const missingColumns = BOARD_COLUMNS.filter((col) => !existingOptions.has(col.name));
+  // Add any missing Status field options via GraphQL updateProjectV2Field mutation.
+  // The mutation replaces the entire options array, so we merge existing + missing.
+  const existingOptions = statusResult.data.options ?? [];
+  const existingNames = new Set(existingOptions.map((o) => o.name));
+  const missingColumns = BOARD_COLUMNS.filter((col) => !existingNames.has(col.name));
 
   if (missingColumns.length > 0) {
-    for (const col of missingColumns) {
-      const createResult = ghExec([
-        'project', 'field-create', String(project.number),
-        '--owner', projectOwner,
-        '--name', col.name,
-        '--data-type', 'SINGLE_SELECT',
-      ]);
-      if (!createResult.ok) {
-        console.warn(
-          `Warning: Failed to create board column "${col.name}": ${createResult.error}. ` +
-          'You may need to add it manually via the GitHub Projects UI.',
-        );
+    // Build the merged options list: keep existing options first, then append new ones.
+    // Existing options must include their id; new options omit id (GitHub assigns it).
+    const optionsJson = JSON.stringify([
+      ...existingOptions.map((o) => ({ id: o.id, name: o.name, color: o.color ?? 'GRAY' })),
+      ...missingColumns.map((col) => ({ name: col.name, color: col.color })),
+    ]);
+
+    const mutation = `
+      mutation($projectId: ID!, $fieldId: ID!, $options: [ProjectV2SingleSelectFieldOptionInput!]!) {
+        updateProjectV2Field(input: {
+          projectId: $projectId
+          fieldId: $fieldId
+          singleSelectOptions: $options
+        }) {
+          projectV2Field {
+            ... on ProjectV2SingleSelectField {
+              id
+              name
+            }
+          }
+        }
       }
+    `.trim();
+
+    const updateResult = ghExec([
+      'api', 'graphql',
+      '-f', `query=${mutation}`,
+      '-f', `projectId=${project.id}`,
+      '-f', `fieldId=${statusResult.data.id}`,
+      '-f', `options=${optionsJson}`,
+    ]);
+
+    if (!updateResult.ok) {
+      console.warn(
+        `Warning: Failed to add missing Status options (${missingColumns.map((c) => c.name).join(', ')}): ${updateResult.error}. ` +
+        'You may need to add them manually via the GitHub Projects UI.',
+      );
     }
   }
 

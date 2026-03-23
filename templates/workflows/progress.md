@@ -84,7 +84,39 @@ Board column breakdown (from `github status` output):
 
 ---
 
-## Step 4: Recommend next action
+## Step 4: Gap Detection
+
+Identify planning and execution gaps from the phase data:
+
+**Phases planned but not executed** — phases with status "To Do" that have a plan comment on their GitHub Issue but no executor agent has run yet (no SUMMARY comment exists):
+
+```
+## Gaps Detected
+
+Planned but not executed:
+- Phase [N] — [Title] (Issue #NNN): plan exists, execution not started
+```
+
+**Phases executed but not verified** — phases with status "In Progress" or "In Review" where all tasks are done but no verification PASS comment is present:
+
+```
+Executed but not verified:
+- Phase [N] — [Title] (Issue #NNN): tasks complete, verification pending
+```
+
+**Overdue or blocked tasks** — phases whose milestone due date has passed, or phases with open issues labeled "type:blocker":
+
+```
+Overdue / blocked:
+- Phase [N] — [Title]: milestone due [date], currently [status]
+- Phase [N] — [Title]: blocked by #NNN ([blocker title])
+```
+
+If no gaps are found, omit the section entirely and do not print a "no gaps" message.
+
+---
+
+## Step 5: Recommend next action
 
 Evaluate phase statuses in order:
 

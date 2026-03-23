@@ -123,3 +123,24 @@ To reset learnings for a fresh start:
 ```
 rm .claude/agent-memory/maxsim-learner/MEMORY.md
 ```
+
+---
+
+## 7. Improvement Targets
+
+Self-improvement applies to four categories (PROJECT.md §11.2):
+
+| Target | Description |
+|--------|-------------|
+| **Skills** | Add, refine, or retire skill files based on what patterns work repeatedly. |
+| **Configuration** | Update `.claude/maxsim/config.json` defaults when observed values consistently differ from defaults. |
+| **Workflows** | Revise workflow YAML when a command sequence reliably fails or a better sequence emerges from session data. |
+| **Prompts** | Sharpen agent prompts when the same clarifying question recurs across sessions. |
+
+Promote a pattern to a target only after it appears in the "Worked" column three or more times (see section 3).
+
+---
+
+## 8. GitHub-Native Complement
+
+The `project-memory` skill is the GitHub-native counterpart to this file's local memory approach. It records learnings, decisions, and lessons directly as GitHub Issues (labels `maxsim:lesson`, `maxsim:decision`) so they survive across machines and are visible to all agents without file access. Use `project-memory` when a learning is project-specific and should be shared; use this file's MEMORY.md when the learning is environment- or session-specific.

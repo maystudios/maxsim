@@ -75,7 +75,7 @@ git commit -m "feat!: rename STATE.md fields — breaks existing projects"
 
 ## Code Style
 
-This project uses **[Biome](https://biomejs.dev/)** for linting and formatting.
+This project uses **[Biome](https://biomejs.dev/)** for linting.
 
 ```bash
 npm run lint             # Check

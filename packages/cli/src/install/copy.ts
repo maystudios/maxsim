@@ -35,7 +35,7 @@ export function removeDir(dir: string): void {
 }
 
 /** Get the path to the bundled assets directory. */
-export function getAssetsDir(): string {
+function getAssetsDir(): string {
   return path.resolve(__dirname, 'assets');
 }
 

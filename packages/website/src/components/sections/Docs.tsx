@@ -208,8 +208,9 @@ function GettingStarted() {
       <div>
         <DocSubheading>Start a new project</DocSubheading>
         <DocText>
-          Kicks off a project with deep context gathering. Creates .planning/
-          with PROJECT.md, REQUIREMENTS.md, and ROADMAP.md.
+          Kicks off a project with deep context gathering. Creates PROJECT.md,
+          REQUIREMENTS.md, and ROADMAP.md, then sets up a GitHub Project Board,
+          Issues, and Milestones to track all state.
         </DocText>
         <CodeBlock
           language="bash"
@@ -343,7 +344,7 @@ agents/*.md                # Specialized subagent prompts (4 agents)`}
       <div>
         <DocSubheading>Data Structure in User Projects</DocSubheading>
         <DocText>
-          Creates a .planning/ directory in your project to track all state.
+          All project state is tracked on GitHub — Issues, Project Board, and Milestones. No local planning directory is created.
         </DocText>
         <CodeBlock
           language="text"

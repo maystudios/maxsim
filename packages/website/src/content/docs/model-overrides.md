@@ -16,7 +16,7 @@ Per-agent model overrides let you assign a specific model to any agent, regardle
 }
 {% /codeblock %}
 
-Override keys are agent names: `executor`, `planner`, `researcher`, `verifier`, `debugger`. Override values are model tiers: `opus`, `sonnet`, or `haiku`. Overrides take precedence over the profile. An overridden agent always uses the specified model regardless of what the profile says.
+Override keys are agent names: `executor`, `planner`, `researcher`, `verifier`. Override values are model tiers: `opus`, `sonnet`, or `haiku`. Overrides take precedence over the profile. An overridden agent always uses the specified model regardless of what the profile says.
 
 Model overrides are the recommended way to optimize cost for projects where you know which agents need the most capability. Example: complex planning benefits from Opus, but research (which is mostly reading and categorizing) works fine with Haiku.
 
