@@ -83,6 +83,10 @@ When all agents complete:
    - Merge conflict found: decomposition was wrong -- fix overlap and re-run the conflicting units
    - 3+ failures on one unit: stop and escalate to user with full failure context
 
+## Agent Teams (Intra-Branch Coordination)
+
+For tasks that benefit from competitive implementation, use Agent Teams: spawn 2-3 agents on the same task within the same branch, then have a verifier agent pick the best result. This is useful when solution quality matters more than speed and multiple valid approaches exist. The verifier reads each agent's output, evaluates against acceptance criteria, and promotes the winner. See §7.2 of PROJECT.md for the full Agent Teams specification.
+
 ## Limits
 
 - Up to 30 parallel agents; typically 3-10 for manageable coordination

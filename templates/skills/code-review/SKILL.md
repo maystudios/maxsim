@@ -124,4 +124,4 @@ These are different activities. Both are required.
 
 Spec review alone misses security issues. Code review alone misses missing requirements. Run both.
 
-See also: `/maxsim-simplify` for maintainability optimization (duplication, dead code, complexity reduction).
+See also: `maxsim-simplify` skill for maintainability optimization (duplication, dead code, complexity reduction).

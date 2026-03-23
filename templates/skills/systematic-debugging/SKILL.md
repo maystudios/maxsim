@@ -88,4 +88,4 @@ If 3+ fix attempts have failed, the issue is likely architectural. Stop guessing
 
 Stop immediately if you catch yourself changing code before reproducing, proposing a fix before reading the full error, trying random fixes, or changing multiple things at once.
 
-See also: `verification-before-completion` for evidence-based confirmation after fixes.
+See also: `verification` for evidence-based confirmation after fixes.

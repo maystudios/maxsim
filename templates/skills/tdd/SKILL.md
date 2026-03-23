@@ -71,4 +71,4 @@ TDD uses approximately 40% more context than direct implementation due to cycle 
 
 Stop immediately if you catch yourself writing implementation code before a test, writing a test that passes on the first run, skipping VERIFY RED, or adding features beyond what the current test requires.
 
-See also: `verification-before-completion` for evidence-based completion claims after TDD cycles.
+See also: `verification` for evidence-based completion claims after TDD cycles.
