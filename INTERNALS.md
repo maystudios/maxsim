@@ -34,8 +34,7 @@ maxsimcli/                        ← repo root
 │   ├── skills/                   ← 14 skill modules
 │   ├── workflows/                ← 20 workflow orchestrators
 │   ├── references/               ← reference documents
-│   ├── rules/                    ← conventions + verification protocol
-│   └── templates/                ← output templates (codebase, research-project)
+│   └── rules/                    ← conventions + verification protocol
 └── docs/spec/                    ← deep-dive technical specifications (~20k lines)
 ```
 
@@ -80,7 +79,6 @@ packages/cli/src/
 │   ├── maxsim-check-update.ts           ← SessionStart hook
 │   ├── maxsim-notification-sound.ts     ← Notification hook
 │   ├── maxsim-stop-sound.ts             ← Stop hook (sound)
-│   ├── maxsim-sync-reminder.ts          ← Stop hook (sync reminder)
 │   ├── maxsim-capture-learnings.ts      ← Stop hook (agent memory)
 │   └── index.ts
 └── install/
@@ -263,7 +261,7 @@ Exported functions:
 
 ## Hook System
 
-Six hook scripts compiled by tsdown into `dist/assets/hooks/*.cjs` and
+Five hook scripts compiled by tsdown into `dist/assets/hooks/*.cjs` and
 installed to `.claude/maxsim/hooks/` at `npx maxsimcli` time.
 
 | Hook script                    | Event       | Purpose                                      |
@@ -272,7 +270,6 @@ installed to `.claude/maxsim/hooks/` at `npx maxsimcli` time.
 | `maxsim-check-update.cjs`      | SessionStart| Check for newer maxsimcli version on npm     |
 | `maxsim-notification-sound.cjs`| Notification| Play sound when Claude asks a question       |
 | `maxsim-stop-sound.cjs`        | Stop        | Play sound when Claude finishes              |
-| `maxsim-sync-reminder.cjs`     | Stop        | Remind to sync if local changes are pending  |
 | `maxsim-capture-learnings.cjs` | Stop        | Append session commits to MEMORY.md          |
 
 All hooks share `hooks/shared.ts`:
@@ -291,7 +288,6 @@ All hooks share `hooks/shared.ts`:
     "Notification":  [{ "hooks": [{ "type": "command", "command": "node \"...maxsim-notification-sound.cjs\"" }] }],
     "Stop": [
       { "hooks": [{ "type": "command", "command": "node \"...maxsim-stop-sound.cjs\"" }] },
-      { "hooks": [{ "type": "command", "command": "node \"...maxsim-sync-reminder.cjs\"" }] },
       { "hooks": [{ "type": "command", "command": "node \"...maxsim-capture-learnings.cjs\"" }] }
     ]
   },
@@ -381,10 +377,9 @@ directly — it is copied into `dist/assets/templates/` during the build.
 ├── maxsim/
 │   ├── bin/
 │   │   └── maxsim-tools.cjs  ← compiled CLI dispatcher
-│   ├── hooks/             ← 6 compiled hook scripts (*.cjs)
+│   ├── hooks/             ← 5 compiled hook scripts (*.cjs)
 │   ├── workflows/         ← 20 workflow orchestrators
 │   ├── references/        ← reference documents
-│   ├── templates/         ← output templates (codebase, research-project)
 │   └── config.json        ← runtime config (created/updated by /maxsim:settings)
 └── agent-memory/          ← per-agent persistent memory (auto-created at runtime)
     └── maxsim-learner/
@@ -445,7 +440,6 @@ npx maxsimcli
        templates/rules      → .claude/rules/
        templates/workflows  → .claude/maxsim/workflows/
        templates/references → .claude/maxsim/references/
-       templates/templates  → .claude/maxsim/templates/
   5. Copy CLI binary: dist/cli.cjs → .claude/maxsim/bin/maxsim-tools.cjs
   6. Copy hook scripts: dist/assets/hooks/*.cjs → .claude/maxsim/hooks/
   7. Register hooks in .claude/settings.json (idempotent)
@@ -471,7 +465,7 @@ tsdown compiles three separate entry point groups:
 |----------------------|---------------------------|--------------------------------|
 | `install/index.ts`   | `dist/install.cjs`        | `npx maxsimcli` (package bin)  |
 | `cli.ts`             | `dist/cli.cjs`            | Installed as `maxsim-tools.cjs`|
-| `hooks/*.ts` (6 files)| `dist/assets/hooks/*.cjs`| Installed to `.claude/maxsim/hooks/` |
+| `hooks/*.ts` (5 files)| `dist/assets/hooks/*.cjs`| Installed to `.claude/maxsim/hooks/` |
 
 All targets: `format: cjs`, `platform: node`, `target: es2022`, `sourcemap: true`.
 `@octokit/*` packages are inlined into `dist/cli.cjs` (`noExternal: [/^@octokit/]`).
@@ -559,7 +553,7 @@ a file path reference rather than inline stdout.
 
 **Hook exit codes.** Hooks must exit 0 under all circumstances unless they
 intend to block the triggering event (exit 2 for TeammateIdle/TaskCompleted
-quality gates). All six installed hooks always exit 0 regardless of errors.
+quality gates). All five installed hooks always exit 0 regardless of errors.
 
 **Worktree isolation.** Every executor agent operates in its own git worktree
 under `.maxsim-worktrees/{taskId}/` on a dedicated branch
