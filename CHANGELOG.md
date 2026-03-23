@@ -1,3 +1,10 @@
+## [5.2.4](https://github.com/maystudios/maxsimcli/compare/v5.2.3...v5.2.4) (2026-03-23)
+
+
+### Bug Fixes
+
+* comprehensive codebase audit — 72 discrepancies found, 50+ resolved ([9020d45](https://github.com/maystudios/maxsimcli/commit/9020d45f7b8653ea1474ae499457c4acd63cf92d))
+
 ## [5.2.3](https://github.com/maystudios/maxsimcli/compare/v5.2.2...v5.2.3) (2026-03-23)
 
 
