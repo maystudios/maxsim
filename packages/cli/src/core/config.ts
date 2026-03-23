@@ -53,10 +53,14 @@ export function loadConfig(projectDir: string): MaxsimConfig {
 
   try {
     const raw = fs.readFileSync(configPath, 'utf8');
-    const parsed = JSON.parse(raw) as Record<string, unknown>;
+    const parsed: unknown = JSON.parse(raw);
+    if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
+      console.warn(`[maxsim] Invalid config at ${configPath}: expected an object. Using defaults.`);
+      return { ...DEFAULT_CONFIG };
+    }
     return deepMerge(
       DEFAULT_CONFIG as unknown as Record<string, unknown>,
-      parsed,
+      parsed as Record<string, unknown>,
     ) as unknown as MaxsimConfig;
   } catch {
     return { ...DEFAULT_CONFIG };

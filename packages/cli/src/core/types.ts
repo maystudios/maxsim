@@ -179,6 +179,13 @@ export interface MaxsimConfig {
     autoCommitOnSuccess: boolean;
     conventionalCommits: boolean;
   };
+  github: {
+    projectName: string;
+    autoPush: boolean;
+  };
+  hooks: {
+    enabled: boolean;
+  };
 }
 
 export const DEFAULT_CONFIG: MaxsimConfig = {
@@ -211,5 +218,12 @@ export const DEFAULT_CONFIG: MaxsimConfig = {
   automation: {
     autoCommitOnSuccess: true,
     conventionalCommits: true,
+  },
+  github: {
+    projectName: '',
+    autoPush: true,
+  },
+  hooks: {
+    enabled: true,
   },
 };

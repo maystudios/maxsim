@@ -1,6 +1,6 @@
 /**
  * MAXSIM Tools — CLI dispatcher.
- * Usage: node maxsim-tools.cjs <command> [args] [--raw]
+ * Usage: node maxsim-tools.cjs <command> [args]
  */
 
 const COMMANDS: Record<string, () => void> = {};
@@ -12,7 +12,7 @@ async function main(): Promise<void> {
   if (!command) {
     const available = Object.keys(COMMANDS).join(', ') || '(none yet)';
     process.stderr.write(
-      `Usage: maxsim-tools <command> [args] [--raw]\nCommands: ${available}\n`,
+      `Usage: maxsim-tools <command> [args]\nCommands: ${available}\n`,
     );
     process.exit(1);
   }
