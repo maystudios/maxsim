@@ -1,3 +1,20 @@
+# [5.2.0](https://github.com/maystudios/maxsimcli/compare/v5.1.3...v5.2.0) (2026-03-23)
+
+
+### Bug Fixes
+
+* **ci:** add PR workflow and fix GitHub templates ([d4c19b6](https://github.com/maystudios/maxsimcli/commit/d4c19b6dfb86b834660e5b35e896c923eb7906be))
+* **skills:** correct paths, descriptions, and agent-skill mappings ([e9bed64](https://github.com/maystudios/maxsimcli/commit/e9bed6416dc126337bf9341f84e78e2458a1ae7f))
+* **test:** correct e2e test paths and file checks ([a9c6e3a](https://github.com/maystudios/maxsimcli/commit/a9c6e3aebd03c0457f9c3cabaae97bd4ae732529))
+* **workflows:** add missing subagent_type and fix isolation values ([7ab8e8b](https://github.com/maystudios/maxsimcli/commit/7ab8e8bee92aa89b8650eda5d134ad8a28954e52))
+* **workflows:** add Plan Mode to plan/quick workflows and fix retry count ([990e061](https://github.com/maystudios/maxsimcli/commit/990e06115de86cadba4a93d95c14161f73fa8d3c))
+* **workflows:** replace ROADMAP.md refs with GitHub reads and fix paths ([37fb996](https://github.com/maystudios/maxsimcli/commit/37fb996c6e06449718c413c8d8b22ba684a668a5))
+
+
+### Features
+
+* **workflows:** create debug.md workflow ([af96545](https://github.com/maystudios/maxsimcli/commit/af96545f2191ef9bacd9a94e32871eabc2fe22f3))
+
 ## [5.1.3](https://github.com/maystudios/maxsimcli/compare/v5.1.2...v5.1.3) (2026-03-23)
 
 
