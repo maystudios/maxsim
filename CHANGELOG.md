@@ -1,3 +1,11 @@
+## [5.2.2](https://github.com/maystudios/maxsimcli/compare/v5.2.1...v5.2.2) (2026-03-23)
+
+
+### Bug Fixes
+
+* **project:** correct homepage domain and remove multi-runtime references ([feef1f1](https://github.com/maystudios/maxsimcli/commit/feef1f1db13a6cf61d3399b859958e33fb028d37))
+* **templates:** remove plan flags from hint and delete obsolete planning templates ([d01d3e0](https://github.com/maystudios/maxsimcli/commit/d01d3e07b14d57686f21aa68bad76631d11967db))
+
 ## [5.2.1](https://github.com/maystudios/maxsimcli/compare/v5.2.0...v5.2.1) (2026-03-23)
 
 
