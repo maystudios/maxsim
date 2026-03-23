@@ -4,9 +4,9 @@ title: Phases
 group: Core Concepts
 ---
 
-A phase is a cohesive unit of work that advances the project toward a milestone. Phases are defined in ROADMAP.md and tracked in STATE.md. Each phase contains one or more plans. A plan is a specific task breakdown for one workstream within the phase.
+A phase is a cohesive unit of work that advances the project toward a milestone. Phases are defined as GitHub Issues with label `type:phase` and tracked on the GitHub Project Board. Each phase contains one or more task sub-Issues. A task is a specific unit of work within the phase.
 
-Phases have a lifecycle: planned, researched, executing, complete. The lifecycle is tracked in ROADMAP.md with status symbols. You can query current status any time with `/maxsim:progress`.
+Phases have a lifecycle: planned, researched, executing, complete. The lifecycle is tracked via GitHub Issue labels and Project Board column position. You can query current status any time with `/maxsim:progress`.
 
 ### Phase numbering
 
@@ -20,8 +20,9 @@ Sort order is: 01 < 01A < 01B < 01.1 < 01.2 < 02. The `normalizePhaseName()` fun
 ### Phase lifecycle
 
 {% codeblock language="text" %}
-planned     → Phase exists in ROADMAP.md, not yet researched
-researched  → /maxsim:plan has run, RESEARCH.md and PLAN.md exist
-executing   → /maxsim:execute is in progress
-complete    → All plans have SUMMARY.md, verification passed
+planned     → Phase Issue exists on Project Board (Backlog column)
+researched  → Discussion and research comments posted on phase Issue (To Do column)
+executing   → Executor agents running (In Progress column)
+complete    → All task sub-Issues closed, verification passed, phase completion
+              comment written on the GitHub Issue (Done column)
 {% /codeblock %}

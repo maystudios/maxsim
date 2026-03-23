@@ -6,7 +6,14 @@ group: Core Concepts
 
 GitHub Issues and comments are MaxsimCLI's cross-session memory. Every agent writes decisions, blockers, and progress notes as comments on the relevant phase Issue. Every orchestrator reads GitHub before starting a new session. It answers the question: "where are we and why did we make the decisions we made?"
 
-Phase Issues track four categories of information: decisions (architectural choices and the reasoning behind them), blockers (unresolved issues that need human input), performance metrics (task counts, duration, file counts per plan), and current position (which task was last active, what the next action is).
+### State model
+
+Project state is derived entirely from GitHub — there are no local state files:
+
+{% doctable headers=["State dimension", "GitHub source"] rows=[["Phase status", "Project Board column position (Backlog / To Do / In Progress / In Review / Done)"], ["Task progress", "Open vs. closed task sub-Issues on the phase Issue"], ["Roadmap progress", "GitHub Milestone completion percentage (open vs. closed phase Issues)"], ["Decisions and context", "Comments on phase and task Issues"], ["Requirements", "GitHub Wiki requirements page for the milestone"], ["Discussions", "GitHub Discussions for open questions and architectural decisions"]] %}
+{% /doctable %}
+
+Phase Issues track four categories of information: decisions (architectural choices and the reasoning behind them), blockers (unresolved issues that need human input), performance metrics (task counts, duration, file counts per task), and current position (which task was last active, what the next action is).
 
 {% codeblock language="markdown" %}
 <!-- Example phase Issue comment written by an executor agent -->
