@@ -6,30 +6,12 @@
  * Falls through silently if playback fails.
  */
 
-import * as path from 'node:path';
-import { readStdinJson, playSound, isWindows, isMac } from './shared.js';
+import { readStdinJson, playSound, isWindows, isMac, bundledSound } from './shared.js';
 
 interface StopInput {
   session_id?: string;
   stop_reason?: string;
   [key: string]: unknown;
-}
-
-/** Resolve a bundled WAV asset relative to this script, or return null. */
-function bundledSound(name: string): string | null {
-  const candidates = [
-    path.join(path.dirname(process.argv[1] ?? __filename), 'sounds', name),
-    path.join(__dirname, 'sounds', name),
-  ];
-  for (const p of candidates) {
-    try {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      if (require('node:fs').existsSync(p)) return p;
-    } catch {
-      // ignore
-    }
-  }
-  return null;
 }
 
 /** Play the best available completion sound for the current platform. */

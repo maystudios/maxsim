@@ -2,6 +2,7 @@
 
 import { spawnSync } from 'node:child_process';
 import * as os from 'node:os';
+import * as path from 'node:path';
 
 export function readStdinJson<T>(callback: (data: T) => void): void {
   let input = '';
@@ -29,6 +30,28 @@ export function isWindows(): boolean {
 /** Returns true when running on macOS. */
 export function isMac(): boolean {
   return os.platform() === 'darwin';
+}
+
+/**
+ * Resolve a bundled WAV asset relative to the running hook script, or return null.
+ *
+ * When compiled to a CJS bundle the file sits next to the .cjs file in
+ * dist/assets/hooks/. We look for a sibling sounds/ directory.
+ */
+export function bundledSound(name: string): string | null {
+  const candidates = [
+    path.join(path.dirname(process.argv[1] ?? __filename), 'sounds', name),
+    path.join(__dirname, 'sounds', name),
+  ];
+  for (const p of candidates) {
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      if (require('node:fs').existsSync(p)) return p;
+    } catch {
+      // ignore
+    }
+  }
+  return null;
 }
 
 /**

@@ -6,8 +6,7 @@
  * required.  Falls through silently if playback fails for any reason.
  */
 
-import * as path from 'node:path';
-import { readStdinJson, playSound, isWindows, isMac } from './shared.js';
+import { readStdinJson, playSound, isWindows, isMac, bundledSound } from './shared.js';
 
 interface NotificationInput {
   session_id?: string;
@@ -15,31 +14,9 @@ interface NotificationInput {
   [key: string]: unknown;
 }
 
-/** Resolve a bundled WAV asset relative to this script, or return null. */
-function bundledSound(name: string): string | null {
-  // When compiled to a CJS bundle the file sits next to the .cjs file in
-  // dist/assets/hooks/.  We look for a sibling sounds/ directory.
-  const candidates = [
-    path.join(path.dirname(process.argv[1] ?? __filename), 'sounds', name),
-    path.join(__dirname, 'sounds', name),
-  ];
-  for (const p of candidates) {
-    try {
-      // Use dynamic require check — fs.existsSync would also work
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      require('node:fs').existsSync(p);
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      if (require('node:fs').existsSync(p)) return p;
-    } catch {
-      // ignore
-    }
-  }
-  return null;
-}
-
 /** Play the best available notification sound for the current platform. */
 function playNotification(): void {
-  // 1. Prefer a bundled WAV if present (future-proof for custom sounds)
+  // 1. Prefer a bundled WAV if present
   const wav = bundledSound('notification.wav');
   if (wav) {
     playSound(wav);
