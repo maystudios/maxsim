@@ -252,7 +252,11 @@ Ready to execute? Run `/maxsim:execute {phase_number}`
 This is the final gate -- no further confirmation needed. The user's next action is to run
 `/maxsim:execute`.
 
-## 9. Checkpoint Before /clear
+## 9. Exit Plan Mode
+
+After the final gate is shown and planning is complete, call `ExitPlanMode` to exit plan mode.
+
+## 10. Checkpoint Before /clear
 
 At any point during the workflow, if context is getting full (conversation is long, many tool
 calls made), recommend checkpointing before `/clear`.
