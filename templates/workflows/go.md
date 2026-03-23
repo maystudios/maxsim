@@ -44,7 +44,7 @@ Gather all signals in parallel for speed. Run these simultaneously:
 **1. Live GitHub project board state (primary source of truth):**
 
 ```bash
-node ~/.claude/maxsim/bin/maxsim-tools.cjs github status
+node .claude/maxsim/bin/maxsim-tools.cjs github status
 ```
 
 Returns: `phase_number`, `title`, `issue_number`, `total_tasks`, `completed_tasks`, `remaining_tasks`, `status` (GitHub board column: To Do / In Progress / In Review / Done), and any interrupted phase detection.
@@ -87,7 +87,7 @@ Check for problems BEFORE suggesting any action. All problems are blocking — s
 Check if any phase issue is stuck in "In Review" with a verification FAIL comment. Query the current phase issue comments:
 
 ```bash
-node ~/.claude/maxsim/bin/maxsim-tools.cjs github get-issue --issue-number N --include-comments
+node .claude/maxsim/bin/maxsim-tools.cjs github get-issue --issue-number N --include-comments
 ```
 
 If a FAIL is found:
@@ -165,7 +165,7 @@ Rule 6: All phases status = "Done"?
   -> Reasoning: "All phases complete. Milestone ready for review."
 
 Rule 7: None of the above?
-  -> Action: Show interactive menu (see Step 6)
+  -> Action: Show interactive menu (see Step 7)
   -> Reasoning: "Project state is ambiguous."
 ```
 </step>
@@ -173,7 +173,7 @@ Rule 7: None of the above?
 <step name="show_and_act">
 ## Step 6: Show + Act
 
-Once a rule matches (Rules 1–6), display detection reasoning FIRST, then invoke the Skill tool to run the recommended command. Do NOT ask for confirmation — the user can Ctrl+C if the detection is wrong.
+Once a rule matches (Rules 1–6), call EnterPlanMode, then display detection reasoning and the proposed action. Wait for user approval before proceeding.
 
 **Display format:**
 
@@ -185,10 +185,20 @@ Current phase: Phase {N} — {name} (GitHub Issue #{issue_number})
 GitHub status: {board column}
 Tasks:         {completed}/{total} complete
 
-Action: Running /maxsim:{command} {args}...
+Proposed action: /maxsim:{command} {args}
+
+Proceed?
 ```
 
-Then invoke the Skill tool with the recommended command.
+After the user approves, call ExitPlanMode, then invoke the Skill tool with the recommended command.
+
+**Result reporting:** After the Skill tool completes, print a one-line summary:
+
+```
+Done: /maxsim:{command} {args} completed successfully.
+```
+
+If it fails, print the error and suggest a recovery command.
 </step>
 
 <step name="interactive_menu">
@@ -230,11 +240,12 @@ Wait for user selection, then invoke the Skill tool for the chosen command.
 - No SlashCommand tool — use the Skill tool to invoke commands
 - GitHub Issues is the SOLE source of truth for phase state
 - No local .planning/ directory references anywhere
-- Use `node ~/.claude/maxsim/bin/maxsim-tools.cjs` for all CLI operations
-- Never ask for confirmation before dispatching (Show + Act, not Show + Ask)
+- Use `node .claude/maxsim/bin/maxsim-tools.cjs` for all CLI operations
+- EnterPlanMode must be called before presenting the proposed action; ExitPlanMode must be called after user approves
 - Always surface problems BEFORE suggesting actions
 - All problems are blocking — no warnings, no severity tiers
 - No arguments accepted — this is pure auto-detection
 - Show "Analyzing..." before heavy operations
 - If GitHub is unavailable, fail explicitly — do not fall back to local files
+- Report the result of the dispatched command after it completes
 </constraints>
