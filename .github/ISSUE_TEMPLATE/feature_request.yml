@@ -37,10 +37,10 @@ body:
       description: Which part of MAXSIM does this affect?
       options:
         - CLI / install
-        - Commands (packages/cli/src/commands/ or templates/)
+        - Commands (templates/commands/maxsim/)
         - Workflows (templates/workflows/)
         - Agents (templates/agents/)
-        - Dashboard
+        - Skills (templates/skills/)
         - Hooks
         - Core tooling (cli.ts / core modules)
         - Documentation

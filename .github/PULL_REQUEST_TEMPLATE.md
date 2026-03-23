@@ -31,6 +31,7 @@ Closes #<!-- issue number -->
 ## Checklist
 
 - [ ] `npm run build` passes with no errors
+- [ ] `npm run lint` passes
 - [ ] `npm test` passes
 - [ ] Commit message(s) follow [Conventional Commits](https://www.conventionalcommits.org/) format
 - [ ] I have not edited `packages/cli/README.md` directly (it is auto-generated)
