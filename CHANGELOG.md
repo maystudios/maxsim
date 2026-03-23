@@ -1,3 +1,12 @@
+## [5.1.3](https://github.com/maystudios/maxsimcli/compare/v5.1.2...v5.1.3) (2026-03-23)
+
+
+### Bug Fixes
+
+* **agents:** sync executor skills with PROJECT.md spec ([1829d11](https://github.com/maystudios/maxsimcli/commit/1829d11e2ca49b23b85150f895ebf6f27d79ddf9))
+* **templates:** correct paths and GitHub-first references in references and rules ([f431062](https://github.com/maystudios/maxsimcli/commit/f431062ac2a17293f8ab8b3ab221611631034532))
+* **test:** correct e2e test paths and file checks ([dd1f902](https://github.com/maystudios/maxsimcli/commit/dd1f90277b0d68b9ad96866d47389534c6cc2ba9))
+
 ## [5.1.2](https://github.com/maystudios/maxsimcli/compare/v5.1.1...v5.1.2) (2026-03-23)
 
 
