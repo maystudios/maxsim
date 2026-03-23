@@ -20,6 +20,7 @@ npm test
 
 # 5. Run e2e tests (requires build)
 cd packages/cli && npx vitest run --config vitest.e2e.config.ts
+# Or simply: `npm run e2e`
 ```
 
 > **Note:** E2E tests are not yet implemented. The command will be skipped if no test files are found.
@@ -78,7 +79,7 @@ This project uses **[Biome](https://biomejs.dev/)** for linting and formatting.
 
 ```bash
 npm run lint             # Check
-npm run lint -- --fix    # Auto-fix (passes --fix through to Biome)
+npm run lint -- --write  # Auto-fix (passes --write through to Biome)
 ```
 
 Biome runs automatically on CI. PRs with lint failures will not be merged.

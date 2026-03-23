@@ -1,6 +1,6 @@
 ---
 name: maxsim-simplify
-description: Reviews changed code for reuse opportunities, quality issues, and efficiency improvements, then fixes actionable items. Use after implementing features or when code feels over-engineered.
+description: Reviews changed code for reuse opportunities, quality issues, and efficiency improvements, then fixes actionable items. Used after implementing features or when code feels over-engineered.
 ---
 
 # Simplify
@@ -60,7 +60,7 @@ Identify unnecessary work, missing caching, and query patterns that scale poorly
 | Medium | Naming issues, minor inefficiencies, single-use abstractions | File as follow-up issue |
 | Low | Style preferences, marginal improvements | Note only, do not act |
 
-Apply fixes for Blocker and High priority items in the current pass. File Medium and Low items as GitHub Issues for follow-up, labelled `maxsim:simplify`.
+Apply fixes for Blocker and High priority items in the current pass. File Medium and Low items as GitHub Issues for follow-up, labelled `type:chore`.
 
 ---
 

@@ -6,7 +6,7 @@ group: Commands Reference
 
 ### `/maxsim:settings`
 
-View or modify MaxsimCLI configuration interactively. Settings include model profile, branching strategy, workflow toggles, and other project-level options.
+View or modify MaxsimCLI configuration interactively. Settings include model profile, workflow toggles, and other project-level options.
 
 {% codeblock language="bash" %}
 /maxsim:settings
@@ -14,7 +14,7 @@ View or modify MaxsimCLI configuration interactively. Settings include model pro
 
 Available configuration options:
 
-{% doctable headers=["Setting", "Description"] rows=[["model_profile", "Switch between quality, balanced, budget, or tokenburner profiles"], ["branching_strategy", "Control how branches are created during execution"], ["Workflow toggles", "Enable or disable specific workflow steps (research, verification, etc.)"]] %}
+{% doctable headers=["Setting", "Description"] rows=[["model_profile", "Switch between quality, balanced, budget, or tokenburner profiles"], ["Workflow toggles", "Enable or disable specific workflow steps (research, verification, etc.)"]] %}
 {% /doctable %}
 
 ### `/maxsim:help`

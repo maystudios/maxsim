@@ -160,7 +160,7 @@ maxsim/
 **maxsim/templates/**
 - Purpose: Document templates for GitHub Issue content
 - Contains: Template definitions with frontmatter
-- Key files: project.md, roadmap.md, plan.md, summary.md
+- Key files: project.md, phase-prompt.md, plan.md, summary.md
 - Subdirectories: codebase/ (new - for stack/architecture/structure templates)
 
 **maxsim/workflows/**
@@ -216,7 +216,7 @@ maxsim/
 
 **New Workflow:**
 - Implementation: `maxsim/workflows/{name}.md`
-- Usage: Reference from command with `@~/.claude/maxsim/workflows/{name}.md`
+- Usage: Reference from command with `@.claude/maxsim/workflows/{name}.md`
 
 **New Reference Document:**
 - Implementation: `maxsim/references/{name}.md`

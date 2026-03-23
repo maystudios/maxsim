@@ -1,6 +1,6 @@
 ---
 name: systematic-debugging
-description: Systematic debugging via reproduce-hypothesize-isolate-verify-fix-confirm cycle. Requires evidence at each step. Use when encountering bugs, test failures, or unexpected behavior.
+description: Systematic debugging via reproduce-hypothesize-isolate-verify-fix-confirm cycle. Requires evidence at each step. Used when encountering bugs, test failures, or unexpected behavior.
 ---
 
 # Systematic Debugging

@@ -1,6 +1,6 @@
 ---
 name: brainstorming
-description: Explores multiple implementation approaches before committing to one. Produces a structured comparison table with effort/risk assessment. Use when starting features, facing design decisions, or multiple valid approaches exist.
+description: Explores multiple implementation approaches before committing to one. Produces a structured comparison table with effort/risk assessment. Used when starting features, facing design decisions, or multiple valid approaches exist.
 ---
 
 # Brainstorming

@@ -10,11 +10,11 @@ group: Workflow
 /maxsim:init
 {% /codeblock %}
 
-When you run `/maxsim:init`, MaxsimCLI inspects the project directory to determine what to do:
+When you run `/maxsim:init`, MaxsimCLI inspects the project to determine what to do:
 
-- **No `.planning/` directory**: starts the new-project workflow. Runs an interactive session that asks about your project vision, constraints, non-goals, and target users. Spawns a project researcher and roadmapper to create PROJECT.md, REQUIREMENTS.md, ROADMAP.md, and STATE.md.
-- **Existing codebase without `.planning/`**: starts the init-existing workflow. Analyzes the existing code, infers architecture and conventions, then creates .planning/ artifacts that reflect the project's current state.
-- **`.planning/` already exists**: starts the new-milestone workflow. Lets you add a new milestone and its phases to an existing roadmap without recreating the project from scratch.
+- **No existing project structure**: starts the new-project workflow. Runs an interactive session that asks about your project vision, constraints, non-goals, and target users. Spawns a project researcher and roadmapper. Creates GitHub repository, Project Board, Milestones, and Phase Issues.
+- **Existing codebase without MaxsimCLI structure**: starts the init-existing workflow. Analyzes the existing code, infers architecture and conventions, then creates GitHub-native artifacts that reflect the project's current state.
+- **Project already initialized**: starts the new-milestone workflow. Lets you add a new milestone and its phases to an existing Project Board without recreating the project from scratch.
 
 The project researcher agent uses web search (if available) to analyze the technology ecosystem, including frameworks, libraries, and known pitfalls, before the roadmapper creates the phase breakdown. This prevents phases that are sized wrong or ordered incorrectly.
 

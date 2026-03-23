@@ -16,26 +16,26 @@ Template for GitHub Issue comment content — comprehensive ecosystem research b
 **Confidence:** [HIGH/MEDIUM/LOW]
 
 <user_constraints>
-## User Constraints (from CONTEXT.md)
+## User Constraints (from GitHub Phase Issue context comment)
 
-**CRITICAL:** If CONTEXT.md exists from /maxsim:plan (discussion stage), copy locked decisions here verbatim. These MUST be honored by the planner.
+**CRITICAL:** If a context comment exists on the GitHub Phase Issue (tagged `<!-- maxsim:type=context -->`), copy locked decisions here verbatim. These MUST be honored by the planner.
 
 ### Locked Decisions
-[Copy from CONTEXT.md `## Decisions` section - these are NON-NEGOTIABLE]
+[Copy from the context comment's `## Decisions` section - these are NON-NEGOTIABLE]
 - [Decision 1]
 - [Decision 2]
 
 ### Claude's Discretion
-[Copy from CONTEXT.md - areas where researcher/planner can choose]
+[Copy from the context comment - areas where researcher/planner can choose]
 - [Area 1]
 - [Area 2]
 
 ### Deferred Ideas (OUT OF SCOPE)
-[Copy from CONTEXT.md - do NOT research or plan these]
+[Copy from the context comment - do NOT research or plan these]
 - [Deferred 1]
 - [Deferred 2]
 
-**If no CONTEXT.md exists:** Write "No user constraints - all decisions at Claude's discretion"
+**If no context comment exists:** Write "No user constraints - all decisions at Claude's discretion"
 </user_constraints>
 
 <research_summary>
@@ -172,7 +172,7 @@ Verified patterns from official sources:
 </code_examples>
 
 <sota_updates>
-## State of the Art (2024-2025)
+## State of the Art
 
 What's changed recently:
 

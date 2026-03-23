@@ -191,17 +191,8 @@ For existing codebases:
 
 <state_reference>
 
-STATE.md references PROJECT.md:
+GitHub Issue state tracking references PROJECT.md:
 
-```markdown
-## Project Reference
-
-See: the phase GitHub Issue body (updated [date])
-
-**Core value:** [One-liner from Core Value section]
-**Current focus:** [Current phase name]
-```
-
-This ensures Claude reads current PROJECT.md context.
+Project state lives on GitHub Issues and Milestones. Each phase GitHub Issue body should reference the relevant sections of PROJECT.md for core value and current focus. This ensures Claude reads current PROJECT.md context.
 
 </state_reference>

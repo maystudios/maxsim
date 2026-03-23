@@ -47,6 +47,8 @@ Then re-run /maxsim:init.
 
 Stop. Do not proceed.
 
+Call `EnterPlanMode` immediately after verifying prerequisites. All scanning and GitHub setup happens within Plan Mode. Call `ExitPlanMode` only after the user approves the complete initialization plan.
+
 ## Phase 2: Scan (if code exists)
 
 Check for existing code:
@@ -169,8 +171,6 @@ gh api repos/$REPO/milestones \
 
 ## Phase 5: Local Setup
 
-Call EnterPlanMode before writing any local files.
-
 **5a. Write .claude/maxsim/config.json:**
 
 Create `.claude/maxsim/config.json` with:
@@ -279,7 +279,7 @@ Next step: /maxsim:go
 - No SlashCommand tool
 - GitHub Issues is the SOLE source of truth — no local .planning/ directory
 - Use `node .claude/maxsim/bin/maxsim-tools.cjs` for CLI operations
-- EnterPlanMode must be called before Phase 5 (local file writes); ExitPlanMode must be called after the commit
+- EnterPlanMode must be called immediately after Phase 1 prerequisites pass; ExitPlanMode must be called after the user approves the complete initialization plan (after the Phase 5 commit)
 - Agent spawning uses: Agent tool with isolation:"worktree", run_in_background:true (for parallel research) or run_in_background:false (for sequential work)
 - Self-contained agent prompts — include all context the agent needs inline
 - Maximum 4 questions per AskUserQuestion call

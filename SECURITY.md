@@ -41,7 +41,6 @@ We follow responsible disclosure: once a fix is released, we'll coordinate with 
 
 **In scope:**
 - `maxsimcli` CLI package (install, tools router, adapters, hooks)
-- Dashboard server (`packages/dashboard`)
 - Template files that could enable command injection or privilege escalation
 
 **Out of scope:**

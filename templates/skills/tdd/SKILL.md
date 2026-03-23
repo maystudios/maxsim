@@ -1,6 +1,6 @@
 ---
 name: tdd
-description: Enforces red-green-refactor TDD cycle with atomic commits per phase. Use when implementing features, fixing bugs, or when tests should drive the design.
+description: Enforces red-green-refactor TDD cycle with atomic commits per phase. Used when implementing features, fixing bugs, or when tests should drive the design.
 ---
 
 # Test-Driven Development (TDD)

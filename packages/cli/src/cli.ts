@@ -3,12 +3,84 @@
  * Usage: node maxsim-tools.cjs <command> [args]
  */
 
-const COMMANDS: Record<string, () => void> = {};
+import { loadConfig, saveConfig, resolveModel } from './core/index.js';
+import { AgentType, type ModelProfile } from './core/index.js';
 
-async function main(): Promise<void> {
-  const args = process.argv.slice(2);
-  const command = args[0];
+const args = process.argv.slice(2);
+const command = args[0];
 
+const COMMANDS: Record<string, () => void> = {
+  'resolve-model': () => {
+    const agentType = args[1]?.toUpperCase() as AgentType;
+    if (!agentType || !Object.values(AgentType).includes(agentType)) {
+      console.error(`Invalid agent type: ${args[1]}`);
+      process.exit(1);
+    }
+    const projectDir = process.cwd();
+    const config = loadConfig(projectDir);
+    const model = resolveModel(config.execution.model_profile as ModelProfile, agentType);
+    if (args.includes('--raw')) {
+      process.stdout.write(model.toLowerCase());
+    } else {
+      console.log(model);
+    }
+  },
+  'config-get': () => {
+    const key = args[1];
+    if (!key) { console.error('Usage: config-get <key>'); process.exit(1); }
+    const config = loadConfig(process.cwd());
+    const parts = key.split('.');
+    let value: unknown = config;
+    for (const part of parts) {
+      if (value && typeof value === 'object') {
+        value = (value as Record<string, unknown>)[part];
+      } else {
+        value = undefined;
+        break;
+      }
+    }
+    if (value === undefined) {
+      console.error(`Key not found: ${key}`);
+      process.exit(1);
+    }
+    console.log(typeof value === 'object' ? JSON.stringify(value, null, 2) : String(value));
+  },
+  'config-set': () => {
+    const key = args[1];
+    const val = args[2];
+    if (!key || val === undefined) { console.error('Usage: config-set <key> <value>'); process.exit(1); }
+    const projectDir = process.cwd();
+    const config = loadConfig(projectDir);
+    const parts = key.split('.');
+    let obj: Record<string, unknown> = config as unknown as Record<string, unknown>;
+    for (let i = 0; i < parts.length - 1; i++) {
+      if (!obj[parts[i]] || typeof obj[parts[i]] !== 'object') {
+        obj[parts[i]] = {};
+      }
+      obj = obj[parts[i]] as Record<string, unknown>;
+    }
+    // Try to parse as JSON, fall back to string
+    try { obj[parts[parts.length - 1]] = JSON.parse(val); } catch { obj[parts[parts.length - 1]] = val; }
+    saveConfig(projectDir, config);
+    console.log(`Set ${key} = ${val}`);
+  },
+  'config-ensure-section': () => {
+    const section = args[1];
+    if (!section) { console.error('Usage: config-ensure-section <section>'); process.exit(1); }
+    const projectDir = process.cwd();
+    const config = loadConfig(projectDir);
+    const obj = config as unknown as Record<string, unknown>;
+    if (!obj[section]) {
+      obj[section] = {};
+      saveConfig(projectDir, config);
+      console.log(`Created section: ${section}`);
+    } else {
+      console.log(`Section exists: ${section}`);
+    }
+  },
+};
+
+function main(): void {
   if (!command) {
     const available = Object.keys(COMMANDS).join(', ') || '(none yet)';
     process.stderr.write(
@@ -26,9 +98,11 @@ async function main(): Promise<void> {
   handler();
 }
 
-main().catch((err: unknown) => {
+try {
+  main();
+} catch (err: unknown) {
   process.stderr.write(
     `Fatal: ${err instanceof Error ? err.message : String(err)}\n`,
   );
   process.exit(1);
-});
+}

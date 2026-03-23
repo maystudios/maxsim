@@ -172,6 +172,7 @@ export const MAXSIM_LABELS: LabelDef[] = [
   { name: 'maxsim:managed', description: 'Managed by MaxsimCLI', color: '5319e7' },
   { name: 'maxsim:lesson', description: 'Project learning', color: 'f9d0c4' },
   { name: 'maxsim:decision', description: 'Architecture decision', color: 'd4c5f9' },
+  { name: 'status:backlog', color: '808080', description: 'In backlog, not yet scheduled' },
 ];
 
 // ── Board Configuration ───────────────────────────────────────────────

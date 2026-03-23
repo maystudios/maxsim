@@ -155,6 +155,8 @@ Confirm to begin execution? (yes/no)
 
 Wait for user confirmation unless `--auto` flag is set.
 
+When `--auto` flag is set, still call `ExitPlanMode` after displaying the plan summary (auto-approval).
+
 **Call `ExitPlanMode` after user confirms.** Begin wave execution.
 
 ## 6. Execute Waves
@@ -193,67 +195,19 @@ Agent(
   isolation="worktree",
   run_in_background=true,
   prompt="
-    You are an executor agent for MaxsimCLI v6.
+    Follow @.claude/maxsim/workflows/execute-plan.md end-to-end for this task.
 
-    <objective>
-    Execute plan {plan_id} of phase {phase_number}: {phase_name}.
-    You are running in an isolated git worktree. Work only in your worktree.
-    Commit each task atomically using conventional commits.
-    Post a summary comment to the phase GitHub issue when all tasks complete.
-    Move task sub-issues on the board as you work (open -> In Progress -> Done per task).
-    </objective>
+    <task_context>
+    Phase issue number: {phase_issue_number}
+    Phase: {phase_number} — {phase_name}
+    Plan ID: {plan_id}
+    Task sub-issue numbers: {task_issue_numbers for this plan}
+    Task mappings: {task_mappings for this plan}
+    </task_context>
 
     <plan_content>
     {full plan_comment_body for this plan, including all tasks and success criteria}
     </plan_content>
-
-    <github_context>
-    Phase issue number: {phase_issue_number}
-    Plan ID: {plan_id}
-    Task sub-issue numbers: {task_issue_numbers for this plan}
-    Task mappings: {task_mappings for this plan}
-    </github_context>
-
-    <files_to_read>
-    Read these files at execution start:
-    - .claude/maxsim/config.json (if exists)
-    - ./CLAUDE.md (if exists — follow project conventions)
-    </files_to_read>
-
-    <codebase_conventions>
-    - Follow conventional commits: type(scope): description
-    - Commit each task individually — one commit per task
-    - Stage specific files (never git add . or git add -A)
-    - Run tests relevant to changed files before committing
-    - Do not touch files outside your worktree scope
-    </codebase_conventions>
-
-    <board_transitions>
-    When starting a task: move its sub-issue to In Progress
-      node .claude/maxsim/bin/maxsim-tools.cjs github move-issue --issue-number {task_issue} --status 'In Progress'
-    When completing a task: move its sub-issue to Done, then close it
-      node .claude/maxsim/bin/maxsim-tools.cjs github move-issue --issue-number {task_issue} --status 'Done'
-      node .claude/maxsim/bin/maxsim-tools.cjs github close-issue --issue-number {task_issue}
-    </board_transitions>
-
-    <summary_posting>
-    After all tasks complete, post a summary comment on the phase issue:
-    TMPFILE=\$(mktemp)
-    cat > \"\$TMPFILE\" << 'SUMMARY_EOF'
-    {summary content including: one-liner, task table, commits, deviations}
-    <!-- maxsim:type=summary -->
-    SUMMARY_EOF
-    node .claude/maxsim/bin/maxsim-tools.cjs github post-comment \\
-      --issue-number {phase_issue_number} --body-file \"\$TMPFILE\" --type summary
-    </summary_posting>
-
-    <success_criteria>
-    - [ ] All tasks in plan executed
-    - [ ] Each task committed individually with conventional commit message
-    - [ ] Task sub-issues moved: In Progress when started, Done and closed when complete
-    - [ ] Summary posted as GitHub comment (type=summary) on phase issue
-    - [ ] Final line of output: RESULT: PASS or RESULT: FAIL — {reason}
-    </success_criteria>
   "
 )
 ```
@@ -360,32 +314,17 @@ Spawn the verifier agent to check phase goal achievement:
 Agent(
   subagent_type="verifier",
   model="{verifier_model}",
+  isolation="worktree",
   prompt="
-    Verify phase {phase_number}: {phase_name} goal achievement.
+    Follow @.claude/maxsim/workflows/verify-phase.md end-to-end for this phase verification.
 
+    <phase_context>
+    Phase: {phase_number} — {phase_name}
     Phase issue: #{phase_issue_number}
     Phase goal: {goal from phase issue body}
+    Success criteria: {success criteria from phase issue body}
     Phase sub-issues: {list of task sub-issue numbers}
-
-    Instructions:
-    1. Load the phase issue body and all comments from GitHub
-       node .claude/maxsim/bin/maxsim-tools.cjs github get-issue --issue-number {phase_issue_number} --include-comments
-    2. Check success criteria listed in the phase issue body against the actual codebase
-    3. Verify all task sub-issues are closed
-       node .claude/maxsim/bin/maxsim-tools.cjs github list-sub-issues --phase-issue-number {phase_issue_number}
-    4. Run automated checks: tests, build, lint (detect runners from package.json / config files)
-    5. Identify any gaps or stubs
-
-    Post verification result as a GitHub comment on the phase issue:
-    TMPFILE=\$(mktemp)
-    cat > \"\$TMPFILE\" << 'VERIFY_EOF'
-    {verification result with status, score, evidence per criterion}
-    <!-- maxsim:type=verification -->
-    VERIFY_EOF
-    node .claude/maxsim/bin/maxsim-tools.cjs github post-comment \\
-      --issue-number {phase_issue_number} --body-file \"\$TMPFILE\" --type verification
-
-    Return: RESULT: PASS or RESULT: FAIL — {gaps list}
+    </phase_context>
   "
 )
 ```
@@ -484,6 +423,7 @@ Spawn planner in gap-closure mode:
 Agent(
   subagent_type="planner",
   model="{planner_model}",
+  isolation="worktree",
   prompt="
     <planning_context>
     Phase: {phase_number}
@@ -551,15 +491,7 @@ sub-issues) are detected automatically and skipped on resume.
 
 ## 11. Update State and Complete
 
-After verification passes, record session:
-
-```bash
-node .claude/maxsim/bin/maxsim-tools.cjs state record-session \
-  --stopped-at "Phase ${PHASE_NUMBER} executed and verified" \
-  --resume-file "${phase_dir}"
-```
-
-Display final report:
+After verification passes, display final report:
 
 ```
 ## Phase {phase_number}: {phase_name} — Execution Complete

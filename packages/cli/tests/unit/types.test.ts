@@ -51,8 +51,9 @@ describe('CmdResult', () => {
 });
 
 describe('Enums', () => {
-  it('ProjectStatus has 4 Kanban columns', () => {
-    expect(Object.values(ProjectStatus)).toHaveLength(4);
+  it('ProjectStatus has 5 Kanban columns', () => {
+    expect(Object.values(ProjectStatus)).toHaveLength(5);
+    expect(ProjectStatus.BACKLOG).toBe('Backlog');
     expect(ProjectStatus.TO_DO).toBe('To Do');
     expect(ProjectStatus.IN_PROGRESS).toBe('In Progress');
     expect(ProjectStatus.IN_REVIEW).toBe('In Review');

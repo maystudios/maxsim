@@ -10,7 +10,7 @@ By the time you are 20,000 tokens into a session, the model pays more attention 
 
 MaxsimCLI's solution is structural: never ask one agent to hold the entire project in mind. Instead, each subagent receives only the context it needs for its specific job. The executor sees the plan. The verifier sees the plan and the deliverables. The researcher sees the phase description and the codebase. Nothing more.
 
-Structured artifacts (PLAN.md, SUMMARY.md, RESEARCH.md, STATE.md) serve as the hand-off medium between agents. Because artifacts are written files, they do not decay. An agent spawned six months later reads the same STATE.md as the one spawned yesterday.
+Structured GitHub Issue comments (plan, summary, research, context) serve as the hand-off medium between agents. Because these are stored in GitHub, they do not decay. An agent spawned six months later reads the same issue history as the one spawned yesterday.
 
 {% callout type="note" %}
 MaxsimCLI doesn't prevent you from having long conversations. It makes long conversations unnecessary for implementation work. Research, planning, execution, and verification each happen in a clean, scoped context.

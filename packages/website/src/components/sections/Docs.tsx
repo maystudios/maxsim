@@ -194,11 +194,11 @@ function GettingStarted() {
         <DocSubheading>What gets installed</DocSubheading>
         <DocText>
           Commands, workflows, and agent definitions go into your AI runtime's
-          config directory. For Claude Code that's ~/.claude/.
+          config directory. For Claude Code that's .claude/.
         </DocText>
         <CodeBlock
           language="text"
-          code={`~/.claude/
+          code={`.claude/
 ├── commands/maxsim/   # 9 user-facing commands (/maxsim:*)
 ├── agents/            # 4 specialized agent prompts
 └── hooks/             # Pre/post hooks for automation`}
@@ -347,29 +347,25 @@ agents/*.md                # Specialized subagent prompts (4 agents)`}
         </DocText>
         <CodeBlock
           language="text"
-          code={`.planning/
-├── config.json            # model_profile, workflow flags
-├── PROJECT.md             # Vision (always loaded)
-├── REQUIREMENTS.md        # v1/v2/out-of-scope requirements
-├── ROADMAP.md             # Phase structure
-├── STATE.md               # Memory: decisions, blockers, metrics
-├── phases/
-│   └── 01-Foundation/
-│       ├── 01-CONTEXT.md        # User decisions
-│       ├── 01-RESEARCH.md       # Phase findings
-│       ├── 01-01-PLAN.md        # Task plan
-│       ├── 01-01-SUMMARY.md     # Completion record
-│       ├── 01-VERIFICATION.md   # Verification results
-│       └── 01-UAT.md            # User acceptance tests
-└── todos/pending/ & todos/completed/`}
+          code={`.claude/
+├── commands/maxsim/       # 9 slash commands
+├── agents/                # 4 agent definitions + AGENTS.md
+├── skills/                # 14 skill modules
+├── rules/                 # Conventions + verification
+├── maxsim/
+│   ├── bin/maxsim-tools.cjs
+│   ├── hooks/
+│   ├── workflows/
+│   ├── references/
+│   └── templates/
+└── agent-memory/`}
         />
       </div>
 
       <div>
         <DocSubheading>Tools Layer</DocSubheading>
         <DocText>
-          cli.cjs routes all tool calls to core modules: state management, phase lifecycle,
-          roadmap parsing, verification. Large outputs go to a tmpfile and return as
+          maxsim-tools.cjs routes all tool calls to core modules: model resolution, GitHub operations, and config management. Large outputs go to a tmpfile and return as
           @file:/path to avoid buffer overflow.
         </DocText>
       </div>
@@ -380,28 +376,32 @@ agents/*.md                # Specialized subagent prompts (4 agents)`}
 // ─── Tab: Configuration ───────────────────────────────────────────────────────
 
 const configJson = `{
-  "model_profile": "balanced",
-  "commit_docs": true,
-  "search_gitignored": false,
-  "branching_strategy": "none",
-  "phase_branch_template": "maxsim/phase-{phase}-{slug}",
-  "milestone_branch_template": "maxsim/{milestone}-{slug}",
-  "workflow": { "research": true, "plan_checker": true, "verifier": true },
-  "parallelization": true,
-  "brave_search": false,
-  "worktree_mode": "auto",
-  "max_parallel_agents": 10,
-  "review": { "spec_review": true, "code_review": true, "simplify_review": true, "retry_limit": 3 },
-  "model_overrides": {}
+  "version": "6.0.0",
+  "execution": {
+    "model_profile": "balanced",
+    "parallelism": {
+      "max_agents_per_wave": 3,
+      "max_retries": 3,
+      "competition_strategy": "best-of-3"
+    }
+  },
+  "worktrees": {
+    "basePath": ".maxsim-worktrees/",
+    "auto_cleanup": true
+  },
+  "github": {
+    "projectName": "",
+    "auto_push": true
+  }
 }`;
 
 function Configuration() {
   return (
     <div className="space-y-6">
       <div>
-        <DocHeading>.planning/config.json</DocHeading>
+        <DocHeading>.claude/maxsim/config.json</DocHeading>
         <DocText>
-          Drop config.json into your .planning/ directory to adjust behavior.
+          Drop config.json into your .claude/maxsim/ directory to adjust behavior.
           All values ship with sensible defaults.
         </DocText>
       </div>
@@ -410,14 +410,13 @@ function Configuration() {
       <div>
         <DocSubheading>Model Profiles</DocSubheading>
         <DocText>
-          Four tiers control which Claude model each agent gets.
+          Three tiers control which Claude model each agent gets.
         </DocText>
         <CodeBlock
           language="text"
           code={`quality      → Opus for executor/planner/researcher, Sonnet for verifier/debugger
 balanced     → Sonnet for executor/researcher, Opus for planner, Sonnet for verifier/debugger  (default)
-budget       → Sonnet for executor/planner, Haiku for researcher/verifier/debugger
-tokenburner  → Opus for all agents`}
+budget       → Sonnet for executor/planner, Haiku for researcher/verifier/debugger`}
         />
       </div>
 

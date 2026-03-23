@@ -14,7 +14,7 @@ Arguments: $ARGUMENTS
 
 If $ARGUMENTS is provided, treat it as the task description.
 
-Quick tasks are tracked as GitHub Issues (label: `quick`) — separate from planned phase Issues. GitHub is the sole source of truth — no STATE.md or .planning/ files.
+Quick tasks are tracked as GitHub Issues (label: `quick`) — separate from planned phase Issues. GitHub is the sole source of truth — no .planning/ files.
 </context>
 
 <process>

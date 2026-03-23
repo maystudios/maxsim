@@ -1,7 +1,7 @@
 ---
 name: maxsim:plan
 description: Plan a specific phase with discussion, research, and task breakdown
-argument-hint: "<phase-number>"
+argument-hint: "[phase-number]"
 allowed-tools: [Read, Write, Edit, Bash, Grep, Glob, Agent, AskUserQuestion, WebFetch, EnterPlanMode, ExitPlanMode]
 ---
 
@@ -33,3 +33,4 @@ Follow @.claude/maxsim/workflows/plan.md end-to-end.
 5. Planning stage: spawn Agent to break phase into task Issues with acceptance criteria
 6. Show gate summary after each stage — wait for confirmation before advancing
 </process>
+</output>

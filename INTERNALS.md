@@ -32,7 +32,7 @@ maxsimcli/                        ← repo root
 │   ├── agents/                   ← 4 agent definitions
 │   ├── commands/maxsim/          ← 9 slash commands
 │   ├── skills/                   ← 14 skill modules
-│   ├── workflows/                ← 17 workflow orchestrators
+│   ├── workflows/                ← 18 workflow orchestrators
 │   ├── references/               ← reference documents
 │   └── rules/                    ← conventions + verification protocol
 └── docs/spec/                    ← deep-dive technical specifications (~20k lines)
@@ -56,12 +56,12 @@ maxsimcli/                        ← repo root
 
 ```
 packages/cli/src/
-├── cli.ts              ← CLI dispatcher (maxsim-tools.cjs entry point)
+├── cli.ts              ← CLI dispatcher (maxsim-tools.cjs entry point) (Note: COMMANDS registry is currently empty — commands will be registered in a future phase)
 ├── index.ts            ← package re-exports
 ├── core/
 │   ├── types.ts        ← all TypeScript interfaces + const enums (single source)
 │   ├── config.ts       ← config load/save/merge, model resolution
-│   ├── utils.ts        ← shared path helpers, frontmatter parsing
+│   ├── utils.ts        ← Reserved for future shared utilities (currently empty)
 │   ├── version.ts      ← semver constant
 │   └── index.ts
 ├── github/
@@ -128,13 +128,13 @@ Located at `templates/commands/maxsim/`:
 | `init`     | `init.md`              | Initialize project + GitHub structure    |
 | `plan`     | `plan.md`              | Plan a phase (Discussion→Research→Plan)  |
 | `execute`  | `execute.md`           | Execute a phase with agents + worktrees  |
-| `debug`    | (inline)               | Systematic debugging flow                |
+| `debug`    | `debug.md`             | Systematic debugging flow                |
 | `quick`    | `quick.md`             | Single-issue quick task                  |
 | `progress` | `progress.md`          | Show board status + next recommendation  |
 | `settings` | `settings.md`          | Configure model profile + options        |
 | `help`     | `help.md`              | Command reference                        |
 
-### Workflows (17)
+### Workflows (18)
 
 Located at `templates/workflows/`. Key workflows:
 
@@ -175,10 +175,11 @@ Provides the Octokit singleton and `gh` CLI wrappers.
   fetched via `gh auth token` (no hardcoded credentials).
 - `getRepoInfo()` — parses `owner`/`repo`/`isOrg` from `git remote get-url origin`.
 - `ghJson<T>(args)` — runs a `gh` CLI command, parses stdout as JSON, returns
-  `GhResult<T>`. Classifies errors into `NOT_FOUND | UNAUTHORIZED | RATE_LIMITED | VALIDATION | UNKNOWN`.
+  `GhResult<T>`. Classifies errors into `NOT_FOUND | UNAUTHORIZED | RATE_LIMITED | FORBIDDEN | VALIDATION | UNKNOWN`.
 - `ghExec(args)` — same as `ghJson` but returns raw string stdout.
 - `withGhResult<T>(fn)` — wraps an async Octokit call in the same
   `GhResult<T>` discriminated union.
+- `resetClient()` — clears the cached Octokit singleton (used in tests).
 
 All functions are synchronous where possible (`ghJson`, `ghExec`), async only
 when Octokit's paginate is required.
@@ -188,6 +189,7 @@ when Octokit's paginate is required.
 Full Issues CRUD plus sub-issues.
 
 - `createIssue`, `getIssue`, `updateIssue`, `closeIssue` — standard REST via Octokit.
+- `listIssues` — paginated list of repository issues.
 - `listComments(issueNumber)` — paginated with `octokit.paginate`.
 - `addComment(issueNumber, body)` — single POST via `octokit.rest.issues.createComment`.
 - `addSubIssue(parentNumber, childNumber)` — **uses the internal numeric `.id`
@@ -211,7 +213,7 @@ options (currently flagged with a console warning).
 
 Board columns defined in `github/types.ts`:
 ```
-To Do → In Progress → In Review → Done
+Backlog → To Do → In Progress → In Review → Done
 ```
 
 ### milestones.ts
@@ -227,7 +229,6 @@ Enforces the 16-label taxonomy defined in `github/types.ts::MAXSIM_LABELS`.
 
 - `ensureLabels` — paginates existing labels, creates any that are missing.
 - `getLabel`, `createLabel` — individual label operations.
-- `updateLabel` — updates an existing label's name, color, or description.
 
 Label taxonomy (16 labels, 4 namespaces):
 
@@ -274,6 +275,10 @@ All hooks share `hooks/shared.ts`:
 - `CLAUDE_DIR = '.claude'` constant.
 - `readStdinJson<T>(callback)` — reads the Claude Code hook JSON payload from
   stdin, parses it, and calls the callback. Never throws.
+- `isWindows()` — returns true when running on Windows.
+- `isMac()` — returns true when running on macOS.
+- `bundledSound(name)` — resolves the absolute path to a bundled sound asset by name.
+- `playSound(soundFile)` — plays the given sound file path (cross-platform).
 
 ### Registration in settings.json
 
@@ -319,31 +324,31 @@ Runtime configuration lives at `.claude/maxsim/config.json`.
 interface MaxsimConfig {
   version: string;                    // "6.0.0"
   execution: {
-    modelProfile: 'quality' | 'balanced' | 'budget';
+    model_profile: 'quality' | 'balanced' | 'budget';
     parallelism: {
-      maxAgentsPerWave: number;        // default: 3
-      maxRetries: number;              // default: 3
-      competitionStrategy: 'none' | 'quick' | 'standard' | 'deep';
+      max_agents_per_wave: number;     // default: 3
+      max_retries: number;             // default: 3
+      competition_strategy: 'none' | 'quick' | 'standard' | 'deep';
     };
     verification: {
-      strictMode: boolean;             // default: true
+      strict_mode: boolean;            // default: true
       gates: VerificationGate[];       // all 5 gates by default
-      requireCodeReview: boolean;      // default: true
-      autoResolveConflicts: boolean;   // default: true
+      require_code_review: boolean;    // default: true
+      auto_resolve_conflicts: boolean; // default: true
     };
   };
   worktrees: {
     basePath: string;                  // default: ".maxsim-worktrees/"
-    autoCleanup: boolean;              // default: true
-    branchPrefix: string;              // default: "maxsim/"
+    auto_cleanup: boolean;             // default: true
+    branch_prefix: string;             // default: "maxsim/"
   };
   automation: {
-    autoCommitOnSuccess: boolean;      // default: true
-    conventionalCommits: boolean;      // default: true
+    auto_commit_on_success: boolean;   // default: true
+    conventional_commits: boolean;     // default: true
   };
   github: {
     projectName: string;               // default: ""
-    autoPush: boolean;                 // default: true
+    auto_push: boolean;                // default: true
   };
   hooks: {
     enabled: boolean;                  // default: true
@@ -383,7 +388,7 @@ directly — it is copied into `dist/assets/templates/` during the build.
 │   ├── bin/
 │   │   └── maxsim-tools.cjs  ← compiled CLI dispatcher
 │   ├── hooks/             ← 5 compiled hook scripts (*.cjs)
-│   ├── workflows/         ← 17 workflow orchestrators
+│   ├── workflows/         ← 18 workflow orchestrators
 │   ├── references/        ← reference documents
 │   ├── templates/         ← reusable content templates
 │   └── config.json        ← runtime config (created/updated by /maxsim:settings)
@@ -394,7 +399,7 @@ directly — it is copied into `dist/assets/templates/` during the build.
 
 ### Skills (14)
 
-Located at `templates/skills/`, one subdirectory per skill with an `index.md`.
+Located at `templates/skills/`, one subdirectory per skill with a `SKILL.md`.
 All follow Anthropic's skill convention: YAML frontmatter with `name` and
 `description`, body under 500 lines, no `@` imports.
 
@@ -452,13 +457,16 @@ npx maxsimcli
   7. Register hooks in .claude/settings.json (idempotent)
   8. Generate CLAUDE.md in project root
      (project name from package.json or directory name)
+     If an existing CLAUDE.md is found without MaxsimCLI content, the installer
+     appends the MaxsimCLI section rather than overwriting.
   9. Print summary: file counts, hook list, get-started commands
 ```
 
 `--uninstall` calls `install/uninstall.ts::uninstall()` which removes
 `.claude/commands/maxsim/`, `.claude/agents/`, `.claude/skills/`,
-`.claude/rules/`, `.claude/maxsim/`, strips maxsim entries from
-`settings.json`, and removes the generated `CLAUDE.md`.
+`.claude/rules/`, `.claude/maxsim/`, `.claude/agent-memory/maxsim-learner/`,
+strips maxsim entries from `settings.json`, and removes the generated
+`CLAUDE.md`.
 
 ---
 
@@ -476,7 +484,7 @@ tsdown compiles three separate entry point groups:
 
 All targets: `format: cjs`, `platform: node`, `target: es2022`, `sourcemap: true`.
 `@octokit/*` packages are inlined into `dist/cli.cjs` (`noExternal: [/^@octokit/]`).
-Hook scripts have `external: [/^node:/]` only — all other imports are bundled.
+All build targets use `external: [/^node:/]`. Hook scripts additionally bundle all other imports.
 
 ### Post-build
 

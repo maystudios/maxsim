@@ -1,7 +1,7 @@
 ---
 name: maxsim:settings
 description: View and modify MaxsimCLI configuration
-allowed-tools: [Read, Write, Edit, Bash, AskUserQuestion]
+allowed-tools: [Read, Write, Edit, Bash, AskUserQuestion, EnterPlanMode, ExitPlanMode]
 ---
 
 <objective>
@@ -9,7 +9,7 @@ Interactively view and modify MaxsimCLI configuration: model profile, pipeline t
 </objective>
 
 <context>
-Configuration is stored in CLAUDE.md (project-level) and `.claude/maxsim/config.json` (global). Present current values as pre-selections in each prompt.
+Configuration is stored in `.claude/maxsim/config.json` (project-level). Present current values as pre-selections in each prompt.
 </context>
 
 <process>

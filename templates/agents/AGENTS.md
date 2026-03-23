@@ -71,7 +71,7 @@ Every agent return MUST include these sections, enforced by the `handoff-contrac
 |---------|---------|
 | Key Decisions | Decisions made during execution that affect downstream agents |
 | Artifacts | Files created or modified (absolute paths) |
-| Status | `complete`, `blocked`, or `partial` with explanation |
+| Status | `PASS`, `FAIL`, or `PARTIAL` with explanation |
 | Deferred Items | Work discovered but not implemented, categorized by type |
 
 Agents load this format via the `handoff-contract` preloaded skill. Orchestrators parse these sections to determine board transitions, next agent spawns, and GitHub comment posting.

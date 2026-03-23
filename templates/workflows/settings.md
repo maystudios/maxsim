@@ -25,6 +25,8 @@ Parse current values (use defaults if field is absent):
 - `parallelism` — "conservative" | "standard" | "aggressive" (default: "standard")
 - `git.branching_strategy` — "none" | "phase" | "milestone" (default: "none")
 
+Call `EnterPlanMode` before presenting current settings to the user. After the user confirms all changes, call `ExitPlanMode` before writing to config.json.
+
 Display current settings before prompting for changes:
 
 ```

@@ -1,6 +1,6 @@
 # Self-Improvement System
 
-MaxsimCLI v6 introduces an autoresearch-inspired feedback loop that lets the agent
+MaxsimCLI introduces an autoresearch-inspired feedback loop that lets the agent
 learn from previous sessions rather than starting cold every time.
 
 ---

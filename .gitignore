@@ -21,6 +21,7 @@ commands.html
 .next/
 next-env.d.ts
 *.tsbuildinfo
+nul
 
 # Temp files
 tmp/

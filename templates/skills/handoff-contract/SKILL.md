@@ -2,7 +2,7 @@
 name: handoff-contract
 description: >-
   Standardizes agent output format with key decisions, artifacts, status, and
-  deferred items. Use when any agent completes a task and needs to report
+  deferred items. Used when any agent completes a task and needs to report
   results to the orchestrator.
 ---
 

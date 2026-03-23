@@ -41,6 +41,14 @@ npx maxsimcli@latest
 Then inside Claude Code:
 
 ```
+/maxsim:go
+```
+
+**Tip:** `/maxsim:go` auto-detects project state and proposes the right action. Use it as your primary entry point.
+
+Or use the explicit sequence:
+
+```
 /maxsim:init        # Set up the planning structure
 /maxsim:plan 1      # Plan phase 1
 /maxsim:execute 1   # Run phase 1
@@ -52,7 +60,7 @@ That is the core loop. Init, plan, execute, verify. Each phase is isolated, each
 
 ## What You Get
 
-MAXSIM ships 9 slash commands, 4 agents, 14 skills, and 17 workflows. Here is what that means in practice.
+MAXSIM ships 9 slash commands, 4 agents, 14 skills, and 18 workflows. Here is what that means in practice.
 
 **Spec-driven development.** All work flows through GitHub — phase Issues, sub-issue tasks, Project Board columns, and structured comments. The GitHub Project Board is the single source of truth. Agents read from it and update it as they work.
 
@@ -60,7 +68,7 @@ MAXSIM ships 9 slash commands, 4 agents, 14 skills, and 17 workflows. Here is wh
 
 **3 model profiles.** Pick `quality`, `balanced`, or `budget` to control which Claude model tier each agent uses. You can override individual agents too.
 
-**GitHub Issues as the source of truth.** Phases become tracking issues. Plans become sub-issues. A 4-column project board (To Do, In Progress, In Review, Done) tracks execution progress.
+**GitHub Issues as the source of truth.** Phases become tracking issues. Plans become sub-issues. A 5-column project board (Backlog, To Do, In Progress, In Review, Done) tracks execution progress.
 
 **Parallel execution with git worktrees.** Independent plans run concurrently in separate worktrees. MAXSIM groups them into dependency-ordered waves and runs each wave in parallel.
 
@@ -72,7 +80,7 @@ MAXSIM ships 9 slash commands, 4 agents, 14 skills, and 17 workflows. Here is wh
 
 ## Installation
 
-You need Node.js 22+ and Claude Code. Git is required for parallel execution. GitHub CLI (`gh`) is optional, only needed for the Issues integration.
+You need Node.js 22+ and Claude Code. Git is required for parallel execution. GitHub CLI (`gh`) is required for all GitHub operations. MaxsimCLI uses GitHub as the single source of truth.
 
 ```bash
 npx maxsimcli@latest
@@ -96,7 +104,7 @@ The installer copies these files into `.claude/`:
 - 9 slash commands (`/maxsim:init`, `/maxsim:plan`, etc.)
 - 4 agent definitions (executor, planner, researcher, verifier)
 - 14 skills (TDD, debugging, code review, and more)
-- 17 workflow files
+- 18 workflow files
 - 5 reference documents, 2 rules files
 - 5 hooks (statusline, update checker, sounds, capture-learnings)
 - 1 tool binary (`maxsim-tools.cjs`)
@@ -109,7 +117,7 @@ The installer copies these files into `.claude/`:
 ├── commands/maxsim/          # 9 slash commands
 ├── maxsim/
 │   ├── bin/maxsim-tools.cjs  # Tool binary
-│   ├── workflows/            # 17 workflows
+│   ├── workflows/            # 18 workflows
 │   ├── templates/            # Planning document templates
 │   ├── references/           # 5 reference docs
 │   └── hooks/                # 5 hook scripts (.cjs)
@@ -117,8 +125,8 @@ The installer copies these files into `.claude/`:
 ├── skills/                   # 14 skill directories
 ├── rules/                    # 2 rules files
 ├── settings.json
-├── settings.local.json
-└── CLAUDE.md                 # Generated project context
+└── CLAUDE.md                 # Not here — see note below
+# CLAUDE.md is generated in the project root, not inside .claude/
 ```
 
 ### Upgrading
@@ -222,7 +230,7 @@ Set `execution.modelProfile` in `.claude/maxsim/config.json` to control which Cl
 
 ### Per-Agent Overrides
 
-Override individual agents regardless of profile by setting `execution.modelProfile` in `.claude/maxsim/config.json`. The model profile applies uniformly; per-agent granularity is not a supported config key in v6.
+The model profile applies uniformly to all agents of each type. To change which models are used, set `execution.model_profile` in `.claude/maxsim/config.json` to `quality`, `balanced`, or `budget`.
 
 ---
 
@@ -234,7 +242,7 @@ MAXSIM tracks phase and plan progress through GitHub Issues. Execution progress 
 
 Configured during `/maxsim:init`:
 
-1. Creates a "MAXSIM Task Board" project with 4 columns (To Do, In Progress, In Review, Done)
+1. Creates a "MAXSIM Task Board" project with 5 columns (Backlog, To Do, In Progress, In Review, Done)
 2. Creates labels: `phase` (purple), `task` (blue), `blocker` (red)
 3. Optionally creates a GitHub Milestone
 

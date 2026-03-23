@@ -1,14 +1,20 @@
 ---
 name: researcher
 description: Investigates codebase patterns, evaluates technologies, and gathers information from code and documentation.
-tools: Read, Bash, Grep, Glob, WebFetch, WebSearch
+tools:
+  - Read
+  - Bash
+  - Grep
+  - Glob
+  - WebFetch
+  - WebSearch
 model: inherit
 skills:
   - handoff-contract
   - research
 available_skills:
   - name: github-operations
-    path: ~/.claude/skills/github-operations/SKILL.md
+    path: .claude/skills/github-operations/SKILL.md
     trigger: When reading context from GitHub Issues
 ---
 

@@ -23,7 +23,7 @@ Template for GitHub Issue comment content capturing implementation decisions for
 <domain>
 ## Phase Boundary
 
-[Clear statement of what this phase delivers — the scope anchor. This comes from ROADMAP.md and is fixed. Discussion clarifies implementation within this boundary.]
+[Clear statement of what this phase delivers — the scope anchor. This comes from the GitHub Phase Issue description and is fixed. Discussion clarifies implementation within this boundary.]
 
 </domain>
 

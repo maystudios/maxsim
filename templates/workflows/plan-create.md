@@ -334,7 +334,7 @@ Agent(
   ```
   Agent(
     prompt=revision_prompt,
-    subagent_type="verifier",
+    subagent_type="planner",
     model="{planner_model}",
     isolation="worktree",
     run_in_background=false

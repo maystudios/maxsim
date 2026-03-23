@@ -10,7 +10,7 @@ Template for GitHub Issue comment content — persistent UAT session tracking.
 ---
 status: testing | complete | diagnosed
 phase: XX-name
-source: [list of SUMMARY.md files tested]
+source: [list of GitHub Issue summary comments tested]
 started: [ISO timestamp]
 updated: [ISO timestamp]
 ---
@@ -107,7 +107,7 @@ skipped: [N]
 **After testing complete (status: complete), if gaps exist:**
 
 1. User runs diagnosis (from verify-work offer or manually)
-2. diagnose-issues workflow spawns parallel debug agents
+2. debug workflow spawns parallel debug agents
 3. Each agent investigates one gap, returns root cause
 4. UAT.md Gaps section updated with diagnosis:
    - Each gap gets `root_cause`, `artifacts`, `missing`, `debug_session` filled
@@ -137,7 +137,7 @@ skipped: [N]
 <lifecycle>
 
 **Creation:** When /maxsim:execute (verification) starts new session
-- Extract tests from SUMMARY.md files
+- Extract tests from GitHub Issue summary comments
 - Set status to "testing"
 - Current Test points to test 1
 - All tests have result: [pending]
@@ -184,7 +184,7 @@ Default: **major** (safe default, user can clarify if wrong)
 ---
 status: diagnosed
 phase: 04-comments
-source: 04-01-SUMMARY.md, 04-02-SUMMARY.md
+source: GitHub Issue #42 summary comment (phase 04-01), GitHub Issue #43 summary comment (phase 04-02)
 started: 2025-01-15T10:30:00Z
 updated: 2025-01-15T10:45:00Z
 ---

@@ -1,6 +1,6 @@
 ---
 name: roadmap-writing
-description: Creates phased project roadmaps with dependency graphs, success criteria, and GitHub Milestone structure. Use when planning new projects, creating milestones, or breaking work into phases.
+description: Creates phased project roadmaps with dependency graphs, success criteria, and GitHub Milestone structure. Used when planning new projects, creating milestones, or breaking work into phases.
 ---
 
 # Roadmap Writing

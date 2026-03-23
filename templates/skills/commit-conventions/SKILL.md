@@ -2,7 +2,7 @@
 name: commit-conventions
 description: >-
   Enforces conventional commit format with atomic changes and co-author
-  attribution. Use when committing code changes to maintain consistent git
+  attribution. Used when committing code changes to maintain consistent git
   history.
 ---
 
@@ -79,6 +79,8 @@ All AI-assisted commits include the co-author line:
 ```
 Co-Authored-By: Claude <noreply@anthropic.com>
 ```
+
+Note: The co-author name may be overridden by the project's CLAUDE.md or commit conventions.
 
 ## Common Mistakes
 

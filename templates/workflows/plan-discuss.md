@@ -74,7 +74,7 @@ Ask about vision and implementation choices. Capture decisions for downstream ag
 <scope_guardrail>
 **CRITICAL: No scope creep.**
 
-The phase boundary comes from ROADMAP.md and is FIXED. Discussion clarifies HOW to implement
+The phase boundary comes from the GitHub Phase Issue description and is FIXED. Discussion clarifies HOW to implement
 what's scoped, never WHETHER to add new capabilities.
 
 **When user suggests scope creep:**

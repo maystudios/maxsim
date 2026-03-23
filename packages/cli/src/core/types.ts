@@ -34,6 +34,7 @@ export function cmdErr(error: string): CmdResult {
  * @internal — reserved for future use
  */
 export const ProjectStatus = {
+  BACKLOG: 'Backlog',
   TO_DO: 'To Do',
   IN_PROGRESS: 'In Progress',
   IN_REVIEW: 'In Review',
@@ -190,6 +191,7 @@ export interface MaxsimConfig {
   automation: {
     auto_commit_on_success: boolean;
     conventional_commits: boolean;
+    co_author: string;
   };
   github: {
     projectName: string;
@@ -230,6 +232,7 @@ export const DEFAULT_CONFIG: MaxsimConfig = {
   automation: {
     auto_commit_on_success: true,
     conventional_commits: true,
+    co_author: 'Co-Authored-By: Claude <noreply@anthropic.com>',
   },
   github: {
     projectName: '',

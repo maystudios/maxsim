@@ -28,3 +28,4 @@ Follow @.claude/maxsim/workflows/go.md end-to-end.
 4. Wait for user approval (Ctrl+C cancels)
 5. Execute approved action by spawning the appropriate Agent
 </process>
+</output>

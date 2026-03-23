@@ -2,7 +2,7 @@
 name: maxsim-batch
 description: >-
   Orchestrates parallel agent execution using worktree isolation following
-  Anthropic's batch pattern. Use when multiple independent tasks can be
+  Anthropic's batch pattern. Used when multiple independent tasks can be
   executed simultaneously.
 ---
 
@@ -85,7 +85,7 @@ When all agents complete:
 
 ## Agent Teams (Intra-Branch Coordination)
 
-For tasks that benefit from competitive implementation, use Agent Teams: spawn 2-3 agents on the same task within the same branch, then have a verifier agent pick the best result. This is useful when solution quality matters more than speed and multiple valid approaches exist. The verifier reads each agent's output, evaluates against acceptance criteria, and promotes the winner. See §7.2 of PROJECT.md for the full Agent Teams specification.
+For tasks that benefit from competitive implementation, use Agent Teams: spawn 2-3 agents on the same task within the same branch, then have a verifier agent pick the best result. This is useful when solution quality matters more than speed and multiple valid approaches exist. The verifier reads each agent's output, evaluates against acceptance criteria, and promotes the winner. See PROJECT.md section 7.2 for the full Agent Teams specification.
 
 ## Limits
 

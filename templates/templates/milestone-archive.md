@@ -65,7 +65,7 @@ Plans:
 {{DECISIONS_FROM_PROJECT_STATE}}
 [Example:]
 
-- Decision: Use ROADMAP.md split (Rationale: Constant context cost)
+- Decision: Use milestone split (Rationale: Constant context cost)
 - Decision: Decimal phase numbering (Rationale: Clear insertion semantics)
 
 **Issues Resolved:**
@@ -79,7 +79,7 @@ Plans:
 {{ISSUES_DEFERRED_TO_LATER}}
 [Example:]
 
-- PROJECT-STATE.md tiering (deferred until decisions > 300)
+- Project state tiering (deferred until decisions > 300)
 
 **Technical Debt Incurred:**
 {{SHORTCUTS_NEEDING_FUTURE_WORK}}
@@ -104,9 +104,9 @@ _For current project status, see the GitHub Project Board_
 **How to fill template:**
 
 - Replace {{PLACEHOLDERS}} with actual values
-- Extract phase details from ROADMAP.md
+- Extract phase details from GitHub Phase Issues
 - Document decimal phases with (INSERTED) marker
-- Include key decisions from PROJECT-STATE.md or SUMMARY files
+- Include key decisions from GitHub Issue comments
 - List issues resolved vs deferred
 - Capture technical debt for future reference
 
@@ -117,7 +117,7 @@ _For current project status, see the GitHub Project Board_
 
 **After archiving:**
 
-- Update ROADMAP.md to collapse completed milestone in `<details>` tag
+- Close the GitHub Milestone and archive phase issues
 - Update PROJECT.md to brownfield format with Current State section
 - Continue phase numbering in next milestone (never restart at 01)
   </guidelines>

@@ -12,7 +12,7 @@ Milestone lifecycle is managed through `/maxsim:init`. This single entry point h
 
 ### Operations available through `/maxsim:init`
 
-{% doctable headers=["Operation", "Description"] rows=[["new-project", "Initialize a new project — creates .planning/ with vision, requirements, roadmap"], ["init-existing", "Onboard an existing codebase into MaxsimCLI (use --existing flag)"], ["new-milestone", "Add a new milestone to ROADMAP.md with placeholder phases"], ["complete-milestone", "Archive milestone phases and advance to the next milestone"]] %}
+{% doctable headers=["Operation", "Description"] rows=[["new-project", "Initialize a new project — Creates GitHub repo, Project Board, Milestones with phase issues."], ["init-existing", "Onboard an existing codebase into MaxsimCLI (use --existing flag)"], ["new-milestone", "Add a new milestone to the Project Board with placeholder phase issues"], ["complete-milestone", "Archive milestone phases and advance to the next milestone"]] %}
 {% /doctable %}
 
 {% codeblock language="bash" %}

@@ -80,11 +80,14 @@ export function installHooks(projectDir: string): { installed: string[] } {
     installed.push('maxsim-capture-learnings (Stop)');
   }
 
-  // Register statusLine
+  // Register statusLine (only if not already set, or if it's already ours)
   const statusLinePath = path.join(hooksDestDir, 'maxsim-statusline.cjs');
   if (fs.existsSync(statusLinePath)) {
-    settings.statusLine = { type: 'command', command: `node "${statusLinePath}"` };
-    installed.push('maxsim-statusline (statusLine)');
+    const existingStatusLine = settings.statusLine;
+    if (!existingStatusLine || existingStatusLine.command.includes('maxsim-statusline')) {
+      settings.statusLine = { type: 'command', command: `node "${statusLinePath}"` };
+      installed.push('maxsim-statusline (statusLine)');
+    }
   }
 
   // Enable Agent Teams

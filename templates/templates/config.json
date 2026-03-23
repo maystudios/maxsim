@@ -5,7 +5,7 @@
     "parallelism": {
       "max_agents_per_wave": 3,
       "max_retries": 3,
-      "competition_strategy": "none"
+      "competition_strategy": "best-of-3"
     },
     "verification": {
       "strict_mode": true,

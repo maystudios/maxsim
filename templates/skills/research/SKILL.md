@@ -1,6 +1,6 @@
 ---
 name: research
-description: Systematic investigation using parallel agents, source hierarchy, and Claude Code tool priority. Merges research methodology with tool selection best practices. Use when investigating codebase patterns, evaluating libraries, or gathering information before planning.
+description: Provides systematic investigation merging research methodology with tool selection best practices using parallel agents, source hierarchy, and Claude Code tool priority. Used when investigating codebase patterns, evaluating libraries, or gathering information before planning.
 ---
 
 # Research Skill

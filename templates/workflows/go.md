@@ -206,6 +206,8 @@ If it fails, print the error and suggest a recovery command.
 
 When no clear action is detected, show a contextual menu. Filter items based on live GitHub data — do not show static options that don't apply.
 
+Call `EnterPlanMode` before presenting the menu options. After the user selects an action and confirms, call `ExitPlanMode` before dispatching.
+
 ```
 ## Project Status
 

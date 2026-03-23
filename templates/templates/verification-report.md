@@ -16,7 +16,7 @@ score: N/M must-haves verified
 
 # Phase {X}: {Name} Verification Report
 
-**Phase Goal:** {goal from ROADMAP.md}
+**Phase Goal:** {goal from GitHub Phase Issue}
 **Verified:** {timestamp}
 **Status:** {passed | gaps_found | human_needed}
 
@@ -147,7 +147,7 @@ None — all verifiable items checked programmatically.
 ## Verification Metadata
 
 **Verification approach:** Goal-backward (derived from phase goal)
-**Must-haves source:** {PLAN.md frontmatter | derived from ROADMAP.md goal}
+**Must-haves source:** {plan from GitHub Issue comment | derived from phase goal}
 **Automated checks:** {N} passed, {M} failed
 **Human checks required:** {N}
 **Total verification time:** {duration}

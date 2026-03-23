@@ -1,6 +1,6 @@
 ---
 name: project-memory
-description: GitHub-native persistence for project learnings, decisions, and patterns using issue labels and structured comments. Use when recording what worked, what failed, or architectural decisions that should persist across sessions.
+description: GitHub-native persistence for project learnings, decisions, and patterns using issue labels and structured comments. Used when recording what worked, what failed, or architectural decisions that should persist across sessions.
 ---
 
 # Project Memory Skill
@@ -114,7 +114,9 @@ This surfaces what changed recently without opening every file. Combine with `gh
 
 ## Agent-Memory Storage Layer
 
-MaxsimCLI maintains an automated local memory store for learnings captured by the agent itself. The storage path is `.claude/agent-memory/maxsim-learner/MEMORY.md`. This file is written automatically at session end by the `maxsim-capture-learnings` Stop hook (per §11.4 of PROJECT.md), which extracts key lessons from the session transcript and appends them to the file. Agents should read this file at session start alongside GitHub Issues to surface recently captured patterns before planning.
+MaxsimCLI maintains an automated local memory store for learnings captured by the agent itself. The storage path is `.claude/agent-memory/maxsim-learner/MEMORY.md`. This file is written automatically at session end by the `maxsim-capture-learnings` Stop hook (per PROJECT.md section 12.1 (hooks table)), which extracts key lessons from the session transcript and appends them to the file. Agents should read this file at session start alongside GitHub Issues to surface recently captured patterns before planning.
+
+**Note:** The local agent-memory file complements GitHub-native storage. It provides fast session-start context while GitHub Issues remain the authoritative long-term store. This file may not exist on fresh installations until the first session completes.
 
 ---
 

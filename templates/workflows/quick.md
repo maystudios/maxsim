@@ -105,6 +105,7 @@ GitHub Issue: #$ISSUE_NUM
 ",
   model=$EXECUTOR_MODEL,
   subagent_type="executor",
+  isolation="worktree",
   description="Execute quick task #$ISSUE_NUM: $DESCRIPTION"
 )
 ```
@@ -134,6 +135,7 @@ Return: PASS or FAIL with brief reasoning.
 ",
   model=$VERIFIER_MODEL,
   subagent_type="verifier",
+  isolation="worktree",
   description="Verify quick task #$ISSUE_NUM"
 )
 ```
@@ -149,7 +151,7 @@ If FAIL: display issues, ask user whether to fix or accept as-is.
 Post completion comment to the issue:
 
 ```bash
-node .claude/maxsim/bin/maxsim-tools.cjs github comment-issue \
+node .claude/maxsim/bin/maxsim-tools.cjs github post-comment \
   --issue-number $ISSUE_NUM \
   --body "Completed. Commit: $COMMIT_HASH\n\nSummary: $SUMMARY\n\nVerification: $VERIFY_STATUS"
 ```

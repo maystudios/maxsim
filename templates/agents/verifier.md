@@ -1,7 +1,11 @@
 ---
 name: verifier
 description: Reviews completed work for correctness, quality, security, and spec compliance with evidence-based verification.
-tools: Read, Bash, Grep, Glob
+tools:
+  - Read
+  - Bash
+  - Grep
+  - Glob
 model: inherit
 skills:
   - handoff-contract
@@ -9,10 +13,10 @@ skills:
   - code-review
 available_skills:
   - name: systematic-debugging
-    path: ~/.claude/skills/systematic-debugging/SKILL.md
+    path: .claude/skills/systematic-debugging/SKILL.md
     trigger: When investigating test failures or unexpected behavior
   - name: github-operations
-    path: ~/.claude/skills/github-operations/SKILL.md
+    path: .claude/skills/github-operations/SKILL.md
     trigger: When posting verification results to GitHub
 ---
 

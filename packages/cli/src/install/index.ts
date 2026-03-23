@@ -91,6 +91,9 @@ async function runInstall(projectDir: string, quiet: boolean): Promise<void> {
     }
   }
 
+  // 1b. Create agent-memory directory
+  fs.mkdirSync(path.join(projectDir, '.claude', 'agent-memory', 'maxsim-learner'), { recursive: true });
+
   // 2. Copy CLI binary
   const cliBinSrc = path.resolve(__dirname, 'cli.cjs');
   const cliBinDest = path.join(claudeDir, 'maxsim', 'bin', 'maxsim-tools.cjs');

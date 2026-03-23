@@ -1,6 +1,6 @@
 ---
 name: github-operations
-description: Unified GitHub interaction covering artifact types, comment conventions, CLI commands, and issue lifecycle. Use when reading from or writing to GitHub Issues, managing the project board, or posting structured comments.
+description: Unified GitHub interaction covering artifact types, comment conventions, CLI commands, and issue lifecycle. Used when reading from or writing to GitHub Issues, managing the project board, or posting structured comments.
 ---
 
 # GitHub Operations

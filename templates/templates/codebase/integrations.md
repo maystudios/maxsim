@@ -255,7 +255,7 @@ Template for GitHub Issue comment content capturing external service dependencie
 **What does NOT belong here:**
 - Actual API keys or secrets (NEVER write these)
 - Internal architecture (that's ARCHITECTURE.md)
-- Code patterns (that's PATTERNS.md)
+- Code patterns (that's CONVENTIONS.md)
 - Technology choices (that's STACK.md)
 - Performance issues (that's CONCERNS.md)
 

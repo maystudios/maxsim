@@ -1,6 +1,6 @@
 ---
 name: verification
-description: Evidence-based verification with quality gates, anti-rationalization enforcement, and retry escalation. Merges gate framework, evidence collection, and completion verification into one authoritative source. Use when completing tasks, verifying implementations, or before claiming work is done.
+description: Evidence-based verification with quality gates, anti-rationalization enforcement, and retry escalation. Merges gate framework, evidence collection, and completion verification into one authoritative source. Used when completing tasks, verifying implementations, or before claiming work is done.
 ---
 
 # Verification

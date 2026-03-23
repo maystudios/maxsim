@@ -2,7 +2,7 @@
 name: code-review
 description: >-
   Performs multi-dimensional code review covering security, quality, spec
-  compliance, and maintainability. Use when reviewing completed implementations
+  compliance, and maintainability. Used when reviewing completed implementations
   or before merging changes.
 ---
 

@@ -1,6 +1,6 @@
 ---
 name: using-maxsim
-description: Routes work through MaxsimCLI commands based on project state and user intent. Provides command reference and decision routing table. Use when determining which MaxsimCLI command to use or when starting a new session.
+description: Routes work through MaxsimCLI commands based on project state and user intent. Provides command reference and decision routing table. Used when determining which MaxsimCLI command to use or when starting a new session.
 ---
 
 # Using MaxsimCLI
@@ -33,7 +33,7 @@ Determine user intent, then route to the correct command.
 
 Before beginning any task in a session:
 
-1. Check GitHub Project Board status via `node .claude/maxsim/bin/maxsim-tools.cjs github status`
+1. Check GitHub Project Board status using `gh project list` and `gh project item-list` commands directly.
 2. Identify the active phase from GitHub Issues — if any phase is in progress, resume via `/maxsim:go`
 3. Route to the correct command using the table above
 

@@ -1,7 +1,7 @@
 ---
 name: maxsim:execute
 description: Execute all plans in a phase with parallel agents and auto-verification
-argument-hint: "<phase-number>"
+argument-hint: "[phase-number]"
 allowed-tools: [Read, Write, Edit, Bash, Grep, Glob, Agent, EnterPlanMode, ExitPlanMode]
 ---
 
@@ -12,7 +12,7 @@ Execute all task Issues in a phase using parallel Agents, auto-verify results, a
 <context>
 Arguments: $ARGUMENTS
 
-Phase number is required (e.g., `/maxsim:execute 3`).
+Phase number can be specified or auto-detected from the next unexecuted phase (e.g., `/maxsim:execute 3`).
 
 GitHub is the sole source of truth. Task state (todo/in-progress/done) is read from GitHub Issue labels and Project Board columns — no .planning/ files.
 

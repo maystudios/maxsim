@@ -1,17 +1,23 @@
 ---
 name: executor
 description: Implements code changes with atomic commits, test verification, and structured handoff reporting.
-tools: Read, Write, Edit, Bash, Grep, Glob
+tools:
+  - Read
+  - Write
+  - Edit
+  - Bash
+  - Grep
+  - Glob
 model: inherit
 skills:
   - handoff-contract
   - commit-conventions
 available_skills:
   - name: github-operations
-    path: ~/.claude/skills/github-operations/SKILL.md
+    path: .claude/skills/github-operations/SKILL.md
     trigger: When reading from or writing to GitHub Issues
   - name: tdd
-    path: ~/.claude/skills/tdd/SKILL.md
+    path: .claude/skills/tdd/SKILL.md
     trigger: When implementing features with test-first approach
 ---
 

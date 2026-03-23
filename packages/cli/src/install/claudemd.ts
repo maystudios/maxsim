@@ -6,11 +6,13 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
-/** Generate CLAUDE.md content for a project. */
-export function generateClaudeMd(projectName: string): string {
-  return `# ${projectName}
-
-## MaxsimCLI
+/** Generate CLAUDE.md content for a project.
+ * @param projectName - The project name used as the H1 heading (fresh installs only).
+ * @param appendMode - When true, omits the H1 heading and starts directly with ## MaxsimCLI.
+ */
+export function generateClaudeMd(projectName: string, appendMode = false): string {
+  const heading = appendMode ? '## MaxsimCLI' : `# ${projectName}\n\n## MaxsimCLI`;
+  return `${heading}
 
 This project uses [MaxsimCLI](https://maxsimcli.dev) for structured development.
 
@@ -51,7 +53,7 @@ export function writeClaudeMd(projectDir: string, projectName: string): void {
     const existing = fs.readFileSync(claudeMdPath, 'utf8');
     if (!existing.includes('MaxsimCLI') && !existing.includes('maxsim')) {
       // Append our section instead of overwriting
-      const content = `${existing}\n\n${generateClaudeMd(projectName)}`;
+      const content = `${existing}\n\n${generateClaudeMd(projectName, true)}`;
       fs.writeFileSync(claudeMdPath, content, 'utf8');
       return;
     }

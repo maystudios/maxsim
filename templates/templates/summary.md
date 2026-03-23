@@ -282,8 +282,8 @@ The one-liner should tell someone what actually shipped.
 
 **Decisions section:**
 - Key decisions made during execution with rationale
-- Extracted to STATE.md accumulated context
+- Post summary as GitHub Issue comment with `<!-- maxsim:type=summary -->` marker
 - Use "None - followed plan as specified" if no deviations
 
-**After creation:** STATE.md updated with position, decisions, issues.
+**After creation:** Post as GitHub Issue comment with `<!-- maxsim:type=summary -->` marker so state is tracked on GitHub.
 </guidelines>
