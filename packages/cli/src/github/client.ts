@@ -99,6 +99,24 @@ export function getRepoInfo(): RepoInfo {
   }
 }
 
+/** Classify a gh CLI error message into a GhResult error code. */
+function classifyGhError(msg: string): GhResult<never> {
+  if (msg.includes('404') || msg.includes('Not Found')) {
+    return { ok: false, error: msg, code: 'NOT_FOUND' };
+  }
+  if (msg.includes('401') || msg.includes('Unauthorized') || msg.includes('auth')) {
+    return { ok: false, error: msg, code: 'UNAUTHORIZED' };
+  }
+  if (msg.includes('403') || msg.includes('Forbidden')) {
+    const code = msg.toLowerCase().includes('rate limit') ? 'RATE_LIMITED' : 'FORBIDDEN';
+    return { ok: false, error: msg, code };
+  }
+  if (msg.includes('422') || msg.includes('Validation')) {
+    return { ok: false, error: msg, code: 'VALIDATION' };
+  }
+  return { ok: false, error: msg, code: 'UNKNOWN' };
+}
+
 /** Execute a gh CLI command and return parsed JSON. */
 export function ghJson<T>(args: string[]): GhResult<T> {
   try {
@@ -114,21 +132,7 @@ export function ghJson<T>(args: string[]): GhResult<T> {
     }
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
-
-    if (msg.includes('404') || msg.includes('Not Found')) {
-      return { ok: false, error: msg, code: 'NOT_FOUND' };
-    }
-    if (msg.includes('401') || msg.includes('Unauthorized') || msg.includes('auth')) {
-      return { ok: false, error: msg, code: 'UNAUTHORIZED' };
-    }
-    if (msg.includes('403') || msg.includes('rate limit')) {
-      return { ok: false, error: msg, code: 'RATE_LIMITED' };
-    }
-    if (msg.includes('422') || msg.includes('Validation')) {
-      return { ok: false, error: msg, code: 'VALIDATION' };
-    }
-
-    return { ok: false, error: msg, code: 'UNKNOWN' };
+    return classifyGhError(msg);
   }
 }
 
@@ -142,7 +146,7 @@ export function ghExec(args: string[]): GhResult<string> {
     return { ok: true, data: stdout.trim() };
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
-    return { ok: false, error: msg, code: 'UNKNOWN' };
+    return classifyGhError(msg);
   }
 }
 

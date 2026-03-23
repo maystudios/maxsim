@@ -26,15 +26,15 @@ export {
 export {
   createProject, listProjects, findProject,
   listProjectFields, getStatusField, getFieldOptionId,
-  addItemToProject, moveItemToStatus, listItems,
+  addItemToProject, moveItemToStatus,
   ensureProjectBoard,
 } from './projects.js';
 
 // Milestones
 export {
   createMilestone, listMilestones, findMilestone,
-  ensureMilestone, updateMilestone, deleteMilestone,
+  ensureMilestone, updateMilestone,
 } from './milestones.js';
 
 // Labels
-export { ensureLabels, getLabel, createLabel, updateLabel } from './labels.js';
+export { ensureLabels, getLabel, createLabel } from './labels.js';

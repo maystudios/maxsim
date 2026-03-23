@@ -8,7 +8,7 @@ import type { MaxsimIssueMeta, MaxsimIssueState, MaxsimCommentMeta } from './typ
 
 const META_REGEX = /<!--\s*maxsim:meta\s*\n([\s\S]*?)\n\s*-->/;
 const STATE_REGEX = /<!--\s*maxsim:state\s*\n([\s\S]*?)\n\s*-->/;
-const COMMENT_META_REGEX = /<!--\s*maxsim:type=(\w+)\s*(.*?)\s*-->/;
+const COMMENT_META_REGEX = /<!--\s*maxsim:type=([\w-]+)\s*(.*?)\s*-->/;
 
 /** Parse key-value pairs from a YAML-like block inside HTML comments. */
 function parseKV(block: string): Record<string, string> {
@@ -51,7 +51,7 @@ export function parseIssueMeta(body: string): MaxsimIssueMeta | null {
     status: kv.status ?? 'planning',
     estimate: kv.estimate ? Number(kv.estimate) : null,
     wave: kv.wave ? Number(kv.wave) : null,
-    createdAt: kv.created_at ?? new Date().toISOString(),
+    createdAt: kv.created_at ?? '',
     createdBy: kv.created_by ?? 'maxsim',
   };
 }

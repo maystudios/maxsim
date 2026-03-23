@@ -7,7 +7,6 @@ import { getRepoInfo, ghJson, ghExec } from './client.js';
 import type {
   GhProject,
   GhProjectField,
-  GhProjectItem,
   GhResult,
 } from './types.js';
 import { BOARD_COLUMNS } from './types.js';
@@ -185,78 +184,6 @@ export function moveItemToStatus(
 
   if (!editResult.ok) return editResult;
   return { ok: true, data: undefined };
-}
-
-/** Set a number field value on a project item. */
-export function setItemNumberField(
-  projectNumber: number,
-  itemId: string,
-  fieldName: string,
-  value: number,
-  owner?: string,
-): GhResult<void> {
-  const { owner: repoOwner } = getRepoInfo();
-  const projectOwner = owner ?? repoOwner;
-
-  const fieldsResult = listProjectFields(projectNumber, projectOwner);
-  if (!fieldsResult.ok) return fieldsResult;
-
-  const field = fieldsResult.data.find((f) => f.name === fieldName);
-  if (!field) {
-    return { ok: false, error: `Field "${fieldName}" not found`, code: 'NOT_FOUND' };
-  }
-
-  const projectResult = listProjects(projectOwner);
-  if (!projectResult.ok) return projectResult;
-  const project = projectResult.data.find((p) => p.number === projectNumber);
-  if (!project) {
-    return { ok: false, error: `Project #${projectNumber} not found`, code: 'NOT_FOUND' };
-  }
-
-  const editResult = ghExec([
-    'project', 'item-edit',
-    '--id', itemId,
-    '--project-id', project.id,
-    '--field-id', field.id,
-    '--number', String(value),
-  ]);
-
-  if (!editResult.ok) return editResult;
-  return { ok: true, data: undefined };
-}
-
-/** List all items on a project board with their field values. */
-export function listItems(
-  projectNumber: number,
-  owner?: string,
-): GhResult<GhProjectItem[]> {
-  const { owner: repoOwner } = getRepoInfo();
-  const projectOwner = owner ?? repoOwner;
-
-  const result = ghJson<{
-    items: Array<{
-      id: string;
-      content?: { id?: string; type?: string; number?: number; title?: string };
-      title?: string;
-      archived?: boolean;
-    }>;
-  }>(
-    ['project', 'item-list', String(projectNumber), '--owner', projectOwner, '--format', 'json', '--limit', '500'],
-  );
-
-  if (!result.ok) return result;
-
-  return {
-    ok: true,
-    data: (result.data.items ?? []).map((item) => ({
-      id: item.id,
-      contentNodeId: item.content?.id ?? '',
-      contentType: (item.content?.type ?? 'Issue') as GhProjectItem['contentType'],
-      issueNumber: item.content?.number,
-      title: item.content?.title ?? item.title ?? '',
-      isArchived: item.archived ?? false,
-    })),
-  };
 }
 
 // ── Board Setup ───────────────────────────────────────────────────────
