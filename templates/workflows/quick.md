@@ -54,7 +54,38 @@ Issue: #$ISSUE_NUM (In Progress)
 
 ---
 
-## Step 3: Execute the task
+## Step 3: Resolve models and present plan
+
+Resolve executor and verifier models:
+
+```bash
+EXECUTOR_MODEL=$(node .claude/maxsim/bin/maxsim-tools.cjs resolve-model executor --raw)
+VERIFIER_MODEL=$(node .claude/maxsim/bin/maxsim-tools.cjs resolve-model verifier --raw)
+```
+
+Call `EnterPlanMode` then present the task plan to the user:
+
+```
+## Quick Task Plan
+
+**Task:** $DESCRIPTION
+**Issue:** #$ISSUE_NUM
+
+**Steps:**
+1. Execute the task using an executor agent
+2. Verify the result using a verifier agent
+3. Commit, close issue, and move to Done
+
+Proceed? [Yes / Edit description]
+```
+
+Wait for user approval. If user wants to edit, update `$DESCRIPTION` and re-show plan.
+
+After approval, call `ExitPlanMode`.
+
+---
+
+## Step 4: Execute the task
 
 Spawn an executor agent to implement the task directly — no wave scheduling, no plan files:
 
@@ -72,6 +103,7 @@ GitHub Issue: #$ISSUE_NUM
 - Return a short summary of what was done and the commit hash
 </constraints>
 ",
+  model=$EXECUTOR_MODEL,
   subagent_type="executor",
   description="Execute quick task #$ISSUE_NUM: $DESCRIPTION"
 )
@@ -81,7 +113,7 @@ Extract `$COMMIT_HASH` and `$SUMMARY` from executor output.
 
 ---
 
-## Step 4: Verify
+## Step 5: Verify
 
 Run a focused verification of the completed work:
 
@@ -100,6 +132,7 @@ Check:
 
 Return: PASS or FAIL with brief reasoning.
 ",
+  model=$VERIFIER_MODEL,
   subagent_type="verifier",
   description="Verify quick task #$ISSUE_NUM"
 )
@@ -111,7 +144,7 @@ If FAIL: display issues, ask user whether to fix or accept as-is.
 
 ---
 
-## Step 5: Commit artifacts, close issue, move to Done
+## Step 6: Commit artifacts, close issue, move to Done
 
 Post completion comment to the issue:
 
@@ -150,6 +183,8 @@ Ready for next task: /maxsim:quick
 <success_criteria>
 - [ ] GitHub Issue created with label "type:quick"
 - [ ] Issue moved to "In Progress" on project board
+- [ ] Models resolved before spawning executor and verifier agents
+- [ ] Plan presented to user in plan mode before execution
 - [ ] Task executed directly (no plan files)
 - [ ] Verification run and result recorded
 - [ ] Completion comment posted to issue

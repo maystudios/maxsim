@@ -1,12 +1,12 @@
 # User Setup Template
 
-Template for `.planning/phases/XX-name/{phase}-USER-SETUP.md` - human-required configuration that Claude cannot automate.
+Template for user setup documentation - human-required configuration that Claude cannot automate. In v6, setup requirements are tracked as GitHub Issue comments on the relevant phase issue.
 
 **Purpose:** Document setup tasks that literally require human action - account creation, dashboard configuration, secret retrieval. Claude automates everything possible; this file captures only what remains.
 
 ---
 
-## File Template
+## Issue Comment Template
 
 ```markdown
 # Phase {X}: User Setup Required
@@ -61,13 +61,13 @@ Expected results:
 
 ## When to Generate
 
-Generate `{phase}-USER-SETUP.md` when plan frontmatter contains `user_setup` field.
+Generate a user setup comment on the relevant GitHub Issue when plan frontmatter contains `user_setup` field.
 
 **Trigger:** `user_setup` exists in PLAN.md frontmatter and has items.
 
-**Location:** Same directory as PLAN.md and SUMMARY.md.
+**Location:** Posted as a comment on the phase GitHub Issue.
 
-**Timing:** Generated during execute-plan.md after tasks complete, before SUMMARY.md creation.
+**Timing:** Generated during execute-plan.md after tasks complete, before summary creation.
 
 ---
 
@@ -306,6 +306,6 @@ curl -X POST http://localhost:3000/api/test-email \
 
 **Never include:** Actual secret values. Steps Claude can automate (package installs, code changes).
 
-**Naming:** `{phase}-USER-SETUP.md` matches the phase number pattern.
-**Status tracking:** User marks checkboxes and updates status line when complete.
-**Searchability:** `grep -r "USER-SETUP" .planning/` finds all phases with user requirements.
+**Naming:** Use the phase GitHub Issue title as reference.
+**Status tracking:** User marks checkboxes in the GitHub Issue comment and closes/updates the issue when complete.
+**Searchability:** Filter GitHub Issues by the `user-setup` label to find all phases with user requirements.

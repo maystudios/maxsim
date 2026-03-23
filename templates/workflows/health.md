@@ -13,7 +13,7 @@ node .claude/maxsim/bin/maxsim-tools.cjs validate structure
 ```
 
 Expected checks:
-- `~/.claude/` directory exists
+- `.claude/` directory exists
 - `.claude/maxsim/` directory exists
 - `.claude/maxsim/bin/maxsim-tools.cjs` exists
 - `.claude/maxsim/config.json` exists (or create with defaults)

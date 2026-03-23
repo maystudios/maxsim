@@ -13,7 +13,7 @@ node .claude/maxsim/bin/maxsim-tools.cjs config-ensure-section
 Then read the current config:
 
 ```bash
-node .claude/maxsim/bin/maxsim-tools.cjs state load
+node .claude/maxsim/bin/maxsim-tools.cjs config-get
 ```
 
 Parse current values (use defaults if field is absent):
