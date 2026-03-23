@@ -50,8 +50,8 @@ Output: [Working, tested feature]
 </objective>
 
 <context>
-@.planning/PROJECT.md
-@.planning/ROADMAP.md
+GitHub Issue: #<phase-issue-number> (phase scope and acceptance criteria)
+GitHub Issue: #<feature-issue-number> (feature sub-issue with TDD spec)
 @relevant/source/files.ts
 </context>
 

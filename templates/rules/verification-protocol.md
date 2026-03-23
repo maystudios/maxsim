@@ -24,8 +24,10 @@ Every completion claim requires an evidence block:
 CLAIM: [what you are claiming]
 EVIDENCE: [exact command run in THIS turn]
 OUTPUT: [relevant excerpt of actual output]
-VERDICT: PASS | FAIL
+VERDICT: PASS | FAIL | SKIPPED
 ```
+
+`SKIPPED` is permitted only when the verification command is not applicable to the current environment (e.g., a UI-only check in a headless CI run). Document the reason explicitly. When in doubt, use `FAIL` and fix the issue.
 
 If VERDICT is FAIL: do NOT commit. Fix the issue, re-run verification, produce a new evidence block.
 
@@ -51,6 +53,17 @@ These phrases indicate reasoning without evidence. Replace them with a verificat
 | "Bug is fixed" | Original failing test now passes | "Code changed, assumed fixed" |
 | "Task complete" | All done criteria checked with evidence | "I implemented everything" |
 | "No regressions" | Full test suite passing | "I only changed one file" |
+
+## Gate Structure
+
+The `verification` skill defines the authoritative 4-gate structure all verification must pass through:
+
+1. **Exists** — artifact is present at the expected path.
+2. **Substantive** — content is a real implementation, not a stub or placeholder.
+3. **Wired** — artifact is connected to the rest of the system.
+4. **Functional** — artifact actually works when invoked.
+
+Each gate must produce its own evidence block. Gates are sequential: a failure at any gate stops progression.
 
 ## Retry Protocol
 

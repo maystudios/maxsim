@@ -58,6 +58,11 @@ Patterns that appear in the "Worked" column three or more times should be
 promoted to templates or standard operating procedures. Patterns that appear in
 the "Failed" column should be flagged before attempting again.
 
+Structured results are persisted to `.claude/agent-memory/maxsim-learner/autoresearch-results.tsv`
+(tab-separated: `date`, `task`, `approach`, `outcome`, `commit`). This file feeds the
+autoresearch feedback loop and enables cross-session pattern analysis without requiring
+MEMORY.md parsing.
+
 ---
 
 ## 4. Verify + Guard Pattern
