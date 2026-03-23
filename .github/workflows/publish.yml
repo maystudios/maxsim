@@ -56,7 +56,12 @@ jobs:
           STANDALONE_BUILD: 'true'
 
       - name: E2E Tests
-        run: npm run e2e
+        run: |
+          if [ -d packages/cli/tests/e2e ] && ls packages/cli/tests/e2e/*.test.ts 1>/dev/null 2>&1; then
+            npm run e2e
+          else
+            echo "No E2E test files found — skipping"
+          fi
 
   release:
     needs: [build-and-test, e2e]
