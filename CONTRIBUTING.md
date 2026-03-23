@@ -22,6 +22,8 @@ npm test
 cd packages/cli && npx vitest run --config vitest.e2e.config.ts
 ```
 
+> **Note:** E2E tests are not yet implemented. The command will be skipped if no test files are found.
+
 **Requirements:** Node >= 22.0.0
 
 ## Branch Naming
@@ -87,14 +89,14 @@ Key locations for common tasks:
 
 | Task | Location |
 |------|----------|
-| Add a new CLI tool command | `packages/cli/src/cli.ts` (switch dispatch) + relevant module in `src/core/` |
+| Add a new CLI tool command | `packages/cli/src/cli.ts` (registry-based dispatch — currently a stub; commands will be registered in a future phase) + relevant module in `src/core/` |
 | Add a new workflow | `templates/workflows/` |
 | Add a new agent | `templates/agents/` |
-| Change model assignments | `MODEL_PROFILES` in `packages/cli/src/core/config.ts` |
+| Change model assignments | `MODEL_PROFILES` in `packages/cli/src/core/types.ts` |
 | Change install behavior | `packages/cli/src/install/index.ts` |
 | Modify hooks | `packages/cli/src/hooks/` |
 
-Static assets (commands, agents, workflows) live in `templates/` at the repo root. See [CLAUDE.md](./CLAUDE.md) for the full architecture overview.
+Static assets (commands, agents, workflows) live in `templates/` at the repo root. See [PROJECT.md](./PROJECT.md) for the full architecture overview.
 
 ## Before Submitting a PR
 
