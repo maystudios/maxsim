@@ -3,6 +3,8 @@ name: github-operations
 description: Unified GitHub interaction covering artifact types, comment conventions, CLI commands, and issue lifecycle. Use when reading from or writing to GitHub Issues, managing the project board, or posting structured comments.
 ---
 
+# GitHub Operations
+
 ## GitHub as Source of Truth
 
 All project state lives on GitHub. No local `.planning/` files. The canonical record for every phase, task, decision, and progress update is an Issue or Issue comment on the configured repository.
@@ -34,7 +36,7 @@ Every artifact posted to GitHub must include a type marker as the first line of 
 All commands use the MAXSIM tools router:
 
 ```bash
-node ~/.claude/maxsim/bin/maxsim-tools.cjs github <command> [--flag value]
+node .claude/maxsim/bin/maxsim-tools.cjs github <command> [--flag value]
 ```
 
 Add `--raw` to any command for machine-readable JSON output: `{"ok": true, "result": "...", "rawValue": {...}}`.
@@ -96,7 +98,7 @@ cat > "$TMPFILE" << 'EOF'
 ## Summary
 Content here...
 EOF
-node ~/.claude/maxsim/bin/maxsim-tools.cjs github post-comment --issue-number 42 --body-file "$TMPFILE"
+node .claude/maxsim/bin/maxsim-tools.cjs github post-comment --issue-number 42 --body-file "$TMPFILE"
 rm "$TMPFILE"
 ```
 

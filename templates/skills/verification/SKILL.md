@@ -3,6 +3,8 @@ name: verification
 description: Evidence-based verification with quality gates, anti-rationalization enforcement, and retry escalation. Merges gate framework, evidence collection, and completion verification into one authoritative source. Use when completing tasks, verifying implementations, or before claiming work is done.
 ---
 
+# Verification
+
 ## The Iron Law
 
 No completion claim is valid without fresh verification evidence produced in THIS session. Evidence from a prior session, a prior attempt, or reasoning about what "should" be true does not count. If the evidence was not collected by running a tool call in the current session, it does not exist.

@@ -43,16 +43,16 @@ GitHub Issues with label `maxsim:lesson` or `maxsim:decision` are the source of 
 
 ## Skills Per Agent Type
 
-Skills load on-demand based on the current task. Each agent type draws from a different set.
+Skills are matched to agents by semantic description. Each agent type is associated with a different set.
 
 | Agent | Primary Skills |
 |-------|---------------|
-| Planner | `research`, `brainstorming`, `roadmap-writing`, `project-memory` |
-| Executor | `tdd`, `systematic-debugging`, `verification`, `maxsim-simplify` |
-| Verifier | `verification`, `code-review`, `systematic-debugging` |
-| Researcher | `research`, `project-memory` |
+| Planner | `handoff-contract`, `roadmap-writing` |
+| Executor | `handoff-contract`, `commit-conventions` |
+| Verifier | `handoff-contract`, `verification`, `code-review` |
+| Researcher | `handoff-contract`, `research` |
 
-Skills are not auto-loaded. They activate when invoked directly (e.g., `/research`) or when the orchestrator spawns an agent with explicit skill instructions.
+Skills are auto-loaded by Claude Code based on semantic description matching.
 
 ---
 
