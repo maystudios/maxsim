@@ -62,7 +62,8 @@ export function loadConfig(projectDir: string): MaxsimConfig {
       DEFAULT_CONFIG as unknown as Record<string, unknown>,
       parsed as Record<string, unknown>,
     ) as unknown as MaxsimConfig;
-  } catch {
+  } catch (e) {
+    console.warn('maxsim: failed to parse config:', (e as Error).message);
     return { ...DEFAULT_CONFIG };
   }
 }
@@ -85,4 +86,3 @@ export function resolveModel(profile: ModelProfile, agentType: AgentType): Model
   return assignment[agentType as keyof typeof assignment];
 }
 
-export { DEFAULT_CONFIG };

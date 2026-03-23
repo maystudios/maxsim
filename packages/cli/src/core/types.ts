@@ -29,7 +29,10 @@ export function cmdErr(error: string): CmdResult {
 
 // ── Enums ─────────────────────────────────────────────────────────────
 
-/** GitHub Project Board columns (Kanban). */
+/**
+ * GitHub Project Board columns (Kanban).
+ * @internal — reserved for future use
+ */
 export const ProjectStatus = {
   TO_DO: 'To Do',
   IN_PROGRESS: 'In Progress',
@@ -38,7 +41,10 @@ export const ProjectStatus = {
 } as const;
 export type ProjectStatus = (typeof ProjectStatus)[keyof typeof ProjectStatus];
 
-/** Issue priority levels. */
+/**
+ * Issue priority levels.
+ * @internal — reserved for future use
+ */
 export const Priority = {
   P0_CRITICAL: 'P0 Critical',
   P1_HIGH: 'P1 High',
@@ -92,7 +98,10 @@ export const VerificationResult = {
 export type VerificationResult =
   (typeof VerificationResult)[keyof typeof VerificationResult];
 
-/** Task execution states. */
+/**
+ * Task execution states.
+ * @internal — reserved for future use
+ */
 export const TaskState = {
   PENDING: 'pending',
   IN_PROGRESS: 'in_progress',
@@ -102,7 +111,10 @@ export const TaskState = {
 } as const;
 export type TaskState = (typeof TaskState)[keyof typeof TaskState];
 
-/** Wave scheduling states. */
+/**
+ * Wave scheduling states.
+ * @internal — reserved for future use
+ */
 export const WaveState = {
   SCHEDULED: 'scheduled',
   IN_PROGRESS: 'in_progress',
