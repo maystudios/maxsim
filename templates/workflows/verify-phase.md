@@ -15,20 +15,20 @@ Evidence-first: every PASS or FAIL verdict must cite specific file paths, line n
 ## Step 1 — Load Phase Context
 
 ```bash
-INIT=$(node ~/.claude/maxsim/bin/maxsim-tools.cjs init phase-op "${PHASE_ARG}")
+INIT=$(node .claude/maxsim/bin/maxsim-tools.cjs init phase-op "${PHASE_ARG}")
 ```
 
 Extract: `phase_dir`, `phase_number`, `phase_name`, `has_plans`, `plan_count`.
 
 Get the phase issue number from GitHub:
 ```bash
-node ~/.claude/maxsim/bin/maxsim-tools.cjs github all-progress
+node .claude/maxsim/bin/maxsim-tools.cjs github all-progress
 ```
 Find entry where `phase_number` matches. Extract `issue_number` — all verification results are posted here as comments.
 
 Load phase goal and requirements:
 ```bash
-node ~/.claude/maxsim/bin/maxsim-tools.cjs roadmap get-phase "${PHASE_NUMBER}"
+node .claude/maxsim/bin/maxsim-tools.cjs roadmap get-phase "${PHASE_NUMBER}"
 ```
 
 Extract `success_criteria` array and `goal` from ROADMAP.md. These are the contract.
@@ -41,7 +41,7 @@ Extract `success_criteria` array and `goal` from ROADMAP.md. These are the contr
 
 2. **Must-haves from plan frontmatter** — if no ROADMAP success criteria, extract from each plan comment on the phase issue:
    ```bash
-   node ~/.claude/maxsim/bin/maxsim-tools.cjs github get-issue \
+   node .claude/maxsim/bin/maxsim-tools.cjs github get-issue \
      --issue-number $PHASE_ISSUE_NUMBER --include-comments
    ```
    For each plan comment, parse frontmatter `must_haves` field: `{ truths, artifacts, key_links }`.
@@ -344,25 +344,54 @@ checks:
 <!-- maxsim:type=verification -->
 VERIFY_EOF
 
-node ~/.claude/maxsim/bin/maxsim-tools.cjs github post-comment \
+node .claude/maxsim/bin/maxsim-tools.cjs github post-comment \
   --issue-number {PHASE_ISSUE_NUMBER} \
   --body-file "$VERIFY_FILE" \
   --type verification
 ```
 
-## Step 8 — Update Board and Return
+## Step 8 — Regression Guard
+
+Run the full test suite to verify that phase changes did not break existing functionality. This is a second, independent test pass — distinct from the phase-specific checks in Step 3.
+
+```bash
+# Re-run the full test suite
+if [ -f package.json ]; then
+  TEST_SCRIPT=$(node -e "const p=require('./package.json'); console.log(p.scripts?.test || '')")
+  [ -n "$TEST_SCRIPT" ] && npm test 2>&1
+elif [ -f pytest.ini ] || [ -f pyproject.toml ]; then
+  python -m pytest 2>&1
+elif [ -f Cargo.toml ]; then
+  cargo test 2>&1
+fi
+```
+
+**Guard outcome:**
+
+- **Guard PASS** — Continue to Step 9.
+- **Guard FAIL** (verify passed but regression found) — Allow up to 2 rework attempts:
+  1. Identify failing tests from output.
+  2. Spawn an executor agent to fix the regression (targeted fix only — do not re-implement phase work).
+  3. Re-run the regression guard.
+  4. If guard still fails after 2 attempts, set overall status to FAIL, document regression failures in the verification comment, and proceed to Step 9 as a FAIL.
+
+Record: PASS / FAIL + failing test names if failure.
+
+---
+
+## Step 9 — Update Board and Return
 
 **If PASS:**
 ```bash
-node ~/.claude/maxsim/bin/maxsim-tools.cjs github move-issue \
+node .claude/maxsim/bin/maxsim-tools.cjs github move-issue \
   --issue-number $PHASE_ISSUE_NUMBER --status "Done"
-node ~/.claude/maxsim/bin/maxsim-tools.cjs github close-issue \
+node .claude/maxsim/bin/maxsim-tools.cjs github close-issue \
   --issue-number $PHASE_ISSUE_NUMBER
 ```
 
 **If FAIL:**
 ```bash
-node ~/.claude/maxsim/bin/maxsim-tools.cjs github move-issue \
+node .claude/maxsim/bin/maxsim-tools.cjs github move-issue \
   --issue-number $PHASE_ISSUE_NUMBER --status "In Progress"
 ```
 
@@ -391,6 +420,8 @@ Return to orchestrator:
 - [ ] Overall status determined (PASS / FAIL / HUMAN_NEEDED)
 - [ ] Verification result posted as GitHub comment: <!-- maxsim:type=verification -->
 - [ ] No local VERIFICATION.md written
+- [ ] Regression guard (full test suite) run after main verification pass
+- [ ] Rework attempted up to 2 times if guard fails after verify passes
 - [ ] Board transition executed: Done + closed on pass, In Progress on fail
 - [ ] Results returned to orchestrator with status, score, and gap details
 </success_criteria>

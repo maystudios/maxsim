@@ -20,7 +20,6 @@ MAXSIM is a spec-driven development system for Claude Code. It structures work i
 | `/maxsim:progress` | Show project status and recommend next action |
 | `/maxsim:quick` | Run a small ad-hoc task without phase ceremony |
 | `/maxsim:settings` | View and modify MaxsimCLI configuration |
-| `/maxsim:health` | Verify installation and GitHub connectivity |
 | `/maxsim:help` | Show this command reference |
 
 ---
@@ -129,21 +128,6 @@ View and modify MaxsimCLI configuration.
 
 ---
 
-### /maxsim:health
-
-Verify MaxsimCLI installation and GitHub connectivity.
-
-- Checks .claude/ directory structure
-- Verifies gh CLI is installed and authenticated
-- Confirms GitHub repo and project board are accessible
-- Reports status of each check with fix instructions
-
-```
-/maxsim:health
-```
-
----
-
 ### /maxsim:help
 
 Show this command reference.
@@ -176,7 +160,6 @@ Show this command reference.
 | Check progress | `/maxsim:progress` |
 | Quick ad-hoc task | `/maxsim:quick` |
 | Change settings | `/maxsim:settings` |
-| Check installation | `/maxsim:health` |
 | See this help | `/maxsim:help` |
 
 ---

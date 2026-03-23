@@ -7,13 +7,13 @@ View and modify MaxsimCLI configuration stored in .claude/maxsim/config.json.
 ## Step 1: Load current config
 
 ```bash
-node ~/.claude/maxsim/bin/maxsim-tools.cjs config-ensure-section
+node .claude/maxsim/bin/maxsim-tools.cjs config-ensure-section
 ```
 
 Then read the current config:
 
 ```bash
-node ~/.claude/maxsim/bin/maxsim-tools.cjs state load
+node .claude/maxsim/bin/maxsim-tools.cjs state load
 ```
 
 Parse current values (use defaults if field is absent):
@@ -126,14 +126,14 @@ AskUserQuestion([
 Merge new settings into config.json:
 
 ```bash
-node ~/.claude/maxsim/bin/maxsim-tools.cjs config-set model_profile "[value]"
-node ~/.claude/maxsim/bin/maxsim-tools.cjs config-set workflow.research [true/false]
-node ~/.claude/maxsim/bin/maxsim-tools.cjs config-set workflow.plan_checker [true/false]
-node ~/.claude/maxsim/bin/maxsim-tools.cjs config-set workflow.verifier [true/false]
-node ~/.claude/maxsim/bin/maxsim-tools.cjs config-set workflow.auto_advance [true/false]
-node ~/.claude/maxsim/bin/maxsim-tools.cjs config-set parallelism "[value]"
-node ~/.claude/maxsim/bin/maxsim-tools.cjs config-set competition "[none/best-of-2/best-of-3]"
-node ~/.claude/maxsim/bin/maxsim-tools.cjs config-set git.branching_strategy "[value]"
+node .claude/maxsim/bin/maxsim-tools.cjs config-set model_profile "[value]"
+node .claude/maxsim/bin/maxsim-tools.cjs config-set workflow.research [true/false]
+node .claude/maxsim/bin/maxsim-tools.cjs config-set workflow.plan_checker [true/false]
+node .claude/maxsim/bin/maxsim-tools.cjs config-set workflow.verifier [true/false]
+node .claude/maxsim/bin/maxsim-tools.cjs config-set workflow.auto_advance [true/false]
+node .claude/maxsim/bin/maxsim-tools.cjs config-set parallelism "[value]"
+node .claude/maxsim/bin/maxsim-tools.cjs config-set competition "[none/best-of-2/best-of-3]"
+node .claude/maxsim/bin/maxsim-tools.cjs config-set git.branching_strategy "[value]"
 ```
 
 ---
@@ -149,7 +149,7 @@ AskUserQuestion([
     header: "Defaults",
     multiSelect: false,
     options: [
-      { label: "Yes", description: "New projects start with these settings (~/.maxsim/defaults.json)." },
+      { label: "Yes", description: "New projects start with these settings (.claude/maxsim/defaults.json)." },
       { label: "No", description: "Only apply to this project." }
     ]
   }
@@ -159,8 +159,8 @@ AskUserQuestion([
 If "Yes":
 
 ```bash
-mkdir -p ~/.maxsim
-node ~/.claude/maxsim/bin/maxsim-tools.cjs config-save-defaults ~/.maxsim/defaults.json
+mkdir -p .claude/maxsim
+node .claude/maxsim/bin/maxsim-tools.cjs config-save-defaults .claude/maxsim/defaults.json
 ```
 
 Display:
@@ -170,8 +170,8 @@ Display:
  MAXSIM ► SETTINGS UPDATED
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-Settings saved to .planning/config.json
-[If global: Also saved to ~/.maxsim/defaults.json]
+Settings saved to .claude/maxsim/config.json
+[If global: Also saved to .claude/maxsim/defaults.json]
 
 Re-run /maxsim:settings anytime to change these.
 ```
