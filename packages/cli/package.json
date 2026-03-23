@@ -1,6 +1,6 @@
 {
   "name": "maxsimcli",
-  "version": "5.2.0",
+  "version": "5.2.1",
   "private": false,
   "description": "A meta-prompting, context engineering and spec-driven development system for Claude Code by MayStudios.",
   "bin": {
@@ -28,7 +28,7 @@
     "type": "git",
     "url": "git+https://github.com/maystudios/maxsimcli.git"
   },
-  "homepage": "https://maxsimcli.com",
+  "homepage": "https://maxsimcli.dev",
   "bugs": {
     "url": "https://github.com/maystudios/maxsimcli/issues"
   },

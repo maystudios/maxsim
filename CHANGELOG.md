@@ -1,3 +1,10 @@
+## [5.2.1](https://github.com/maystudios/maxsimcli/compare/v5.2.0...v5.2.1) (2026-03-23)
+
+
+### Bug Fixes
+
+* **github:** fix comment regex, milestone dueOn, error classification, remove dead code ([414a75e](https://github.com/maystudios/maxsimcli/commit/414a75e48862abd5690803bbfe54e1688437587c))
+
 # [5.2.0](https://github.com/maystudios/maxsimcli/compare/v5.1.3...v5.2.0) (2026-03-23)
 
 

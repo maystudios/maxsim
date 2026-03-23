@@ -1,7 +1,7 @@
 ---
 name: maxsim:plan
 description: Plan a specific phase with discussion, research, and task breakdown
-argument-hint: "<phase-number> [--force-research] [--skip-verify]"
+argument-hint: "<phase-number>"
 allowed-tools: [Read, Write, Edit, Bash, Grep, Glob, Agent, AskUserQuestion, WebFetch, EnterPlanMode, ExitPlanMode]
 ---
 

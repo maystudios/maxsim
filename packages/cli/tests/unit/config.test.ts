@@ -30,9 +30,9 @@ describe('getConfigPath', () => {
 describe('loadConfig', () => {
   it('returns defaults when no config file exists', () => {
     const config = loadConfig(tmpDir);
-    expect(config.execution.modelProfile).toBe(ModelProfile.BALANCED);
-    expect(config.execution.parallelism.maxRetries).toBe(3);
-    expect(config.execution.verification.strictMode).toBe(true);
+    expect(config.execution.model_profile).toBe(ModelProfile.BALANCED);
+    expect(config.execution.parallelism.max_retries).toBe(3);
+    expect(config.execution.verification.strict_mode).toBe(true);
   });
 
   it('merges partial config with defaults', () => {
@@ -41,14 +41,14 @@ describe('loadConfig', () => {
     fs.writeFileSync(
       path.join(configDir, 'config.json'),
       JSON.stringify({
-        execution: { modelProfile: 'quality' },
+        execution: { model_profile: 'quality' },
       }),
     );
 
     const config = loadConfig(tmpDir);
-    expect(config.execution.modelProfile).toBe('quality');
+    expect(config.execution.model_profile).toBe('quality');
     // Defaults still applied for unset fields
-    expect(config.execution.parallelism.maxRetries).toBe(3);
+    expect(config.execution.parallelism.max_retries).toBe(3);
   });
 
   it('returns defaults for invalid JSON', () => {
@@ -57,14 +57,14 @@ describe('loadConfig', () => {
     fs.writeFileSync(path.join(configDir, 'config.json'), 'not json{{{');
 
     const config = loadConfig(tmpDir);
-    expect(config.execution.modelProfile).toBe(ModelProfile.BALANCED);
+    expect(config.execution.model_profile).toBe(ModelProfile.BALANCED);
   });
 });
 
 describe('saveConfig', () => {
   it('writes config to disk as JSON', () => {
     const config = { ...DEFAULT_CONFIG };
-    config.execution.modelProfile = ModelProfile.QUALITY;
+    config.execution.model_profile = ModelProfile.QUALITY;
 
     saveConfig(tmpDir, config);
 
@@ -73,7 +73,7 @@ describe('saveConfig', () => {
 
     const raw = fs.readFileSync(configPath, 'utf8');
     const parsed = JSON.parse(raw);
-    expect(parsed.execution.modelProfile).toBe('quality');
+    expect(parsed.execution.model_profile).toBe('quality');
   });
 
   it('creates directories if they do not exist', () => {
