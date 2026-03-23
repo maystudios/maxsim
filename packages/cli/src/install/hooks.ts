@@ -4,8 +4,7 @@
 
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import { copyDir } from './copy.js';
-import { getHooksDir } from './copy.js';
+import { copyDir, getHooksDir } from './copy.js';
 
 interface HookEntry {
   type: 'command';

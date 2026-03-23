@@ -27,15 +27,6 @@ export function copyDir(src: string, dest: string): number {
   return count;
 }
 
-/** Copy a single file, creating parent directories as needed. */
-export function copyFile(src: string, dest: string): void {
-  const dir = path.dirname(dest);
-  if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir, { recursive: true });
-  }
-  fs.copyFileSync(src, dest);
-}
-
 /** Remove a directory recursively if it exists. */
 export function removeDir(dir: string): void {
   if (fs.existsSync(dir)) {

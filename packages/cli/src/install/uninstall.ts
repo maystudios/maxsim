@@ -21,7 +21,7 @@ export function uninstall(projectDir: string): {
   const dirsToRemove = [
     path.join(claudeDir, 'maxsim'),         // workflows, templates, references, bin, hooks
     path.join(claudeDir, 'commands', 'maxsim'), // slash commands
-    path.join(claudeDir, 'agent-memory'),    // agent persistent memory
+    path.join(claudeDir, 'agent-memory', 'maxsim-learner'), // agent persistent memory (maxsim only)
   ];
 
   for (const dir of dirsToRemove) {
@@ -93,12 +93,29 @@ export function uninstall(projectDir: string): {
     }
   }
 
-  // Clean hooks from settings.json
+  const settingsPath = path.join(claudeDir, 'settings.json');
+  const hadSettings = hasMaxsimSettings(settingsPath);
   removeHooks(projectDir);
 
   return {
     removedDirs,
     removedFiles,
-    cleanedSettings: true,
+    cleanedSettings: hadSettings,
   };
+}
+
+/** Returns true if settings.json contains maxsim hooks or statusLine. */
+function hasMaxsimSettings(settingsPath: string): boolean {
+  if (!fs.existsSync(settingsPath)) return false;
+  try {
+    const s = JSON.parse(fs.readFileSync(settingsPath, 'utf8'));
+    const hasHooks =
+      s.hooks &&
+      Object.values(s.hooks as Record<string, Array<{ hooks: Array<{ command: string }> }>>).some(
+        (matchers) => matchers.some((m) => m.hooks.some((h) => h.command.includes('maxsim'))),
+      );
+    return hasHooks || s.statusLine?.command?.includes('maxsim') === true;
+  } catch {
+    return false;
+  }
 }

@@ -100,6 +100,8 @@ async function runInstall(projectDir: string, quiet: boolean): Promise<void> {
     fs.copyFileSync(cliBinSrc, cliBinDest);
     totalFiles++;
     if (!quiet) console.log('  maxsim/bin/maxsim-tools.cjs: CLI binary');
+  } else {
+    console.warn('  Warning: cli.cjs binary not found — maxsim tool commands will be unavailable.');
   }
 
   // 3. Install hooks
