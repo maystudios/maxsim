@@ -1,3 +1,23 @@
+## [5.1.2](https://github.com/maystudios/maxsimcli/compare/v5.1.1...v5.1.2) (2026-03-23)
+
+
+### Bug Fixes
+
+* **agents:** correct model profiles and promote verification to preloaded skill ([0062019](https://github.com/maystudios/maxsimcli/commit/00620191beb267b057d726a4f5e27c94b4427520))
+* **ci:** enforce strict test config, add lint step, and clean up stale workflow ([4f0ef76](https://github.com/maystudios/maxsimcli/commit/4f0ef760bd65488712f9eeb183bf31712cc53c46))
+* **ci:** skip e2e job when no test files exist ([e7661a7](https://github.com/maystudios/maxsimcli/commit/e7661a757e900519684cb74732a40e9f99fe0442))
+* **commands:** standardize all 9 slash command definitions ([c72f401](https://github.com/maystudios/maxsimcli/commit/c72f401202e68b9a710ad68efaa921777152b877))
+* **core:** audit fixes for types, config, labels, and board schema ([064ecdc](https://github.com/maystudios/maxsimcli/commit/064ecdc03ca1db785227c7f77c88e8e78a117ba9))
+* **github:** resolve critical audit findings in GitHub integration module ([4f04588](https://github.com/maystudios/maxsimcli/commit/4f0458891f22ff2c90be673df1e788c72fd9136e))
+* **hooks:** remove dead sync-reminder hook, fix Windows path quoting, use npx for update command ([8ed202b](https://github.com/maystudios/maxsimcli/commit/8ed202b5788afd1822e2a1fd202bcc44272751a0))
+* **install:** scope uninstall to maxsim-only paths and fix housekeeping issues ([4617e6f](https://github.com/maystudios/maxsimcli/commit/4617e6f4e50e4e0420b6817e955124d291d13522))
+* **references-rules:** remove orphan references and align with v6 GitHub-first model ([f5a115d](https://github.com/maystudios/maxsimcli/commit/f5a115d47ff98d6c34f514db2c707e9ac8170f65))
+* **skills:** update 8 skill files — remove stale references and add missing content ([eef42ff](https://github.com/maystudios/maxsimcli/commit/eef42ff4b72d8a3c5378f14bb773c9c800d6ac85))
+* **workflows:** remove .planning/ dependencies from execute workflows ([11a8aca](https://github.com/maystudios/maxsimcli/commit/11a8acad3faf9b6626dd6d517d40ca7150436797))
+* **workflows:** remove orphan workflows and normalize config paths ([23ce315](https://github.com/maystudios/maxsimcli/commit/23ce315456b3f6de85a4e9e54ba267372e446f58))
+* **workflows:** repair plan workflow path refs and dead code ([947b271](https://github.com/maystudios/maxsimcli/commit/947b271403fa63aa96c8229ceef0e983c40138d0))
+* **workflows:** use project-local paths and add Plan Mode gates to init/go/milestone workflows ([9a71fab](https://github.com/maystudios/maxsimcli/commit/9a71fabb10d0233afabef73a9ca80f52621c8344))
+
 ## [5.1.1](https://github.com/maystudios/maxsimcli/compare/v5.1.0...v5.1.1) (2026-03-23)
 
 
