@@ -112,4 +112,4 @@ Before reporting completion:
 - [ ] All tests pass after simplification
 - [ ] No behavioral changes introduced
 
-See also: `/code-review` for correctness review covering security, interfaces, and test coverage.
+See also: `code-review` for correctness review covering security, interfaces, and test coverage.
