@@ -2,7 +2,7 @@
 name: maxsim:plan
 description: Plan a specific phase with discussion, research, and task breakdown
 argument-hint: "<phase-number> [--force-research] [--skip-verify]"
-allowed-tools: [Read, Write, Bash, Grep, Glob, Agent, AskUserQuestion, WebFetch]
+allowed-tools: [Read, Write, Bash, Grep, Glob, Agent, AskUserQuestion, WebFetch, EnterPlanMode, ExitPlanMode]
 ---
 
 <objective>
@@ -24,7 +24,7 @@ Re-entry: If phase is already planned, show status and offer options (view, re-p
 </context>
 
 <process>
-Follow @~/.claude/maxsim/workflows/plan.md end-to-end.
+Follow @.claude/maxsim/workflows/plan.md end-to-end.
 
 1. Detect current stage from GitHub Issue labels on the phase Issue
 2. Start at earliest incomplete stage

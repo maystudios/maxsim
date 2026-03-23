@@ -13,7 +13,7 @@ GitHub is the sole source of truth. Read the GitHub Project Board, Milestone pro
 </context>
 
 <process>
-Follow @~/.claude/maxsim/workflows/progress.md end-to-end.
+Follow @.claude/maxsim/workflows/progress.md end-to-end.
 
 1. Read active GitHub Milestone and its completion percentage
 2. Read GitHub Project Board columns to get phase/task states

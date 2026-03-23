@@ -2,7 +2,7 @@
 name: maxsim:quick
 description: Quick task - create GitHub Issue and execute in simplified flow
 argument-hint: "[task description]"
-allowed-tools: [Read, Write, Edit, Bash, Grep, Glob, Agent, AskUserQuestion]
+allowed-tools: [Read, Write, Edit, Bash, Grep, Glob, Agent, AskUserQuestion, EnterPlanMode, ExitPlanMode]
 ---
 
 <objective>
@@ -18,7 +18,7 @@ Quick tasks are tracked as GitHub Issues (label: `quick`) — separate from plan
 </context>
 
 <process>
-Follow @~/.claude/maxsim/workflows/quick.md end-to-end.
+Follow @.claude/maxsim/workflows/quick.md end-to-end.
 
 1. Get task description from $ARGUMENTS or via AskUserQuestion
 2. Clarify scope if ambiguous (one focused question)

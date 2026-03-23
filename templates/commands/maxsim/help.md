@@ -9,5 +9,5 @@ Display the complete MaxsimCLI command reference. Output ONLY the reference cont
 </objective>
 
 <process>
-Output the command reference from @~/.claude/maxsim/workflows/help.md directly. No additions or modifications.
+Output the command reference from @.claude/maxsim/workflows/help.md directly. No additions or modifications.
 </process>

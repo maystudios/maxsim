@@ -1,7 +1,7 @@
 ---
 name: maxsim:go
 description: Auto-detect project state and execute the right action
-allowed-tools: [Read, Bash, Grep, Glob, Agent, AskUserQuestion]
+allowed-tools: [Read, Bash, Grep, Glob, Agent, AskUserQuestion, EnterPlanMode, ExitPlanMode]
 ---
 
 <objective>
@@ -20,7 +20,7 @@ Detection priority:
 </context>
 
 <process>
-Follow @~/.claude/maxsim/workflows/go.md end-to-end.
+Follow @.claude/maxsim/workflows/go.md end-to-end.
 
 1. Read GitHub Project Board state via `gh` CLI
 2. Detect what's next using the priority list above
