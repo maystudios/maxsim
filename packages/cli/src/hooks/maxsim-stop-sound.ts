@@ -1,4 +1,60 @@
-import { readStdinJson } from './shared.js';
-readStdinJson(() => {
-  /* Phase 0: no-op */
+/**
+ * Stop hook — play a satisfying completion sound when Claude finishes a task
+ * (i.e. the Stop event fires).
+ *
+ * Uses platform-native system sounds so no external audio files are required.
+ * Falls through silently if playback fails.
+ */
+
+import * as path from 'node:path';
+import { readStdinJson, playSound, isWindows, isMac } from './shared.js';
+
+interface StopInput {
+  session_id?: string;
+  stop_reason?: string;
+  [key: string]: unknown;
+}
+
+/** Resolve a bundled WAV asset relative to this script, or return null. */
+function bundledSound(name: string): string | null {
+  const candidates = [
+    path.join(path.dirname(process.argv[1] ?? __filename), 'sounds', name),
+    path.join(__dirname, 'sounds', name),
+  ];
+  for (const p of candidates) {
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      if (require('node:fs').existsSync(p)) return p;
+    } catch {
+      // ignore
+    }
+  }
+  return null;
+}
+
+/** Play the best available completion sound for the current platform. */
+function playCompletion(): void {
+  // 1. Prefer a bundled WAV if present
+  const wav = bundledSound('complete.wav');
+  if (wav) {
+    playSound(wav);
+    return;
+  }
+
+  // 2. Fall back to a built-in system sound
+  if (isWindows()) {
+    // SystemNotification maps to the Windows notification toast sound
+    playSound('SystemNotification');
+  } else if (isMac()) {
+    // Glass — a clean, pleasant completion chime
+    playSound('/System/Library/Sounds/Glass.aiff');
+  } else {
+    // Linux: use the freedesktop complete sound
+    playSound('/usr/share/sounds/freedesktop/stereo/complete.oga');
+  }
+}
+
+readStdinJson<StopInput>((_input) => {
+  playCompletion();
+  process.exit(0);
 });

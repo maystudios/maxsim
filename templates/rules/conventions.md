@@ -29,7 +29,7 @@ Co-author line when AI-assisted: `Co-Authored-By: Claude <noreply@anthropic.com>
 | Skills | `.claude/skills/<kebab-case>/SKILL.md` |
 | Agents | `.claude/agents/<simple-name>.md` |
 | Rules | `.claude/rules/<topic>.md` |
-| Plans | `.planning/phases/XX-Name/XX-NN-PLAN.md` |
+| Plans | `phases/{phase}-{name}/{phase}-{plan}-PLAN.md` |
 
 Use kebab-case for directory names. Use UPPER_CASE for protocol files (SKILL.md, PLAN.md, STATE.md).
 

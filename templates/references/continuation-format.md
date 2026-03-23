@@ -52,7 +52,7 @@ Standard format for presenting next steps after completing a command or workflow
 
 **Also available:**
 - Review plan before executing
-- `/maxsim:plan --review 2` — check assumptions
+- `/maxsim:plan 2` — review and adjust assumptions
 
 ---
 ```
@@ -99,7 +99,6 @@ Add note that this is the last plan and what comes after:
 
 **Also available:**
 - `/maxsim:plan 2` — gather context first
-- `/maxsim:plan --research 2` — investigate unknowns
 - Review roadmap
 
 ---
@@ -128,7 +127,6 @@ Show completion status before next action:
 
 **Also available:**
 - `/maxsim:plan 3` — gather context first
-- `/maxsim:plan --research 3` — investigate unknowns
 - Review what Phase 2 built
 
 ---
@@ -149,7 +147,7 @@ When there's no clear primary action:
 
 **To discuss context first:** `/maxsim:plan 3`
 
-**To research unknowns:** `/maxsim:plan --research 3`
+**To research unknowns:** `/maxsim:plan 3`
 
 <sub>`/clear` first → fresh context window</sub>
 

@@ -34,7 +34,7 @@ Model profiles control which Claude model each MAXSIM agent uses. This allows ba
 Orchestrators resolve model before spawning:
 
 ```
-1. Read .planning/config.json
+1. Read maxsim config (via maxsim-tools.cjs state load)
 2. Check model_overrides for agent-specific override
 3. If no override, look up agent in profile table
 4. Pass model parameter to Task call
@@ -60,7 +60,7 @@ Overrides take precedence over the profile. Valid values: `opus`, `sonnet`, `hai
 
 Runtime: `/maxsim:settings` (change profile)
 
-Per-project default: Set in `.planning/config.json`:
+Per-project default: Set in `maxsim.config.json`:
 ```json
 {
   "model_profile": "balanced"
