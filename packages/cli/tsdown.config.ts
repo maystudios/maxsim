@@ -47,11 +47,6 @@ export default defineConfig([
   },
   {
     ...hookShared,
-    entry: { 'maxsim-sync-reminder': 'src/hooks/maxsim-sync-reminder.ts' },
-    dts: false,
-  },
-  {
-    ...hookShared,
     entry: { 'maxsim-notification-sound': 'src/hooks/maxsim-notification-sound.ts' },
     dts: false,
   },

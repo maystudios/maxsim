@@ -52,7 +52,7 @@ export function playSound(soundFile: string): void {
             '-NoProfile',
             '-NonInteractive',
             '-Command',
-            `(New-Object System.Media.SoundPlayer '${soundFile.replace(/'/g, "''")}').PlaySync()`,
+            `$p='${soundFile.replace(/'/g, "''")}'; (New-Object System.Media.SoundPlayer $p).PlaySync()`,
           ],
           { stdio: 'ignore' },
         );
