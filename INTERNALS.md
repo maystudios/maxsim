@@ -32,7 +32,7 @@ maxsimcli/                        ← repo root
 │   ├── agents/                   ← 4 agent definitions
 │   ├── commands/maxsim/          ← 9 slash commands
 │   ├── skills/                   ← 14 skill modules
-│   ├── workflows/                ← 20 workflow orchestrators
+│   ├── workflows/                ← 17 workflow orchestrators
 │   ├── references/               ← reference documents
 │   └── rules/                    ← conventions + verification protocol
 └── docs/spec/                    ← deep-dive technical specifications (~20k lines)
@@ -134,7 +134,7 @@ Located at `templates/commands/maxsim/`:
 | `settings` | `settings.md`          | Configure model profile + options        |
 | `help`     | `help.md`              | Command reference                        |
 
-### Workflows (20)
+### Workflows (17)
 
 Located at `templates/workflows/`. Key workflows:
 
@@ -154,9 +154,6 @@ Located at `templates/workflows/`. Key workflows:
 | `new-milestone.md`  | `init.md`         | Milestone management                 |
 | `quick.md`          | `/maxsim:quick`   | Quick task flow                      |
 | `progress.md`       | `/maxsim:progress`| Board status + routing               |
-| `batch.md`          | internal          | Batch agent orchestration            |
-| `sdd.md`            | internal          | Spec-driven development              |
-| `diagnose-issues.md`| internal          | Issue diagnosis                      |
 | `health.md`         | internal          | Health checks                        |
 | `settings.md`       | `/maxsim:settings`| Interactive configuration            |
 | `help.md`           | `/maxsim:help`    | Help reference                       |
@@ -191,13 +188,13 @@ when Octokit's paginate is required.
 Full Issues CRUD plus sub-issues.
 
 - `createIssue`, `getIssue`, `updateIssue`, `closeIssue` — standard REST via Octokit.
-- `listComments`, `addComment` — paginated with `octokit.paginate`.
+- `listComments(issueNumber)` — paginated with `octokit.paginate`.
+- `addComment(issueNumber, body)` — single POST via `octokit.rest.issues.createComment`.
 - `addSubIssue(parentNumber, childNumber)` — **uses the internal numeric `.id`
   (not the issue number)** for the `sub_issue_id` parameter. Fetches the
   child's `.id` first, then calls `issues.addSubIssue`. This is the correct
   API: issue number (#42) and internal id are different values.
 - `listSubIssues(parentNumber)` — paginated.
-- `getIssueIds(number)` — returns all three ID forms: `{ number, id, nodeId }`.
 
 ### projects.ts
 
@@ -226,18 +223,19 @@ Milestone CRUD using `octokit.paginate` for listing.
 
 ### labels.ts
 
-Enforces the 15-label taxonomy defined in `github/types.ts::MAXSIM_LABELS`.
+Enforces the 16-label taxonomy defined in `github/types.ts::MAXSIM_LABELS`.
 
 - `ensureLabels` — paginates existing labels, creates any that are missing.
 - `getLabel`, `createLabel` — individual label operations.
+- `updateLabel` — updates an existing label's name, color, or description.
 
-Label taxonomy (15 labels, 3 namespaces):
+Label taxonomy (16 labels, 4 namespaces):
 
 | Namespace   | Labels                                                      |
 |-------------|-------------------------------------------------------------|
-| `type:`     | phase, task, bug, quick, user                               |
+| `type:`     | phase, task, bug, quick, user-issue                         |
 | `priority:` | p0, p1, p2, p3                                              |
-| `status:`   | planning, ready, blocked                                    |
+| `status:`   | planned, planning, ready, blocked                           |
 | `maxsim:`   | managed, lesson, decision                                   |
 
 ### comments.ts
@@ -343,6 +341,13 @@ interface MaxsimConfig {
     autoCommitOnSuccess: boolean;      // default: true
     conventionalCommits: boolean;      // default: true
   };
+  github: {
+    projectName: string;               // default: ""
+    autoPush: boolean;                 // default: true
+  };
+  hooks: {
+    enabled: boolean;                  // default: true
+  };
 }
 ```
 
@@ -378,8 +383,9 @@ directly — it is copied into `dist/assets/templates/` during the build.
 │   ├── bin/
 │   │   └── maxsim-tools.cjs  ← compiled CLI dispatcher
 │   ├── hooks/             ← 5 compiled hook scripts (*.cjs)
-│   ├── workflows/         ← 20 workflow orchestrators
+│   ├── workflows/         ← 17 workflow orchestrators
 │   ├── references/        ← reference documents
+│   ├── templates/         ← reusable content templates
 │   └── config.json        ← runtime config (created/updated by /maxsim:settings)
 └── agent-memory/          ← per-agent persistent memory (auto-created at runtime)
     └── maxsim-learner/
@@ -440,6 +446,7 @@ npx maxsimcli
        templates/rules      → .claude/rules/
        templates/workflows  → .claude/maxsim/workflows/
        templates/references → .claude/maxsim/references/
+       templates/templates  → .claude/maxsim/templates/
   5. Copy CLI binary: dist/cli.cjs → .claude/maxsim/bin/maxsim-tools.cjs
   6. Copy hook scripts: dist/assets/hooks/*.cjs → .claude/maxsim/hooks/
   7. Register hooks in .claude/settings.json (idempotent)
