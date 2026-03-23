@@ -14,7 +14,7 @@
 | **npm package** | `maxsimcli` |
 | **Command prefix** | `/maxsim:` |
 | **Repository** | `github.com/maystudios/maxsimcli` |
-| **Website** | `maxsimcli.com` (Landing Page + Documentation) |
+| **Website** | `maxsimcli.dev` (Landing Page + Documentation) |
 | **License** | MIT |
 
 ## 2. What MaxsimCLI Is
@@ -98,7 +98,7 @@ GitHub is not optional. MaxsimCLI requires:
 | GitHub Feature | Purpose |
 |----------------|---------|
 | **Repository** | Code storage. If none exists, MaxsimCLI offers to create a private repo. |
-| **GitHub Projects (v2)** | Visual project board. Kanban: To Do → In Progress → In Review → Done |
+| **GitHub Projects (v2)** | Visual project board. Kanban: Backlog → To Do → In Progress → In Review → Done |
 | **GitHub Issues** | Source of truth for phases, tasks, plans, and context |
 | **Sub-Issues** | Tasks within a phase (sub-issues of the phase issue) |
 | **GitHub Milestones** | Group phases into deliverable milestones |
@@ -412,7 +412,7 @@ Session End (Stop hook)
 
 - **Git as Memory** — `git log --oneline -20` at session start reveals what was tried
 - **Agent Memory** — `.claude/agent-memory/maxsim-learner/MEMORY.md` (Claude Code's subagent memory system, `memory: project`)
-- **Results TSV** — `autoresearch-results.tsv` (gitignored) for metric tracking
+- **Results TSV** — `.claude/agent-memory/maxsim-learner/autoresearch-results.tsv` (gitignored) for metric tracking
 - **Claude Code Memory** — Native auto-memory for user-level preferences
 
 ### 11.5 Isolation
@@ -530,7 +530,7 @@ maxsimcli/
 
 ## 16. Website
 
-`maxsimcli.com` serves two purposes:
+`maxsimcli.dev` serves two purposes:
 
 1. **Landing Page** — Marketing: features, benefits, installation instructions, tech stack showcase
 2. **Full Documentation** — All commands, workflows, skills, configuration, and guides
@@ -608,7 +608,7 @@ MaxsimCLI is successful when:
 2. src/github/projects.ts — Projects v2 (GraphQL + REST, CORRECT APIs)
 3. src/github/issues.ts — Issues + Sub-Issues (correct ID types)
 4. src/github/milestones.ts — Milestones (with pagination)
-5. src/github/labels.ts — Label taxonomy (30+ labels)
+5. src/github/labels.ts — Label taxonomy (16 labels in 4 namespaces)
 6. src/github/comments.ts — Structured comments (HTML markers)
 7. src/github/mapping.ts — Local cache (github-issues.json)
 8. src/github/sync.ts — State synchronization
@@ -738,7 +738,7 @@ Each section above has a corresponding deep-dive document in `docs/spec/` with f
 | # | Topic | Document | Lines | Key Content |
 |---|-------|----------|-------|-------------|
 | 1 | GitHub Projects v2 API | [`github-projects-v2-api.md`](docs/spec/github-projects-v2-api.md) | 2,374 | Complete REST + GraphQL + gh CLI reference, Sub-Issues API, authentication, pagination |
-| 2 | GitHub Issue Structure | [`github-structure-design.md`](docs/spec/github-structure-design.md) | 1,855 | Board design, issue hierarchy, 30+ labels, 9 comment types, IssueOps, GitHub Actions |
+| 2 | GitHub Issue Structure | [`github-structure-design.md`](docs/spec/github-structure-design.md) | 1,855 | Board design, issue hierarchy, 16 labels in 4 namespaces, 9 comment types, IssueOps, GitHub Actions |
 | 3 | Agent Teams Guide | [`agent-teams-guide.md`](docs/spec/agent-teams-guide.md) | 1,283 | TeamCreate, SendMessage, TeammateIdle/TaskCompleted hooks, 6 coordination patterns |
 | 4 | Plan Mode Guide | [`plan-mode-guide.md`](docs/spec/plan-mode-guide.md) | 1,090 | EnterPlanMode/ExitPlanMode mechanics, permissionMode:plan, tool restrictions |
 | 5 | Skills Writing Guide | [`skills-writing-guide.md`](docs/spec/skills-writing-guide.md) | 1,480 | Anthropic skill conventions, frontmatter spec, CSO rules, 12 anti-patterns |
