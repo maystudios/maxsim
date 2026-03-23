@@ -118,9 +118,9 @@ function spawnBackgroundCheck(): void {
 
 function emitUpdateNotice(installed: string, latest: string): void {
   process.stdout.write(
-    JSON.stringify({
+    `${JSON.stringify({
       additionalContext: `MaxsimCLI update available: v${installed} → v${latest}. Run: npx maxsimcli@latest`,
-    }) + '\n',
+    })}\n`,
   );
 }
 
