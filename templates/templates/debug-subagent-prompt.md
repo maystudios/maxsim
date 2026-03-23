@@ -27,7 +27,7 @@ goal: {find_root_cause_only | find_and_fix}
 </mode>
 
 <debug_file>
-Create: .planning/debug/{slug}.md
+Document findings in GitHub Issue: #{issue_number} (add comment with debug report)
 </debug_file>
 ```
 
@@ -38,6 +38,7 @@ Create: .planning/debug/{slug}.md
 | Placeholder | Source | Example |
 |-------------|--------|---------|
 | `{issue_id}` | Orchestrator-assigned | `auth-screen-dark` |
+| `{issue_number}` | GitHub Issue number | `42` |
 | `{issue_summary}` | User description | `Auth screen is too dark` |
 | `{expected}` | From symptoms | `See logo clearly` |
 | `{actual}` | From symptoms | `Screen is dark` |
@@ -53,7 +54,7 @@ Create: .planning/debug/{slug}.md
 
 **From /maxsim:debug:**
 ```python
-Task(
+Agent(
   prompt=filled_template,
   subagent_type="verifier",
   description="Debug {slug}"
@@ -62,7 +63,7 @@ Task(
 
 **From diagnose-issues (UAT):**
 ```python
-Task(prompt=template, subagent_type="verifier", description="Debug UAT-001")
+Agent(prompt=template, subagent_type="verifier", description="Debug UAT-001")
 ```
 
 ---
@@ -73,11 +74,11 @@ For checkpoints, spawn fresh agent with:
 
 ```markdown
 <objective>
-Continue debugging {slug}. Evidence is in the debug file.
+Continue debugging {slug}. Evidence is in the GitHub Issue.
 </objective>
 
 <prior_state>
-Debug file: @.planning/debug/{slug}.md
+GitHub Issue: #{issue_number} — debug findings in issue comments
 </prior_state>
 
 <checkpoint_response>

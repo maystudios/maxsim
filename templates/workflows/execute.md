@@ -17,7 +17,7 @@ Resolve executor model and load phase state in one call:
 ```bash
 EXECUTOR_MODEL=$(node .claude/maxsim/bin/maxsim-tools.cjs resolve-model executor --raw)
 VERIFIER_MODEL=$(node .claude/maxsim/bin/maxsim-tools.cjs resolve-model verifier --raw)
-INIT=$(node .claude/maxsim/bin/maxsim-tools.cjs init execute-phase "$PHASE")
+INIT=$(node .claude/maxsim/bin/maxsim-tools.cjs init execute-phase "$PHASE_NUMBER")
 ```
 
 Parse `$ARGUMENTS` for: phase number (required), `--auto` (skip confirmation prompts), `--gaps-only` (execute gap-closure plans only).
@@ -553,7 +553,7 @@ After verification passes, record session:
 
 ```bash
 node .claude/maxsim/bin/maxsim-tools.cjs state record-session \
-  --stopped-at "Phase ${PHASE} executed and verified" \
+  --stopped-at "Phase ${PHASE_NUMBER} executed and verified" \
   --resume-file "${phase_dir}"
 ```
 

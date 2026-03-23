@@ -13,23 +13,22 @@ Template for spawning planner agent. The agent contains all planning expertise -
 **Mode:** {standard | gap_closure}
 
 **Project State:**
-@.planning/STATE.md
+@GitHub Issue: project state (see project board)
 
 **Roadmap:**
-@.planning/ROADMAP.md
+@GitHub Issues: roadmap milestones (see GitHub Milestones)
 
 **Requirements (if exists):**
-@.planning/REQUIREMENTS.md
+@GitHub Issue: requirements issue for this project
 
 **Phase Context (if exists):**
-@.planning/phases/{phase_dir}/{phase_num}-CONTEXT.md
+@GitHub Issue: #{phase_issue_number} — phase context
 
 **Research (if exists):**
-@.planning/phases/{phase_dir}/{phase_num}-RESEARCH.md
+@GitHub Issue: #{phase_issue_number} — research notes in issue comments
 
 **Gap Closure (if --gaps mode):**
-@.planning/phases/{phase_dir}/{phase_num}-VERIFICATION.md
-@.planning/phases/{phase_dir}/{phase_num}-UAT.md
+@GitHub Issue: #{phase_issue_number} — verification and UAT results in issue comments
 
 </planning_context>
 
@@ -44,7 +43,7 @@ Plans must be executable prompts with:
 
 <quality_gate>
 Before returning PLANNING COMPLETE:
-- [ ] PLAN.md files created in phase directory
+- [ ] Plan comments posted to the phase GitHub Issue
 - [ ] Each plan has valid frontmatter
 - [ ] Tasks are specific and actionable
 - [ ] Dependencies correctly identified
@@ -60,7 +59,7 @@ Before returning PLANNING COMPLETE:
 | Placeholder | Source | Example |
 |-------------|--------|---------|
 | `{phase_number}` | From roadmap/arguments | `5` or `2.1` |
-| `{phase_dir}` | Phase directory name | `05-user-profiles` |
+| `{phase_issue_number}` | GitHub Issue number | `42` |
 | `{phase}` | Phase prefix | `05` |
 | `{standard \| gap_closure}` | Mode flag | `standard` |
 
@@ -70,7 +69,7 @@ Before returning PLANNING COMPLETE:
 
 **From /maxsim:plan (standard mode):**
 ```python
-Task(
+Agent(
   prompt=filled_template,
   subagent_type="planner",
   description="Plan Phase {phase}"
@@ -79,7 +78,7 @@ Task(
 
 **From /maxsim:plan --gaps (gap closure mode):**
 ```python
-Task(
+Agent(
   prompt=filled_template,  # with mode: gap_closure
   subagent_type="planner",
   description="Plan gaps for Phase {phase}"
@@ -98,8 +97,8 @@ Continue planning for Phase {phase_number}: {phase_name}
 </objective>
 
 <prior_state>
-Phase directory: @.planning/phases/{phase_dir}/
-Existing plans: @.planning/phases/{phase_dir}/*-PLAN.md
+Phase GitHub Issue: #{phase_issue_number}
+Existing plans referenced in issue comments
 </prior_state>
 
 <checkpoint_response>

@@ -28,18 +28,19 @@ Find entry where `phase_number` matches. Extract `issue_number` — all verifica
 
 Load phase goal and requirements:
 ```bash
-node .claude/maxsim/bin/maxsim-tools.cjs roadmap get-phase "${PHASE_NUMBER}"
+node .claude/maxsim/bin/maxsim-tools.cjs github get-issue \
+  --issue-number $PHASE_ISSUE_NUMBER --include-comments
 ```
 
-Extract `success_criteria` array and `goal` from ROADMAP.md. These are the contract.
+Extract `success_criteria` and `goal` from the phase GitHub Issue body. These are the contract.
 
 ## Step 2 — Establish Must-Haves
 
 **Priority order:**
 
-1. **Success Criteria from ROADMAP.md** — if `success_criteria` array is non-empty, use it directly. Each criterion is an observable, testable truth. These override plan-level must_haves.
+1. **Success Criteria from the phase GitHub Issue** — if `success_criteria` array is non-empty in the issue body, use it directly. Each criterion is an observable, testable truth. These override plan-level must_haves.
 
-2. **Must-haves from plan frontmatter** — if no ROADMAP success criteria, extract from each plan comment on the phase issue:
+2. **Must-haves from plan frontmatter** — if no GitHub Issue success criteria, extract from each plan comment on the phase issue:
    ```bash
    node .claude/maxsim/bin/maxsim-tools.cjs github get-issue \
      --issue-number $PHASE_ISSUE_NUMBER --include-comments
@@ -408,7 +409,7 @@ Return to orchestrator:
 
 <success_criteria>
 - [ ] Phase issue number retrieved from GitHub via all-progress
-- [ ] Must-haves established from ROADMAP success_criteria, plan frontmatter, or derived from goal
+- [ ] Must-haves established from GitHub Issue success_criteria, plan frontmatter, or derived from goal
 - [ ] All must-have truths verified with status and evidence
 - [ ] All artifacts checked at three levels (exists, substantive, wired)
 - [ ] All key links verified with grep evidence

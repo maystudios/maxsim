@@ -20,6 +20,7 @@ MAXSIM is a spec-driven development system for Claude Code. It structures work i
 | `/maxsim:progress` | Show project status and recommend next action |
 | `/maxsim:quick` | Run a small ad-hoc task without phase ceremony |
 | `/maxsim:settings` | View and modify MaxsimCLI configuration |
+| `/maxsim:debug [desc]` | Investigate and fix a bug using GitHub Issues |
 | `/maxsim:help` | Show this command reference |
 
 ---
@@ -42,9 +43,9 @@ Initialize a new project or start a new milestone cycle.
 
 Plan a phase through three stages: Discussion, Research, Planning.
 
-- Gather implementation decisions via conversation (creates CONTEXT.md)
-- Spawn researcher agent for domain analysis (creates RESEARCH.md)
-- Spawn planner agent to create executable PLAN.md files
+- Gather implementation decisions via conversation (posts context to the phase GitHub Issue)
+- Spawn researcher agent for domain analysis (posts research findings to the phase GitHub Issue)
+- Spawn planner agent to create executable plans (posted as comments on the phase GitHub Issue)
 - Auto-detects current stage and resumes from checkpoint
 
 ```
@@ -128,6 +129,22 @@ View and modify MaxsimCLI configuration.
 
 ---
 
+### /maxsim:debug [desc]
+
+Investigate and fix a bug via GitHub Issues.
+
+- Creates a GitHub Issue labeled "type:bug" for tracking
+- Spawns a debug agent to reproduce, diagnose root cause, and fix
+- Posts findings and fix as comments on the bug issue
+- Runs verification and closes the issue on success
+
+```
+/maxsim:debug
+/maxsim:debug login form crashes when email is empty
+```
+
+---
+
 ### /maxsim:help
 
 Show this command reference.
@@ -160,13 +177,14 @@ Show this command reference.
 | Check progress | `/maxsim:progress` |
 | Quick ad-hoc task | `/maxsim:quick` |
 | Change settings | `/maxsim:settings` |
+| Debug a bug | `/maxsim:debug` |
 | See this help | `/maxsim:help` |
 
 ---
 
 ## Documentation
 
-Full docs: https://github.com/maystudios/maxsim
+Full docs: https://maxsimcli.dev
 
 Update to latest:
 ```bash
