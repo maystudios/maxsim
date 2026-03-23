@@ -1,77 +1,74 @@
 ---
 name: tdd
-description: >-
-  Test-driven development with red-green-refactor cycle and atomic commits.
-  Write failing test first, then minimal passing code, then refactor. Use when
-  implementing business logic, API endpoints, data transformations, validation
-  rules, or algorithms.
+description: Enforces red-green-refactor TDD cycle with atomic commits per phase. Use when implementing features, fixing bugs, or when tests should drive the design.
 ---
 
 # Test-Driven Development (TDD)
 
 Write the test first. Watch it fail. Write minimal code to pass. Clean up.
 
-## When to Use TDD
+## When to Use
 
-**Good fit:** Business logic with defined I/O, API endpoints with contracts, data transformations, validation rules, algorithms, state machines.
+**Good fit:** Business logic with defined I/O, API endpoints with contracts, data transformations, validation rules, algorithms, state machines, bug fixes.
 
-**Poor fit:** UI layout, configuration files, build scripts, one-off scripts, mechanical renames.
+**Poor fit:** UI layout, configuration files, build scripts, one-off scripts, mechanical renames, exploratory spikes.
 
 ## The Red-Green-Refactor Cycle
 
-### 1. RED -- Write One Failing Test
+### RED — Write One Failing Test
 
-- Write ONE minimal test describing the desired behavior
-- Test name describes what SHOULD happen, not implementation details
-- Use real code paths -- mocks only when unavoidable (external APIs, databases)
+- Write ONE minimal test describing the desired behavior.
+- Test name describes what SHOULD happen, not implementation details.
+- Use real code paths — mocks only when unavoidable (external APIs, databases, I/O).
 
-### 2. VERIFY RED -- Run the Test
+**Verify RED:** Run the test. It MUST fail with an assertion error — not a syntax error or import failure. If the test passes immediately, it is testing existing behavior. Rewrite it.
 
-- Test MUST fail with an assertion (not error out from syntax or imports)
-- Failure message must match the missing behavior
-- If the test passes immediately, you are testing existing behavior -- rewrite it
+### GREEN — Write Minimal Code
 
-### 3. GREEN -- Write Minimal Code
+- Write the SIMPLEST code that makes the test pass.
+- Do NOT add features the test does not require.
+- Do NOT refactor yet.
 
-- Write the SIMPLEST code that makes the test pass
-- Do NOT add features the test does not require
-- Do NOT refactor yet
+**Verify GREEN:** Run all tests. The new test must pass. ALL existing tests must still pass. If any existing test fails, fix the code — not the tests.
 
-### 4. VERIFY GREEN -- Run All Tests
+### REFACTOR — Clean Up
 
-- The new test MUST pass
-- ALL existing tests MUST still pass
-- If any test fails, fix code -- not tests
+- Remove duplication, improve names, extract helpers.
+- Run tests after every change.
+- Do NOT add new behavior during refactor.
 
-### 5. REFACTOR -- Clean Up (Tests Still Green)
+**Verify REFACTOR:** All tests still pass. No behavior changed.
 
-- Remove duplication, improve names, extract helpers
-- Run tests after every change
-- Do NOT add new behavior during refactor
+### REPEAT
 
-### 6. REPEAT -- Next failing test for next behavior
+Move to the next failing test for the next unit of behavior.
 
 ## Commit Pattern
 
-Each TDD cycle produces 2-3 atomic commits:
+Each TDD cycle produces 2–3 atomic commits:
 
-- **RED commit:** `test({scope}): add failing test for [feature]`
-- **GREEN commit:** `feat({scope}): implement [feature]`
-- **REFACTOR commit (if changes made):** `refactor({scope}): clean up [feature]`
+| Phase | Commit format |
+|-------|---------------|
+| RED | `test({scope}): add failing test for [feature]` |
+| GREEN | `feat({scope}): implement [feature]` |
+| REFACTOR | `refactor({scope}): clean up [feature]` (omit if no changes) |
+
+Keep commits small. One cycle = one feature unit = one commit group.
 
 ## Context Budget
 
-TDD uses approximately 40% more context than direct implementation due to the RED-GREEN-REFACTOR overhead. Plan accordingly for long task lists.
+TDD uses approximately 40% more context than direct implementation due to cycle overhead. Plan accordingly for long task lists.
 
 ## Common Pitfalls
 
 | Excuse | Why It Fails |
 |--------|-------------|
-| "Too simple to test" | Simple code breaks. The test takes 30 seconds. |
-| "I'll add tests after" | Tests written after pass immediately -- they prove nothing. |
+| "Too simple to test" | Simple code breaks. The test takes 30 seconds to write. |
+| "I'll add tests after" | Tests written after pass immediately — they prove nothing. |
 | "I know the code works" | Knowledge is not evidence. A passing test is evidence. |
-| "TDD is slower" | TDD is faster than debugging. Every skip creates debt. |
+| "TDD is slower" | TDD is faster than debugging. Every skipped test creates debt. |
+| "Mocks make this easy" | Over-mocking tests the mock, not the code. Prefer real code paths. |
 
-Stop immediately if you catch yourself writing implementation code before writing a test, writing a test that passes on the first run, skipping the VERIFY RED step, or adding features beyond what the current test requires.
+Stop immediately if you catch yourself writing implementation code before a test, writing a test that passes on the first run, skipping VERIFY RED, or adding features beyond what the current test requires.
 
-See also: `/verification-before-completion` for evidence-based completion claims after TDD cycles.
+See also: `verification-before-completion` for evidence-based completion claims after TDD cycles.

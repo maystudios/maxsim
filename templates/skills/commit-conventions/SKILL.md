@@ -1,75 +1,109 @@
 ---
 name: commit-conventions
 description: >-
-  Commit message format using conventional commits with scope. Defines atomic
-  commit rules, breaking change markers, and co-author attribution for
-  AI-assisted work. Use when creating git commits, reviewing commit messages,
-  or establishing commit conventions for a project.
-user-invocable: false
+  Enforces conventional commit format with atomic changes and co-author
+  attribution. Use when committing code changes to maintain consistent git
+  history.
 ---
 
 # Commit Conventions
 
-Consistent commit messages that enable automated versioning, changelogs, and clear project history.
+Consistent commit messages enable automated versioning, changelogs, and clear project history. Every commit follows this format.
 
-## Conventional Commit Format
+## Format
 
 ```
-{type}({scope}): {description}
+type(scope): description
 
-- {key change 1}
-- {key change 2}
+- key change 1
+- key change 2
+
+Co-Authored-By: Claude <noreply@anthropic.com>
 ```
 
-### Types
+Subject line under 72 characters. Body bullet points are optional for trivial commits. Co-author line always present for AI-assisted work.
 
-| Type | When | Triggers |
-|------|------|---------|
-| `feat` | New feature or capability | Minor version bump |
-| `fix` | Bug fix | Patch version bump |
-| `chore` | Build, deps, config, maintenance | No version bump |
-| `docs` | Documentation only | No version bump |
-| `test` | Adding or fixing tests | No version bump |
-| `refactor` | Code change that's neither fix nor feature | No version bump |
+## Types
 
-### Breaking Changes
+| Type | When to Use | Version Impact |
+|------|-------------|---------------|
+| `feat` | New feature or capability | Minor bump |
+| `fix` | Bug fix | Patch bump |
+| `refactor` | Code restructure with no behavior change | No bump |
+| `test` | Adding or correcting tests | No bump |
+| `docs` | Documentation only | No bump |
+| `chore` | Build, deps, config, tooling, maintenance | No bump |
+| `style` | Formatting, whitespace, no logic change | No bump |
+| `perf` | Performance improvement | No bump |
+| `ci` | CI/CD pipeline changes | No bump |
+
+## Breaking Changes
 
 Append `!` after the type for breaking changes:
 
 ```
-feat!(install): require Node 20 minimum
+feat!(api): require authentication on all endpoints
 fix!(config): rename model_profile to profile
 ```
 
-Breaking changes trigger a major version bump.
+Breaking changes trigger a major version bump. Always explain what breaks and the migration path in the commit body.
 
-### Scope
+## Scope
 
-Scope identifies the area of change:
+Scope identifies the affected area:
 
-- Phase work: `feat(04-01):`, `fix(phase-04):`
-- Module: `fix(install):`, `refactor(core):`
+- Module or package: `fix(install):`, `refactor(core):`
 - Component: `feat(dashboard):`, `test(cli):`
+- Phase work: `feat(04-01):`, `fix(phase-04):`
+
+Scope is required when the change is not project-wide.
 
 ## Atomic Commits
 
-One logical change per commit:
+One logical change per commit. The diff and message should describe a single coherent unit of work.
 
-- **DO:** Separate feature implementation from test additions
-- **DO:** Commit each task in a plan individually
-- **DO NOT:** Bundle unrelated changes in one commit
-- **DO NOT:** Include "fix typo" changes in feature commits
+Do:
+- Separate feature implementation from test additions
+- Commit each task in a plan individually
+- Commit a refactor separately from a bug fix found during refactor
+
+Do not:
+- Bundle unrelated changes in one commit
+- Mix "fix typo" with feature work
+- Commit "work in progress" or partial implementations
 
 ## Co-Author Attribution
 
-When work is AI-assisted, include the co-author line:
+All AI-assisted commits include the co-author line:
 
 ```
 Co-Authored-By: Claude <noreply@anthropic.com>
 ```
 
-## Commit Message Guidelines
+## Common Mistakes
 
-- **Subject line:** Under 72 characters, imperative mood ("add" not "added")
-- **Body:** Bullet points for key changes (optional for small commits)
-- **Why over what:** The diff shows what changed; the message explains why
+| Mistake | Correct Approach |
+|---------|-----------------|
+| `fix: fixed stuff` | `fix(auth): handle expired token on refresh` |
+| `update things` | Missing type prefix entirely -- add `chore:` or appropriate type |
+| `feat: add feature and also fix bug` | Two commits: one `feat`, one `fix` |
+| `WIP` | Never commit WIP to main; finish the unit of work |
+| Past tense: "added validation" | Imperative mood: "add validation" |
+
+## Examples
+
+```
+feat(api): add rate limiting to public endpoints
+
+- Default: 100 requests per minute per IP
+- Configurable via RATE_LIMIT_RPM env var
+- Returns 429 with Retry-After header
+
+Co-Authored-By: Claude <noreply@anthropic.com>
+```
+
+```
+fix(install): resolve path resolution failure on Windows
+
+Co-Authored-By: Claude <noreply@anthropic.com>
+```

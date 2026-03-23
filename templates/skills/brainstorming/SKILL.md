@@ -1,10 +1,6 @@
 ---
 name: brainstorming
-description: >-
-  Multi-approach exploration before design decisions. Generates 3+ approaches
-  with tradeoff analysis before selecting. Use when facing architectural
-  choices, library selection, design decisions, or any problem with multiple
-  viable solutions.
+description: Explores multiple implementation approaches before committing to one. Produces a structured comparison table with effort/risk assessment. Use when starting features, facing design decisions, or multiple valid approaches exist.
 ---
 
 # Brainstorming
@@ -13,7 +9,7 @@ The first idea is rarely the best idea. Explore the space before committing to a
 
 ## Process
 
-### 1. Frame the Problem
+### 1. Understand the Goal
 
 Define the problem clearly before proposing solutions:
 
@@ -22,45 +18,52 @@ Define the problem clearly before proposing solutions:
 - What has been tried or considered already?
 - What are the non-negotiables vs. nice-to-haves?
 
-Ask the user ONE question at a time. Each answer informs the next question.
+Ask one question at a time. Each answer informs the next question. Do not front-load a list of questions.
 
 ### 2. Research Context
 
 Before proposing solutions, gather evidence:
 
-- Read relevant code and check for prior decisions
-- Identify patterns already in use in the codebase
-- Check STATE.md for existing architectural decisions
+- Read relevant code and check for prior decisions in the codebase.
+- Identify patterns already in use — prefer consistency over novelty.
+- Check for existing architectural decisions that constrain the options.
 
-### 3. Present 3+ Approaches
+### 3. Generate 3+ Approaches
 
-For each approach, provide:
+Present at least three distinct approaches. For each:
 
 | Aspect | Content |
 |--------|---------|
 | **Summary** | One sentence |
-| **How it works** | 3-5 implementation bullets |
+| **How it works** | 3–5 implementation bullets |
 | **Pros** | Concrete advantages ("200 fewer lines" beats "simpler") |
-| **Cons** | Honest drawbacks -- do not hide weaknesses |
+| **Cons** | Honest drawbacks — do not hide weaknesses |
 | **Effort** | Low / Medium / High |
-| **Risk** | What could go wrong and how recoverable |
+| **Risk** | What could go wrong and how recoverable it is |
 
-If one approach is clearly superior, say so -- but still present alternatives so the user can validate your reasoning.
+If one approach is clearly superior, say so — but still present the alternatives so the reasoning can be validated.
 
-### 4. Discuss and Refine
+### 4. Compare — Produce the Summary Table
 
-- Ask which approach the user prefers or whether they want a hybrid
-- Answer follow-up questions honestly
-- If no approach fits, propose new ones informed by the discussion
-- Continue one question at a time -- do not assume consensus
+Always include a top-level comparison table before the detailed breakdowns:
 
-### 5. Get Explicit Approval
+| # | Approach | Effort | Risk |
+|---|----------|--------|------|
+| A | [one-line summary] | Low/Med/High | Low/Med/High |
+| B | [one-line summary] | Low/Med/High | Low/Med/High |
+| C | [one-line summary] | Low/Med/High | Low/Med/High |
 
-The user must explicitly approve one approach (e.g., "Go with A", "Approved"). Vague responses like "Sounds good" or "Interesting" are not approval. If ambiguous, ask: "To confirm -- should I proceed with [specific approach]?"
+### 5. Select with Rationale
+
+State which approach is recommended and why. Reference specific tradeoffs — not just "it's simpler." If no approach fits cleanly, propose a hybrid informed by the analysis.
 
 ### 6. Document the Decision
 
-Record: chosen approach, rejected alternatives with reasons, key implementation decisions, and risks.
+Record:
+- Chosen approach and rationale
+- Rejected alternatives and reasons for rejection
+- Key implementation decisions that follow from the choice
+- Known risks and mitigation plan
 
 ## Output Format
 
@@ -88,14 +91,20 @@ Record: chosen approach, rejected alternatives with reasons, key implementation 
 ## Selected: [letter]
 **Rationale:** [why this approach was chosen]
 **Rejected:** [why alternatives were not chosen]
+**Risks:** [known risks and mitigation]
 ```
+
+## Explicit Approval Required
+
+The user must explicitly approve one approach before any implementation begins. Vague responses like "Sounds good" or "Interesting" are not approval. If ambiguous, ask: "To confirm — should I proceed with [specific approach]?"
 
 ## Common Pitfalls
 
-| Excuse | Reality |
-|--------|---------|
+| Pitfall | Reality |
+|---------|---------|
 | "I already know the best approach" | You know your preferred approach. Alternatives may be better. |
 | "There's only one way to do this" | There is almost never only one way. |
 | "Brainstorming slows us down" | Building the wrong thing is slower. 30 minutes of design saves days of rework. |
+| "The user will just pick the first one" | Present the best option last — anchoring on the first wastes the analysis. |
 
 Stop immediately if you catch yourself writing code before presenting approaches, presenting only one option, asking multiple questions at once, or assuming approval without explicit confirmation.

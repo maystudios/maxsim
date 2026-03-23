@@ -1,10 +1,6 @@
 ---
 name: maxsim-simplify
-description: >-
-  Maintainability optimization covering duplication, dead code, complexity, and
-  naming. Produces structured findings with before/after metrics. Use when
-  reviewing code for simplification, during refactoring passes, or when
-  codebase complexity is increasing.
+description: Reviews changed code for reuse opportunities, quality issues, and efficiency improvements, then fixes actionable items. Use after implementing features or when code feels over-engineered.
 ---
 
 # Simplify
@@ -15,57 +11,83 @@ Every line of code is a liability. Remove what does not earn its place.
 
 Only simplify touched files unless explicitly asked for broader refactoring. The goal is incremental maintainability improvement, not a codebase-wide rewrite.
 
-## Dimensions
+---
 
-### 1. DUPLICATION -- Eliminate Repeated Logic
+## 3-Pass Review
 
-- Are there patterns repeated across files that should be a shared helper?
+### Pass 1 — Reuse
+
+Identify duplication and missed opportunities to use existing code.
+
+- Are there patterns repeated across files that belong in a shared helper?
 - Does new code duplicate existing utilities or library functions?
 - Could two similar implementations be merged behind a single interface?
+- Are there inline blocks that match patterns already extracted elsewhere?
 
-**Rule of three:** If the same pattern appears three times, extract it.
+**Rule of three:** If the same pattern appears three or more times, extract it.
 
-### 2. DEAD CODE -- Remove What Is Not Called
+### Pass 2 — Quality
 
-- Delete unused imports, variables, functions, and parameters
-- Remove commented-out code blocks (version control is the archive)
-- Strip unreachable branches and impossible conditions
-- Drop feature flags for features that no longer exist
+Identify naming, complexity, and error handling problems.
 
-### 3. COMPLEXITY -- Question Every Abstraction
-
-- Does every wrapper, adapter, or indirection layer justify its existence?
-- Are there generics or parametrization that serve only one concrete case?
-- Could a 20-line class be replaced by a 3-line function?
-- Is there defensive programming that guards against conditions that cannot occur?
-
-**If removing it does not break anything, it should not be there.**
-
-### 4. NAMING -- Tighten Clarity
-
-- Are names self-documenting? Rename anything that needs a comment to explain.
+- Are names self-documenting? Rename anything that requires a comment to explain.
+- Does every abstraction, wrapper, or indirection layer justify its existence?
+- Is there dead code: unused imports, commented-out blocks, unreachable branches?
+- Are feature flags still needed, or do they guard features that no longer exist?
+- Is error handling present and consistent, or are errors silently swallowed?
 - Could nested logic be flattened with early returns?
-- Is control flow straightforward, or does it require tracing to understand?
+
+**If removing something does not break anything, it should not be there.**
+
+### Pass 3 — Efficiency
+
+Identify unnecessary work, missing caching, and query patterns that scale poorly.
+
+- Are there operations repeated in a loop that could run once outside it?
+- Is data fetched that is never used?
+- Are there N+1 query patterns (fetching inside a loop that iterates over results)?
+- Could expensive computations be memoized or cached?
+- Are synchronous operations blocking where async would suffice?
+
+---
+
+## Priority Levels
+
+| Priority | Description | Action |
+|----------|-------------|--------|
+| Blocker | Incorrect behavior, data loss risk, or broken error handling introduced by the change | Fix immediately |
+| High | Significant duplication, N+1 queries, or complexity that will compound | Fix in this pass |
+| Medium | Naming issues, minor inefficiencies, single-use abstractions | File as follow-up issue |
+| Low | Style preferences, marginal improvements | Note only, do not act |
+
+Apply fixes for Blocker and High priority items in the current pass. File Medium and Low items as GitHub Issues for follow-up, labelled `maxsim:simplify`.
+
+---
 
 ## Process
 
-1. **DIFF** -- Collect the set of modified and added files. Read each file in full, not just changed hunks.
-2. **SCAN** -- Check each dimension (duplication, dead code, complexity, naming) against each file.
-3. **RECORD** -- Document findings with file path, line range, dimension, and suggested fix.
-4. **FIX** -- Apply fixes for all actionable items. Blocker and High priority first.
-5. **VERIFY** -- Re-run tests to confirm nothing broke. Simplify, do not alter behavior.
+1. **Diff** — Collect the set of modified and added files. Read each file in full, not just the changed hunks.
+2. **Scan** — Run all three passes (Reuse, Quality, Efficiency) against each file.
+3. **Record** — Document each finding using the output format below.
+4. **Fix** — Apply all Blocker and High fixes. Do not alter behavior — simplify only.
+5. **Verify** — Re-run tests. Confirm all tests pass before reporting completion.
+
+---
 
 ## Output Format
 
 ```
-DIMENSION: [Duplication | Dead Code | Complexity | Naming]
-FILE: [path]
-FINDING: [description]
-SEVERITY: [Blocker | High | Medium]
-FIX: [what was done or recommended]
+PASS: [Reuse | Quality | Efficiency]
+FILE: <path>
+LINE: <range>
+FINDING: <description>
+PRIORITY: [Blocker | High | Medium | Low]
+FIX: <what was applied or recommended>
 ```
 
-## Common Rationalizations -- Reject These
+---
+
+## Common Rationalizations — Reject These
 
 | Excuse | Why It Fails |
 |--------|-------------|
@@ -73,18 +95,21 @@ FIX: [what was done or recommended]
 | "The abstraction makes it extensible" | Extensibility serving no current requirement is dead weight. |
 | "Refactoring is risky" | Small, tested simplifications reduce risk. Accumulated complexity increases it. |
 | "I'll clean it up later" | Later never comes. Simplify now while context is fresh. |
+| "The diff is small, not worth reviewing" | Small diffs introduce the most insidious problems. |
 
-Stop if you catch yourself skipping the simplification pass because the diff is small, keeping dead code "just in case", or adding complexity during a simplification pass.
+---
 
-## Verification
+## Verification Checklist
 
 Before reporting completion:
 
 - [ ] All changed files reviewed in full (not just diffs)
-- [ ] No duplicated logic remains that appears three or more times
+- [ ] No duplicated logic that appears three or more times
 - [ ] No dead code: unused imports, commented blocks, unreachable branches
 - [ ] No unnecessary abstractions, wrappers, or indirection layers
+- [ ] Error handling present and consistent in all changed paths
+- [ ] No N+1 queries or repeated expensive operations in loops
 - [ ] All tests pass after simplification
-- [ ] No behavioral changes introduced (simplify only, do not alter)
+- [ ] No behavioral changes introduced
 
-See also: `/code-review` for correctness review (security, interfaces, error handling, test coverage).
+See also: `/code-review` for correctness review covering security, interfaces, and test coverage.

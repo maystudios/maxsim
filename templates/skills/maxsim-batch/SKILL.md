@@ -1,86 +1,112 @@
 ---
 name: maxsim-batch
 description: >-
-  Parallel worktree execution for independent work units. Isolates agents in
-  separate git worktrees for conflict-free parallel implementation. Use when
-  executing multiple independent plans, batch processing, or parallelizable
-  tasks.
+  Orchestrates parallel agent execution using worktree isolation following
+  Anthropic's batch pattern. Use when multiple independent tasks can be
+  executed simultaneously.
 ---
 
-# Batch Worktree Execution
+# Batch Parallel Execution
 
-Decompose large tasks into independent units and execute each in an isolated git worktree.
+Decompose large tasks into independent units, spawn all agents in a single message block, track progress, collect results.
 
 ## When to Use
 
-- 3 or more independent work units with no shared file modifications
-- Tasks that can be verified independently (each unit's tests pass without the others)
-- Parallelizable implementation where speed matters
+Use batch execution when:
+- 3 or more tasks with no shared file modifications
+- Each task can be verified independently
+- Speed matters and the overhead of coordination is worth it
 
-**Do not use for:** Fewer than 3 units (overhead not worth it), sequential dependencies, tasks that modify the same files.
+Do not use for fewer than 3 tasks (overhead exceeds benefit), sequential dependencies, or tasks that modify the same files.
 
 ## Process
 
-### 1. DECOMPOSE -- Analyze Independence
+### 1. DECOMPOSE -- Verify Independence
 
-List all units with a one-line description each. For each unit, list the files it will create or modify. Verify:
+List all units. For each unit, list the files it will create or modify. Check:
 
 - No file appears in more than one unit
-- No runtime dependency (unit A output is not unit B input)
+- No unit's output is another unit's input
 - Each unit's tests pass without the other units' changes
 
-If overlap exists, merge overlapping units or extract shared code into a prerequisite unit that runs first.
+If overlap exists: merge overlapping units, or extract shared code into a prerequisite unit that runs first (serially) before the parallel batch begins.
 
-### 2. PLAN -- Define Unit Specifications
+### 2. SPAWN -- All Agents in One Message Block
 
-For each unit, prepare:
+Spawn all agents in a single message. Each agent call must be self-contained -- the prompt includes all context the agent needs without relying on shared state or prior conversation.
 
-- Unit description and acceptance criteria
-- The list of files it owns (and only those files)
-- The base branch to branch from
-- Instructions: implement, test, commit, push, create PR
+Agent configuration:
+- `isolation: "worktree"` -- each agent works in an isolated git worktree
+- `run_in_background: true` -- agents run in parallel
 
-### 3. SPAWN -- Create Worktree Per Unit
+Each agent prompt must include:
+1. The specific task and acceptance criteria
+2. The exact files it owns (and only those files)
+3. The base branch to branch from
+4. Instructions: implement, run tests, commit, push, create PR
+5. Output contract (see below)
 
-For each unit, create an isolated worktree and spawn an agent. Each agent works independently: read source, implement changes, run tests, commit, push, create PR.
+### 3. OUTPUT CONTRACT
 
-### 4. TRACK -- Monitor Progress
+Every agent returns a terminal line that the orchestrator reads:
 
-Maintain a status table:
+```
+RESULT: PASS — [brief summary]
+RESULT: FAIL — [reason for failure]
+```
 
-| # | Unit | Status | PR |
-|---|------|--------|----|
-| 1 | description | done | #123 |
-| 2 | description | in-progress | -- |
+The line must be the last non-whitespace line of agent output. This is what the orchestrator uses to update the status table -- do not use other formats.
 
-Statuses: `pending`, `in-progress`, `done`, `failed`
+Full handoff output follows the `handoff-contract` skill format.
 
-### 5. MERGE -- Collect Results
+### 4. TRACK -- Status Table
 
-When all units complete, list all created PRs. Handle failures:
+Maintain a status table and re-render it after each agent completion:
 
-- Unit fails tests: spawn a fix agent in the same worktree
-- Merge conflict: decomposition was wrong -- fix overlap and re-run unit
-- 3+ failures on same unit: stop and escalate
+| # | Unit | Branch | Status | PR |
+|---|------|--------|--------|----|
+| 1 | description | feat/unit-1 | done | #123 |
+| 2 | description | feat/unit-2 | in-progress | -- |
+| 3 | description | feat/unit-3 | pending | -- |
+
+Statuses: `pending` → `in-progress` → `done` | `failed`
+
+Update the table in place -- replace the previous table, do not append a new one each time.
+
+### 5. COLLECT -- Handle Results
+
+When all agents complete:
+1. List all PRs created
+2. Verify each PR is independently mergeable (no dependency on another PR)
+3. Handle failures:
+   - Unit fails tests: spawn a fix agent in the same worktree (up to 2 retries)
+   - Merge conflict found: decomposition was wrong -- fix overlap and re-run the conflicting units
+   - 3+ failures on one unit: stop and escalate to user with full failure context
 
 ## Limits
 
-- Up to 30 parallel agents, but typically 3-10 for manageable coordination
-- Fast-forward merge preferred, rebase if needed
-- Each unit must be independently mergeable
+- Up to 30 parallel agents; typically 3-10 for manageable coordination
+- Each unit must be independently mergeable -- prefer fast-forward, rebase if needed
+- Context budget: each agent consumes its own context window; keep prompts focused
 
 ## Common Pitfalls
 
-- "The overlap is minor" -- Minor overlap causes merge conflicts. Split shared code into a prerequisite unit.
-- "We'll merge in the right order" -- Order-dependent merges are not independent. Serialize those units.
-- "Only 2 units, let's still use worktrees" -- Worktree overhead is not worth it for fewer than 3 units.
+| Pitfall | Reality |
+|---------|---------|
+| "The overlap is minor" | Minor overlap causes merge conflicts. Extract shared code first. |
+| "We'll merge in dependency order" | Order-dependent merges are not independent. Serialize those units. |
+| "Only 2 units, let's use batch anyway" | Overhead is not worth it. Run sequentially. |
+| "Agents can ask each other for context" | Agents are isolated. All context goes in the spawn prompt. |
+| "I'll fix the prompt after spawning" | Re-spawning restarts work. Write complete prompts before spawning. |
 
-## Verification
+## Verification Before Completion
 
-Before reporting completion:
+Before reporting batch complete:
 
 - [ ] All units touch non-overlapping files
+- [ ] All agents returned `RESULT: PASS`
 - [ ] Each unit was implemented in an isolated worktree
 - [ ] Each unit's tests pass independently
 - [ ] Each unit has its own PR
 - [ ] No PR depends on another PR being merged first
+- [ ] Status table shows `done` for all units
