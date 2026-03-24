@@ -6,6 +6,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { removeDir } from './copy.js';
 import { removeHooks } from './hooks.js';
+import { removeManifested } from './manifest.js';
 
 /** Completely uninstall MaxsimCLI from a project directory. */
 export function uninstall(projectDir: string): {
@@ -16,6 +17,8 @@ export function uninstall(projectDir: string): {
   const claudeDir = path.join(projectDir, '.claude');
   const removedDirs: string[] = [];
   const removedFiles: string[] = [];
+
+  removeManifested(projectDir);
 
   // Remove MaxsimCLI directories
   const dirsToRemove = [
