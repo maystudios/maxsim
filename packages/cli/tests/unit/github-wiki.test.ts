@@ -30,6 +30,7 @@ vi.mock('node:fs', async (importOriginal) => {
     readFileSync: vi.fn(),
     readdirSync: vi.fn(),
     rmSync: vi.fn(),
+    unlinkSync: vi.fn(),
   };
 });
 
@@ -46,13 +47,14 @@ vi.mock('../../src/github/client.js', () => ({
 // ── Imports (after mocks) ──────────────────────────────────────────────────
 
 import { execFileSync } from 'node:child_process';
-import { mkdtempSync, writeFileSync, readFileSync, readdirSync, rmSync } from 'node:fs';
+import { mkdtempSync, writeFileSync, readFileSync, readdirSync, rmSync, unlinkSync } from 'node:fs';
 import { ghExec, getRepoInfo } from '../../src/github/client.js';
 import {
   checkWikiEnabled,
   getWikiPage,
   createOrUpdateWikiPage,
   listWikiPages,
+  deleteWikiPage,
 } from '../../src/github/wiki.js';
 import type { GhWikiPage } from '../../src/github/types.js';
 
@@ -64,6 +66,7 @@ const mockWriteFileSync = vi.mocked(writeFileSync);
 const mockReadFileSync = vi.mocked(readFileSync);
 const mockReaddirSync = vi.mocked(readdirSync);
 const mockRmSync = vi.mocked(rmSync);
+const mockUnlinkSync = vi.mocked(unlinkSync);
 const mockGhExec = vi.mocked(ghExec);
 const mockGetRepoInfo = vi.mocked(getRepoInfo);
 
@@ -83,6 +86,8 @@ beforeEach(() => {
   mockRmSync.mockReturnValue(undefined);
   // execFileSync (git clone, add, commit, push) is a no-op by default.
   mockExecFileSync.mockReturnValue('' as never);
+  // unlinkSync is a no-op by default (file exists and is removed).
+  mockUnlinkSync.mockReturnValue(undefined);
 });
 
 // ── checkWikiEnabled ──────────────────────────────────────────────────────
@@ -497,6 +502,137 @@ describe('listWikiPages', () => {
     mockReaddirSync.mockReturnValue([] as never);
 
     listWikiPages();
+
+    expect(mockGetRepoInfo).toHaveBeenCalledOnce();
+  });
+});
+
+// ── deleteWikiPage ────────────────────────────────────────────────────────
+
+describe('deleteWikiPage', () => {
+  it('returns ok:true with data:undefined on successful deletion', () => {
+    const result = deleteWikiPage('Home');
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) throw new Error('Expected ok:true');
+    expect(result.data).toBeUndefined();
+  });
+
+  it('removes the file via unlinkSync', () => {
+    deleteWikiPage('My-Page');
+
+    expect(mockUnlinkSync).toHaveBeenCalledWith(expect.stringContaining('My-Page.md'));
+  });
+
+  it('stages the deleted file via git add', () => {
+    deleteWikiPage('Home');
+
+    expect(mockExecFileSync).toHaveBeenCalledWith(
+      'git',
+      ['-C', WIKI_DIR, 'add', 'Home.md'],
+      expect.any(Object),
+    );
+  });
+
+  it('commits with a message derived from the slug', () => {
+    deleteWikiPage('Getting-Started');
+
+    expect(mockExecFileSync).toHaveBeenCalledWith(
+      'git',
+      ['-C', WIKI_DIR, 'commit', '-m', 'Delete Getting Started'],
+      expect.any(Object),
+    );
+  });
+
+  it('pushes the commit', () => {
+    deleteWikiPage('Home');
+
+    expect(mockExecFileSync).toHaveBeenCalledWith(
+      'git',
+      ['-C', WIKI_DIR, 'push'],
+      expect.any(Object),
+    );
+  });
+
+  it('returns NOT_FOUND when the page does not exist', () => {
+    mockUnlinkSync.mockImplementation(() => {
+      throw Object.assign(new Error('ENOENT: no such file or directory'), { code: 'ENOENT' });
+    });
+
+    const result = deleteWikiPage('nonexistent-page');
+
+    expect(result.ok).toBe(false);
+    if (result.ok) throw new Error('Expected ok:false');
+    expect(result.code).toBe('NOT_FOUND');
+  });
+
+  it('returns NOT_FOUND when git clone fails with a not-found error', () => {
+    mockExecFileSync.mockImplementation(() => {
+      throw new Error('Repository not found');
+    });
+
+    const result = deleteWikiPage('Home');
+
+    expect(result.ok).toBe(false);
+    if (result.ok) throw new Error('Expected ok:false');
+    expect(result.code).toBe('NOT_FOUND');
+  });
+
+  it('returns UNKNOWN for unexpected errors during git operations', () => {
+    mockExecFileSync
+      .mockReturnValueOnce('' as never) // git clone
+      .mockImplementationOnce(() => { throw new Error('ENOSPC: no space left on device'); }); // git add
+
+    const result = deleteWikiPage('Home');
+
+    expect(result.ok).toBe(false);
+    if (result.ok) throw new Error('Expected ok:false');
+    expect(result.code).toBe('UNKNOWN');
+  });
+
+  it('cleans up the temp directory after a successful deletion', () => {
+    deleteWikiPage('Home');
+
+    expect(mockRmSync).toHaveBeenCalledWith(WIKI_DIR, expect.objectContaining({ recursive: true }));
+  });
+
+  it('cleans up the temp directory when the page does not exist', () => {
+    mockUnlinkSync.mockImplementation(() => {
+      throw Object.assign(new Error('ENOENT: no such file or directory'), { code: 'ENOENT' });
+    });
+
+    deleteWikiPage('nonexistent-page');
+
+    expect(mockRmSync).toHaveBeenCalledWith(WIKI_DIR, expect.objectContaining({ recursive: true }));
+  });
+
+  it('cleans up the temp directory when git push fails', () => {
+    mockExecFileSync
+      .mockReturnValueOnce('' as never)   // git clone
+      .mockReturnValueOnce('' as never)   // git add
+      .mockReturnValueOnce('' as never)   // git commit
+      .mockImplementationOnce(() => { throw new Error('push rejected'); }); // git push
+
+    deleteWikiPage('Home');
+
+    expect(mockRmSync).toHaveBeenCalledWith(WIKI_DIR, expect.objectContaining({ recursive: true }));
+  });
+
+  it('uses the provided repo override instead of getRepoInfo()', () => {
+    const customRepo = { owner: 'fork-owner', repo: 'fork-repo', isOrg: false };
+
+    deleteWikiPage('Home', customRepo);
+
+    expect(mockExecFileSync).toHaveBeenCalledWith(
+      'git',
+      expect.arrayContaining(['https://github.com/fork-owner/fork-repo.wiki.git']),
+      expect.any(Object),
+    );
+    expect(mockGetRepoInfo).not.toHaveBeenCalled();
+  });
+
+  it('calls getRepoInfo() when no repo override is provided', () => {
+    deleteWikiPage('Home');
 
     expect(mockGetRepoInfo).toHaveBeenCalledOnce();
   });
