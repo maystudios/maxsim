@@ -13,7 +13,7 @@ import { copyDir, removeDir } from '../../src/install/copy.js';
 import { generateClaudeMd, writeClaudeMd } from '../../src/install/claudemd.js';
 import { uninstall } from '../../src/install/uninstall.js';
 import { checkGhAuth } from '../../src/install/gh-auth.js';
-import { checkNodeVersion } from '../../src/install/index.js';
+import { checkNodeVersion, ensureGitignoreEntries } from '../../src/install/index.js';
 
 const mockExecFileSync = execFileSync as ReturnType<typeof vi.fn>;
 
@@ -208,5 +208,42 @@ describe('uninstall', () => {
 
     uninstall(tmpDir);
     expect(fs.existsSync(path.join(tmpDir, 'CLAUDE.md'))).toBe(true);
+  });
+});
+
+describe('ensureGitignoreEntries', () => {
+  it('adds entries to an empty .gitignore', () => {
+    const gitignorePath = path.join(tmpDir, '.gitignore');
+    fs.writeFileSync(gitignorePath, '', 'utf8');
+
+    ensureGitignoreEntries(tmpDir, ['.claude/agent-memory/', 'autoresearch-results.tsv']);
+
+    const content = fs.readFileSync(gitignorePath, 'utf8');
+    expect(content).toContain('.claude/agent-memory/');
+    expect(content).toContain('autoresearch-results.tsv');
+    expect(content).toContain('# MaxsimCLI');
+  });
+
+  it('skips entries already present in .gitignore', () => {
+    const gitignorePath = path.join(tmpDir, '.gitignore');
+    fs.writeFileSync(gitignorePath, '.claude/agent-memory/\nautoresearch-results.tsv\n', 'utf8');
+
+    ensureGitignoreEntries(tmpDir, ['.claude/agent-memory/', 'autoresearch-results.tsv']);
+
+    const content = fs.readFileSync(gitignorePath, 'utf8');
+    expect(content).toBe('.claude/agent-memory/\nautoresearch-results.tsv\n');
+  });
+
+  it('creates .gitignore if it does not exist', () => {
+    const gitignorePath = path.join(tmpDir, '.gitignore');
+    expect(fs.existsSync(gitignorePath)).toBe(false);
+
+    ensureGitignoreEntries(tmpDir, ['.claude/agent-memory/', 'autoresearch-results.tsv']);
+
+    expect(fs.existsSync(gitignorePath)).toBe(true);
+    const content = fs.readFileSync(gitignorePath, 'utf8');
+    expect(content).toContain('.claude/agent-memory/');
+    expect(content).toContain('autoresearch-results.tsv');
+    expect(content).toContain('# MaxsimCLI');
   });
 });
