@@ -1,3 +1,10 @@
+## [5.9.1](https://github.com/maystudios/maxsimcli/compare/v5.9.0...v5.9.1) (2026-03-24)
+
+
+### Bug Fixes
+
+* **hooks:** wrap maxsim-session-start output in JSON additionalContext envelope ([05194be](https://github.com/maystudios/maxsimcli/commit/05194be88ce6e74e1a9fc2c5fd7977d34d2a9c93))
+
 # [5.9.0](https://github.com/maystudios/maxsimcli/compare/v5.8.0...v5.9.0) (2026-03-24)
 
 
