@@ -109,9 +109,16 @@ Stage only the specific files changed by this task (NEVER `git add .` or `git ad
 
 ```bash
 git add {specific_files_changed_by_this_task}
-git commit -m "{type}({phase_number}-{plan_id}): {task_description_as_commit_message}"
+git commit -m "$(cat <<'EOF'
+{type}({phase_number}-{plan_id}): {task_description_as_commit_message}
+
+{co_author}
+EOF
+)"
 TASK_COMMIT=$(git rev-parse HEAD)
 ```
+
+`{co_author}` is the value of `automation.co_author` from `.claude/maxsim/config.json` (default: `Co-Authored-By: Claude <noreply@anthropic.com>`).
 
 Commit type conventions:
 - `feat` — new feature or capability
@@ -243,6 +250,7 @@ Do not add text after the RESULT line.
 Before returning RESULT: PASS, confirm ALL of the following:
 - [ ] All tasks in the plan were executed
 - [ ] Each task has exactly one atomic commit with a conventional commit message
+- [ ] Each commit includes the `Co-Authored-By` trailer from `automation.co_author` in config
 - [ ] No task was committed with `git add .` or `git add -A`
 - [ ] Tests were run and pass (or no test runner detected)
 - [ ] No TODOs, stubs, or placeholder content introduced
