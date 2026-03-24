@@ -31,19 +31,25 @@ Stop. Do not proceed.
 
 **If REMOTE_FAIL:**
 
-```
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
- MAXSIM ► NO GITHUB REMOTE FOUND
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Use `AskUserQuestion` to ask:
 
-MAXSIM requires a GitHub remote to track phases as Issues.
+"No GitHub remote found. Would you like me to create a private GitHub repository for this project?"
 
-Fix: git remote add origin <url>
+- **If yes:** Determine the project name from the directory name or `package.json` name field. Run:
+  ```bash
+  gh repo create {project_name} --private --source=. --remote=origin --push
+  ```
+  Verify the remote was created: `git remote get-url origin`
+  If creation fails, show the error and display the manual setup instructions below.
 
-Then re-run /maxsim:init.
-```
-
-Stop. Do not proceed.
+- **If no:** Display:
+  ```
+  To set up manually:
+    Create a new repo:   gh repo create --private
+    Link existing repo:  git remote add origin <url>
+  Then re-run /maxsim:init.
+  ```
+  Stop. Do not proceed.
 
 Call `EnterPlanMode` immediately after verifying prerequisites. All scanning and GitHub setup happens within Plan Mode. Call `ExitPlanMode` only after the user approves the complete initialization plan.
 
