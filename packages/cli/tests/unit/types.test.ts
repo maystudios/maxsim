@@ -14,6 +14,8 @@ import {
   WaveState,
   CompetitionStrategy,
   MODEL_PROFILES,
+  PARALLELISM_LIMITS,
+  DEFAULT_CONFIG,
 } from '../../src/core/types.js';
 import { VERSION } from '../../src/core/version.js';
 
@@ -143,5 +145,51 @@ describe('VERSION', () => {
     expect(VERSION).toBeDefined();
     expect(typeof VERSION).toBe('string');
     expect(VERSION.length).toBeGreaterThan(0);
+  });
+});
+
+describe('PARALLELISM_LIMITS', () => {
+  it('has entries for all 3 profiles', () => {
+    expect(Object.keys(PARALLELISM_LIMITS)).toHaveLength(3);
+    expect(PARALLELISM_LIMITS[ModelProfile.QUALITY]).toBeDefined();
+    expect(PARALLELISM_LIMITS[ModelProfile.BALANCED]).toBeDefined();
+    expect(PARALLELISM_LIMITS[ModelProfile.BUDGET]).toBeDefined();
+  });
+
+  it('quality profile allows up to 40 agents with range [20, 40]', () => {
+    const q = PARALLELISM_LIMITS[ModelProfile.QUALITY];
+    expect(q.max_agents).toBe(40);
+    expect(q.typical_range).toEqual([20, 40]);
+  });
+
+  it('balanced profile allows up to 20 agents with range [10, 20]', () => {
+    const b = PARALLELISM_LIMITS[ModelProfile.BALANCED];
+    expect(b.max_agents).toBe(20);
+    expect(b.typical_range).toEqual([10, 20]);
+  });
+
+  it('budget profile allows up to 10 agents with range [5, 10]', () => {
+    const b = PARALLELISM_LIMITS[ModelProfile.BUDGET];
+    expect(b.max_agents).toBe(10);
+    expect(b.typical_range).toEqual([5, 10]);
+  });
+});
+
+describe('DEFAULT_CONFIG', () => {
+  it('version matches VERSION constant', () => {
+    expect(DEFAULT_CONFIG.version).toBe(VERSION);
+  });
+
+  it('includes workflow section with correct defaults', () => {
+    expect(DEFAULT_CONFIG.workflow).toBeDefined();
+    expect(DEFAULT_CONFIG.workflow.research).toBe(true);
+    expect(DEFAULT_CONFIG.workflow.plan_checker).toBe(true);
+    expect(DEFAULT_CONFIG.workflow.verifier).toBe(true);
+    expect(DEFAULT_CONFIG.workflow.auto_advance).toBe(false);
+  });
+
+  it('includes git section with branching_strategy phase', () => {
+    expect(DEFAULT_CONFIG.git).toBeDefined();
+    expect(DEFAULT_CONFIG.git.branching_strategy).toBe('phase');
   });
 });
