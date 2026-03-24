@@ -243,7 +243,7 @@ MAXSIM tracks phase and plan progress through GitHub Issues. Execution progress 
 Configured during `/maxsim:init`:
 
 1. Creates a "MAXSIM Task Board" project with 5 columns (Backlog, To Do, In Progress, In Review, Done)
-2. Creates 19 labels in 4 namespaces (`type:phase`, `type:task`, `type:bug`, `priority:p0-critical`, `status:planning`, `status:in-progress`, etc.)
+2. Creates 6 labels in 2 namespaces (`type:phase`, `type:task`, `type:bug`, `type:quick`, `maxsim:auto`, `maxsim:user`)
 3. Optionally creates a GitHub Milestone
 
 ### How It Works

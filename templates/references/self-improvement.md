@@ -143,4 +143,4 @@ Promote a pattern to a target only after it appears in the "Worked" column three
 
 ## 8. GitHub-Native Complement
 
-The `project-memory` skill is the GitHub-native counterpart to this file's local memory approach. It records learnings, decisions, and lessons directly as GitHub Issues (labels `maxsim:lesson`, `maxsim:decision`) so they survive across machines and are visible to all agents without file access. Use `project-memory` when a learning is project-specific and should be shared; use this file's MEMORY.md when the learning is environment- or session-specific.
+The `project-memory` skill is the GitHub-native counterpart to this file's local memory approach. It records learnings, decisions, and lessons directly as GitHub Issue comments on the relevant phase/task issues (labels `maxsim:auto`, `maxsim:user`) so they survive across machines and are visible to all agents without file access. Use `project-memory` when a learning is project-specific and should be shared; use this file's MEMORY.md when the learning is environment- or session-specific.

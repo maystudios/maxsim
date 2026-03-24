@@ -29,14 +29,9 @@ Not everything is worth recording. Persist only information that would change be
 
 ## Storage: GitHub Issues
 
-All project memory lives as GitHub Issues in the project repository. Two labels are used:
+All project memory lives as GitHub Issues in the project repository. Use structured issue comments with `type:task` or `type:phase` labels to capture learnings and decisions inline within the relevant issue context.
 
-| Label | Purpose |
-|-------|---------|
-| `maxsim:lesson` | Something learned — what worked or what failed |
-| `maxsim:decision` | An architectural or design decision and its rationale |
-
-Create issues with `gh issue create`. Query them with `gh issue list --label maxsim:lesson`.
+Create issues with `gh issue create`. Query them with `gh issue list --label type:task`.
 
 ---
 
@@ -108,7 +103,7 @@ git log --oneline -20
 git log --oneline --since="7 days ago"
 ```
 
-This surfaces what changed recently without opening every file. Combine with `gh issue list --label maxsim:lesson` to get both code history and recorded learnings.
+This surfaces what changed recently without opening every file. Combine with `gh issue list --label maxsim:auto` to get both code history and recorded learnings.
 
 ---
 

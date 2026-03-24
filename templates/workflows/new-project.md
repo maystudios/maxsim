@@ -139,7 +139,7 @@ Execute in sequence:
 node .claude/maxsim/bin/maxsim-tools.cjs github ensure-labels
 ```
 
-This creates the standard MAXSIM label set (phase:N, status:*, priority:*, bug, etc.).
+This creates the standard MAXSIM label set (type:phase, type:task, type:bug, type:quick, maxsim:auto, maxsim:user).
 
 **4b. Create GitHub Project Board:**
 

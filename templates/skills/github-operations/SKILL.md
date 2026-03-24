@@ -122,9 +122,8 @@ Backlog  →  To Do  →  In Progress  →  In Review  →  Done
 | `type:task` | Task sub-issues |
 | `type:bug` | Bug reports |
 | `type:quick` | Quick tasks |
-| `priority:p0-critical`, `priority:p1-high`, `priority:p2-medium`, `priority:p3-low` | All issues |
-| `status:blocked` | Blocked issues |
-| `maxsim:managed` | All issues created by MAXSIM |
+| `maxsim:auto` | All issues created by MAXSIM automation |
+| `maxsim:user` | Issues created by the user |
 
 ## Write Order
 
