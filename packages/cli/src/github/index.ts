@@ -6,6 +6,7 @@ export type {
   MaxsimIssueMeta, MaxsimIssueState, MaxsimCommentMeta,
   LabelDef, RepoInfo, GhResult, GhResultCode,
   GhIssueRelation,
+  GhWikiPage,
 } from './types.js';
 export { MAXSIM_LABELS, BOARD_COLUMNS } from './types.js';
 
@@ -44,3 +45,6 @@ export { ensureLabels, getLabel, createLabel } from './labels.js';
 
 // Discussions
 export { createDiscussion, listDiscussions, getDiscussion } from './discussions.js';
+
+// Wiki
+export { checkWikiEnabled, getWikiPage, createOrUpdateWikiPage, listWikiPages } from './wiki.js';

@@ -170,6 +170,14 @@ export const BOARD_COLUMNS = [
   { name: 'Done', color: 'GREEN' },
 ] as const;
 
+// ── Wiki Types ────────────────────────────────────────────────────────
+
+export interface GhWikiPage {
+  slug: string;
+  title: string;
+  content: string;
+}
+
 // ── Repo Info ─────────────────────────────────────────────────────────
 
 export interface RepoInfo {
