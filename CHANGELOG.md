@@ -1,3 +1,20 @@
+# [5.7.0](https://github.com/maystudios/maxsimcli/compare/v5.6.0...v5.7.0) (2026-03-24)
+
+
+### Bug Fixes
+
+* **github:** distinguish relation directions in listIssueRelations ([a94a0ba](https://github.com/maystudios/maxsimcli/commit/a94a0bae4478066055eb0fd78a09be6a450f3839))
+
+
+### Features
+
+* **github:** add createRepo function for repository creation via gh CLI ([e6c204c](https://github.com/maystudios/maxsimcli/commit/e6c204c8d6ac1e54556709b44417ca1f432aefd4))
+* **github:** add deleteWikiPage to wiki module ([2fb356b](https://github.com/maystudios/maxsimcli/commit/2fb356b992a2dee46bc979cb6f554da5e20a6cfd))
+* **github:** add update, delete, and reply functions to discussions module ([ba4f53a](https://github.com/maystudios/maxsimcli/commit/ba4f53a6dbfa6b8852eb728f8c3bbe88fa456153))
+* **installer:** add Node.js runtime version check ([19be01f](https://github.com/maystudios/maxsimcli/commit/19be01fa4ae883993ba1be4101994fca2a66487f))
+* **templates:** add HARD GATE heading to executor and fresh-agent retry instruction ([01798dd](https://github.com/maystudios/maxsimcli/commit/01798dde37bb93822d2f7e7b4358838bcb68c616))
+* **types:** add workflow/git config sections, PARALLELISM_LIMITS, and sync VERSION ([f4811d7](https://github.com/maystudios/maxsimcli/commit/f4811d7dd4dc8630ba2fb8dcc9e9851b4f5b89fb))
+
 # [5.6.0](https://github.com/maystudios/maxsimcli/compare/v5.5.0...v5.6.0) (2026-03-24)
 
 
