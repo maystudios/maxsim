@@ -49,7 +49,7 @@ Run the 8-phase autoresearch loop, one iteration at a time:
 8. **Log** — append iteration result to the TSV file (date, iteration, approach, metric-value, outcome, commit-hash, notes)
 
 **Stuck Detection:**
-After 5 consecutive discards:
+After 5 consecutive discards or crashes:
 1. Re-read ALL in-scope files (full context reload)
 2. Re-read original goal and review entire TSV log for patterns
 3. Try combining 2-3 successful past changes

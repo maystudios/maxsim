@@ -159,7 +159,7 @@ Keeps: X | Discards: Y | Crashes: Z | Skipped: W
 Best iteration: #{n} — {description}
 ```
 
-### When Stuck (>5 consecutive discards)
+### When Stuck (5 consecutive discards or crashes (status=discard or status=crash))
 
 1. Re-read all in-scope files from scratch.
 2. Re-read the original goal/direction.
