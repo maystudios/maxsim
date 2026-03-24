@@ -23,6 +23,9 @@ import {
   createDiscussion,
   listDiscussions,
   getDiscussion,
+  updateDiscussion,
+  deleteDiscussion,
+  addDiscussionReply,
 } from '../../src/github/discussions.js';
 
 const execFileSyncMock = vi.mocked(childProcess.execFileSync);
@@ -385,5 +388,193 @@ describe('getDiscussion', () => {
     const flagIndex = ghArgs.indexOf('-F');
     expect(flagIndex).toBeGreaterThan(-1);
     expect(ghArgs[flagIndex + 1]).toBe('number=42');
+  });
+});
+
+// ── Helpers for new mutations ────────────────────────────────────────────────
+
+/** Build the GraphQL response for the updateDiscussion mutation. */
+function updateDiscussionResponse(discussion: typeof MOCK_DISCUSSION_RAW = MOCK_DISCUSSION_RAW): string {
+  return JSON.stringify({
+    data: {
+      updateDiscussion: {
+        discussion,
+      },
+    },
+  });
+}
+
+/** Build the GraphQL response for the deleteDiscussion mutation. */
+function deleteDiscussionResponse(): string {
+  return JSON.stringify({
+    data: {
+      deleteDiscussion: {
+        clientMutationId: null,
+      },
+    },
+  });
+}
+
+/** Build the GraphQL response for the addDiscussionComment mutation. */
+function addDiscussionCommentResponse(id = 'DC_kwDOAbc456'): string {
+  return JSON.stringify({
+    data: {
+      addDiscussionComment: {
+        comment: { id },
+      },
+    },
+  });
+}
+
+// ── updateDiscussion ─────────────────────────────────────────────────────────
+
+describe('updateDiscussion', () => {
+  it('returns a mapped GhDiscussion on success', () => {
+    setupExecMock(updateDiscussionResponse());
+
+    const result = updateDiscussion('D_kwDOAbc123', { title: 'Updated Title', body: 'Updated body' });
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.data).toEqual(MOCK_DISCUSSION_MAPPED);
+  });
+
+  it('works when only title is provided', () => {
+    setupExecMock(updateDiscussionResponse());
+
+    const result = updateDiscussion('D_kwDOAbc123', { title: 'Only Title' });
+
+    expect(result.ok).toBe(true);
+    const calls = execFileSyncMock.mock.calls;
+    const graphqlCall = calls.find(
+      (c) => c[0] === 'gh' && (c[1] as string[])?.includes('graphql'),
+    );
+    expect(graphqlCall).toBeDefined();
+    const ghArgs = graphqlCall?.[1] as string[];
+    expect(ghArgs).toContain('title=Only Title');
+    expect(ghArgs).not.toContain('body=');
+  });
+
+  it('works when only body is provided', () => {
+    setupExecMock(updateDiscussionResponse());
+
+    const result = updateDiscussion('D_kwDOAbc123', { body: 'Only body' });
+
+    expect(result.ok).toBe(true);
+    const calls = execFileSyncMock.mock.calls;
+    const graphqlCall = calls.find(
+      (c) => c[0] === 'gh' && (c[1] as string[])?.includes('graphql'),
+    );
+    expect(graphqlCall).toBeDefined();
+    const ghArgs = graphqlCall?.[1] as string[];
+    expect(ghArgs).toContain('body=Only body');
+    expect(ghArgs).not.toContain('title=');
+  });
+
+  it('returns UNKNOWN when mutation returns no discussion', () => {
+    setupExecMock(JSON.stringify({ data: { updateDiscussion: { discussion: null } } }));
+
+    const result = updateDiscussion('D_kwDOAbc123', { title: 'Test' });
+
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.code).toBe('UNKNOWN');
+  });
+
+  it('propagates API error', () => {
+    setupExecMock(new Error('gh: 404 Not Found'));
+
+    const result = updateDiscussion('D_kwDOAbc123', { title: 'Test' });
+
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.code).toBe('NOT_FOUND');
+  });
+});
+
+// ── deleteDiscussion ─────────────────────────────────────────────────────────
+
+describe('deleteDiscussion', () => {
+  it('returns ok: true with no data on success', () => {
+    setupExecMock(deleteDiscussionResponse());
+
+    const result = deleteDiscussion('D_kwDOAbc123');
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.data).toBeUndefined();
+  });
+
+  it('passes the discussion id to the mutation', () => {
+    setupExecMock(deleteDiscussionResponse());
+
+    deleteDiscussion('D_kwDOAbc123');
+
+    const calls = execFileSyncMock.mock.calls;
+    const graphqlCall = calls.find(
+      (c) => c[0] === 'gh' && (c[1] as string[])?.includes('graphql'),
+    );
+    expect(graphqlCall).toBeDefined();
+    const ghArgs = graphqlCall?.[1] as string[];
+    expect(ghArgs).toContain('id=D_kwDOAbc123');
+  });
+
+  it('propagates API error', () => {
+    setupExecMock(new Error('gh: 403 Forbidden'));
+
+    const result = deleteDiscussion('D_kwDOAbc123');
+
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.code).toBe('FORBIDDEN');
+  });
+});
+
+// ── addDiscussionReply ───────────────────────────────────────────────────────
+
+describe('addDiscussionReply', () => {
+  it('returns the comment id on success', () => {
+    setupExecMock(addDiscussionCommentResponse('DC_kwDOAbc456'));
+
+    const result = addDiscussionReply('D_kwDOAbc123', 'Great discussion!');
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.data).toEqual({ id: 'DC_kwDOAbc456' });
+  });
+
+  it('passes discussionId and body to the mutation', () => {
+    setupExecMock(addDiscussionCommentResponse());
+
+    addDiscussionReply('D_kwDOAbc123', 'Hello!');
+
+    const calls = execFileSyncMock.mock.calls;
+    const graphqlCall = calls.find(
+      (c) => c[0] === 'gh' && (c[1] as string[])?.includes('graphql'),
+    );
+    expect(graphqlCall).toBeDefined();
+    const ghArgs = graphqlCall?.[1] as string[];
+    expect(ghArgs).toContain('discussionId=D_kwDOAbc123');
+    expect(ghArgs).toContain('body=Hello!');
+  });
+
+  it('returns UNKNOWN when mutation returns no comment', () => {
+    setupExecMock(JSON.stringify({ data: { addDiscussionComment: { comment: null } } }));
+
+    const result = addDiscussionReply('D_kwDOAbc123', 'Hello');
+
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.code).toBe('UNKNOWN');
+  });
+
+  it('propagates API error', () => {
+    setupExecMock(new Error('gh: 401 Unauthorized'));
+
+    const result = addDiscussionReply('D_kwDOAbc123', 'Hello');
+
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.code).toBe('UNAUTHORIZED');
   });
 });

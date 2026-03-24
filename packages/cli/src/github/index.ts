@@ -44,7 +44,10 @@ export {
 export { ensureLabels, getLabel, createLabel } from './labels.js';
 
 // Discussions
-export { createDiscussion, listDiscussions, getDiscussion } from './discussions.js';
+export {
+  createDiscussion, listDiscussions, getDiscussion,
+  updateDiscussion, deleteDiscussion, addDiscussionReply,
+} from './discussions.js';
 
 // Wiki
 export { checkWikiEnabled, getWikiPage, createOrUpdateWikiPage, listWikiPages } from './wiki.js';

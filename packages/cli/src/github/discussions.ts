@@ -249,3 +249,112 @@ export function getDiscussion(
 
   return { ok: true, data: mapDiscussion(discussion) };
 }
+
+export function updateDiscussion(
+  id: string,
+  opts: { title?: string; body?: string },
+): GhResult<GhDiscussion> {
+  const mutation = `
+    mutation($discussionId: ID!, $title: String, $body: String) {
+      updateDiscussion(input: {
+        discussionId: $discussionId
+        title: $title
+        body: $body
+      }) {
+        discussion {
+          number
+          id
+          title
+          body
+          category { name }
+          url
+          createdAt
+          updatedAt
+        }
+      }
+    }
+  `.trim();
+
+  const args = [
+    'api', 'graphql',
+    '-f', `query=${mutation}`,
+    '-f', `discussionId=${id}`,
+  ];
+
+  if (opts.title !== undefined) {
+    args.push('-f', `title=${opts.title}`);
+  }
+
+  if (opts.body !== undefined) {
+    args.push('-f', `body=${opts.body}`);
+  }
+
+  const result = ghJson<{
+    data: { updateDiscussion: { discussion: RawDiscussion } };
+  }>(args);
+
+  if (!result.ok) return result;
+
+  const discussion = result.data?.data?.updateDiscussion?.discussion;
+  if (!discussion) {
+    return { ok: false, error: 'updateDiscussion mutation returned no discussion', code: 'UNKNOWN' };
+  }
+
+  return { ok: true, data: mapDiscussion(discussion) };
+}
+
+export function deleteDiscussion(id: string): GhResult<void> {
+  const mutation = `
+    mutation($id: ID!) {
+      deleteDiscussion(input: { id: $id }) {
+        clientMutationId
+      }
+    }
+  `.trim();
+
+  const result = ghJson<unknown>([
+    'api', 'graphql',
+    '-f', `query=${mutation}`,
+    '-f', `id=${id}`,
+  ]);
+
+  if (!result.ok) return result;
+
+  return { ok: true, data: undefined };
+}
+
+export function addDiscussionReply(
+  discussionId: string,
+  body: string,
+): GhResult<{ id: string }> {
+  const mutation = `
+    mutation($discussionId: ID!, $body: String!) {
+      addDiscussionComment(input: {
+        discussionId: $discussionId
+        body: $body
+      }) {
+        comment {
+          id
+        }
+      }
+    }
+  `.trim();
+
+  const result = ghJson<{
+    data: { addDiscussionComment: { comment: { id: string } | null } };
+  }>([
+    'api', 'graphql',
+    '-f', `query=${mutation}`,
+    '-f', `discussionId=${discussionId}`,
+    '-f', `body=${body}`,
+  ]);
+
+  if (!result.ok) return result;
+
+  const comment = result.data?.data?.addDiscussionComment?.comment;
+  if (!comment) {
+    return { ok: false, error: 'addDiscussionComment mutation returned no comment', code: 'UNKNOWN' };
+  }
+
+  return { ok: true, data: { id: comment.id } };
+}
