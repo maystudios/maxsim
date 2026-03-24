@@ -40,6 +40,7 @@ import {
   ghExec,
   getOctokit,
   resetClient,
+  createRepo,
 } from '../../src/github/client.js';
 import type { GhResult, RepoInfo } from '../../src/github/types.js';
 
@@ -563,5 +564,146 @@ describe('classifyGhError() — error classification contract', () => {
       expect(r.ok).toBe(false);
       if (!r.ok) expect(r.error).toBe(msg);
     });
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────
+// createRepo()
+// ─────────────────────────────────────────────────────────────────────
+
+describe('createRepo()', () => {
+  beforeEach(() => {
+    vi.resetAllMocks();
+    resetClient();
+  });
+
+  // ── Success cases ──────────────────────────────────────────────────
+
+  it('creates a private repo by default and returns parsed RepoInfo', () => {
+    stubExec('https://github.com/myowner/my-new-repo\n');
+
+    const result = createRepo('my-new-repo');
+
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.data.owner).toBe('myowner');
+      expect(result.data.repo).toBe('my-new-repo');
+      expect(result.data.isOrg).toBe(false);
+    }
+    // --private must be in the args
+    expect(mockExecFileSync).toHaveBeenCalledWith(
+      'gh',
+      expect.arrayContaining(['--private']),
+      expect.any(Object),
+    );
+  });
+
+  it('creates a private repo when opts.private is true', () => {
+    stubExec('https://github.com/org/cool-repo\n');
+
+    const result = createRepo('org/cool-repo', { private: true });
+
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.data.owner).toBe('org');
+      expect(result.data.repo).toBe('cool-repo');
+    }
+    expect(mockExecFileSync).toHaveBeenCalledWith(
+      'gh',
+      expect.arrayContaining(['--private']),
+      expect.any(Object),
+    );
+  });
+
+  it('creates a public repo when opts.private is false (omits --private flag)', () => {
+    stubExec('https://github.com/alice/public-repo\n');
+
+    const result = createRepo('alice/public-repo', { private: false });
+
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.data.owner).toBe('alice');
+      expect(result.data.repo).toBe('public-repo');
+    }
+    // --private must NOT be present
+    const calledArgs: string[] = (mockExecFileSync as ReturnType<typeof vi.fn>).mock.calls[0][1];
+    expect(calledArgs).not.toContain('--private');
+  });
+
+  it('passes --description when provided', () => {
+    stubExec('https://github.com/alice/described-repo\n');
+
+    createRepo('alice/described-repo', { description: 'A great repo' });
+
+    const calledArgs: string[] = (mockExecFileSync as ReturnType<typeof vi.fn>).mock.calls[0][1];
+    expect(calledArgs).toContain('--description');
+    expect(calledArgs).toContain('A great repo');
+  });
+
+  it('does not add --description when it is omitted', () => {
+    stubExec('https://github.com/alice/nodesc-repo\n');
+
+    createRepo('alice/nodesc-repo');
+
+    const calledArgs: string[] = (mockExecFileSync as ReturnType<typeof vi.fn>).mock.calls[0][1];
+    expect(calledArgs).not.toContain('--description');
+  });
+
+  it('falls back to splitting the name argument when gh output is not a parseable URL', () => {
+    stubExec('Created repository owner/fallback-repo\n');
+
+    const result = createRepo('owner/fallback-repo');
+
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.data.owner).toBe('owner');
+      expect(result.data.repo).toBe('fallback-repo');
+    }
+  });
+
+  it('returns UNKNOWN when output is unparseable and name has no slash', () => {
+    stubExec('some unexpected output with no url\n');
+
+    const result = createRepo('orphan-name');
+
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.code).toBe('UNKNOWN');
+    }
+  });
+
+  // ── Error cases ────────────────────────────────────────────────────
+
+  it('returns UNKNOWN error when repo already exists', () => {
+    failExec('GraphQL: Name already exists on this account (createRepository)');
+
+    const result = createRepo('my-owner/existing-repo');
+
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.code).toBe('UNKNOWN');
+    }
+  });
+
+  it('returns UNAUTHORIZED when not authenticated', () => {
+    failExec('HTTP 401: Unauthorized - authentication required: run gh auth login');
+
+    const result = createRepo('new-repo');
+
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.code).toBe('UNAUTHORIZED');
+    }
+  });
+
+  it('returns FORBIDDEN when the token lacks repo creation permissions', () => {
+    failExec('HTTP 403: Forbidden - insufficient scopes');
+
+    const result = createRepo('new-repo');
+
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.code).toBe('FORBIDDEN');
+    }
   });
 });
