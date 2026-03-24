@@ -20,7 +20,7 @@ export {
 } from './types.js';
 
 // Config
-export { loadConfig, saveConfig, resolveModel, getConfigPath } from './config.js';
+export { loadConfig, saveConfig, resolveModel, resolveMaxAgents, getConfigPath } from './config.js';
 
 // Version
 export { VERSION } from './version.js';

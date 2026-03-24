@@ -11,6 +11,7 @@ import {
   type AgentType,
   DEFAULT_CONFIG,
   MODEL_PROFILES,
+  PARALLELISM_LIMITS,
 } from './types.js';
 
 /** Returns the path to the MaxsimCLI config file. */
@@ -78,6 +79,17 @@ export function saveConfig(projectDir: string, config: MaxsimConfig): void {
   }
 
   fs.writeFileSync(configPath, `${JSON.stringify(config, null, 2)}\n`, 'utf8');
+}
+
+/** Resolve max agents for a profile, applying the small-project scaling rule from PROJECT.md §7.4. */
+export function resolveMaxAgents(
+  profile: ModelProfile,
+  projectFileCount: number
+): number {
+  const limits = PARALLELISM_LIMITS[profile];
+  if (projectFileCount < 10) return Math.min(5, limits.max_agents);
+  if (projectFileCount < 25) return Math.min(Math.floor(limits.max_agents / 2), limits.typical_range[1]);
+  return limits.max_agents;
 }
 
 /** Resolve the model for a given profile and agent type, with optional per-agent overrides. */
