@@ -22,5 +22,5 @@ The `--todo` flag integrates with GitHub Issues. It lets you create, view, and r
 When to use quick vs execute-phase: use quick for tasks you could describe in one sentence that have no dependencies on other planned work. Use execute-phase when the task is part of a planned phase, has multiple sub-tasks, or needs the plan-checker's validation.
 
 {% callout type="note" %}
-Even in quick mode, the executor still commits after each task, updates STATE.md, and follows the deviation rules. It's "quick" because it skips optional planning agents, not because it cuts corners on execution quality.
+Even in quick mode, the executor still commits after each task, updates the GitHub Issue status, and follows the deviation rules. It's "quick" because it skips optional planning agents, not because it cuts corners on execution quality.
 {% /callout %}

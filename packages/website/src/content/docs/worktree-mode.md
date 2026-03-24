@@ -1,5 +1,5 @@
 ---
-id: dashboard-features
+id: worktree-mode
 title: Worktree Mode
 group: Advanced
 ---

@@ -37,5 +37,5 @@ The `review` object controls what the verifier checks when it runs. Each review 
 {% /codeblock %}
 
 {% callout type="warn" %}
-Disabling the verifier means broken items won't automatically generate fix phases. You'll need to run /maxsim:verify-work manually and check results yourself. Recommended only for throwaway or prototype phases.
+Disabling the verifier means broken items won't automatically generate fix phases. Re-enable the verifier to restore automatic verification through /maxsim:execute. Recommended only for throwaway or prototype phases.
 {% /callout %}
