@@ -1,3 +1,10 @@
+# [5.8.0](https://github.com/maystudios/maxsimcli/compare/v5.7.0...v5.8.0) (2026-03-24)
+
+
+### Features
+
+* **install:** add GitHub CLI auth pre-flight check ([1a763b4](https://github.com/maystudios/maxsimcli/commit/1a763b41d5184d17cb3d2ec720aaf0afa0f80234))
+
 # [5.7.0](https://github.com/maystudios/maxsimcli/compare/v5.6.0...v5.7.0) (2026-03-24)
 
 
