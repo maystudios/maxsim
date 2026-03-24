@@ -1,6 +1,7 @@
 ---
 name: maxsim:progress
 description: Show project status from GitHub Project Board with next-action recommendation
+argument-hint: ""
 allowed-tools: [Read, Bash, Grep, Glob]
 ---
 
