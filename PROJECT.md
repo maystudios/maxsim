@@ -71,7 +71,7 @@ One command. Installs project-locally into `.claude/`. No global installation.
 ```
 .claude/
 ├── settings.json          # Claude Code settings (hooks, permissions, env)
-├── commands/maxsim/       # 9 slash commands
+├── commands/maxsim/       # 13 slash commands
 ├── agents/                # 4 agent definitions + AGENTS.md registry
 ├── skills/                # 15 skill modules
 ├── rules/                 # Conventions + verification protocol
@@ -743,7 +743,7 @@ maxsimcli/
 │   └── website/          # Landing page + documentation (React + Vite)
 ├── templates/            # Source templates (copied to .claude/ during install)
 │   ├── agents/           # 4 agent definitions + AGENTS.md registry
-│   ├── commands/maxsim/  # 9 slash commands
+│   ├── commands/maxsim/  # 13 slash commands
 │   ├── skills/           # 14 skill modules
 │   ├── workflows/        # Workflow definitions
 │   ├── references/       # Reference documents
@@ -887,10 +887,10 @@ REMOVED: commands.ts (functionality covered by client.ts + individual modules)
 **Commit:** `feat: install system with complete uninstall`
 
 ### Phase 4: Commands + Workflows
-**Goal:** 9 slash commands with correct tool names and GitHub-first workflows.
+**Goal:** 13 slash commands with correct tool names and GitHub-first workflows.
 **Spec:** PROJECT.md §6, `docs/spec/init-process-design.md`, `docs/spec/wave-execution-design.md`
 ```
-1. templates/commands/maxsim/ — All 9 commands (correct frontmatter)
+1. templates/commands/maxsim/ — All 13 commands (correct frontmatter)
    - Use 'Agent' tool (NOT 'Task')
    - Use correct allowed-tools
    - Correct argument-hint on all commands

@@ -45,6 +45,6 @@ docs/*
 !docs/spec/
 analysis/
 gaps.md
-improve.md
+/improve.md
 philosophy.md
 autoresearch-results.tsv

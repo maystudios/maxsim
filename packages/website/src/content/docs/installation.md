@@ -22,7 +22,7 @@ MaxsimCLI installs into `.claude/` at your project root:
 
 {% codeblock language="text" %}
 .claude/
-├── commands/maxsim/      # 9 user-facing commands (/maxsim:*)
+├── commands/maxsim/      # 13 user-facing commands (/maxsim:*)
 ├── agents/               # 4 specialized subagent prompts
 ├── skills/               # 14 reusable skill modules
 ├── rules/                # Standing rules loaded into every session

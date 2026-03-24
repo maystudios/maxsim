@@ -199,7 +199,7 @@ function GettingStarted() {
         <CodeBlock
           language="text"
           code={`.claude/
-├── commands/maxsim/   # 9 user-facing commands (/maxsim:*)
+├── commands/maxsim/   # 13 user-facing commands (/maxsim:*)
 ├── agents/            # 4 specialized agent prompts
 └── hooks/             # Pre/post hooks for automation`}
         />
@@ -349,7 +349,7 @@ agents/*.md                # Specialized subagent prompts (4 agents)`}
         <CodeBlock
           language="text"
           code={`.claude/
-├── commands/maxsim/       # 9 slash commands
+├── commands/maxsim/       # 13 slash commands
 ├── agents/                # 4 agent definitions + AGENTS.md
 ├── skills/                # 14 skill modules
 ├── rules/                 # Conventions + verification

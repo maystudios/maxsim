@@ -21,6 +21,10 @@ MAXSIM is a spec-driven development system for Claude Code. It structures work i
 | `/maxsim:quick` | Run a small ad-hoc task without phase ceremony |
 | `/maxsim:settings` | View and modify MaxsimCLI configuration |
 | `/maxsim:debug [desc]` | Investigate and fix a bug using GitHub Issues |
+| `/maxsim:improve [metric-command]` | Autonomous optimization loop against any metric |
+| `/maxsim:fix-loop [error-command]` | Autonomous error repair until zero errors remain |
+| `/maxsim:debug-loop [symptom]` | Autonomous bug hunting with hypothesis testing |
+| `/maxsim:security [scope]` | Security audit — STRIDE + OWASP + red-team (read-only) |
 | `/maxsim:help` | Show this command reference |
 
 ---
@@ -145,6 +149,74 @@ Investigate and fix a bug via GitHub Issues.
 
 ---
 
+### /maxsim:improve [metric-command]
+
+Autonomous optimization loop — make one atomic change per iteration, verify against a metric, keep or discard.
+
+- Configures metric command, guard command, direction, and iteration budget in Plan Mode
+- Runs the autoresearch 8-phase loop: Review → Ideate → Modify → Commit → Verify → Guard → Decide → Log
+- Stuck detection after 5 consecutive discards
+- Results tracked in `.claude/agent-memory/maxsim-learner/autoresearch-results.tsv`
+
+```
+/maxsim:improve npm run benchmark
+/maxsim:improve "wc -l src/**/*.ts"
+```
+
+---
+
+### /maxsim:fix-loop [error-command]
+
+Autonomous error repair — iteratively fix errors until zero remain.
+
+- Configures error command and optional guard command in Plan Mode
+- Loops: run command → parse errors → fix one error → verify → repeat
+- Skips resistant errors after 3 failed attempts, revisits later
+- Tracks progress with error counts per iteration
+
+```
+/maxsim:fix-loop npm run build
+/maxsim:fix-loop "tsc --noEmit"
+/maxsim:fix-loop npm run lint
+```
+
+---
+
+### /maxsim:debug-loop [symptom]
+
+Autonomous bug hunting using the scientific method.
+
+- Gathers symptom details and reproduction steps in Plan Mode
+- Loops: reproduce → hypothesize → test hypothesis → fix if confirmed → verify
+- Each hypothesis is tested independently; disproven hypotheses are discarded
+- Creates a GitHub Issue labeled `debug` to track the session
+
+```
+/maxsim:debug-loop
+/maxsim:debug-loop "API returns 500 on POST /users"
+```
+
+---
+
+### /maxsim:security [scope]
+
+Read-only security audit using STRIDE, OWASP Top 10, and red-team analysis.
+
+- No Plan Mode — purely read-only, no code modifications
+- Phase 1: Reconnaissance (tech stack, entry points, data flows, trust boundaries)
+- Phase 2: STRIDE threat modeling
+- Phase 3: OWASP Top 10 vulnerability check
+- Phase 4: Red-team attack surface analysis
+- Posts structured report as a GitHub Issue labeled `security-audit`
+
+```
+/maxsim:security
+/maxsim:security src/auth/
+/maxsim:security "api endpoints"
+```
+
+---
+
 ### /maxsim:help
 
 Show this command reference.
@@ -178,6 +250,10 @@ Show this command reference.
 | Quick ad-hoc task | `/maxsim:quick` |
 | Change settings | `/maxsim:settings` |
 | Debug a bug | `/maxsim:debug` |
+| Optimize a metric | `/maxsim:improve` |
+| Fix all errors | `/maxsim:fix-loop` |
+| Hunt a bug autonomously | `/maxsim:debug-loop` |
+| Security audit | `/maxsim:security` |
 | See this help | `/maxsim:help` |
 
 ---
