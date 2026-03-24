@@ -1,6 +1,7 @@
 ---
 name: maxsim:help
 description: Show available MaxsimCLI commands and usage
+argument-hint: ""
 allowed-tools: [Read]
 ---
 

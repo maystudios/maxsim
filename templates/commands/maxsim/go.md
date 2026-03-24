@@ -1,6 +1,7 @@
 ---
 name: maxsim:go
 description: Auto-detect project state and execute the right action
+argument-hint: ""
 allowed-tools: [Read, Bash, Grep, Glob, Agent, AskUserQuestion, EnterPlanMode, ExitPlanMode]
 ---
 
