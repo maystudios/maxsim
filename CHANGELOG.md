@@ -1,3 +1,21 @@
+# [5.9.0](https://github.com/maystudios/maxsimcli/compare/v5.8.0...v5.9.0) (2026-03-24)
+
+
+### Bug Fixes
+
+* **core:** sync version.ts to 5.7.0 and add scripts to packages/cli/package.json ([6f63a8a](https://github.com/maystudios/maxsimcli/commit/6f63a8adbccc675d4e320170671a70e6e4de5e25))
+* **hooks:** add stop_hook_active guard to stop-sound hook ([96b6fdc](https://github.com/maystudios/maxsimcli/commit/96b6fdc08d4b22f6ba5f70762d28e567199fd1cd))
+* **install:** add Backlog column to generated CLAUDE.md ([fd400a4](https://github.com/maystudios/maxsimcli/commit/fd400a47bfef5857b519b9001dc203b425fb8d70))
+* **skills:** update autoresearch description and maxsim-batch Agent Teams section ([2046d0e](https://github.com/maystudios/maxsimcli/commit/2046d0ea25afb476b38407cadf80c3d2b9d4be2d))
+* **workflows:** add merge verification, auto-resolve, and TSV logging to execute ([6db2c2c](https://github.com/maystudios/maxsimcli/commit/6db2c2ca69fcb111ef18f69794d1bd4870ee2a26))
+* **workflows:** add verifier step to quick and TSV logging to verify-phase ([8a57669](https://github.com/maystudios/maxsimcli/commit/8a57669a8d66fc5cded048751a906fb5e0bb9c33))
+
+
+### Features
+
+* **core:** implement utils with path helpers and frontmatter parser ([1768a8d](https://github.com/maystudios/maxsimcli/commit/1768a8d1d4cfcfcf3741acbc9fedcf6d826fc415))
+* **install:** implement manifest for installed file tracking ([fa92f30](https://github.com/maystudios/maxsimcli/commit/fa92f305611a58f001cf000178e41b6b00dd8e9c))
+
 # [5.8.0](https://github.com/maystudios/maxsimcli/compare/v5.7.0...v5.8.0) (2026-03-24)
 
 
