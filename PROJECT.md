@@ -792,7 +792,7 @@ maxsimcli/
 ## 17. What MaxsimCLI is NOT
 
 - **Not a fork** of GSD or Superpowers — it is an independent project inspired by both
-- **Not multi-runtime** — it only works with Claude Code (the file `docs/multi-runtime-architecture.md` is a deprecated reference and should be deleted)
+- **Not multi-runtime** — it only works with Claude Code
 - **Not global** — it installs per-project into `.claude/`, not globally. Any global `~/.claude/maxsim/` installation is a developer's personal setup, not part of the product.
 - **Not local-first** — GitHub is always the source of truth
 - **Not a MCP server** — commands are slash commands, not MCP tools
@@ -986,7 +986,6 @@ P3 — Optimization Loop:
 5. Fix CONTRIBUTING.md (correct lint command, etc.)
 6. Update GitHub issue templates
 7. Update global CLAUDE.md template
-8. Delete docs/multi-runtime-architecture.md (deprecated)
 9. Verify all docs match actual code
 ```
 **Commit:** `docs: complete documentation for v6`
