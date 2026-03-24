@@ -83,11 +83,17 @@ When all agents complete:
    - Merge conflict found: decomposition was wrong -- fix overlap and re-run the conflicting units
    - 3+ failures on one unit: stop and escalate to user with full failure context
 
-## Agent Teams (Intra-Branch Coordination)
+## Agent Teams (Tier 2 — Opt-in)
 
-**Planned/experimental — pending API research. Not yet implemented.**
+Agent Teams (available since Claude Code v2.1.32, Feb 2026) enable inter-agent communication for workflows that require debate, cross-checking, or collaborative problem-solving. MaxsimCLI sets `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` during install and registers `TeammateIdle` and `TaskCompleted` quality-gate hooks.
 
-Agent Teams is a future capability for competitive implementation: spawn 2-3 agents on the same task within the same branch, then have a verifier agent pick the best result. This is intended for cases where solution quality matters more than speed and multiple valid approaches exist. The verifier would read each agent's output, evaluate against acceptance criteria, and promote the winner. See PROJECT.md section 7.2 for the planned Agent Teams specification.
+**Current status:** Infrastructure is in place (env var, hooks). Workflow templates that invoke `TeamCreate`/`SendMessage` for Tier 2 patterns (competitive implementation, multi-reviewer code review, collaborative debugging) are planned but not yet implemented. All workflows currently use Tier 1 subagents. See PROJECT.md §7.2 for the full specification.
+
+**When Tier 2 is ready, it will be used for:**
+- Competitive implementation with adversarial debate
+- Multi-dimensional code review (security + performance + test coverage)
+- Collaborative debugging with competing hypotheses
+- Cross-layer feature work (frontend + backend + tests)
 
 ## Limits
 
