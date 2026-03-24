@@ -1,3 +1,18 @@
+# [5.4.0](https://github.com/maystudios/maxsimcli/compare/v5.3.0...v5.4.0) (2026-03-24)
+
+
+### Bug Fixes
+
+* **lint:** replace string concatenation with template literal in statusline hook ([e64a618](https://github.com/maystudios/maxsimcli/commit/e64a6189c05396c286fd16f4c54e03e2516adaec))
+* remove unused IssueIds and BOARD_FIELDS from github/types.ts ([a11ac51](https://github.com/maystudios/maxsimcli/commit/a11ac51be1e18004999df587dbee67adef1d5614))
+* replace non-null assertions with type-safe narrowing in test files ([a423190](https://github.com/maystudios/maxsimcli/commit/a4231909516cd6056d7c42e3bc0e3550c144bc4c))
+
+
+### Features
+
+* add GitHub issue relations (blocked by / blocking) per spec §5.3 ([486ab94](https://github.com/maystudios/maxsimcli/commit/486ab9459493b5dd3e54aede933e7c4981f26886))
+* **hooks:** improve maxsim-capture-learnings per spec §11.3 ([e62a90f](https://github.com/maystudios/maxsimcli/commit/e62a90f5a62847751b445b4ef4e449ab7ea88eeb))
+
 # [5.3.0](https://github.com/maystudios/maxsimcli/compare/v5.2.4...v5.3.0) (2026-03-24)
 
 
