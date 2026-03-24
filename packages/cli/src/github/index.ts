@@ -1,6 +1,7 @@
 // Types
 export type {
   GhUser, GhLabel, GhMilestone, GhIssue, GhComment,
+  GhDiscussion,
   GhProject, GhProjectField, GhFieldOption, GhProjectItem,
   MaxsimIssueMeta, MaxsimIssueState, MaxsimCommentMeta,
   LabelDef, RepoInfo, GhResult, GhResultCode,
@@ -40,3 +41,6 @@ export {
 
 // Labels
 export { ensureLabels, getLabel, createLabel } from './labels.js';
+
+// Discussions
+export { createDiscussion, listDiscussions, getDiscussion } from './discussions.js';

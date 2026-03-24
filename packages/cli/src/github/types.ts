@@ -60,6 +60,17 @@ export interface GhComment {
   htmlUrl: string;
 }
 
+export interface GhDiscussion {
+  number: number;
+  nodeId: string;
+  title: string;
+  body: string;
+  categoryName: string;
+  url: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 // ── Projects v2 Types ─────────────────────────────────────────────────
 
 export interface GhProject {
