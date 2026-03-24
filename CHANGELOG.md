@@ -1,3 +1,20 @@
+# [5.11.0](https://github.com/maystudios/maxsimcli/compare/v5.10.0...v5.11.0) (2026-03-24)
+
+
+### Bug Fixes
+
+* sync forbidden phrases to canonical 10 in verification protocol and verifier agent ([9e0e5cb](https://github.com/maystudios/maxsimcli/commit/9e0e5cb3603b7034f5d74ce781792dcf0f837b58))
+
+
+### Features
+
+* add @biomejs/biome as pinned devDependency ([3cbab6d](https://github.com/maystudios/maxsimcli/commit/3cbab6d18560ebd8fd10ee9e186ef7c2fb691c79))
+* add argument-hint field to no-arg command frontmatter ([644387d](https://github.com/maystudios/maxsimcli/commit/644387d9401ab22117a7c357e3c8a56a379a6f32))
+* **config:** implement small-project agent scaling (PROJECT.md §7.4) ([491d108](https://github.com/maystudios/maxsimcli/commit/491d10821640c1f0c1c3424a6d85262d5dfdedd3))
+* ensure .gitignore covers agent-memory files on install ([65f5e14](https://github.com/maystudios/maxsimcli/commit/65f5e14359fe9ba8db63856598d2133bddc6868b))
+* **execute-workflow:** add competitive implementation, GitHub Issue escalation, and auto-debug ([984421f](https://github.com/maystudios/maxsimcli/commit/984421f6564302c612f6903b53759df7ff3f1a50))
+* **executor:** add Co-Authored-By trailer to atomic commit format ([4d7ec4c](https://github.com/maystudios/maxsimcli/commit/4d7ec4cb1bd61759e14dadcec7cb55becbdc25a1))
+
 # [5.10.0](https://github.com/maystudios/maxsimcli/compare/v5.9.1...v5.10.0) (2026-03-24)
 
 
