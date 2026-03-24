@@ -42,6 +42,7 @@ reports/
 RAILROAD_ARCHITECTURE.md
 # .planning/ — tracked per config (commit_docs: true)
 docs/*
+!docs/spec/
 !docs/multi-runtime-architecture.md
 analysis/
 gaps.md

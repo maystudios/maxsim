@@ -13,7 +13,7 @@
 | **Meaning** | **MAX**imale **SIM**plicity |
 | **npm package** | `maxsimcli` |
 | **Command prefix** | `/maxsim:` |
-| **Repository** | `github.com/maystudios/maxsimcli` |
+| **Repository** | `https://github.com/maystudios/maxsimcli` |
 | **Website** | `maxsimcli.dev` (Landing Page + Documentation) |
 | **License** | MIT |
 
@@ -43,11 +43,11 @@ All Claude Code users — from beginners to power users. The system is simple to
 ## 4. Core Principles
 
 1. **GitHub is the Single Source of Truth** — All project state, plans, tasks, progress, decisions, and learnings live on GitHub (Issues, Projects, Milestones, Wiki, Discussions). Local files are only for MaxsimCLI's own installation (`.claude/`).
-2. **Maximum Parallelism** — Use as many parallel agents as the task allows. Competitive implementation (same task solved 3 ways, best picked). Agent Teams for complex coordination.
+2. **Maximum Parallelism** — Two-tier hybrid: Subagents (Tier 1, default) for independent tasks, Agent Teams (Tier 2, opt-in) for workflows requiring inter-agent communication. Scaled by model profile (budget: 5–10, balanced: 10–20, quality: 30–40) and project size. Competitive implementation available as an optional strategy. Graceful degradation to Tier 1 when Agent Teams are unavailable.
 3. **Full Automation** — Commits, merges, pushes, branch management, verification, and error recovery happen automatically. The user is only involved at plan approval gates and when unrecoverable errors occur.
 4. **Self-Improvement** — MaxsimCLI learns from every session. Skills, prompts, configurations, and workflows improve over time through a structured feedback loop.
 5. **Anthropic Conformity** — Every skill, command, hook, and agent follows Anthropic's documented conventions exactly. Correct tool names (`Agent`, not `Task`), correct frontmatter format, correct skill structure.
-6. **Plan Before Execute** — Every action goes through Claude Code's Plan Mode first. The user always sees and approves what will happen before any code is written.
+6. **Plan Before Execute** — Every action that modifies code, GitHub state, or project configuration goes through Claude Code's Plan Mode first. The user always sees and approves what will happen before any code is written. Read-only commands (help, progress) are exempt.
 
 ---
 
@@ -73,7 +73,7 @@ One command. Installs project-locally into `.claude/`. No global installation.
 ├── settings.json          # Claude Code settings (hooks, permissions, env)
 ├── commands/maxsim/       # 9 slash commands
 ├── agents/                # 4 agent definitions + AGENTS.md registry
-├── skills/                # 14 skill modules
+├── skills/                # 15 skill modules
 ├── rules/                 # Conventions + verification protocol
 ├── maxsim/
 │   ├── bin/maxsim-tools.cjs  # Internal CLI helper
@@ -100,7 +100,8 @@ GitHub is not optional. MaxsimCLI requires:
 | **GitHub Issues** | Source of truth for phases, tasks, plans, and context |
 | **Sub-Issues** | Tasks within a phase (sub-issues of the phase issue) |
 | **GitHub Milestones** | Group phases into deliverable milestones |
-| **Labels** | Categorize issues (phase, task, blocker, bug, etc.) |
+| **Labels** | Categorize issues — 6 labels in 2 namespaces: `type:` (phase, task, bug, quick) and `maxsim:` (auto, user) |
+| **Issue Relations** | Native GitHub "blocked by" / "blocking" for dependency tracking |
 | **Issue Comments** | Store plans, research, context, summaries as structured comments |
 | **GitHub Wiki** | Project conventions, requirements, decisions |
 | **GitHub Discussions** | Architecture decisions, design proposals |
@@ -117,13 +118,14 @@ Only `.claude/` exists locally. Additionally:
 ### 5.5 State Tracking
 
 The project state IS the GitHub Project Board:
-- Which column an issue is in = its status
+- Which column an issue is in = its status (Backlog → To Do → In Progress → In Review → Done)
 - Open/closed issues = progress
 - Milestone completion percentage = roadmap progress
 - Issue comments = plans, research, context, summaries
-- Issue labels = categorization
+- Issue labels = type categorization (`type:phase`, `type:task`, `type:bug`, `type:quick`) and origin (`maxsim:auto`, `maxsim:user`)
+- Issue relations = dependency tracking (native GitHub "blocked by" / "blocking")
 
-No local state file. No sync mechanism needed. GitHub is always authoritative.
+No local state file. No sync mechanism needed. No local cache. GitHub is always authoritative.
 
 ### 5.6 Multi-Project Isolation
 
@@ -138,21 +140,25 @@ Each project is completely isolated:
 
 ## 6. Commands
 
-MaxsimCLI provides **9 slash commands**. `/maxsim:go` is the primary interface.
+MaxsimCLI provides **13 slash commands**. `/maxsim:go` is the primary interface.
 
 ### 6.1 Command List
 
-| Command | Purpose | Primary? |
+| Command | Purpose | Category |
 |---------|---------|----------|
-| `/maxsim:go` | **Auto-dispatch** — Detects project state and does the right thing | **YES** |
+| `/maxsim:go` | **Auto-dispatch** — Detects project state and does the right thing | **Primary** |
 | `/maxsim:init` | Initialize MaxsimCLI in a project | Setup |
-| `/maxsim:plan [N]` | Plan a specific phase | Explicit |
-| `/maxsim:execute [N]` | Execute a specific phase | Explicit |
+| `/maxsim:plan [N]` | Plan a specific phase | Phase |
+| `/maxsim:execute [N]` | Execute a specific phase | Phase |
 | `/maxsim:debug [desc]` | Debug a specific issue | Explicit |
 | `/maxsim:quick [desc]` | Quick task (simplified flow) | Shortcut |
 | `/maxsim:progress` | Show project status + recommendation | Info |
 | `/maxsim:settings` | Configure MaxsimCLI | Config |
 | `/maxsim:help` | Show available commands | Info |
+| `/maxsim:improve` | **Autonomous optimization loop** — modify→verify→keep/discard cycle against any metric | Optimization |
+| `/maxsim:fix-loop` | **Autonomous error repair** — Iteratively fix until zero errors remain | Optimization |
+| `/maxsim:debug-loop` | **Autonomous bug hunting** — Scientific method with hypothesis testing | Optimization |
+| `/maxsim:security` | **Security audit** — STRIDE + OWASP + red-team analysis (read-only) | Audit |
 
 ### 6.2 `/maxsim:go` — The Main Command
 
@@ -167,13 +173,13 @@ Auto-dispatch is the primary way users interact with MaxsimCLI. It:
 ### 6.3 `/maxsim:init` — Project Initialization
 
 Interactive process:
-1. **Scan** — Analyze existing repo (if any): README, package.json, tech stack, file structure. Use 30+ parallel Research agents.
+1. **Scan** — Analyze existing repo (if any): README, package.json, tech stack, file structure. Use parallel Research agents (count scaled by model profile and project size — see §7.4).
 2. **Interview** — Deep questioning: project name, description, goals, tech stack, conventions, testing strategy, deployment, acceptance criteria, no-gos, risks.
 3. **GitHub Setup** — Create/configure: GitHub repo (if none, offer to create private), GitHub Project Board (Kanban), Labels, Milestones.
 4. **CLAUDE.md** — Generate project-root CLAUDE.md with brief context.
 5. **Roadmap** (optional) — Ask user if they want an initial roadmap created as GitHub Milestones + Phase Issues.
 
-For **brownfield projects** (existing code): Use massive parallel agent scanning (30-40 agents) to map the codebase, identify goals/patterns, then confirm with user before creating the GitHub structure.
+For **brownfield projects** (existing code): Use parallel agent scanning (count determined by model profile and codebase size — see §7.4) to map the codebase, identify goals/patterns, then confirm with user before creating the GitHub structure.
 
 ### 6.4 `/maxsim:plan [N]`
 
@@ -192,7 +198,7 @@ Executes a planned phase:
 2. User approves via ExitPlanMode
 3. Spawn executor agents in adaptive waves
 4. Each executor works in its own git worktree
-5. Competitive implementation: same task solved multiple ways, best selected
+5. Competitive implementation (optional): if enabled or user-approved, same task solved multiple ways, best selected
 6. Automatic verification after each task
 7. Max 3 retries on failure
 8. Merge verified worktrees sequentially, auto-resolve conflicts, verify merged result
@@ -238,16 +244,107 @@ When a user opens Claude Code and describes a task without using `/maxsim:`, Cla
 
 ### 7.2 Parallelism Strategy
 
-**Hybrid approach: Agent Tool + Agent Teams**
+**Two-tier hybrid: Subagents (default) + Agent Teams (opt-in)**
 
-- **Agent Tool** (`isolation: "worktree"`) — For parallel execution of independent tasks. Follows Anthropic's batch pattern: all agents spawned in a single message block, self-contained prompts, `run_in_background: true`.
-- **Agent Teams** *(planned — requires Anthropic/Claude Code Agent Teams research)* — For complex tasks requiring inter-agent communication. Teammates can message each other, share a task list, and coordinate. Used within each parallel branch. **Note:** This feature depends on Claude Code's experimental Agent Teams API. Active research into Anthropic's evolving Agent Teams capabilities is required before implementation.
-- **Competitive Implementation** — The same task can be assigned to 2-3 executor agents simultaneously. Each works independently. The verifier picks the best implementation.
+> Research completed 2026-03-24. Full findings: `docs/spec/agent-teams-research.md`
+> Official docs: https://code.claude.com/docs/en/agent-teams
+
+#### Tier 1 — Subagents (Default)
+
+For parallel execution of independent tasks. This is MaxsimCLI's primary execution mechanism.
+
+- Uses the `Agent` tool with `isolation: "worktree"` and `run_in_background: true`
+- Follows Anthropic's batch pattern: all agents spawned in a single message block
+- Each subagent gets a self-contained prompt with full context (no shared state)
+- Results return to the coordinator; subagents cannot communicate with each other
+- **Cost: ~2x** a single session for 3 workers — token-efficient
+- Works on all platforms, all plans, all terminals
+
+**Used for:**
+- `/maxsim:execute` — parallel phase execution (independent tasks)
+- `/maxsim:init` — parallel codebase scanning (read-only, report back)
+- `/maxsim:plan` — parallel research gathering (when no cross-checking needed)
+- Any workflow where tasks are independent and only the result matters
+
+#### Tier 2 — Agent Teams (Opt-in)
+
+For workflows that genuinely require inter-agent communication, shared task lists, and peer-to-peer messaging.
+
+- Experimental feature (since Feb 2026, Claude Code v2.1.32+)
+- Requires `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` (set by MaxsimCLI installer)
+- Each teammate is a fully independent Claude Code session with its own context window
+- Teammates share a task list (`~/.claude/tasks/{team-name}/`) with auto-dependency-unblocking
+- Peer-to-peer messaging via `SendMessage` — teammates can challenge each other's findings
+- Lead creates team, spawns teammates, synthesizes results
+- Teammates do NOT inherit the lead's conversation history — spawn prompt must contain full context
+- **Cost: ~4-7x** a single session — significantly more expensive
+- Display: in-process mode (any terminal) or split-pane mode (tmux/iTerm2 only, **not Windows Terminal**)
+
+**Used for:**
+- **Competitive implementation with debate** — 2-3 agents solve the same problem, actively disprove each other
+- **Multi-reviewer code review** — security + performance + test-coverage reviewers share findings
+- **Competing hypothesis debugging** — agents investigate different root causes, debate like scientists
+- **Cross-layer feature work** — frontend + backend + tests, each owned by a different teammate
+- **Architecture decisions** — UX + architecture + devil's advocate explore a design
+
+**Not used for:** Sequential tasks, same-file edits, simple focused work, budget-constrained workflows.
+
+#### Tier Selection Logic
+
+MaxsimCLI chooses the tier automatically based on the workflow:
+
+| Workflow | Tier | Reason |
+|----------|------|--------|
+| Phase execution (independent tasks) | Tier 1 (Subagents) | Tasks don't need to communicate |
+| Codebase scanning | Tier 1 (Subagents) | Read-only, report back |
+| Research gathering | Tier 1 (Subagents) | Collect and report |
+| Competitive implementation | Tier 2 (Agent Teams) | Agents need to debate |
+| Multi-dimensional code review | Tier 2 (Agent Teams) | Findings need cross-checking |
+| Collaborative debugging | Tier 2 (Agent Teams) | Hypotheses need adversarial testing |
+| Architecture exploration | Tier 2 (Agent Teams) | Requires discussion |
+
+**Graceful degradation:** If Agent Teams are unavailable (env var not set, unsupported plan, or feature not yet stable), MaxsimCLI falls back to Tier 1 subagents for all workflows. The user is informed but not blocked.
+
+#### Agent Teams Architecture (Reference)
+
+| Component | Role | Storage |
+|-----------|------|---------|
+| Team lead | Creates team, spawns teammates, coordinates | Main session |
+| Teammates | Independent Claude Code instances | `~/.claude/teams/{team-name}/config.json` |
+| Task list | Shared work items with dependency tracking | `~/.claude/tasks/{team-name}/{id}.json` |
+| Mailbox | Per-agent message queues | `~/.claude/teams/{team-name}/inboxes/{name}.json` |
+
+**Key Agent Teams constraints:**
+- One team per session, no nested teams
+- Lead is fixed (no promotion/transfer)
+- Teammates load CLAUDE.md + MCP + skills at spawn, but NOT lead's conversation history
+- 3-5 teammates recommended, 5-6 tasks per teammate
+- File locking prevents race conditions on task claiming
+- Avoid two teammates editing the same file (causes overwrites)
+
+#### Agent Teams Quality Gates
+
+Two hooks enable automatic quality enforcement:
+
+| Hook | Fires When | Exit Code 2 Effect |
+|------|-----------|-------------------|
+| `TeammateIdle` | Teammate about to go idle | Keeps teammate working; stderr becomes feedback |
+| `TaskCompleted` | Task being marked complete | Blocks completion; stderr becomes feedback |
+
+**Example:** A `TaskCompleted` hook that runs `npm test` before allowing task completion — if tests fail, the teammate receives the failure output and continues fixing.
+
+#### Competitive Implementation (Optional)
+
+The same task can be assigned to 2–3 agents simultaneously. Each works independently. The verifier picks the best implementation. **Not enabled by default.** Activated either by user approval during planning or automatically for tasks marked as critical.
+
+In Tier 2 mode, competitive implementation uses the Agent Teams debate pattern: agents actively try to disprove each other's approaches, and the theory/implementation that survives adversarial cross-examination wins. This fights LLM anchoring bias (first plausible answer wins).
+
+Rationale: a single high-quality result from competitive implementation can save more tokens than multiple retry cycles.
 
 ### 7.3 Worktrees
 
 Every executor agent works in its own git worktree. Always. No exceptions.
-- Worktree per agent: `.maxsim-worktrees/{taskId}/`
+- Uses Claude Code's native worktree mechanism: `.claude/worktrees/agent-{id}/`
 - Own branch per worktree
 - Merged back after verification
 - Sequential merge order to minimize conflicts
@@ -267,27 +364,83 @@ Every executor agent works in its own git worktree. Always. No exceptions.
 - Individual agent overrides possible
 - Claude can autonomously choose a different model when justified (e.g., Haiku for simple file listing, Opus with extended thinking for complex architecture)
 
+**Parallelism limits per profile** (scaled dynamically by project size):
+
+| Profile | Max Agents | Typical Range |
+|---------|-----------|---------------|
+| quality | 40 | 20–40 |
+| balanced (default) | 20 | 10–20 |
+| budget | 10 | 5–10 |
+
+Small projects (< 10 files) use fewer agents regardless of profile. The exact count is determined dynamically based on codebase size, task complexity, and profile limits.
+
 ---
 
 ## 8. Plan Mode Integration
 
-**Every MaxsimCLI command starts in Plan Mode.** This ensures the user always sees and approves what will happen before any code changes.
+**Every MaxsimCLI command that modifies code, GitHub state, or project configuration starts in Plan Mode.** This ensures the user always sees and approves what will happen before any changes.
 
-Flow:
-1. Command invoked (e.g., `/maxsim:go`)
-2. MaxsimCLI enters Plan Mode (EnterPlanMode)
-3. Read-only research and analysis
-4. Plan presented to user
-5. User approves (ExitPlanMode)
-6. Execution begins
+**Plan Mode per command:**
 
-**Planner agent** has `permissionMode: plan` in its frontmatter — enforcing read-only operation regardless of parent session state.
+| Command | Plan Mode | Reason |
+|---------|-----------|--------|
+| `/maxsim:go` | Yes | Proposes modifying actions |
+| `/maxsim:init` | Yes | Creates GitHub resources |
+| `/maxsim:plan [N]` | Yes | Creates sub-issues |
+| `/maxsim:execute [N]` | Yes | Writes code |
+| `/maxsim:quick [desc]` | Yes | Creates issue + code |
+| `/maxsim:improve` | Yes | Modifies code autonomously |
+| `/maxsim:fix-loop` | Yes | Repairs code autonomously |
+| `/maxsim:debug-loop` | Yes | May modify code |
+| `/maxsim:debug [desc]` | No | Interactive, user guides each step |
+| `/maxsim:settings` | No | Only changes MaxsimCLI config |
+| `/maxsim:security` | No | Read-only audit |
+| `/maxsim:progress` | No | Read-only status display |
+| `/maxsim:help` | No | Read-only text display |
+
+### 8.1 Plan → Approve → Execute Flow
+
+Follows the same pattern as Claude Code's `/batch` skill:
+
+1. Command invoked (e.g., `/maxsim:execute`)
+2. MaxsimCLI enters Plan Mode (`EnterPlanMode`) — read-only research begins
+3. Explore/Research agents analyze codebase (read-only tools only)
+4. Plan written to plan file, presented to user via `ExitPlanMode`
+5. User reviews plan — can edit via Ctrl+G before approving
+6. On approval: Plan Mode exits, execution begins with full permissions
+7. On rejection: stays in Plan Mode, agent revises based on feedback
+
+### 8.2 How Plan Mode Works Internally
+
+Plan Mode is **prompt-based, not tool-enforcement-based**. A `<system-reminder>` is injected that instructs Claude not to use write/execute tools. The restricted tools (Write, Edit, Bash) remain technically callable — enforcement relies on the LLM following instructions.
+
+**Only `ExitPlanMode` has real UI enforcement** — it requires an actual user approval dialog before returning.
+
+**Tools available in Plan Mode:**
+- Full read access: Read, Glob, Grep, LS, WebSearch, WebFetch
+- Task management: TodoRead, TodoWrite
+- User interaction: AskUserQuestion (for clarifying requirements, NOT for plan approval)
+- Subagent spawning: Explore agents (read-only)
+- Plan file: Write/Edit allowed ONLY for the plan file
+
+### 8.3 Two Plan Mode Mechanisms
+
+| Mechanism | `permissionMode: plan` | `EnterPlanMode` tool |
+|-----------|----------------------|---------------------|
+| Set by | Frontmatter / CLI flag / SDK | The agent itself, mid-session |
+| Scope | Entire session from start | From the point the tool is called |
+| User consent | No — imposed by configuration | Yes — requires user approval |
+| Use case | Planner agent definition | MaxsimCLI workflow commands |
+
+**Planner agent** has `permissionMode: plan` in its frontmatter — enforcing read-only operation for the entire agent session. This is used when MaxsimCLI spawns a dedicated Planner subagent.
+
+**Workflow commands** use `EnterPlanMode` / `ExitPlanMode` dynamically — the main session enters plan mode, researches, presents the plan, gets approval, then exits plan mode and executes.
 
 ---
 
 ## 9. Skills
 
-MaxsimCLI ships with **14 skills**, following Anthropic's skill conventions exactly.
+MaxsimCLI ships with **15 skills**, following Anthropic's skill conventions exactly.
 
 ### 9.1 Skill Format
 
@@ -319,7 +472,7 @@ description: What it does. Use when [trigger conditions].
 | 4 | `roadmap-writing` | Technique | Phase planning with dependencies and success criteria |
 | 5 | `handoff-contract` | Infrastructure | Standard output format for all agent results |
 | 6 | `commit-conventions` | Infrastructure | Conventional commits, atomic changes, co-author attribution |
-| 7 | `maxsim-batch` | Technique | Parallel execution orchestration (batch pattern) |
+| 7 | `maxsim-batch` | Technique | Parallel execution orchestration — Tier 1 (subagent batch) + Tier 2 (Agent Teams) selection |
 | 8 | `code-review` | Technique | Security, quality, spec-compliance review |
 | 9 | `verification` | Infrastructure | **MERGED** from: verification-before-completion + evidence-collection + verification-gates. Single authoritative verification skill with gate framework, evidence blocks, anti-rationalization enforcement. |
 | 10 | `github-operations` | Infrastructure | **MERGED** from: github-artifact-protocol + github-tools-guide. Unified GitHub interaction: artifact types, comment conventions, CLI commands, lifecycle state machine. |
@@ -327,6 +480,7 @@ description: What it does. Use when [trigger conditions].
 | 12 | `project-memory` | Infrastructure | **NEW** — GitHub-native persistence for project learnings, decisions, and patterns. |
 | 13 | `using-maxsim` | User-facing | Command reference and routing table. Updated for v6 commands. |
 | 14 | `maxsim-simplify` | Technique | Code simplification, dead code removal, reuse improvement. |
+| 15 | `autoresearch` | Technique | Autonomous optimization loop with reference workflows (loop-protocol, debug, fix, security, results-logging, core-principles). Powers `/maxsim:improve`, `/maxsim:fix-loop`, `/maxsim:debug-loop`, `/maxsim:security`. |
 
 ### 9.3 Skill Loading
 
@@ -378,51 +532,132 @@ Borrowed from autoresearch:
 
 ## 11. Self-Improvement
 
+> Research completed 2026-03-24. Full findings: `docs/spec/self-improvement-research.md`
+> Sources analyzed: autoresearch (1,900 stars, v1.8.2), Superpowers (v4.3.1), 40+ academic/community sources
+
 ### 11.1 Philosophy
 
-MaxsimCLI improves locally per project with every session. Inspired by autoresearch: atomic changes, metric-based evaluation, keep/discard decisions.
+MaxsimCLI improves locally per project with every session through three layers: **Session Memory** (automatic), **Metric Tracking** (per task/phase), and an optional **Optimization Loop** (on-demand). Inspired by autoresearch's "constraint + mechanical metric + autonomous iteration = compounding gains" and Superpowers' anti-rationalization enforcement.
 
-### 11.2 What Improves
+**Core principles** (adapted from autoresearch's 7 universal principles):
+1. **Mechanical verification only** — no subjective "looks good"; every keep/discard uses a number
+2. **One atomic change per iteration** — precise causality; if it breaks, the cause is unambiguous
+3. **Git as memory** — `git revert` (not `git reset --hard`) preserves failed experiments for learning
+4. **Automatic rollback** — failure has no permanent cost; every change reverts instantly
+5. **External enforcement** — the system guarantees termination, not the agent's self-awareness
+6. **Evidence before claims** — no completion without fresh verification (Superpowers Iron Law)
 
-| Target | Mechanism |
-|--------|-----------|
-| Skills | Feedback loop adjusts skill instructions based on success/failure patterns |
-| Configuration | Model profiles, parallelism settings, verification thresholds auto-tuned |
-| Workflows | Process steps refined based on what worked vs what caused failures |
-| Prompts | Agent prompts refined based on output quality metrics |
+### 11.2 Three-Layer Architecture
 
-### 11.3 Feedback Loop
+| Layer | Mechanism | Frequency | What It Does |
+|-------|-----------|-----------|-------------|
+| **Session Memory** | Stop + SessionStart hooks → MEMORY.md | Every session | Captures learnings, injects context at start |
+| **Metric Tracking** | TSV logging after each task/phase | Every task execution | Tracks what worked/failed with numbers |
+| **Optimization Loop** | `/maxsim:improve` command | On-demand | Runs autoresearch-style iteration loop |
 
+### 11.3 Layer 1 — Session Memory
+
+**Stop hook** (`maxsim-capture-learnings`): Fires at session end. Must be improved to:
+- Track only THIS session's commits (diff `session_start_commit..HEAD`, not last 5 all-time)
+- Extract patterns from `last_assistant_message` (available in Stop payload)
+- Prune MEMORY.md to stay under 180 lines (hard 200-line limit in Claude Code)
+- Use `stop_reason` to differentiate clean exits from crashes
+- Check `stop_hook_active` to prevent infinite blocking loops
+- Write structured entries: date, session_id, commit_count, patterns, stop_reason
+
+**SessionStart hook** (`maxsim-session-start`, NEW): Fires at session start/resume/compact. Injects context:
+- Read `git log --oneline -20` (instant orientation)
+- Read first 200 lines of MEMORY.md (learned patterns)
+- Read last 10 TSV entries (metric trends, if file exists)
+- Output via `hookSpecificOutput.additionalContext` for injection into Claude's context
+
+**Storage:** `.claude/agent-memory/maxsim-learner/MEMORY.md` (gitignored, machine-local)
+
+### 11.4 Layer 2 — Metric Tracking
+
+**TSV format** (adopted from autoresearch, 7 columns):
+
+```tsv
+# metric_direction: lower_is_better
+iteration	commit	metric	delta	guard	status	description
+0	abc1234	847	0	-	baseline	Initial measurement
+1	def5678	831	-16	pass	keep	Reduce verification timeout
+2	-	852	+5	-	discard	Add parallel workers (reverted)
+3	ghi9012	-	-	-	crash	Refactor config (syntax error, fixed)
 ```
-Session Start
-  → Read git log (last 20 commits) for patterns
-  → Read project memory (agent-memory/MEMORY.md)
-  → Apply learned adjustments
 
-Session Work
-  → Execute tasks
-  → Measure results (tests, build, spec compliance)
-  → Log results to autoresearch-results.tsv
+| Column | Description |
+|--------|-------------|
+| `iteration` | Sequential counter (0 = baseline) |
+| `commit` | Git hash or `-` if reverted |
+| `metric` | Measured numeric value |
+| `delta` | Change from previous best |
+| `guard` | `pass` / `fail` / `-` (no guard) |
+| `status` | `baseline` / `keep` / `discard` / `crash` / `hook-blocked` |
+| `description` | One-sentence experiment description |
 
-Session End (Stop hook)
-  → Capture learnings
-  → Update agent memory
-  → Record what worked / what failed
-```
+**Path:** `.claude/agent-memory/maxsim-learner/autoresearch-results.tsv` (gitignored)
 
-### 11.4 Storage
+**When written:** After each task in `/maxsim:execute`, after each phase verification, after each `/maxsim:improve` iteration.
 
-- **Git as Memory** — `git log --oneline -20` at session start reveals what was tried
-- **Agent Memory** — `.claude/agent-memory/maxsim-learner/MEMORY.md` (Claude Code's subagent memory system, `memory: project`)
-- **Results TSV** — `.claude/agent-memory/maxsim-learner/autoresearch-results.tsv` (gitignored) for metric tracking
-- **Claude Code Memory** — Native auto-memory for user-level preferences
+### 11.5 Layer 3 — Optimization Loop
 
-### 11.5 Isolation
+`/maxsim:improve` runs the autoresearch 8-phase loop. The full autoresearch skill is included in `templates/skills/autoresearch/` with all reference workflows.
 
-All improvements are project-local. Two projects using MaxsimCLI never interfere with each other:
-- Separate `.claude/agent-memory/`
-- Separate `autoresearch-results.tsv`
-- Separate Claude Code auto-memory (keyed by git repo)
+1. **Review** — read git log + TSV + diff
+2. **Ideate** — exploit successes, avoid repeated failures, try untried approaches
+3. **Modify** — make ONE atomic change
+4. **Commit** — commit before verify (`experiment(<scope>):` prefix)
+5. **Verify** — run metric command, extract number
+6. **Guard** — run regression check (e.g., `npm test`)
+7. **Decide** — improved + guard pass → keep; otherwise → `git revert`
+8. **Log** — append to TSV, check stuck condition, repeat
+
+**Verify + Guard dual-command pattern:**
+- **Verify:** "Did the metric improve?" (primary goal)
+- **Guard:** "Did anything else break?" (regression safety net)
+- Guard failure + verify pass → rework (max 2 attempts), then discard
+- Guard/test files are NEVER modified by the loop
+
+**Stuck detection:** After 5 consecutive discards/crashes:
+1. Re-read ALL in-scope files (full context reload)
+2. Re-read original goal
+3. Review entire TSV log for patterns
+4. Try combining 2-3 successful past changes
+5. Try the OPPOSITE approach
+6. Try a radical architectural change
+7. If still stuck → create diagnostic GitHub Issue + escalate to user
+
+**Noise handling** for volatile metrics: 3-run median for 1-5% variance, 5-run median for >5%, minimum-delta threshold to filter noise.
+
+**Note:** Claude Code's built-in `/loop` command exists for scheduled recurring prompts but is not used by MaxsimCLI — it has no memory between cycles and is session-scoped (max 3 days). `/maxsim:improve` uses its own internal loop with git-based memory and TSV tracking.
+
+### 11.6 Quality Enforcement (from Superpowers)
+
+Adopted from Superpowers' anti-rationalization philosophy:
+
+- **Evidence Blocks** required for all completion claims: `CLAIM / EVIDENCE / OUTPUT / VERDICT`
+- **10 forbidden phrases** in verification: "should work", "I already checked", "tests were passing before", etc.
+- **`<HARD-GATE>` tags** in agent prompts for non-negotiable rules
+- **Two-stage review** (optional): Spec Compliance → Code Quality, each by a fresh subagent
+- **Iron Law:** No completion claims without fresh verification evidence from this session
+
+### 11.7 Code Enforcement via Hooks
+
+| Hook | Event | Purpose | Exit Code 2 Effect |
+|------|-------|---------|-------------------|
+| `maxsim-capture-learnings` | Stop | Write session learnings to MEMORY.md | N/A (always exit 0) |
+| `maxsim-session-start` | SessionStart | Inject MEMORY.md + TSV + git log context | N/A (context injection) |
+| `maxsim-task-completed` | TaskCompleted | Run tests before allowing task completion | Blocks completion, feeds back failure |
+| `maxsim-teammate-idle` | TeammateIdle | Check for pending tasks before allowing idle | Keeps teammate working |
+
+### 11.8 Isolation
+
+All improvements are project-local. Two projects using MaxsimCLI never interfere:
+- Separate `.claude/agent-memory/maxsim-learner/` per project
+- Separate `autoresearch-results.tsv` per project
+- Separate Claude Code auto-memory (keyed by git repo root)
+- MEMORY.md hard-limited to 200 lines (Claude Code constraint)
 
 ---
 
@@ -438,14 +673,25 @@ All improvements are project-local. Two projects using MaxsimCLI never interfere
 | `maxsim-stop-sound` | Stop | Play sound when Claude finishes |
 | `maxsim-capture-learnings` | Stop | Capture session learnings to agent memory |
 
-### 12.2 Agent Team Hooks *(planned — requires Agent Teams research)*
+### 12.2 Agent Team Hooks
 
-> These hooks depend on Claude Code's experimental Agent Teams API. Implementation will follow once Agent Teams capabilities are fully researched and validated.
+> Research completed 2026-03-24. Official docs: https://code.claude.com/docs/en/hooks
 
-| Hook | Event | Purpose |
-|------|-------|---------|
-| TeammateIdle quality gate | TeammateIdle | Exit code 2 = teammate must continue (tests not passing) |
-| TaskCompleted verification | TaskCompleted | Exit code 2 = task stays incomplete (verification failed) |
+These hooks fire only when Agent Teams are active (Tier 2 workflows). Neither hook supports matchers — they fire for every occurrence.
+
+| Hook | Event | Fires When | Payload Fields |
+|------|-------|-----------|---------------|
+| `maxsim-teammate-idle` | `TeammateIdle` | Teammate about to go idle | `teammate_name`, `team_name`, `session_id`, `cwd` |
+| `maxsim-task-completed` | `TaskCompleted` | Task being marked complete | `task_id`, `task_subject`, `task_description`, `teammate_name`, `team_name` |
+
+**Exit code behavior (both hooks):**
+- `exit 0` — allow the action (teammate goes idle / task marked complete)
+- `exit 2` — block the action; stderr is fed back to the teammate as instruction
+- JSON `{"continue": false, "stopReason": "..."}` — stop the teammate entirely
+
+**MaxsimCLI implementation:**
+- `maxsim-teammate-idle`: Checks if pending tasks remain on the shared task list. If yes, exits 2 with "Pick up the next available task."
+- `maxsim-task-completed`: Runs verification (tests, build, lint). If any gate fails, exits 2 with the failure output. The teammate continues fixing until gates pass.
 
 ---
 
@@ -516,7 +762,7 @@ maxsimcli/
 | Testing | Vitest (TDD for everything) |
 | Linting | Biome |
 | CI/CD | GitHub Actions |
-| Releases | semantic-release |
+| Releases | semantic-release (single source of truth for versioning — version injected into code at build time) |
 | Website | React + Vite + Tailwind CSS + Motion |
 | Documentation | Markdoc |
 
@@ -528,7 +774,7 @@ maxsimcli/
 |-------|----------|
 | Unit tests | Core logic, GitHub API, config, state, phases |
 | Integration tests | Install/uninstall flow, hook registration |
-| E2E tests | Full user flow: install → init → plan → execute |
+| E2E tests | Full user flow: install → init → plan → execute. **Runs against real GitHub API** with a dedicated test account/token in CI secrets. |
 
 ---
 
@@ -539,13 +785,15 @@ maxsimcli/
 1. **Landing Page** — Marketing: features, benefits, installation instructions, tech stack showcase
 2. **Full Documentation** — All commands, workflows, skills, configuration, and guides
 
+> **Note:** The current 33 documentation articles are outdated (reference v5 concepts like `.planning/` directory, `/maxsim:milestone`, `/maxsim:todos`). **All documentation must be completely rewritten** to reflect the v6 spec. Only features that exist in this spec should be documented.
+
 ---
 
 ## 17. What MaxsimCLI is NOT
 
 - **Not a fork** of GSD or Superpowers — it is an independent project inspired by both
-- **Not multi-runtime** — it only works with Claude Code
-- **Not global** — it installs per-project, not globally
+- **Not multi-runtime** — it only works with Claude Code (the file `docs/multi-runtime-architecture.md` is a deprecated reference and should be deleted)
+- **Not global** — it installs per-project into `.claude/`, not globally. Any global `~/.claude/maxsim/` installation is a developer's personal setup, not part of the product.
 - **Not local-first** — GitHub is always the source of truth
 - **Not a MCP server** — commands are slash commands, not MCP tools
 - **Not optional** — GitHub integration is mandatory, not a plugin
@@ -613,13 +861,13 @@ MaxsimCLI is successful when:
 2. src/github/projects.ts — Projects v2 (GraphQL + REST, CORRECT APIs) ✅
 3. src/github/issues.ts — Issues + Sub-Issues (correct ID types) ✅
 4. src/github/milestones.ts — Milestones (with pagination) ✅
-5. src/github/labels.ts — Label taxonomy (16 labels in 4 namespaces) ✅
+5. src/github/labels.ts — Label taxonomy (6 labels in 2 namespaces: type + maxsim) ✅ [UPDATE CODE: reduce from 19 to 6]
 6. src/github/comments.ts — Structured comments (HTML markers) ✅
-7. src/github/mapping.ts — Local cache (github-issues.json) ⬚ not yet implemented
-8. src/github/sync.ts — State synchronization ⬚ not yet implemented
-9. src/github/commands.ts — All GitHub CLI commands ⬚ not yet implemented
-10. src/github/types.ts — GitHub-specific types ✅
-11. Tests: unit tests with mocked Octokit, E2E with real API
+7. src/github/types.ts — GitHub-specific types ✅
+8. Tests: unit tests with mocked Octokit, E2E with real API
+REMOVED: mapping.ts (local cache contradicts GitHub-only principle)
+REMOVED: sync.ts (no sync needed — GitHub is always authoritative)
+REMOVED: commands.ts (functionality covered by client.ts + individual modules)
 ```
 **Commit:** `feat: GitHub Projects v2 integration (correct API)`
 
@@ -632,9 +880,9 @@ MaxsimCLI is successful when:
 3. src/install/hooks.ts — Hook registration in settings.json ✅
 4. src/install/uninstall.ts — Clean uninstall (complete!) ✅
 5. src/install/claudemd.ts — CLAUDE.md generation ✅ (added, not in original spec)
-6. src/install/manifest.ts — Track all installed files ⬚ not yet implemented
+6. src/install/manifest.ts — Track all installed files ⬚ not yet implemented (useful for clean uninstall)
 7. scripts/copy-assets.cjs — Build step: copy templates to dist ✅
-7. Tests: E2E install/uninstall cycle
+8. Tests: E2E install/uninstall cycle
 ```
 **Commit:** `feat: install system with complete uninstall`
 
@@ -655,8 +903,8 @@ MaxsimCLI is successful when:
 ```
 **Commit:** `feat: commands and workflows (GitHub-first, correct tool names)`
 
-### Phase 5: Skills (14 new)
-**Goal:** 14 skills following Anthropic conventions exactly.
+### Phase 5: Skills (15 total)
+**Goal:** 15 skills following Anthropic conventions exactly.
 **Spec:** `docs/spec/skills-specification.md`, `docs/spec/skills-writing-guide.md`
 ```
 1. Keep 8: tdd, systematic-debugging, brainstorming, roadmap-writing,
@@ -699,17 +947,31 @@ MaxsimCLI is successful when:
 **Commit:** `feat: hooks (correct events, learnings capture)`
 
 ### Phase 8: Self-Improvement
-**Goal:** autoresearch-style feedback loop.
+**Goal:** Three-layer self-improvement system (Session Memory + Metric Tracking + Optimization Loop).
 **Spec:** `docs/spec/self-improvement-guide.md`, `docs/spec/memory-system-guide.md`
+**Research:** Completed 2026-03-24. Findings: `docs/spec/self-improvement-research.md`
 ```
-1. Verify + Guard dual-command pattern in verification workflow
-2. Git-as-Memory: read git log at session start
-3. Results TSV logging after each phase
-4. Agent memory integration (memory: project on agents)
-5. Stop hook captures learnings to MEMORY.md
-6. Stuck detection (5 consecutive failures → recovery)
+P0 — Session Memory:
+1. Rewrite maxsim-capture-learnings Stop hook (per-session commits, pattern extraction, pruning)
+2. New maxsim-session-start SessionStart hook (MEMORY.md + TSV + git log injection)
+3. Stop hook already captures learnings to MEMORY.md ✅ (needs improvement)
+
+P1 — Metric Tracking:
+4. TSV logging in execute workflow (7-column autoresearch format)
+5. TaskCompleted hook for test-gate enforcement
+6. Verify + Guard dual-command pattern in verification workflow
+
+P2 — Quality & Detection:
+7. Stuck detection (5 consecutive failures → 6-step escalation)
+8. Iron Laws + Anti-Rationalization tables in agent prompts (from Superpowers)
+9. <HARD-GATE> tags for non-negotiable verification rules
+
+P3 — Optimization Loop:
+10. /maxsim:improve command (optional autoresearch-style loop)
+11. Plan wizard for /maxsim:improve setup
+12. Noise handling for volatile metrics (median, min-delta)
 ```
-**Commit:** `feat: self-improvement loop (autoresearch-adapted)`
+**Commit:** `feat: self-improvement system (autoresearch + superpowers adapted)`
 
 ### Phase 9: Documentation & Website
 **Goal:** All docs match the new v6 implementation.
@@ -718,22 +980,27 @@ MaxsimCLI is successful when:
 1. Rewrite USER-GUIDE.md for v6
 2. Rewrite INTERNALS.md for v6
 3. Update README.md
-4. Update website markdown docs (keep design, update content)
+4. COMPLETELY REWRITE all 33 website documentation articles for v6
+   - Remove references to .planning/, /maxsim:milestone, /maxsim:todos, dashboard
+   - Only document features that exist in this spec
 5. Fix CONTRIBUTING.md (correct lint command, etc.)
 6. Update GitHub issue templates
 7. Update global CLAUDE.md template
-8. Verify all docs match actual code
+8. Delete docs/multi-runtime-architecture.md (deprecated)
+9. Verify all docs match actual code
 ```
 **Commit:** `docs: complete documentation for v6`
 
 ### Release
 ```
-1. npm version major (6.0.0)
-2. Update CHANGELOG.md
-3. npm publish
-4. Deploy website
+1. semantic-release handles versioning (6.0.0 via breaking change commit)
+2. CHANGELOG.md auto-updated by semantic-release
+3. npm publish (automated via CI)
+4. Deploy website (automated via GitHub Pages workflow)
 5. Announce
 ```
+
+> **Version strategy:** semantic-release is the single source of truth for versioning. The version in `core/types.ts`, `core/version.ts`, and `templates/templates/config.json` must be injected at build time from `packages/cli/package.json`. No hardcoded version strings.
 
 ---
 
@@ -744,19 +1011,21 @@ Each section above has a corresponding deep-dive document in `docs/spec/` with f
 | # | Topic | Document | Lines | Key Content |
 |---|-------|----------|-------|-------------|
 | 1 | GitHub Projects v2 API | [`github-projects-v2-api.md`](docs/spec/github-projects-v2-api.md) | 2,374 | Complete REST + GraphQL + gh CLI reference, Sub-Issues API, authentication, pagination |
-| 2 | GitHub Issue Structure | [`github-structure-design.md`](docs/spec/github-structure-design.md) | 1,855 | Board design, issue hierarchy, 16 labels in 4 namespaces, 9 comment types, IssueOps, GitHub Actions |
+| 2 | GitHub Issue Structure | [`github-structure-design.md`](docs/spec/github-structure-design.md) | 1,855 | Board design, issue hierarchy, **6 labels in 2 namespaces** (update from 16/4), 9 comment types, IssueOps, GitHub Actions |
 | 3 | Agent Teams Guide | [`agent-teams-guide.md`](docs/spec/agent-teams-guide.md) | 1,283 | TeamCreate, SendMessage, TeammateIdle/TaskCompleted hooks, 6 coordination patterns |
+| 3b | Agent Teams Research | [`agent-teams-research.md`](docs/spec/agent-teams-research.md) | ~400 | **NEW** — Consolidated research (20 parallel agents, 2026-03-24): hybrid architecture decision, cost analysis, patterns catalog, community findings |
 | 4 | Plan Mode Guide | [`plan-mode-guide.md`](docs/spec/plan-mode-guide.md) | 1,090 | EnterPlanMode/ExitPlanMode mechanics, permissionMode:plan, tool restrictions |
 | 5 | Skills Writing Guide | [`skills-writing-guide.md`](docs/spec/skills-writing-guide.md) | 1,480 | Anthropic skill conventions, frontmatter spec, CSO rules, 12 anti-patterns |
 | 6 | Skills Specification | [`skills-specification.md`](docs/spec/skills-specification.md) | 985 | All 14 target skills: name, description, structure, agent preloads |
 | 7 | Memory System Guide | [`memory-system-guide.md`](docs/spec/memory-system-guide.md) | 1,340 | CLAUDE.md, auto memory, MEMORY.md, subagent memory, feedback loops |
 | 8 | CLAUDE.md Guide | [`claude-md-guide.md`](docs/spec/claude-md-guide.md) | 961 | Best practices, template, 200-line limit, path-scoped rules |
 | 9 | Self-Improvement Guide | [`self-improvement-guide.md`](docs/spec/self-improvement-guide.md) | 1,151 | autoresearch adaptation, 8-phase loop, Verify+Guard, Git-as-Memory |
+| 9b | Self-Improvement Research | [`self-improvement-research.md`](docs/spec/self-improvement-research.md) | ~350 | **NEW** — Consolidated research (21 agents, 2026-03-24): 3-layer architecture, autoresearch + Superpowers analysis |
 | 10 | Parallel Execution Guide | [`parallel-execution-guide.md`](docs/spec/parallel-execution-guide.md) | 1,043 | Agent tool parameters, batch pattern, worktree isolation, token costs |
 | 11 | Wave Execution Design | [`wave-execution-design.md`](docs/spec/wave-execution-design.md) | 848 | Dependency analysis, Kahn's algorithm, adaptive waves, error recovery |
-| 12 | Competitive Implementation | [`competitive-implementation-design.md`](docs/spec/competitive-implementation-design.md) | 1,136 | Best-of-N sampling, 7 scoring criteria, prompt variation, hybrid strategy |
+| 12 | Competitive Implementation | [`competitive-implementation-design.md`](docs/spec/competitive-implementation-design.md) | 1,136 | Best-of-N sampling, 7 scoring criteria, prompt variation, hybrid strategy. **Now optional**, not default. |
 | 13 | Verification System | [`verification-system-design.md`](docs/spec/verification-system-design.md) | 1,432 | Gate framework, evidence blocks, anti-rationalization, Guard pattern |
-| 14 | Init Process Design | [`init-process-design.md`](docs/spec/init-process-design.md) | 1,301 | 5-phase init, 30+ scan agents, adaptive interview, GitHub setup |
+| 14 | Init Process Design | [`init-process-design.md`](docs/spec/init-process-design.md) | 1,301 | 5-phase init, profile-based agent count (not fixed 30+), adaptive interview, GitHub setup |
 | 15 | Hooks Reference | [`hooks-reference.md`](docs/spec/hooks-reference.md) | 2,319 | All 22 hook events, settings.json format, 4 handler types, 12 gotchas |
 | 16 | Git Worktree Strategy | [`git-worktree-strategy.md`](docs/spec/git-worktree-strategy.md) | 2,007 | Worktree lifecycle, merge strategies, conflict resolution, cleanup |
 | 17 | Claude Code SDK Guide | [`claude-code-sdk-guide.md`](docs/spec/claude-code-sdk-guide.md) | 1,331 | Claude Agent SDK, headless mode, programmatic sessions, @maxsim/sdk |
