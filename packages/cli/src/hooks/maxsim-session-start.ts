@@ -91,7 +91,11 @@ readStdinJson<SessionStartInput>((input) => {
     }
 
     if (sections.length > 0) {
-      process.stdout.write(`${sections.join('\n\n')}\n`);
+      process.stdout.write(
+        `${JSON.stringify({
+          additionalContext: sections.join('\n\n'),
+        })}\n`,
+      );
     }
   } catch {
     // Never crash — always let the session start cleanly
