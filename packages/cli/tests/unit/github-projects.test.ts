@@ -129,8 +129,8 @@ describe('createProject', () => {
 
     const calls = execFileSyncMock.mock.calls;
     const ghCall = calls.find((c) => c[0] === 'gh' && (c[1] as string[])?.[0] === 'project');
-    expect(ghCall).toBeDefined();
-    const ghArgs = ghCall![1] as string[];
+    if (!ghCall) throw new Error('Expected a gh project call');
+    const ghArgs = ghCall[1] as string[];
     expect(ghArgs).toContain('create');
     expect(ghArgs).toContain('--owner');
     expect(ghArgs).toContain('testorg');
@@ -342,8 +342,8 @@ describe('listProjectFields', () => {
 
     const calls = execFileSyncMock.mock.calls;
     const ghCall = calls.find((c) => c[0] === 'gh' && (c[1] as string[])?.[1] === 'field-list');
-    expect(ghCall).toBeDefined();
-    const ghArgs = ghCall![1] as string[];
+    if (!ghCall) throw new Error('Expected a gh field-list call');
+    const ghArgs = ghCall[1] as string[];
     expect(ghArgs).toContain('42');
     expect(ghArgs).toContain('testorg');
   });
@@ -439,8 +439,8 @@ describe('addItemToProject', () => {
 
     const calls = execFileSyncMock.mock.calls;
     const ghCall = calls.find((c) => c[0] === 'gh' && (c[1] as string[])?.[1] === 'item-add');
-    expect(ghCall).toBeDefined();
-    const ghArgs = ghCall![1] as string[];
+    if (!ghCall) throw new Error('Expected a gh item-add call');
+    const ghArgs = ghCall[1] as string[];
     expect(ghArgs).toContain('7');
     expect(ghArgs).toContain('testorg');
     expect(ghArgs).toContain('https://github.com/testorg/testrepo/issues/42');
@@ -489,8 +489,8 @@ describe('moveItemToStatus', () => {
 
     const calls = execFileSyncMock.mock.calls;
     const editCall = calls.find((c) => c[0] === 'gh' && (c[1] as string[])?.[1] === 'item-edit');
-    expect(editCall).toBeDefined();
-    const args = editCall![1] as string[];
+    if (!editCall) throw new Error('Expected a gh item-edit call');
+    const args = editCall[1] as string[];
     expect(args).toContain('--field-id');
     expect(args).toContain('PVTSSF_status');
     expect(args).toContain('--single-select-option-id');
