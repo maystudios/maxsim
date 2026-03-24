@@ -11,7 +11,7 @@ export type {
 export { MAXSIM_LABELS, BOARD_COLUMNS } from './types.js';
 
 // Client
-export { getOctokit, getRepoInfo, ghJson, ghExec, withGhResult, resetClient } from './client.js';
+export { getOctokit, getRepoInfo, ghJson, ghExec, withGhResult, resetClient, createRepo } from './client.js';
 
 // Comments
 export {

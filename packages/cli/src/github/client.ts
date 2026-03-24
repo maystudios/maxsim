@@ -173,6 +173,37 @@ export async function withGhResult<T>(
   }
 }
 
+/**
+ * Create a new GitHub repository via the gh CLI.
+ *
+ * Defaults to private. Pass `{ private: false }` for a public repo.
+ * Returns the created repo's owner/repo/isOrg info on success.
+ */
+export function createRepo(
+  name: string,
+  opts?: { private?: boolean; description?: string },
+): GhResult<RepoInfo> {
+  const args = ['repo', 'create', name, '--confirm'];
+  if (opts?.private !== false) args.push('--private');
+  if (opts?.description) args.push('--description', opts.description);
+
+  const execResult = ghExec(args);
+  if (!execResult.ok) return execResult;
+
+  const url = execResult.data;
+  const match = url.match(/(?:github\.com)[/:]([^/]+)\/([^/.]+?)(?:\.git)?$/);
+  if (!match) {
+    const parts = name.split('/');
+    if (parts.length === 2) {
+      return { ok: true, data: { owner: parts[0], repo: parts[1], isOrg: false } };
+    }
+    return { ok: false, error: `Cannot parse repo info from gh output: ${url}`, code: 'UNKNOWN' };
+  }
+
+  const [, owner, repo] = match;
+  return { ok: true, data: { owner, repo, isOrg: false } };
+}
+
 /** Reset cached singletons (for testing). */
 export function resetClient(): void {
   _octokit = null;
