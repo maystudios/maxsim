@@ -10,7 +10,7 @@ Phase lifecycle is managed through two commands: `/maxsim:plan` for planning and
 
 `/maxsim:plan` walks through three sequential stages to produce an executable plan:
 
-{% doctable headers=["Stage", "What Happens"] rows=[["Discussion", "Adaptive questioning to gather context — writes CONTEXT.md"], ["Research", "Studies the codebase and domain to inform planning decisions"], ["Planning", "Creates task breakdowns with wave assignments, type annotations, and verification criteria"]] %}
+{% doctable headers=["Stage", "What Happens"] rows=[["Discussion", "Adaptive questioning to gather context — posts context as a GitHub Issue comment"], ["Research", "Studies the codebase and domain to inform planning decisions"], ["Planning", "Creates task breakdowns with wave assignments, type annotations, and verification criteria"]] %}
 {% /doctable %}
 
 {% codeblock language="bash" %}

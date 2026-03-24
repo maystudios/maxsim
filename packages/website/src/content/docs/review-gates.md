@@ -1,5 +1,5 @@
 ---
-id: dashboard-network
+id: review-gates
 title: Review Gates
 group: Advanced
 ---

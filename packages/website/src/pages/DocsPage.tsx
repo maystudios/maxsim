@@ -24,9 +24,9 @@ import planPhaseMd from "../content/docs/plan-phase.md?raw";
 import executePhaseMd from "../content/docs/execute-phase.md?raw";
 import verifyWorkMd from "../content/docs/verify-work.md?raw";
 import milestonesMd from "../content/docs/milestones.md?raw";
-import dashboardOverviewMd from "../content/docs/dashboard-overview.md?raw";
-import dashboardFeaturesMd from "../content/docs/dashboard-features.md?raw";
-import dashboardNetworkMd from "../content/docs/dashboard-network.md?raw";
+import skillsWorkflowsMd from "../content/docs/skills-workflows.md?raw";
+import worktreeModeMd from "../content/docs/worktree-mode.md?raw";
+import reviewGatesMd from "../content/docs/review-gates.md?raw";
 import commandsCoreMd from "../content/docs/commands-core.md?raw";
 import commandsPhasesMd from "../content/docs/commands-phases.md?raw";
 import commandsMilestoneMd from "../content/docs/commands-milestone.md?raw";
@@ -73,9 +73,9 @@ const PARSED_DOCS: ParsedDoc[] = [
   executePhaseMd,
   verifyWorkMd,
   milestonesMd,
-  dashboardOverviewMd,
-  dashboardFeaturesMd,
-  dashboardNetworkMd,
+  skillsWorkflowsMd,
+  worktreeModeMd,
+  reviewGatesMd,
   commandsCoreMd,
   commandsPhasesMd,
   commandsMilestoneMd,

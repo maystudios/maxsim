@@ -1,5 +1,5 @@
 ---
-id: dashboard-overview
+id: skills-workflows
 title: Skills & Workflows
 group: Advanced
 ---
