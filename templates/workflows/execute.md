@@ -212,11 +212,24 @@ Agent(
 )
 ```
 
-### 6.3 Wait for all wave agents to complete
+### 6.3 Competitive Implementation (Optional)
+
+> **Opt-in feature.** Only activates when `config.execution.competitive_enabled` is `true` AND the task is marked as `critical` in its GitHub Issue labels.
+
+When competitive mode is active for a task:
+1. Spawn **2 executor agents** for the same task (each in its own worktree)
+2. Each agent works independently with a different approach prompt variation
+3. After both complete, spawn a **verifier agent** using `@.claude/maxsim/workflows/verify-phase.md` to compare both implementations
+4. The verifier selects the better implementation based on: correctness, code quality, test coverage, and simplicity
+5. Discard the losing implementation's worktree branch
+
+> **Note:** Competitive implementation with Agent Teams debate pattern (Tier 2) is planned but not yet available. This uses Tier 1 subagents only.
+
+### 6.4 Wait for all wave agents to complete
 
 Do not proceed until every agent in the current wave has returned.
 
-### 6.4 Verify completed tasks (automatic)
+### 6.5 Verify completed tasks (automatic)
 
 For each plan completed in this wave, run spot-checks:
 
@@ -242,7 +255,7 @@ Spot-check passes when:
 
 If any spot-check fails: report which plan failed. Ask user: "Retry plan or continue with remaining waves?"
 
-### 6.5 Report wave completion
+### 6.6 Report wave completion
 
 ```
 ---
@@ -257,7 +270,7 @@ If any spot-check fails: report which plan failed. Ask user: "Retry plan or cont
 ---
 ```
 
-### 6.6 Handle checkpoint plans
+### 6.7 Handle checkpoint plans
 
 Plans with `autonomous: false` may pause for user input. When a checkpoint is returned:
 1. Present the checkpoint to the user
@@ -265,7 +278,7 @@ Plans with `autonomous: false` may pause for user input. When a checkpoint is re
 3. Spawn a continuation agent for that plan
 4. Wait for continuation to complete before advancing to next wave
 
-### 6.7 Merge worktree branches
+### 6.8 Merge worktree branches
 
 After all plans in the wave are complete and spot-checks pass, merge each worktree branch back to main sequentially:
 
@@ -289,9 +302,9 @@ Branches are merged sequentially to minimize conflicts. If a merge conflict occu
 - If auto-resolve fails or tests fail after auto-resolve: revert and ask the user to resolve manually
 - If false: report immediately and ask the user to resolve before continuing
 
-### 6.8 Advance to next wave
+### 6.9 Advance to next wave
 
-Repeat steps 6.1–6.7 for each subsequent wave.
+Repeat steps 6.1–6.8 for each subsequent wave.
 
 ## 7. Execution Summary Gate
 
@@ -428,6 +441,38 @@ Attempts: 3 (initial + 2 retries)
 1. Fix manually and re-run /maxsim:execute {phase_number}
 2. Accept as-is and continue to next phase
 ```
+
+#### Diagnostic GitHub Issue
+
+When all 3 attempts are exhausted, create a diagnostic GitHub Issue:
+
+```bash
+TMPFILE=$(mktemp)
+cat > "$TMPFILE" << 'BODY_EOF'
+## Task
+{task_description}
+
+## Failure Summary
+{last_failure_output}
+
+## Attempts
+- Attempt 1: {result}
+- Attempt 2: {result}
+- Attempt 3: {result}
+
+## Suggested Investigation
+- Review the task requirements for ambiguity
+- Check for environmental dependencies
+- Consider breaking the task into smaller sub-tasks
+BODY_EOF
+gh issue create \
+  --title "fix: [Phase {N}] Task {id} failed after 3 attempts" \
+  --body-file "$TMPFILE" \
+  --label "type:bug" --label "maxsim:auto"
+```
+
+Add the created issue number to the phase's gap list for user review.
+
 Exit workflow.
 
 ### 9.2 Plan gap closure
@@ -473,7 +518,13 @@ Agent(
 ### 9.3 Execute gap-closure plans
 
 Re-read the phase issue to discover new plan comments with `gap_closure: true` in frontmatter.
-Execute them using the same wave logic (steps 6.1–6.8).
+
+Before executing, analyze the failure using the `systematic-debugging` skill pattern:
+1. Identify the root cause from the failure output
+2. Classify: build error, test failure, lint violation, or runtime error
+3. Include the diagnosis in the retry agent's prompt so it can avoid the same mistake
+
+Execute them using the same wave logic (steps 6.1–6.9).
 
 When spawning executor agents for gap-closure plans, append the following to each agent prompt:
 
