@@ -110,6 +110,8 @@ Wait for user response before continuing.
 
 **Problem 2: Open bug issues**
 
+Detection rule: If open issues labeled `type:bug` exist → propose `/maxsim:debug` to investigate and fix them.
+
 If `gh issue list --label "type:bug"` returned open issues:
 
 ```
@@ -120,7 +122,7 @@ Bugs:
   #{number} — {title}
   ...
 Impact: Active bugs may affect current phase execution
-Resolution: Address bugs or route to /maxsim:debug
+Resolution: Issues labeled type:bug trigger /maxsim:debug — run it to investigate and fix them
 
 Options:
 1. Route to /maxsim:debug

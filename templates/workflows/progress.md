@@ -104,6 +104,19 @@ Executed but not verified:
 - Phase [N] — [Title] (Issue #NNN): tasks complete, verification pending
 ```
 
+**Overdue milestones** — query milestones with due dates and compare against today's date:
+
+```bash
+gh api repos/{owner}/{repo}/milestones --jq '.[] | select(.due_on != null) | {title, due_on, open_issues}'
+```
+
+For each milestone returned, compare `due_on` (ISO 8601 date string) against today's date. If `due_on` is in the past and `open_issues > 0`, it is overdue. Display:
+
+```
+Overdue milestones:
+- [milestone title]: due [due_on date], [open_issues] open issue(s) remaining
+```
+
 **Overdue or blocked tasks** — phases whose milestone due date has passed, or phases with open issues labeled "type:blocker":
 
 ```
@@ -162,6 +175,13 @@ All phases complete! Ready to wrap up the milestone.
 ## Blockers to Resolve First
 
 - #N: [title] — resolve before continuing
+```
+
+**If overdue milestones exist:** Prepend to next-action section:
+```
+## Overdue Milestones
+
+- [milestone title]: due [due_on date], [open_issues] open issue(s) remaining — close or reschedule before continuing
 ```
 
 </process>
