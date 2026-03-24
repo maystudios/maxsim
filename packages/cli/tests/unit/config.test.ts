@@ -6,9 +6,10 @@ import {
   loadConfig,
   saveConfig,
   resolveModel,
+  resolveMaxAgents,
   getConfigPath,
 } from '../../src/core/config.js';
-import { Model, ModelProfile, AgentType, DEFAULT_CONFIG } from '../../src/core/types.js';
+import { Model, ModelProfile, AgentType, DEFAULT_CONFIG, PARALLELISM_LIMITS } from '../../src/core/types.js';
 
 let tmpDir: string;
 
@@ -111,5 +112,49 @@ describe('resolveModel', () => {
 
   it('empty overrides object falls back to profile', () => {
     expect(resolveModel(ModelProfile.BALANCED, AgentType.EXECUTOR, {})).toBe(Model.SONNET);
+  });
+});
+
+describe('resolveMaxAgents', () => {
+  it('small project (<10 files) caps at 5 for quality profile', () => {
+    expect(resolveMaxAgents(ModelProfile.QUALITY, 5)).toBe(5);
+  });
+
+  it('small project (<10 files) caps at 5 for balanced profile', () => {
+    expect(resolveMaxAgents(ModelProfile.BALANCED, 0)).toBe(5);
+  });
+
+  it('small project (<10 files) caps at 5 for budget profile', () => {
+    expect(resolveMaxAgents(ModelProfile.BUDGET, 9)).toBe(5);
+  });
+
+  it('medium project (<25 files) caps at half of profile max for quality profile', () => {
+    const limits = PARALLELISM_LIMITS[ModelProfile.QUALITY];
+    const expected = Math.min(Math.floor(limits.max_agents / 2), limits.typical_range[1]);
+    expect(resolveMaxAgents(ModelProfile.QUALITY, 10)).toBe(expected);
+  });
+
+  it('medium project (<25 files) caps at half of profile max for balanced profile', () => {
+    const limits = PARALLELISM_LIMITS[ModelProfile.BALANCED];
+    const expected = Math.min(Math.floor(limits.max_agents / 2), limits.typical_range[1]);
+    expect(resolveMaxAgents(ModelProfile.BALANCED, 24)).toBe(expected);
+  });
+
+  it('medium project (<25 files) caps at half of profile max for budget profile', () => {
+    const limits = PARALLELISM_LIMITS[ModelProfile.BUDGET];
+    const expected = Math.min(Math.floor(limits.max_agents / 2), limits.typical_range[1]);
+    expect(resolveMaxAgents(ModelProfile.BUDGET, 15)).toBe(expected);
+  });
+
+  it('large project (>=25 files) uses full profile max for quality profile', () => {
+    expect(resolveMaxAgents(ModelProfile.QUALITY, 25)).toBe(PARALLELISM_LIMITS[ModelProfile.QUALITY].max_agents);
+  });
+
+  it('large project (>=25 files) uses full profile max for balanced profile', () => {
+    expect(resolveMaxAgents(ModelProfile.BALANCED, 100)).toBe(PARALLELISM_LIMITS[ModelProfile.BALANCED].max_agents);
+  });
+
+  it('large project (>=25 files) uses full profile max for budget profile', () => {
+    expect(resolveMaxAgents(ModelProfile.BUDGET, 50)).toBe(PARALLELISM_LIMITS[ModelProfile.BUDGET].max_agents);
   });
 });
