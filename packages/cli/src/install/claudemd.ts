@@ -41,7 +41,7 @@ Start with \`/maxsim:go\` — it will detect the project state and guide you.
 ### GitHub Integration
 
 All project planning lives on GitHub:
-- **Project Board**: Visual Kanban (To Do → In Progress → In Review → Done)
+- **Project Board**: Visual Kanban (Backlog → To Do → In Progress → In Review → Done)
 - **Issues**: Phases and tasks as GitHub Issues with sub-issues
 - **Milestones**: Roadmap milestones
 - **Comments**: Plans, research, and verification results as structured comments
