@@ -24,3 +24,7 @@ export { loadConfig, saveConfig, resolveModel, getConfigPath } from './config.js
 
 // Version
 export { VERSION } from './version.js';
+
+// Utils
+export { claudeDir, maxsimDir, agentMemoryDir, configPath, parseFrontmatter } from './utils.js';
+export type { FrontmatterResult } from './utils.js';
