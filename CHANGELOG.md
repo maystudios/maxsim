@@ -1,3 +1,10 @@
+# [5.5.0](https://github.com/maystudios/maxsimcli/compare/v5.4.0...v5.5.0) (2026-03-24)
+
+
+### Features
+
+* **github:** add GitHub Discussions client (spec §5.3) ([92012c1](https://github.com/maystudios/maxsimcli/commit/92012c1506a19e294bb8bc116d92da43d7de9324))
+
 # [5.4.0](https://github.com/maystudios/maxsimcli/compare/v5.3.0...v5.4.0) (2026-03-24)
 
 
