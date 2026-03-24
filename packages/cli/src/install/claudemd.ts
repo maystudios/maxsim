@@ -26,6 +26,10 @@ This project uses [MaxsimCLI](https://maxsimcli.dev) for structured development.
 | \`/maxsim:execute [N]\` | Execute a planned phase |
 | \`/maxsim:debug [desc]\` | Debug a specific issue |
 | \`/maxsim:quick [desc]\` | Quick task (simplified flow) |
+| \`/maxsim:improve [desc]\` | Autonomous optimization loop |
+| \`/maxsim:fix-loop [desc]\` | Iteratively fix until zero errors |
+| \`/maxsim:debug-loop [desc]\` | Scientific bug hunting loop |
+| \`/maxsim:security\` | Security audit (STRIDE + OWASP) |
 | \`/maxsim:progress\` | Show project status + recommendation |
 | \`/maxsim:settings\` | Configure MaxsimCLI |
 | \`/maxsim:help\` | Show help |

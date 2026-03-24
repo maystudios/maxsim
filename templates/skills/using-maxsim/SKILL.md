@@ -23,6 +23,10 @@ Determine user intent, then route to the correct command.
 | Execute planned work | `/maxsim:execute N` |
 | Fix a bug | `/maxsim:debug` |
 | Quick one-off task | `/maxsim:quick` |
+| Optimize code against a metric | `/maxsim:improve` |
+| Fix errors in a loop until clean | `/maxsim:fix-loop` |
+| Hunt down a bug scientifically | `/maxsim:debug-loop` |
+| Run a security audit | `/maxsim:security` |
 | Check progress | `/maxsim:progress` |
 | Change settings | `/maxsim:settings` |
 | See all commands | `/maxsim:help` |
