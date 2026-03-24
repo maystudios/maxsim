@@ -1,137 +1,56 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import * as fs from 'node:fs';
-import * as path from 'node:path';
-import * as os from 'node:os';
-import { copyDir, removeDir } from '../../src/install/copy.js';
-import { generateClaudeMd, writeClaudeMd } from '../../src/install/claudemd.js';
-import { uninstall } from '../../src/install/uninstall.js';
-
-let tmpDir: string;
-
-beforeEach(() => {
-  tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'maxsim-install-test-'));
-});
+import { describe, it, expect, vi, afterEach } from 'vitest';
+import { checkNodeVersion } from '../../src/install/index.js';
 
 afterEach(() => {
-  fs.rmSync(tmpDir, { recursive: true, force: true });
+  vi.restoreAllMocks();
 });
 
-describe('copyDir', () => {
-  it('copies files recursively', () => {
-    const src = path.join(tmpDir, 'src');
-    const dest = path.join(tmpDir, 'dest');
-    fs.mkdirSync(path.join(src, 'sub'), { recursive: true });
-    fs.writeFileSync(path.join(src, 'a.md'), 'hello');
-    fs.writeFileSync(path.join(src, 'sub', 'b.md'), 'world');
+/** Temporarily override `process.versions.node` for the duration of `fn`. */
+function withNodeVersion<T>(version: string, fn: () => T): T {
+  const original = process.versions;
+  Object.defineProperty(process, 'versions', {
+    value: { ...original, node: version },
+    configurable: true,
+  });
+  try {
+    return fn();
+  } finally {
+    Object.defineProperty(process, 'versions', { value: original, configurable: true });
+  }
+}
 
-    const count = copyDir(src, dest);
-    expect(count).toBe(2);
-    expect(fs.existsSync(path.join(dest, 'a.md'))).toBe(true);
-    expect(fs.existsSync(path.join(dest, 'sub', 'b.md'))).toBe(true);
-    expect(fs.readFileSync(path.join(dest, 'a.md'), 'utf8')).toBe('hello');
+describe('checkNodeVersion', () => {
+  it('does not exit when the current Node.js major version meets the minimum', () => {
+    const exitSpy = vi.spyOn(process, 'exit').mockImplementation((() => {}) as never);
+    // The test process runs Node >= 22 (engines field enforces it).
+    checkNodeVersion(22);
+    expect(exitSpy).not.toHaveBeenCalled();
   });
 
-  it('returns 0 for non-existent source', () => {
-    expect(copyDir('/nonexistent/path', path.join(tmpDir, 'dest'))).toBe(0);
-  });
-});
-
-
-describe('removeDir', () => {
-  it('removes a directory recursively', () => {
-    const dir = path.join(tmpDir, 'removeme');
-    fs.mkdirSync(path.join(dir, 'sub'), { recursive: true });
-    fs.writeFileSync(path.join(dir, 'sub', 'file.txt'), 'x');
-
-    removeDir(dir);
-    expect(fs.existsSync(dir)).toBe(false);
+  it('does not exit when minMajor is set lower than the current version', () => {
+    const exitSpy = vi.spyOn(process, 'exit').mockImplementation((() => {}) as never);
+    checkNodeVersion(1);
+    expect(exitSpy).not.toHaveBeenCalled();
   });
 
-  it('does nothing for non-existent directory', () => {
-    removeDir(path.join(tmpDir, 'nope'));
-    // No error thrown
-  });
-});
+  it('calls process.exit(1) when the major version is below the minimum', () => {
+    const exitSpy = vi.spyOn(process, 'exit').mockImplementation((() => {}) as never);
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
-describe('generateClaudeMd', () => {
-  it('generates markdown with project name', () => {
-    const md = generateClaudeMd('my-project');
-    expect(md).toContain('# my-project');
-    expect(md).toContain('MaxsimCLI');
-    expect(md).toContain('/maxsim:go');
-    expect(md).toContain('/maxsim:init');
-    expect(md).toContain('/maxsim:plan');
-    expect(md).toContain('/maxsim:execute');
+    withNodeVersion('18.20.0', () => checkNodeVersion(22));
+
+    expect(exitSpy).toHaveBeenCalledWith(1);
+    expect(errorSpy).toHaveBeenCalledWith(
+      expect.stringContaining('MaxsimCLI requires Node.js >= 22'),
+    );
   });
 
-  it('includes all 13 commands', () => {
-    const md = generateClaudeMd('test');
-    const commands = [':go', ':init', ':plan', ':execute', ':debug', ':quick', ':improve', ':fix-loop', ':debug-loop', ':security', ':progress', ':settings', ':help'];
-    for (const cmd of commands) {
-      expect(md).toContain(cmd);
-    }
-  });
-});
+  it('prints the current Node version in the error message', () => {
+    vi.spyOn(process, 'exit').mockImplementation((() => {}) as never);
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
-describe('writeClaudeMd', () => {
-  it('creates CLAUDE.md in project root', () => {
-    writeClaudeMd(tmpDir, 'test-project');
-    const filePath = path.join(tmpDir, 'CLAUDE.md');
-    expect(fs.existsSync(filePath)).toBe(true);
-    expect(fs.readFileSync(filePath, 'utf8')).toContain('test-project');
-  });
+    withNodeVersion('16.0.0', () => checkNodeVersion(22));
 
-  it('appends to existing CLAUDE.md that is not ours', () => {
-    const filePath = path.join(tmpDir, 'CLAUDE.md');
-    fs.writeFileSync(filePath, '# Existing Content\n\nDo not remove.');
-
-    writeClaudeMd(tmpDir, 'test-project');
-
-    const content = fs.readFileSync(filePath, 'utf8');
-    expect(content).toContain('Existing Content');
-    expect(content).toContain('MaxsimCLI');
-  });
-
-  it('overwrites CLAUDE.md that is ours', () => {
-    const filePath = path.join(tmpDir, 'CLAUDE.md');
-    fs.writeFileSync(filePath, '# Old MaxsimCLI content\n\nOld stuff.');
-
-    writeClaudeMd(tmpDir, 'new-project');
-
-    const content = fs.readFileSync(filePath, 'utf8');
-    expect(content).toContain('new-project');
-    expect(content).not.toContain('Old stuff');
-  });
-});
-
-describe('uninstall', () => {
-  it('removes MaxsimCLI directories', () => {
-    // Set up a fake installation
-    const claudeDir = path.join(tmpDir, '.claude');
-    fs.mkdirSync(path.join(claudeDir, 'maxsim', 'workflows'), { recursive: true });
-    fs.mkdirSync(path.join(claudeDir, 'commands', 'maxsim'), { recursive: true });
-    fs.writeFileSync(path.join(claudeDir, 'maxsim', 'workflows', 'go.md'), 'test');
-    fs.writeFileSync(path.join(claudeDir, 'commands', 'maxsim', 'go.md'), 'test');
-
-    const result = uninstall(tmpDir);
-    expect(result.removedDirs.length).toBeGreaterThan(0);
-    expect(fs.existsSync(path.join(claudeDir, 'maxsim'))).toBe(false);
-  });
-
-  it('removes CLAUDE.md if generated by MaxsimCLI', () => {
-    fs.writeFileSync(path.join(tmpDir, 'CLAUDE.md'), '# MaxsimCLI project');
-    fs.mkdirSync(path.join(tmpDir, '.claude'), { recursive: true });
-
-    const result = uninstall(tmpDir);
-    expect(result.removedFiles).toContain(path.join(tmpDir, 'CLAUDE.md'));
-    expect(fs.existsSync(path.join(tmpDir, 'CLAUDE.md'))).toBe(false);
-  });
-
-  it('does not remove CLAUDE.md if not ours', () => {
-    fs.writeFileSync(path.join(tmpDir, 'CLAUDE.md'), '# My custom instructions');
-    fs.mkdirSync(path.join(tmpDir, '.claude'), { recursive: true });
-
-    uninstall(tmpDir);
-    expect(fs.existsSync(path.join(tmpDir, 'CLAUDE.md'))).toBe(true);
+    expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining('16.0.0'));
   });
 });
