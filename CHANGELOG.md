@@ -1,3 +1,18 @@
+# [5.3.0](https://github.com/maystudios/maxsimcli/compare/v5.2.4...v5.3.0) (2026-03-24)
+
+
+### Bug Fixes
+
+* inject version from package.json at build time instead of hardcoding ([9ab788f](https://github.com/maystudios/maxsimcli/commit/9ab788f9cdee079c08c7d85e99a449b8cfe19521))
+* reduce label taxonomy from 19 to 6 per PROJECT.md §5.3 ([0451848](https://github.com/maystudios/maxsimcli/commit/0451848f85b945489a1ba8ff3730f75f9b280c66))
+
+
+### Features
+
+* add 4 missing slash commands (improve, fix-loop, debug-loop, security) ([453775c](https://github.com/maystudios/maxsimcli/commit/453775ce5e4a1cdd6f40581e736ee73a630ba6e4))
+* add autoresearch skill ([#15](https://github.com/maystudios/maxsimcli/issues/15) of 15) with 6 reference workflows ([fd83207](https://github.com/maystudios/maxsimcli/commit/fd832078b1010c07d5c9aedad63252444f842a02))
+* add maxsim-session-start, maxsim-teammate-idle, maxsim-task-completed hooks ([a83a76f](https://github.com/maystudios/maxsimcli/commit/a83a76ff432b50c3e149fcacf4e15dba1e851cfb))
+
 ## [5.2.4](https://github.com/maystudios/maxsimcli/compare/v5.2.3...v5.2.4) (2026-03-23)
 
 
