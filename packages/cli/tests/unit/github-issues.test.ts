@@ -23,6 +23,7 @@ const {
   mockIssuesGet,
   mockIssuesUpdate,
   mockIssuesCreateComment,
+  mockGraphql,
   mockOctokit,
   mockGetOctokit,
   mockGetRepoInfo,
@@ -32,9 +33,11 @@ const {
   const mockIssuesGet = vi.fn();
   const mockIssuesUpdate = vi.fn();
   const mockIssuesCreateComment = vi.fn();
+  const mockGraphql = vi.fn();
 
   const mockOctokit = {
     paginate: mockPaginate,
+    graphql: mockGraphql,
     rest: {
       issues: {
         listForRepo: 'listForRepo-endpoint',
@@ -56,6 +59,7 @@ const {
     mockIssuesGet,
     mockIssuesUpdate,
     mockIssuesCreateComment,
+    mockGraphql,
     mockOctokit,
     mockGetOctokit,
     mockGetRepoInfo,
@@ -94,6 +98,9 @@ import {
   closeIssue,
   listComments,
   addComment,
+  addIssueRelation,
+  removeIssueRelation,
+  listIssueRelations,
 } from '../../src/github/issues.js';
 
 // ── Fixtures ─────────────────────────────────────────────────────────────────
@@ -960,5 +967,264 @@ describe('addComment', () => {
     expect(result.ok).toBe(false);
     if (result.ok) return;
     expect(result.code).toBe('RATE_LIMITED');
+  });
+});
+
+// ── addIssueRelation ──────────────────────────────────────────────────────────
+
+describe('addIssueRelation', () => {
+  it('resolves both issue node IDs and calls graphql with BLOCKS', async () => {
+    mockIssuesGet
+      .mockResolvedValueOnce({ data: { ...RAW_ISSUE, node_id: 'I_node42' } })
+      .mockResolvedValueOnce({ data: { ...RAW_ISSUE, number: 99, node_id: 'I_node99' } });
+    mockGraphql.mockResolvedValue({ addLinkedIssue: { issue: { number: 42 } } });
+
+    const result = await addIssueRelation(42, 99, 'blocking');
+
+    expect(result.ok).toBe(true);
+    expect(mockGraphql).toHaveBeenCalledWith(
+      expect.stringContaining('addLinkedIssue'),
+      expect.objectContaining({
+        issueId: 'I_node42',
+        relatedId: 'I_node99',
+        relationType: 'BLOCKS',
+      }),
+    );
+  });
+
+  it('calls graphql with IS_BLOCKED_BY for blocked_by type', async () => {
+    mockIssuesGet
+      .mockResolvedValueOnce({ data: { ...RAW_ISSUE, node_id: 'I_node42' } })
+      .mockResolvedValueOnce({ data: { ...RAW_ISSUE, number: 99, node_id: 'I_node99' } });
+    mockGraphql.mockResolvedValue({ addLinkedIssue: { issue: { number: 42 } } });
+
+    const result = await addIssueRelation(42, 99, 'blocked_by');
+
+    expect(result.ok).toBe(true);
+    expect(mockGraphql).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ relationType: 'IS_BLOCKED_BY' }),
+    );
+  });
+
+  it('passes owner and repo from getRepoInfo when fetching node IDs', async () => {
+    mockIssuesGet
+      .mockResolvedValueOnce({ data: { ...RAW_ISSUE, node_id: 'I_node42' } })
+      .mockResolvedValueOnce({ data: { ...RAW_ISSUE, number: 99, node_id: 'I_node99' } });
+    mockGraphql.mockResolvedValue({});
+
+    await addIssueRelation(42, 99, 'blocking');
+
+    expect(mockIssuesGet).toHaveBeenCalledWith(
+      expect.objectContaining({ owner: 'test-owner', repo: 'test-repo' }),
+    );
+  });
+
+  it('accepts an explicit repo override', async () => {
+    mockIssuesGet
+      .mockResolvedValueOnce({ data: { ...RAW_ISSUE, node_id: 'I_node42' } })
+      .mockResolvedValueOnce({ data: { ...RAW_ISSUE, number: 99, node_id: 'I_node99' } });
+    mockGraphql.mockResolvedValue({});
+
+    await addIssueRelation(42, 99, 'blocking', { owner: 'other-owner', repo: 'other-repo', isOrg: false });
+
+    expect(mockIssuesGet).toHaveBeenCalledWith(
+      expect.objectContaining({ owner: 'other-owner', repo: 'other-repo' }),
+    );
+    expect(mockGetRepoInfo).not.toHaveBeenCalled();
+  });
+
+  it('returns error result when issue lookup fails', async () => {
+    const err = Object.assign(new Error('Not Found'), { status: 404 });
+    mockIssuesGet.mockRejectedValue(err);
+
+    const result = await addIssueRelation(9999, 1, 'blocking');
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.code).toBe('NOT_FOUND');
+  });
+
+  it('returns error result when graphql call fails', async () => {
+    mockIssuesGet
+      .mockResolvedValueOnce({ data: { ...RAW_ISSUE, node_id: 'I_node42' } })
+      .mockResolvedValueOnce({ data: { ...RAW_ISSUE, number: 99, node_id: 'I_node99' } });
+    mockGraphql.mockRejectedValue(new Error('GraphQL error'));
+
+    const result = await addIssueRelation(42, 99, 'blocking');
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.code).toBe('UNKNOWN');
+  });
+});
+
+// ── removeIssueRelation ───────────────────────────────────────────────────────
+
+describe('removeIssueRelation', () => {
+  it('resolves both issue node IDs and calls graphql with removeLinkedIssue', async () => {
+    mockIssuesGet
+      .mockResolvedValueOnce({ data: { ...RAW_ISSUE, node_id: 'I_node42' } })
+      .mockResolvedValueOnce({ data: { ...RAW_ISSUE, number: 99, node_id: 'I_node99' } });
+    mockGraphql.mockResolvedValue({ removeLinkedIssue: { issue: { number: 42 } } });
+
+    const result = await removeIssueRelation(42, 99, 'blocking');
+
+    expect(result.ok).toBe(true);
+    expect(mockGraphql).toHaveBeenCalledWith(
+      expect.stringContaining('removeLinkedIssue'),
+      expect.objectContaining({
+        issueId: 'I_node42',
+        relatedId: 'I_node99',
+        relationType: 'BLOCKS',
+      }),
+    );
+  });
+
+  it('calls graphql with IS_BLOCKED_BY for blocked_by type', async () => {
+    mockIssuesGet
+      .mockResolvedValueOnce({ data: { ...RAW_ISSUE, node_id: 'I_node42' } })
+      .mockResolvedValueOnce({ data: { ...RAW_ISSUE, number: 99, node_id: 'I_node99' } });
+    mockGraphql.mockResolvedValue({});
+
+    const result = await removeIssueRelation(42, 99, 'blocked_by');
+
+    expect(result.ok).toBe(true);
+    expect(mockGraphql).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ relationType: 'IS_BLOCKED_BY' }),
+    );
+  });
+
+  it('returns error result when graphql call fails', async () => {
+    mockIssuesGet
+      .mockResolvedValueOnce({ data: { ...RAW_ISSUE, node_id: 'I_node42' } })
+      .mockResolvedValueOnce({ data: { ...RAW_ISSUE, number: 99, node_id: 'I_node99' } });
+    mockGraphql.mockRejectedValue(new Error('GraphQL error'));
+
+    const result = await removeIssueRelation(42, 99, 'blocking');
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.code).toBe('UNKNOWN');
+  });
+
+  it('returns error result when issue lookup fails', async () => {
+    const err = Object.assign(new Error('Not Found'), { status: 404 });
+    mockIssuesGet.mockRejectedValue(err);
+
+    const result = await removeIssueRelation(9999, 1, 'blocking');
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.code).toBe('NOT_FOUND');
+  });
+
+  it('accepts an explicit repo override', async () => {
+    mockIssuesGet
+      .mockResolvedValueOnce({ data: { ...RAW_ISSUE, node_id: 'I_node42' } })
+      .mockResolvedValueOnce({ data: { ...RAW_ISSUE, number: 99, node_id: 'I_node99' } });
+    mockGraphql.mockResolvedValue({});
+
+    await removeIssueRelation(42, 99, 'blocking', { owner: 'other-owner', repo: 'other-repo', isOrg: false });
+
+    expect(mockIssuesGet).toHaveBeenCalledWith(
+      expect.objectContaining({ owner: 'other-owner', repo: 'other-repo' }),
+    );
+    expect(mockGetRepoInfo).not.toHaveBeenCalled();
+  });
+});
+
+// ── listIssueRelations ────────────────────────────────────────────────────────
+
+describe('listIssueRelations', () => {
+  it('returns an array of GhIssueRelation objects from linkedIssues', async () => {
+    mockGraphql.mockResolvedValue({
+      repository: {
+        issue: {
+          linkedIssues: {
+            nodes: [{ number: 99 }, { number: 100 }],
+          },
+        },
+      },
+    });
+
+    const result = await listIssueRelations(42);
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.data).toHaveLength(2);
+    expect(result.data[0]).toEqual({ issueNumber: 42, relatedIssueNumber: 99, type: 'related' });
+    expect(result.data[1]).toEqual({ issueNumber: 42, relatedIssueNumber: 100, type: 'related' });
+  });
+
+  it('returns empty array when issue has no linked issues', async () => {
+    mockGraphql.mockResolvedValue({
+      repository: {
+        issue: {
+          linkedIssues: { nodes: [] },
+        },
+      },
+    });
+
+    const result = await listIssueRelations(42);
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.data).toHaveLength(0);
+  });
+
+  it('returns empty array when issue is null in response', async () => {
+    mockGraphql.mockResolvedValue({
+      repository: { issue: null },
+    });
+
+    const result = await listIssueRelations(42);
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.data).toHaveLength(0);
+  });
+
+  it('passes owner, repo, and issue number to graphql', async () => {
+    mockGraphql.mockResolvedValue({
+      repository: { issue: { linkedIssues: { nodes: [] } } },
+    });
+
+    await listIssueRelations(42);
+
+    expect(mockGraphql).toHaveBeenCalledWith(
+      expect.stringContaining('linkedIssues'),
+      expect.objectContaining({ owner: 'test-owner', repo: 'test-repo', number: 42 }),
+    );
+  });
+
+  it('accepts an explicit repo override', async () => {
+    mockGraphql.mockResolvedValue({
+      repository: { issue: { linkedIssues: { nodes: [] } } },
+    });
+
+    await listIssueRelations(42, { owner: 'other-owner', repo: 'other-repo', isOrg: false });
+
+    expect(mockGraphql).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ owner: 'other-owner', repo: 'other-repo' }),
+    );
+    expect(mockGetRepoInfo).not.toHaveBeenCalled();
+  });
+
+  it('returns error result when graphql call fails', async () => {
+    mockGraphql.mockRejectedValue(new Error('GraphQL error'));
+
+    const result = await listIssueRelations(42);
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.code).toBe('UNKNOWN');
+  });
+
+  it('returns NOT_FOUND error for 404 responses', async () => {
+    const err = Object.assign(new Error('Not Found'), { status: 404 });
+    mockGraphql.mockRejectedValue(err);
+
+    const result = await listIssueRelations(9999);
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.code).toBe('NOT_FOUND');
   });
 });

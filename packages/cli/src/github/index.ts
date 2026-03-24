@@ -4,6 +4,7 @@ export type {
   GhProject, GhProjectField, GhFieldOption, GhProjectItem,
   MaxsimIssueMeta, MaxsimIssueState, MaxsimCommentMeta,
   LabelDef, RepoInfo, GhResult, GhResultCode,
+  GhIssueRelation,
 } from './types.js';
 export { MAXSIM_LABELS, BOARD_COLUMNS } from './types.js';
 
@@ -20,6 +21,7 @@ export {
 export {
   listIssues, createIssue, getIssue, updateIssue,
   listComments, addComment, addSubIssue, listSubIssues, closeIssue,
+  addIssueRelation, removeIssueRelation, listIssueRelations,
 } from './issues.js';
 
 // Projects

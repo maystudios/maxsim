@@ -192,6 +192,15 @@ export interface RepoInfo {
   isOrg: boolean;
 }
 
+// ── Issue Relations ───────────────────────────────────────────────────
+
+/** Represents a directional relation between two GitHub issues. */
+export interface GhIssueRelation {
+  issueNumber: number;
+  relatedIssueNumber: number;
+  type: 'blocked_by' | 'blocking' | 'duplicate' | 'related';
+}
+
 // ── Operation Results ─────────────────────────────────────────────────
 
 export type GhResultCode = 'NOT_FOUND' | 'UNAUTHORIZED' | 'RATE_LIMITED' | 'FORBIDDEN' | 'VALIDATION' | 'UNKNOWN';
