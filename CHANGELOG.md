@@ -1,3 +1,20 @@
+# [5.10.0](https://github.com/maystudios/maxsimcli/compare/v5.9.1...v5.10.0) (2026-03-24)
+
+
+### Bug Fixes
+
+* add overdue detection to progress and clarify debug detection in go workflow ([9810ef5](https://github.com/maystudios/maxsimcli/commit/9810ef517fa44deb68d6e71156edceaccf34fcd1))
+* **docs:** correct TSV path in autoresearch results-logging reference ([9d288df](https://github.com/maystudios/maxsimcli/commit/9d288dfdd46c654700ec917b7fe3f8d3b4ed5929))
+* **stuck-detection:** include crashes in stuck detection trigger condition ([cb89d37](https://github.com/maystudios/maxsimcli/commit/cb89d372ce2236d14063bde33136729c7abbe150))
+* **templates:** convert HARD-GATE markdown headings to XML tags ([e521d25](https://github.com/maystudios/maxsimcli/commit/e521d2588ce371fc2d89e0615c189eef9e20eb36))
+
+
+### Features
+
+* **config:** add individual agent model overrides ([e3cae0b](https://github.com/maystudios/maxsimcli/commit/e3cae0b05a0d54efc1f7a8c20f2b702ede7270b5))
+* **init:** offer to create GitHub repo interactively on REMOTE_FAIL ([6002528](https://github.com/maystudios/maxsimcli/commit/600252846dcac9d1680b5fd11d5f2410293d730c))
+* **install:** wire manifest into install/uninstall flow ([34f551c](https://github.com/maystudios/maxsimcli/commit/34f551c7a8c4d7dee511dafd7e53f40a5950011a))
+
 ## [5.9.1](https://github.com/maystudios/maxsimcli/compare/v5.9.0...v5.9.1) (2026-03-24)
 
 
