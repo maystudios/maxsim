@@ -47,4 +47,4 @@ export { ensureLabels, getLabel, createLabel } from './labels.js';
 export { createDiscussion, listDiscussions, getDiscussion } from './discussions.js';
 
 // Wiki
-export { checkWikiEnabled, getWikiPage, createOrUpdateWikiPage, listWikiPages } from './wiki.js';
+export { checkWikiEnabled, getWikiPage, createOrUpdateWikiPage, listWikiPages, deleteWikiPage } from './wiki.js';
