@@ -60,11 +60,15 @@ Either evidence passes or it fails. No middle ground.
 
 FORBIDDEN PHRASES -- if you catch yourself using these, STOP and gather real evidence:
 - "should work"
-- "probably passes"
-- "I'm confident that..."
-- "based on my analysis..."
-- "the logic suggests..."
-- "it's reasonable to assume..."
+- "I already checked"
+- "tests were passing before"
+- "this is obviously correct"
+- "I think it's fine"
+- "the logic is sound"
+- "nothing changed in that area"
+- "it worked in my local run"
+- "we can verify later"
+- "this is low risk"
 
 If you have not run the verification command in THIS turn, you cannot claim it passes.
 
