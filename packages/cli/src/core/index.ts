@@ -15,6 +15,7 @@ export {
   WaveState,
   CompetitionStrategy,
   MODEL_PROFILES,
+  PARALLELISM_LIMITS,
   DEFAULT_CONFIG,
 } from './types.js';
 

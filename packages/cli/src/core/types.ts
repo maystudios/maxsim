@@ -3,6 +3,8 @@
  * Single source of truth — all modules import types from here.
  */
 
+import { VERSION } from './version.js';
+
 // ── Result Types ──────────────────────────────────────────────────────
 
 interface CmdOk {
@@ -165,6 +167,16 @@ export const MODEL_PROFILES: Record<ModelProfile, ModelAssignment> = {
   },
 };
 
+/** Parallelism limits per model profile (from PROJECT.md §7.4). */
+export const PARALLELISM_LIMITS: Record<
+  ModelProfile,
+  { max_agents: number; typical_range: [number, number] }
+> = {
+  [ModelProfile.QUALITY]: { max_agents: 40, typical_range: [20, 40] },
+  [ModelProfile.BALANCED]: { max_agents: 20, typical_range: [10, 20] },
+  [ModelProfile.BUDGET]: { max_agents: 10, typical_range: [5, 10] },
+};
+
 // ── Config Schema ─────────────────────────────────────────────────────
 
 export interface MaxsimConfig {
@@ -200,10 +212,19 @@ export interface MaxsimConfig {
   hooks: {
     enabled: boolean;
   };
+  workflow: {
+    research: boolean;
+    plan_checker: boolean;
+    verifier: boolean;
+    auto_advance: boolean;
+  };
+  git: {
+    branching_strategy: 'none' | 'phase' | 'milestone';
+  };
 }
 
 export const DEFAULT_CONFIG: MaxsimConfig = {
-  version: '5.2.2',
+  version: VERSION,
   execution: {
     model_profile: ModelProfile.BALANCED,
     parallelism: {
@@ -240,5 +261,14 @@ export const DEFAULT_CONFIG: MaxsimConfig = {
   },
   hooks: {
     enabled: true,
+  },
+  workflow: {
+    research: true,
+    plan_checker: true,
+    verifier: true,
+    auto_advance: false,
+  },
+  git: {
+    branching_strategy: 'phase',
   },
 };
