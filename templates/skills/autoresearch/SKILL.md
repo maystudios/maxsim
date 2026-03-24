@@ -1,6 +1,6 @@
 ---
 name: autoresearch
-description: Autonomous optimization loop with reference workflows. Powers /maxsim:improve, /maxsim:fix-loop, /maxsim:debug-loop, /maxsim:security. Use when running autonomous optimization, error repair, bug hunting, or security audit loops.
+description: Autonomous optimization loop with reference workflows. Powers /maxsim:improve, /maxsim:fix-loop, /maxsim:debug-loop, /maxsim:security. Used when running autonomous optimization, error repair, bug hunting, or security audit loops.
 version: 1.0.0
 ---
 
