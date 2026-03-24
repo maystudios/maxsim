@@ -3,20 +3,6 @@
  * Covers Projects v2, Issues, Sub-Issues, Milestones, Labels, Comments.
  */
 
-// ── ID Types ──────────────────────────────────────────────────────────
-
-/**
- * GitHub uses TWO id systems:
- * - Node ID (Base64 string like "PVT_kwDO..."): used in ALL GraphQL operations
- * - Numeric ID (integer like 123456789): used in REST URL paths and some REST bodies
- * Issue `.number` (e.g., #42) is NEITHER — it's the human-readable reference.
- */
-interface IssueIds {
-  number: number;    // Human-readable: #42
-  id: number;        // Internal numeric ID (REST bodies)
-  nodeId: string;    // Base64 node ID (GraphQL)
-}
-
 // ── GitHub API Response Types ─────────────────────────────────────────
 
 export interface GhUser {
@@ -171,17 +157,6 @@ export const BOARD_COLUMNS = [
   { name: 'In Progress', color: 'YELLOW' },
   { name: 'In Review', color: 'ORANGE' },
   { name: 'Done', color: 'GREEN' },
-] as const;
-
-/** Custom fields to create on every MaxsimCLI project board. */
-const BOARD_FIELDS = [
-  { name: 'Priority', dataType: 'SINGLE_SELECT', options: ['P0 Critical', 'P1 High', 'P2 Medium', 'P3 Low'] },
-  { name: 'Phase', dataType: 'NUMBER' },
-  { name: 'Wave', dataType: 'NUMBER' },
-  { name: 'Estimate', dataType: 'NUMBER' },
-  { name: 'Type', dataType: 'SINGLE_SELECT' },
-  { name: 'Status', dataType: 'SINGLE_SELECT' },
-  { name: 'Iteration', dataType: 'ITERATION' },
 ] as const;
 
 // ── Repo Info ─────────────────────────────────────────────────────────

@@ -1,6 +1,6 @@
 // Types
 export type {
-  IssueIds, GhUser, GhLabel, GhMilestone, GhIssue, GhComment,
+  GhUser, GhLabel, GhMilestone, GhIssue, GhComment,
   GhProject, GhProjectField, GhFieldOption, GhProjectItem,
   MaxsimIssueMeta, MaxsimIssueState, MaxsimCommentMeta,
   LabelDef, RepoInfo, GhResult, GhResultCode,
