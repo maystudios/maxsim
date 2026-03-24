@@ -1133,17 +1133,25 @@ describe('removeIssueRelation', () => {
 
 // ── listIssueRelations ────────────────────────────────────────────────────────
 
-describe('listIssueRelations', () => {
-  it('returns an array of GhIssueRelation objects from linkedIssues', async () => {
-    mockGraphql.mockResolvedValue({
-      repository: {
-        issue: {
-          linkedIssues: {
-            nodes: [{ number: 99 }, { number: 100 }],
-          },
-        },
+function makeRelationsResponse(opts: {
+  blockedBy?: number[];
+  blocking?: number[];
+  related?: number[];
+}) {
+  return {
+    repository: {
+      issue: {
+        blockedBy: { nodes: (opts.blockedBy ?? []).map((n) => ({ number: n })) },
+        blocking: { nodes: (opts.blocking ?? []).map((n) => ({ number: n })) },
+        related: { nodes: (opts.related ?? []).map((n) => ({ number: n })) },
       },
-    });
+    },
+  };
+}
+
+describe('listIssueRelations', () => {
+  it('returns related relations with type "related"', async () => {
+    mockGraphql.mockResolvedValue(makeRelationsResponse({ related: [99, 100] }));
 
     const result = await listIssueRelations(42);
 
@@ -1154,14 +1162,45 @@ describe('listIssueRelations', () => {
     expect(result.data[1]).toEqual({ issueNumber: 42, relatedIssueNumber: 100, type: 'related' });
   });
 
+  it('returns blocked_by relations with type "blocked_by"', async () => {
+    mockGraphql.mockResolvedValue(makeRelationsResponse({ blockedBy: [10] }));
+
+    const result = await listIssueRelations(42);
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.data).toHaveLength(1);
+    expect(result.data[0]).toEqual({ issueNumber: 42, relatedIssueNumber: 10, type: 'blocked_by' });
+  });
+
+  it('returns blocking relations with type "blocking"', async () => {
+    mockGraphql.mockResolvedValue(makeRelationsResponse({ blocking: [20] }));
+
+    const result = await listIssueRelations(42);
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.data).toHaveLength(1);
+    expect(result.data[0]).toEqual({ issueNumber: 42, relatedIssueNumber: 20, type: 'blocking' });
+  });
+
+  it('returns mixed relation types with correct directions', async () => {
+    mockGraphql.mockResolvedValue(
+      makeRelationsResponse({ blockedBy: [10], blocking: [20], related: [30] }),
+    );
+
+    const result = await listIssueRelations(42);
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.data).toHaveLength(3);
+    expect(result.data.find((r) => r.relatedIssueNumber === 10)?.type).toBe('blocked_by');
+    expect(result.data.find((r) => r.relatedIssueNumber === 20)?.type).toBe('blocking');
+    expect(result.data.find((r) => r.relatedIssueNumber === 30)?.type).toBe('related');
+  });
+
   it('returns empty array when issue has no linked issues', async () => {
-    mockGraphql.mockResolvedValue({
-      repository: {
-        issue: {
-          linkedIssues: { nodes: [] },
-        },
-      },
-    });
+    mockGraphql.mockResolvedValue(makeRelationsResponse({}));
 
     const result = await listIssueRelations(42);
 
@@ -1183,9 +1222,7 @@ describe('listIssueRelations', () => {
   });
 
   it('passes owner, repo, and issue number to graphql', async () => {
-    mockGraphql.mockResolvedValue({
-      repository: { issue: { linkedIssues: { nodes: [] } } },
-    });
+    mockGraphql.mockResolvedValue(makeRelationsResponse({}));
 
     await listIssueRelations(42);
 
@@ -1196,9 +1233,7 @@ describe('listIssueRelations', () => {
   });
 
   it('accepts an explicit repo override', async () => {
-    mockGraphql.mockResolvedValue({
-      repository: { issue: { linkedIssues: { nodes: [] } } },
-    });
+    mockGraphql.mockResolvedValue(makeRelationsResponse({}));
 
     await listIssueRelations(42, { owner: 'other-owner', repo: 'other-repo', isOrg: false });
 

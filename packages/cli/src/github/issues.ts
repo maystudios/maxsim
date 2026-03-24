@@ -377,22 +377,29 @@ export async function listIssueRelations(
       query ListLinkedIssues($owner: String!, $repo: String!, $number: Int!) {
         repository(owner: $owner, name: $repo) {
           issue(number: $number) {
-            linkedIssues(first: 50) {
-              nodes {
-                number
-              }
+            blockedBy: linkedIssues(first: 50, type: IS_BLOCKED_BY) {
+              nodes { number }
+            }
+            blocking: linkedIssues(first: 50, type: BLOCKS) {
+              nodes { number }
+            }
+            related: linkedIssues(first: 50, type: RELATED) {
+              nodes { number }
             }
           }
         }
       }
     `;
 
+    interface LinkedIssueNodes {
+      nodes: Array<{ number: number }>;
+    }
     interface GraphQLResponse {
       repository: {
         issue: {
-          linkedIssues: {
-            nodes: Array<{ number: number }>;
-          };
+          blockedBy: LinkedIssueNodes;
+          blocking: LinkedIssueNodes;
+          related: LinkedIssueNodes;
         } | null;
       };
     }
@@ -404,12 +411,19 @@ export async function listIssueRelations(
       number: issueNumber,
     });
 
-    const nodes = data?.repository?.issue?.linkedIssues?.nodes ?? [];
+    const issue = data?.repository?.issue;
+    if (!issue) return [];
 
-    return nodes.map((node) => ({
-      issueNumber,
-      relatedIssueNumber: node.number,
-      type: 'related' as const,
-    }));
+    const toRelations = (
+      nodes: Array<{ number: number }>,
+      type: GhIssueRelation['type'],
+    ): GhIssueRelation[] =>
+      nodes.map((node) => ({ issueNumber, relatedIssueNumber: node.number, type }));
+
+    return [
+      ...toRelations(issue.blockedBy?.nodes ?? [], 'blocked_by'),
+      ...toRelations(issue.blocking?.nodes ?? [], 'blocking'),
+      ...toRelations(issue.related?.nodes ?? [], 'related'),
+    ];
   });
 }

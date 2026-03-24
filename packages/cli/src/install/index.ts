@@ -18,7 +18,17 @@ import { VERSION } from '../core/version.js';
 export { checkGhAuth } from './gh-auth.js';
 import { checkGhAuth } from './gh-auth.js';
 
+export function checkNodeVersion(minMajor = 22): void {
+  const major = parseInt(process.versions.node.split('.')[0], 10);
+  if (major < minMajor) {
+    console.error(`MaxsimCLI requires Node.js >= ${minMajor}. Current: ${process.versions.node}`);
+    process.exit(1);
+  }
+}
+
 async function main(): Promise<void> {
+  checkNodeVersion();
+
   const args = minimist(process.argv.slice(2), {
     boolean: ['uninstall', 'help', 'version', 'quiet'],
     alias: { h: 'help', v: 'version', q: 'quiet' },
@@ -173,7 +183,9 @@ function detectProjectName(projectDir: string): string {
   return path.basename(projectDir);
 }
 
-main().catch((err: unknown) => {
-  console.error(`\nUnexpected error: ${err instanceof Error ? err.message : String(err)}\n`);
-  process.exit(1);
-});
+if (require.main === module) {
+  main().catch((err: unknown) => {
+    console.error(`\nUnexpected error: ${err instanceof Error ? err.message : String(err)}\n`);
+    process.exit(1);
+  });
+}

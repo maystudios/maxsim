@@ -453,6 +453,12 @@ Agent(
 Re-read the phase issue to discover new plan comments with `gap_closure: true` in frontmatter.
 Execute them using the same wave logic (steps 6.1–6.8).
 
+When spawning executor agents for gap-closure plans, append the following to each agent prompt:
+
+```
+IMPORTANT: This is a fresh retry attempt. Do NOT reference or build upon any previous attempt's reasoning, code, or approach. Start from scratch using only the original task specification and current codebase state.
+```
+
 ### 9.4 Re-verify
 
 Spawn verifier again (step 8). Increment `attempt_count`.

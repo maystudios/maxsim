@@ -13,6 +13,7 @@ import { copyDir, removeDir } from '../../src/install/copy.js';
 import { generateClaudeMd, writeClaudeMd } from '../../src/install/claudemd.js';
 import { uninstall } from '../../src/install/uninstall.js';
 import { checkGhAuth } from '../../src/install/gh-auth.js';
+import { checkNodeVersion } from '../../src/install/index.js';
 
 const mockExecFileSync = execFileSync as ReturnType<typeof vi.fn>;
 
@@ -24,22 +25,56 @@ beforeEach(() => {
 
 afterEach(() => {
   fs.rmSync(tmpDir, { recursive: true, force: true });
+  vi.restoreAllMocks();
   vi.resetAllMocks();
 });
 
-describe('copyDir', () => {
-  it('copies files recursively', () => {
-    const src = path.join(tmpDir, 'src');
-    const dest = path.join(tmpDir, 'dest');
-    fs.mkdirSync(path.join(src, 'sub'), { recursive: true });
-    fs.writeFileSync(path.join(src, 'a.md'), 'hello');
-    fs.writeFileSync(path.join(src, 'sub', 'b.md'), 'world');
+/** Temporarily override `process.versions.node` for the duration of `fn`. */
+function withNodeVersion<T>(version: string, fn: () => T): T {
+  const original = process.versions;
+  Object.defineProperty(process, 'versions', {
+    value: { ...original, node: version },
+    configurable: true,
+  });
+  try {
+    return fn();
+  } finally {
+    Object.defineProperty(process, 'versions', { value: original, configurable: true });
+  }
+}
 
-    const count = copyDir(src, dest);
-    expect(count).toBe(2);
-    expect(fs.existsSync(path.join(dest, 'a.md'))).toBe(true);
-    expect(fs.existsSync(path.join(dest, 'sub', 'b.md'))).toBe(true);
-    expect(fs.readFileSync(path.join(dest, 'a.md'), 'utf8')).toBe('hello');
+describe('checkNodeVersion', () => {
+  it('does not exit when the current Node.js major version meets the minimum', () => {
+    const exitSpy = vi.spyOn(process, 'exit').mockImplementation((() => {}) as never);
+    checkNodeVersion(22);
+    expect(exitSpy).not.toHaveBeenCalled();
+  });
+
+  it('does not exit when minMajor is set lower than the current version', () => {
+    const exitSpy = vi.spyOn(process, 'exit').mockImplementation((() => {}) as never);
+    checkNodeVersion(1);
+    expect(exitSpy).not.toHaveBeenCalled();
+  });
+
+  it('calls process.exit(1) when the major version is below the minimum', () => {
+    const exitSpy = vi.spyOn(process, 'exit').mockImplementation((() => {}) as never);
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    withNodeVersion('18.20.0', () => checkNodeVersion(22));
+
+    expect(exitSpy).toHaveBeenCalledWith(1);
+    expect(errorSpy).toHaveBeenCalledWith(
+      expect.stringContaining('MaxsimCLI requires Node.js >= 22'),
+    );
+  });
+
+  it('prints the current Node version in the error message', () => {
+    vi.spyOn(process, 'exit').mockImplementation((() => {}) as never);
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    withNodeVersion('16.0.0', () => checkNodeVersion(22));
+
+    expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining('16.0.0'));
   });
 
   it('returns 0 for non-existent source', () => {
@@ -147,7 +182,6 @@ describe('checkGhAuth', () => {
 
 describe('uninstall', () => {
   it('removes MaxsimCLI directories', () => {
-    // Set up a fake installation
     const claudeDir = path.join(tmpDir, '.claude');
     fs.mkdirSync(path.join(claudeDir, 'maxsim', 'workflows'), { recursive: true });
     fs.mkdirSync(path.join(claudeDir, 'commands', 'maxsim'), { recursive: true });

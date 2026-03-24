@@ -7,7 +7,7 @@
  */
 
 import { execFileSync } from 'node:child_process';
-import { mkdtempSync, writeFileSync, readFileSync, readdirSync, rmSync } from 'node:fs';
+import { mkdtempSync, writeFileSync, readFileSync, readdirSync, rmSync, unlinkSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { ghExec, getRepoInfo } from './client.js';
@@ -134,6 +134,43 @@ export function createOrUpdateWikiPage(
       stdio: ['pipe', 'pipe', 'pipe'],
     });
     return { ok: true, data: { slug, title, content } };
+  } catch (err) {
+    return classifyError(err);
+  } finally {
+    if (dir) cleanupDir(dir);
+  }
+}
+
+/**
+ * Delete a wiki page by slug.
+ *
+ * Clones the wiki repo, removes the Markdown file for the given slug, commits,
+ * and pushes. Returns NOT_FOUND if the page does not exist.
+ */
+export function deleteWikiPage(slug: string, repo?: RepoInfo): GhResult<void> {
+  const { owner, repo: repoName } = repo ?? getRepoInfo();
+  let dir: string | null = null;
+  try {
+    dir = cloneWiki(owner, repoName);
+    const filename = `${slug}.md`;
+    try {
+      unlinkSync(join(dir, filename));
+    } catch {
+      return { ok: false, error: `Wiki page not found: ${slug}`, code: 'NOT_FOUND' };
+    }
+    execFileSync('git', ['-C', dir, 'add', filename], {
+      encoding: 'utf8',
+      stdio: ['pipe', 'pipe', 'pipe'],
+    });
+    execFileSync('git', ['-C', dir, 'commit', '-m', `Delete ${slugToTitle(slug)}`], {
+      encoding: 'utf8',
+      stdio: ['pipe', 'pipe', 'pipe'],
+    });
+    execFileSync('git', ['-C', dir, 'push'], {
+      encoding: 'utf8',
+      stdio: ['pipe', 'pipe', 'pipe'],
+    });
+    return { ok: true, data: undefined };
   } catch (err) {
     return classifyError(err);
   } finally {

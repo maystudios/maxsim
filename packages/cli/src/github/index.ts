@@ -11,7 +11,7 @@ export type {
 export { MAXSIM_LABELS, BOARD_COLUMNS } from './types.js';
 
 // Client
-export { getOctokit, getRepoInfo, ghJson, ghExec, withGhResult, resetClient } from './client.js';
+export { getOctokit, getRepoInfo, ghJson, ghExec, withGhResult, resetClient, createRepo } from './client.js';
 
 // Comments
 export {
@@ -44,7 +44,10 @@ export {
 export { ensureLabels, getLabel, createLabel } from './labels.js';
 
 // Discussions
-export { createDiscussion, listDiscussions, getDiscussion } from './discussions.js';
+export {
+  createDiscussion, listDiscussions, getDiscussion,
+  updateDiscussion, deleteDiscussion, addDiscussionReply,
+} from './discussions.js';
 
 // Wiki
-export { checkWikiEnabled, getWikiPage, createOrUpdateWikiPage, listWikiPages } from './wiki.js';
+export { checkWikiEnabled, getWikiPage, createOrUpdateWikiPage, listWikiPages, deleteWikiPage } from './wiki.js';
