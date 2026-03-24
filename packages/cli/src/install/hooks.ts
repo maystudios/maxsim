@@ -80,6 +80,27 @@ export function installHooks(projectDir: string): { installed: string[] } {
     installed.push('maxsim-capture-learnings (Stop)');
   }
 
+  // Register SessionStart hook (session context injection)
+  const sessionStartPath = path.join(hooksDestDir, 'maxsim-session-start.cjs');
+  if (fs.existsSync(sessionStartPath)) {
+    registerHook(settings, 'SessionStart', `node "${sessionStartPath}"`);
+    installed.push('maxsim-session-start (SessionStart)');
+  }
+
+  // Register TeammateIdle hook (pending task check)
+  const teammateIdlePath = path.join(hooksDestDir, 'maxsim-teammate-idle.cjs');
+  if (fs.existsSync(teammateIdlePath)) {
+    registerHook(settings, 'TeammateIdle', `node "${teammateIdlePath}"`);
+    installed.push('maxsim-teammate-idle (TeammateIdle)');
+  }
+
+  // Register TaskCompleted hook (verification gates)
+  const taskCompletedPath = path.join(hooksDestDir, 'maxsim-task-completed.cjs');
+  if (fs.existsSync(taskCompletedPath)) {
+    registerHook(settings, 'TaskCompleted', `node "${taskCompletedPath}"`);
+    installed.push('maxsim-task-completed (TaskCompleted)');
+  }
+
   // Register statusLine (only if not already set, or if it's already ours)
   const statusLinePath = path.join(hooksDestDir, 'maxsim-statusline.cjs');
   if (fs.existsSync(statusLinePath)) {

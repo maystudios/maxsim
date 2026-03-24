@@ -60,4 +60,19 @@ export default defineConfig([
     entry: { 'maxsim-capture-learnings': 'src/hooks/maxsim-capture-learnings.ts' },
     dts: false,
   },
+  {
+    ...hookShared,
+    entry: { 'maxsim-session-start': 'src/hooks/maxsim-session-start.ts' },
+    dts: false,
+  },
+  {
+    ...hookShared,
+    entry: { 'maxsim-teammate-idle': 'src/hooks/maxsim-teammate-idle.ts' },
+    dts: false,
+  },
+  {
+    ...hookShared,
+    entry: { 'maxsim-task-completed': 'src/hooks/maxsim-task-completed.ts' },
+    dts: false,
+  },
 ]);

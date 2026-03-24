@@ -12,47 +12,13 @@
 
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import { spawnSync } from 'node:child_process';
-import { readStdinJson, CLAUDE_DIR } from './shared.js';
+import { readStdinJson, CLAUDE_DIR, isMaxsimProject, recentCommits } from './shared.js';
 
 interface StopInput {
   cwd?: string;
   session_id?: string;
   stop_reason?: string;
   [key: string]: unknown;
-}
-
-/** Returns true when .claude/maxsim/config.json exists in the given directory. */
-function isMaxsimProject(projectDir: string): boolean {
-  try {
-    return fs.existsSync(path.join(projectDir, CLAUDE_DIR, 'maxsim', 'config.json'));
-  } catch {
-    return false;
-  }
-}
-
-/** Reads the last N git commits as oneline strings. Returns empty array on failure. */
-function recentCommits(projectDir: string, n = 5): string[] {
-  try {
-    const result = spawnSync(
-      'git',
-      ['log', `--oneline`, `-${n}`],
-      {
-        cwd: projectDir,
-        encoding: 'utf8',
-        timeout: 4000,
-        stdio: ['ignore', 'pipe', 'ignore'],
-        windowsHide: true,
-      },
-    );
-    if (result.status !== 0) return [];
-    return (result.stdout ?? '')
-      .split('\n')
-      .map((l) => l.trim())
-      .filter(Boolean);
-  } catch {
-    return [];
-  }
 }
 
 /** Formats today's date as YYYY-MM-DD. */

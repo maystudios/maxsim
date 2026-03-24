@@ -1,5 +1,6 @@
 /** Shared utilities for MAXSIM hooks. */
 
+import * as fs from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import * as os from 'node:os';
 import * as path from 'node:path';
@@ -21,6 +22,39 @@ export function readStdinJson<T>(callback: (data: T) => void): void {
 }
 
 export const CLAUDE_DIR = '.claude';
+
+/** Returns true when .claude/maxsim/config.json exists in the given directory. */
+export function isMaxsimProject(projectDir: string): boolean {
+  try {
+    return fs.existsSync(path.join(projectDir, CLAUDE_DIR, 'maxsim', 'config.json'));
+  } catch {
+    return false;
+  }
+}
+
+/** Reads the last N git commits as oneline strings. Returns empty array on failure. */
+export function recentCommits(projectDir: string, n = 5): string[] {
+  try {
+    const result = spawnSync(
+      'git',
+      ['log', '--oneline', `-${n}`],
+      {
+        cwd: projectDir,
+        encoding: 'utf8',
+        timeout: 4000,
+        stdio: ['ignore', 'pipe', 'ignore'],
+        windowsHide: true,
+      },
+    );
+    if (result.status !== 0) return [];
+    return (result.stdout ?? '')
+      .split('\n')
+      .map((l) => l.trim())
+      .filter(Boolean);
+  } catch {
+    return [];
+  }
+}
 
 /** Returns true when running on Windows. */
 export function isWindows(): boolean {
