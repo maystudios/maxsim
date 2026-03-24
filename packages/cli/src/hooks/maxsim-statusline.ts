@@ -72,6 +72,6 @@ readStdinJson<StatusLineInput>((input) => {
     statusText = 'MAXSIM \u25ba Ready';
   }
 
-  process.stdout.write(statusText + '\n');
+  process.stdout.write(`${statusText}\n`);
   process.exit(0);
 });
