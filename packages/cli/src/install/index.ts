@@ -19,6 +19,18 @@ import { VERSION } from '../core/version.js';
 export { checkGhAuth } from './gh-auth.js';
 import { checkGhAuth } from './gh-auth.js';
 
+export function ensureGitignoreEntries(projectDir: string, entries: string[]): void {
+  const gitignorePath = path.join(projectDir, '.gitignore');
+  let existing = '';
+  try { existing = fs.readFileSync(gitignorePath, 'utf8'); } catch { /* file doesn't exist yet */ }
+  const lines = existing.split('\n');
+  const missing = entries.filter(e => !lines.includes(e));
+  if (missing.length === 0) return;
+  const addition = (existing.length > 0 && !existing.endsWith('\n') ? '\n' : '') +
+    '# MaxsimCLI\n' + missing.join('\n') + '\n';
+  fs.writeFileSync(gitignorePath, existing + addition, 'utf8');
+}
+
 export function checkNodeVersion(minMajor = 22): void {
   const major = parseInt(process.versions.node.split('.')[0], 10);
   if (major < minMajor) {
@@ -114,6 +126,7 @@ async function runInstall(projectDir: string, quiet: boolean): Promise<void> {
 
   // 1b. Create agent-memory directory
   fs.mkdirSync(path.join(projectDir, '.claude', 'agent-memory', 'maxsim-learner'), { recursive: true });
+  ensureGitignoreEntries(projectDir, ['.claude/agent-memory/', 'autoresearch-results.tsv']);
 
   // 2. Copy CLI binary
   const cliBinSrc = path.resolve(__dirname, 'cli.cjs');
