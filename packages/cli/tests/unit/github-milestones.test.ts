@@ -77,11 +77,11 @@ function makeRawMilestone(overrides: Partial<{
     title: overrides.title ?? 'v1.0',
     // Use `'description' in overrides` so that an explicit null is preserved
     // rather than replaced by the default via the `??` operator.
-    description: 'description' in overrides ? overrides.description! : 'First release',
+    description: 'description' in overrides ? (overrides.description as string | null) : 'First release',
     state: overrides.state ?? 'open',
     open_issues: overrides.open_issues ?? 3,
     closed_issues: overrides.closed_issues ?? 7,
-    due_on: 'due_on' in overrides ? overrides.due_on! : null,
+    due_on: 'due_on' in overrides ? (overrides.due_on as string | null) : null,
     created_at: overrides.created_at ?? '2026-01-01T00:00:00Z',
     updated_at: overrides.updated_at ?? '2026-01-02T00:00:00Z',
   };
