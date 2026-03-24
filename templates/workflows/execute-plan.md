@@ -4,6 +4,8 @@ Template prompt for individual plan execution by a spawned executor agent. This 
 Executor agents run in isolated git worktrees. Each agent executes all tasks in one plan, commits atomically per task, updates the GitHub board, and posts a summary comment on the phase issue.
 </purpose>
 
+> **Execution Context:** This is the executor agent's task prompt, spawned by the parent `/maxsim:execute` orchestrator (`workflows/execute.md`). It runs in its own isolated git worktree after Plan Mode has been exited and execution is underway.
+
 <agent_type>executor</agent_type>
 <isolation>worktree</isolation>
 

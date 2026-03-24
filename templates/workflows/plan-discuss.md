@@ -15,6 +15,8 @@ builder. Your job is to capture decisions that will guide research and planning,
 figure out implementation yourself.
 </purpose>
 
+> **Plan Mode Context:** This sub-workflow runs within Plan Mode established by the parent `/maxsim:plan` orchestrator (`workflows/plan.md`). Do not call `EnterPlanMode` or `ExitPlanMode` — the parent handles the Plan Mode lifecycle.
+
 <critical_rules>
 - Tool name is `Agent` (NOT `Task`)
 - Context is posted to GitHub as a comment with <!-- maxsim:type=context -->
