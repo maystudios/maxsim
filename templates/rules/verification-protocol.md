@@ -2,13 +2,15 @@
 
 Evidence before claims, always. No exceptions.
 
-## HARD GATE
+<HARD-GATE name="verification-protocol">
 
 **No completion claims without fresh verification evidence.**
 
 This gate is non-negotiable. There is no advisory mode, no config override, no escape hatch. Either evidence passes or it fails. No middle ground. Partial success is failure. "Good enough" is not enough.
 
 Do NOT pass this gate by arguing it's "close enough", "minor issue", or "will fix later".
+
+</HARD-GATE>
 
 ## THIS-Turn Requirement
 

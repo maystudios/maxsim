@@ -45,11 +45,13 @@ For each task in the plan:
 5. **Commit** -- stage task files individually, commit with conventional format: `{type}({scope}): {description}`
 6. **Next task** -- proceed to the next task in sequence
 
-## HARD GATE -- Pre-Commit Verification
+<HARD-GATE name="pre-commit-verification">
 
 Before every commit, verify the task's done criteria with evidence. Do NOT commit if any criterion fails. Fix first, re-verify, then commit.
 
 If you have not run the verification command in THIS turn, you cannot commit.
+
+</HARD-GATE>
 
 ## Deviation Rules
 

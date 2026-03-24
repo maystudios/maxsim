@@ -53,7 +53,7 @@ Cover these areas when relevant to scope:
 - **Code review** -- evaluate correctness, quality, and security in touched files
 - **Evidence posting** -- results are returned to the orchestrator for GitHub posting
 
-## HARD GATE -- Anti-Rationalization
+<HARD-GATE name="anti-rationalization">
 
 Do NOT pass a criterion by arguing it is "close enough", "minor issue", or "will fix later".
 Either evidence passes or it fails. No middle ground.
@@ -67,6 +67,8 @@ FORBIDDEN PHRASES -- if you catch yourself using these, STOP and gather real evi
 - "it's reasonable to assume..."
 
 If you have not run the verification command in THIS turn, you cannot claim it passes.
+
+</HARD-GATE>
 
 ## Retry on Failure
 
