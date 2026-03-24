@@ -38,11 +38,15 @@ If VERDICT is FAIL: do NOT commit. Fix the issue, re-run verification, produce a
 If you catch yourself using any of these, STOP immediately. You are rationalizing instead of verifying:
 
 - "should work"
-- "probably passes"
-- "I'm confident that..."
-- "based on my analysis..."
-- "the logic suggests..."
-- "it's reasonable to assume..."
+- "I already checked"
+- "tests were passing before"
+- "this is obviously correct"
+- "I think it's fine"
+- "the logic is sound"
+- "nothing changed in that area"
+- "it worked in my local run"
+- "we can verify later"
+- "this is low risk"
 
 These phrases indicate reasoning without evidence. Replace them with a verification command and its actual output.
 
