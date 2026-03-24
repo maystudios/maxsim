@@ -4,7 +4,7 @@ title: Skills & Workflows
 group: Advanced
 ---
 
-MaxsimCLI includes 14 skills and 23 workflows that give agents domain-specific knowledge and multi-step orchestration capabilities. Skills are loaded into agents at dispatch time based on the task. Workflows chain multiple agents together to complete structured operations.
+MaxsimCLI includes 14 skills and 18 workflows that give agents domain-specific knowledge and multi-step orchestration capabilities. Skills are loaded into agents at dispatch time based on the task. Workflows chain multiple agents together to complete structured operations.
 
 ### Skills
 
@@ -17,7 +17,7 @@ Skills provide procedures and domain knowledge that agents reference during exec
 
 Workflows are multi-step orchestrations that coordinate agents, state, and user interaction. Each workflow defines the sequence of agents dispatched and the conditions for moving between steps.
 
-{% doctable headers=["Workflow", "Purpose"] rows=[["batch", "Run multiple tasks in sequence or parallel"], ["diagnose-issues", "Investigate and diagnose project issues"], ["discuss-phase", "Discuss a phase plan with the user before execution"], ["execute-plan", "Execute a single plan within a phase"], ["execute", "Execute a full phase end-to-end"], ["go", "Fast-start execution with minimal prompts"], ["health", "Check project health and configuration"], ["help", "Display help and available commands"], ["init-existing", "Initialize MaxsimCLI in an existing codebase"], ["init", "Initialize a new MaxsimCLI project from scratch"], ["new-milestone", "Create a new milestone in the roadmap"], ["new-project", "Scaffold a new project with MaxsimCLI structure"], ["plan-create", "Create a detailed plan for a phase"], ["plan-discuss", "Discuss plan details interactively"], ["plan-research", "Research context needed for planning"], ["plan", "Full planning workflow (research + create + discuss)"], ["progress", "Show current progress across phases"], ["quick", "Run a one-off task outside the phase workflow"], ["research-phase", "Deep research for a specific phase"], ["sdd", "Specification-Driven Development full workflow"], ["settings", "View and edit MaxsimCLI settings"], ["verify-phase", "Run verification agents against a completed phase"], ["verify-work", "Verify specific work items"]] %}
+{% doctable headers=["Workflow", "Purpose"] rows=[["debug", "Structured debugging session for a known issue"], ["execute-plan", "Execute a single plan within a phase"], ["execute", "Execute a full phase end-to-end"], ["go", "Fast-start execution with minimal prompts"], ["health", "Check project health and configuration"], ["help", "Display help and available commands"], ["init-existing", "Initialize MaxsimCLI in an existing codebase"], ["init", "Initialize a new MaxsimCLI project from scratch"], ["new-milestone", "Create a new milestone in the roadmap"], ["new-project", "Scaffold a new project with MaxsimCLI structure"], ["plan-create", "Create a detailed plan for a phase"], ["plan-discuss", "Discuss plan details interactively"], ["plan-research", "Research context needed for planning"], ["plan", "Full planning workflow (research + create + discuss)"], ["progress", "Show current progress across phases"], ["quick", "Run a one-off task outside the phase workflow"], ["settings", "View and edit MaxsimCLI settings"], ["verify-phase", "Run verification agents against a completed phase"]] %}
 {% /doctable %}
 
 {% callout type="tip" %}
