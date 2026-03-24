@@ -4,7 +4,7 @@
  */
 
 import { getOctokit, getRepoInfo, withGhResult } from './client.js';
-import type { GhIssue, GhComment, GhResult, RepoInfo } from './types.js';
+import type { GhIssue, GhComment, GhIssueRelation, GhResult, RepoInfo } from './types.js';
 
 /** Map Octokit issue response to our GhIssue type. */
 function mapIssue(raw: Record<string, unknown>): GhIssue {
@@ -272,4 +272,144 @@ export async function closeIssue(
   repo?: RepoInfo,
 ): Promise<GhResult<GhIssue>> {
   return updateIssue(issueNumber, { state: 'closed', stateReason: reason }, repo);
+}
+
+// Maps our public relation type to the GitHub GraphQL enum value.
+const RELATION_TYPE_MAP: Record<'blocked_by' | 'blocking', string> = {
+  blocking: 'BLOCKS',
+  blocked_by: 'IS_BLOCKED_BY',
+};
+
+/** Resolve the GraphQL node IDs for two issues in parallel. */
+async function resolveIssueNodeIds(
+  octokit: ReturnType<typeof getOctokit>,
+  owner: string,
+  repoName: string,
+  issueNumber: number,
+  relatedIssueNumber: number,
+): Promise<[string, string]> {
+  const [issueRes, relatedRes] = await Promise.all([
+    octokit.rest.issues.get({ owner, repo: repoName, issue_number: issueNumber }),
+    octokit.rest.issues.get({ owner, repo: repoName, issue_number: relatedIssueNumber }),
+  ]);
+  return [issueRes.data.node_id, relatedRes.data.node_id];
+}
+
+/**
+ * Add a relation between two issues using the GitHub GraphQL API.
+ *
+ * GitHub's native "linked issues" are managed via the `addLinkedIssue` mutation.
+ * Accepted relation types include BLOCKS, IS_BLOCKED_BY, DUPLICATES, etc.
+ */
+export async function addIssueRelation(
+  issueNumber: number,
+  relatedIssueNumber: number,
+  type: 'blocked_by' | 'blocking',
+  repo?: RepoInfo,
+): Promise<GhResult<void>> {
+  const { owner, repo: repoName } = repo ?? getRepoInfo();
+  const octokit = getOctokit();
+
+  return withGhResult(async () => {
+    const [issueNodeId, relatedNodeId] = await resolveIssueNodeIds(
+      octokit, owner, repoName, issueNumber, relatedIssueNumber,
+    );
+
+    const mutation = `
+      mutation AddLinkedIssue($issueId: ID!, $relatedId: ID!, $relationType: LinkedIssueRelationType!) {
+        addLinkedIssue(input: { issueId: $issueId, relatedIssueId: $relatedId, relationType: $relationType }) {
+          issue { number }
+        }
+      }
+    `;
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (octokit as any).graphql(mutation, {
+      issueId: issueNodeId,
+      relatedId: relatedNodeId,
+      relationType: RELATION_TYPE_MAP[type],
+    });
+  });
+}
+
+/** Remove a relation between two issues using the GitHub GraphQL API. */
+export async function removeIssueRelation(
+  issueNumber: number,
+  relatedIssueNumber: number,
+  type: 'blocked_by' | 'blocking',
+  repo?: RepoInfo,
+): Promise<GhResult<void>> {
+  const { owner, repo: repoName } = repo ?? getRepoInfo();
+  const octokit = getOctokit();
+
+  return withGhResult(async () => {
+    const [issueNodeId, relatedNodeId] = await resolveIssueNodeIds(
+      octokit, owner, repoName, issueNumber, relatedIssueNumber,
+    );
+
+    const mutation = `
+      mutation RemoveLinkedIssue($issueId: ID!, $relatedId: ID!, $relationType: LinkedIssueRelationType!) {
+        removeLinkedIssue(input: { issueId: $issueId, relatedIssueId: $relatedId, relationType: $relationType }) {
+          issue { number }
+        }
+      }
+    `;
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (octokit as any).graphql(mutation, {
+      issueId: issueNodeId,
+      relatedId: relatedNodeId,
+      relationType: RELATION_TYPE_MAP[type],
+    });
+  });
+}
+
+/** List all relations for an issue using the GitHub GraphQL `linkedIssues` field. */
+export async function listIssueRelations(
+  issueNumber: number,
+  repo?: RepoInfo,
+): Promise<GhResult<GhIssueRelation[]>> {
+  const { owner, repo: repoName } = repo ?? getRepoInfo();
+  const octokit = getOctokit();
+
+  return withGhResult(async () => {
+    const query = `
+      query ListLinkedIssues($owner: String!, $repo: String!, $number: Int!) {
+        repository(owner: $owner, name: $repo) {
+          issue(number: $number) {
+            linkedIssues(first: 50) {
+              nodes {
+                number
+              }
+            }
+          }
+        }
+      }
+    `;
+
+    interface GraphQLResponse {
+      repository: {
+        issue: {
+          linkedIssues: {
+            nodes: Array<{ number: number }>;
+          };
+        } | null;
+      };
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const data = await (octokit as any).graphql<GraphQLResponse>(query, {
+      owner,
+      repo: repoName,
+      number: issueNumber,
+    });
+
+    const nodes = data?.repository?.issue?.linkedIssues?.nodes ?? [];
+
+    return nodes.map((node) => ({
+      issueNumber,
+      relatedIssueNumber: node.number,
+      type: 'related' as const,
+    }));
+  });
 }
