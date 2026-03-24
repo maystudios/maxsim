@@ -155,7 +155,7 @@ Autonomous optimization loop — make one atomic change per iteration, verify ag
 
 - Configures metric command, guard command, direction, and iteration budget in Plan Mode
 - Runs the autoresearch 8-phase loop: Review → Ideate → Modify → Commit → Verify → Guard → Decide → Log
-- Stuck detection after 5 consecutive discards
+- Stuck detection after 5 consecutive discards/crashes
 - Results tracked in `.claude/agent-memory/maxsim-learner/autoresearch-results.tsv`
 
 ```
