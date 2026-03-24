@@ -97,4 +97,19 @@ describe('resolveModel', () => {
   it('returns correct model for budget profile', () => {
     expect(resolveModel(ModelProfile.BUDGET, AgentType.RESEARCHER)).toBe(Model.HAIKU);
   });
+
+  it('override takes precedence over profile', () => {
+    const overrides = { [AgentType.EXECUTOR]: Model.OPUS };
+    expect(resolveModel(ModelProfile.BALANCED, AgentType.EXECUTOR, overrides)).toBe(Model.OPUS);
+  });
+
+  it('falls back to profile when agent not in overrides', () => {
+    const overrides = { [AgentType.EXECUTOR]: Model.OPUS };
+    expect(resolveModel(ModelProfile.BALANCED, AgentType.PLANNER, overrides)).toBe(Model.OPUS);
+    expect(resolveModel(ModelProfile.BALANCED, AgentType.RESEARCHER, overrides)).toBe(Model.SONNET);
+  });
+
+  it('empty overrides object falls back to profile', () => {
+    expect(resolveModel(ModelProfile.BALANCED, AgentType.EXECUTOR, {})).toBe(Model.SONNET);
+  });
 });
