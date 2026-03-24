@@ -1,10 +1,20 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import * as os from 'node:os';
+
+// Hoist mock before imports so the factory runs before module resolution
+vi.mock('node:child_process', () => ({
+  execFileSync: vi.fn(),
+}));
+
+import { execFileSync } from 'node:child_process';
 import { copyDir, removeDir } from '../../src/install/copy.js';
 import { generateClaudeMd, writeClaudeMd } from '../../src/install/claudemd.js';
 import { uninstall } from '../../src/install/uninstall.js';
+import { checkGhAuth } from '../../src/install/gh-auth.js';
+
+const mockExecFileSync = execFileSync as ReturnType<typeof vi.fn>;
 
 let tmpDir: string;
 
@@ -14,6 +24,7 @@ beforeEach(() => {
 
 afterEach(() => {
   fs.rmSync(tmpDir, { recursive: true, force: true });
+  vi.resetAllMocks();
 });
 
 describe('copyDir', () => {
@@ -101,6 +112,36 @@ describe('writeClaudeMd', () => {
     const content = fs.readFileSync(filePath, 'utf8');
     expect(content).toContain('new-project');
     expect(content).not.toContain('Old stuff');
+  });
+});
+
+describe('checkGhAuth', () => {
+  it('returns ok:false with install message when gh is not found', () => {
+    mockExecFileSync.mockImplementation(() => {
+      const err: any = new Error('spawn gh ENOENT');
+      err.code = 'ENOENT';
+      throw err;
+    });
+    const result = checkGhAuth();
+    expect(result.ok).toBe(false);
+    expect(result.message).toContain('not installed');
+  });
+
+  it('returns ok:false with auth message when gh auth fails', () => {
+    mockExecFileSync.mockImplementation(() => {
+      const err: any = new Error('Command failed');
+      err.status = 1;
+      throw err;
+    });
+    const result = checkGhAuth();
+    expect(result.ok).toBe(false);
+    expect(result.message).toContain('gh auth login');
+  });
+
+  it('returns ok:true when gh auth succeeds', () => {
+    mockExecFileSync.mockReturnValue(Buffer.from(''));
+    const result = checkGhAuth();
+    expect(result.ok).toBe(true);
   });
 });
 
