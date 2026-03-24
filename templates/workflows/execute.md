@@ -272,10 +272,22 @@ After all plans in the wave are complete and spot-checks pass, merge each worktr
 ```bash
 # For each completed worktree branch from this wave (branch name follows maxsim/phase-{N}-task-{id}):
 git merge --no-ff maxsim/phase-{N}-task-{id}
-# Verify merged result — confirm key files from plan summary are present
 ```
 
-Branches are merged sequentially to minimize conflicts. If a merge conflict occurs, report immediately and ask the user to resolve before continuing.
+After merging each branch, run the project's test suite to catch merge-induced regressions:
+
+```bash
+npm test 2>&1 || echo "MERGE VERIFICATION FAILED"
+```
+
+If the test suite fails after a merge, revert the merge (`git revert HEAD --no-edit`) and escalate to the user before continuing.
+
+Branches are merged sequentially to minimize conflicts. If a merge conflict occurs:
+- Check `auto_resolve_conflicts` in `.claude/maxsim/config.json` (default: true)
+- If true: abort the conflicted merge (`git merge --abort`), then retry with `git merge -X theirs maxsim/phase-{N}-task-{id}` to auto-resolve in favor of the incoming branch
+- If auto-resolve succeeds: run `npm test` to verify the result
+- If auto-resolve fails or tests fail after auto-resolve: revert and ask the user to resolve manually
+- If false: report immediately and ask the user to resolve before continuing
 
 ### 6.8 Advance to next wave
 
@@ -305,6 +317,16 @@ node .claude/maxsim/bin/maxsim-tools.cjs github move-issue \
 Unless `--auto` is set, confirm with user before starting verification.
 
 Initialize `attempt_count = 1` before invoking the verifier.
+
+### 7.1 Log execution metrics
+
+After verification completes (section 8), append a TSV row to `.claude/agent-memory/maxsim-learner/autoresearch-results.tsv`:
+
+```
+{wave_count}	{last_commit_hash}	{tasks_completed}	{delta_from_plan}	{guard_result}	{status}	Phase {N} execution complete
+```
+
+Where `status` is `keep` if verification passed, `discard` if it failed.
 
 ## 8. Auto-Verify
 
