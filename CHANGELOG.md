@@ -1,3 +1,15 @@
+# [5.6.0](https://github.com/maystudios/maxsimcli/compare/v5.5.0...v5.6.0) (2026-03-24)
+
+
+### Bug Fixes
+
+* **wiki:** avoid non-null assertion in listWikiPages ([afc9cc7](https://github.com/maystudios/maxsimcli/commit/afc9cc79716b6655d5d2c8fc8c42b03a26c8da07))
+
+
+### Features
+
+* **github:** add GitHub Wiki client (§5.3) ([e64a67c](https://github.com/maystudios/maxsimcli/commit/e64a67c1c87e4680fec5e9f5f77f07ea4f0cf341))
+
 # [5.5.0](https://github.com/maystudios/maxsimcli/compare/v5.4.0...v5.5.0) (2026-03-24)
 
 
