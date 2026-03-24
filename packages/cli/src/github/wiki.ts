@@ -152,11 +152,12 @@ export function listWikiPages(repo?: RepoInfo): GhResult<GhWikiPage[]> {
   let dir: string | null = null;
   try {
     dir = cloneWiki(owner, repoName);
-    const pages: GhWikiPage[] = readdirSync(dir)
+    const wikiDir = dir;
+    const pages: GhWikiPage[] = readdirSync(wikiDir)
       .filter((entry) => entry.endsWith('.md'))
       .map((entry) => {
         const slug = entry.slice(0, -3);
-        return { slug, title: slugToTitle(slug), content: readFileSync(join(dir!, entry), 'utf8') };
+        return { slug, title: slugToTitle(slug), content: readFileSync(join(wikiDir, entry), 'utf8') };
       });
     return { ok: true, data: pages };
   } catch (err) {
