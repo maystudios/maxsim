@@ -11,6 +11,11 @@
     "dist",
     "README.md"
   ],
+  "scripts": {
+    "build": "node scripts/inject-version.cjs && npx tsdown && node scripts/copy-assets.cjs",
+    "test": "npx vitest run",
+    "lint": "npx biome check ."
+  },
   "engines": {
     "node": ">=22.0.0"
   },
