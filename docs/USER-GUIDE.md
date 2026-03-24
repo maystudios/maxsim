@@ -57,7 +57,7 @@ You never need to remember where you were. `/maxsim:go` always knows.
 
 ## Commands
 
-MaxsimCLI provides 9 slash commands. `/maxsim:go` is the primary interface — use the others when you want explicit control over a specific step.
+MaxsimCLI provides 13 slash commands. `/maxsim:go` is the primary interface — use the others when you want explicit control over a specific step.
 
 | Command | Description | Example |
 |---------|-------------|---------|
@@ -70,6 +70,10 @@ MaxsimCLI provides 9 slash commands. `/maxsim:go` is the primary interface — u
 | `/maxsim:progress` | **Show project status.** Reads the GitHub Project Board and displays a summary of what is done, what is in progress, and what to do next. | `/maxsim:progress` |
 | `/maxsim:settings` | **Configure MaxsimCLI.** Change model profiles, verification settings, parallelism, and other options. Writes to `.claude/maxsim/config.json`. | `/maxsim:settings` |
 | `/maxsim:help` | **Show available commands.** Quick reference for all commands. | `/maxsim:help` |
+| `/maxsim:improve [metric]` | **Autonomous optimization loop.** Iteratively modifies the codebase, verifies the result, and keeps or discards changes based on whether the target metric improves. | `/maxsim:improve performance` |
+| `/maxsim:fix-loop [cmd]` | **Autonomous error repair.** Runs the given command, diagnoses failures, applies fixes, and repeats until zero errors remain. | `/maxsim:fix-loop "npm test"` |
+| `/maxsim:debug-loop [symptom]` | **Autonomous bug hunting.** Applies the scientific method with hypothesis testing — form hypotheses, design experiments, verify, and repeat until the root cause is confirmed and fixed. | `/maxsim:debug-loop "login fails on mobile"` |
+| `/maxsim:security [scope]` | **Security audit.** Runs a read-only STRIDE + OWASP + red-team analysis across the specified scope and produces a prioritised finding report. | `/maxsim:security src/` |
 
 ### When to use explicit commands vs `/maxsim:go`
 
@@ -94,7 +98,7 @@ Init → Plan → Execute → Verify
 
 `/maxsim:init` runs once per project. It:
 
-1. Scans your existing codebase using 30+ parallel Research agents (brownfield support)
+1. Scans your existing codebase using parallel Research agents — count scaled by model profile and project size — (brownfield support)
 2. Interviews you: project name, goals, tech stack, conventions, testing strategy, acceptance criteria
 3. Creates your GitHub repository if none exists
 4. Sets up the GitHub Project Board (Kanban: To Do → In Progress → In Review → Done)
@@ -310,7 +314,7 @@ MaxsimCLI uses 4 specialized agent types that work together to plan, build, rese
 |-------|------|-------------|
 | **Planner** | Planning | Creates phase plans and task breakdowns. Operates in read-only Plan Mode — it cannot write code. Reads GitHub Issues and produces sub-issue task breakdowns. |
 | **Executor** | Implementation | Writes code. Each executor works in an isolated git worktree on its own branch. Commits atomically using conventional commit format. |
-| **Researcher** | Investigation | Reads the codebase, searches the web, investigates dependencies. Used during init (30+ agents scanning in parallel) and during planning (domain research). |
+| **Researcher** | Investigation | Reads the codebase, searches the web, investigates dependencies. Used during init (parallel agents, count scaled by model profile and project size) and during planning (domain research). |
 | **Verifier** | Quality Control | Reviews completed work. Runs tests, checks build, runs lint, reviews code for security and quality issues, and produces evidence blocks. |
 
 ### Parallel Execution with Worktrees

@@ -276,7 +276,7 @@ Project config lives in `.claude/maxsim/config.json`, created during `/maxsim:in
 
 | Setting | Type | Default | What it does |
 |---------|------|---------|-------------|
-| `version` | `string` | `"5.2.2"` | Config schema version |
+| `version` | `string` | `"6.0.0"` | Config schema version |
 | `execution.model_profile` | `'quality' \| 'balanced' \| 'budget'` | `'balanced'` | Model tier for all agents |
 | `execution.parallelism.max_agents_per_wave` | `number` | `3` | Cap on concurrent agents per wave |
 | `execution.parallelism.max_retries` | `number` | `3` | Max retries per failed plan |
@@ -298,7 +298,7 @@ Project config lives in `.claude/maxsim/config.json`, created during `/maxsim:in
 
 ```json
 {
-  "version": "5.2.2",
+  "version": "6.0.0",
   "execution": {
     "model_profile": "balanced",
     "parallelism": {
@@ -387,7 +387,7 @@ Each parallel plan gets a worktree at `.maxsim-worktrees/{planId}/` on its own b
 
 ### When It Activates
 
-Parallel execution kicks in when a wave has at least `parallelization.min_plans_for_parallel` plans (default 2). `execution.parallelism.max_agents_per_wave` caps concurrent agents per wave (default 3). `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` is set automatically in `settings.json` during installation.
+`execution.parallelism.max_agents_per_wave` caps concurrent agents per wave (default 3). `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` is set automatically in `settings.json` during installation.
 
 Before running in parallel, MAXSIM checks that plans do not modify the same files. If there is a conflict, it falls back to sequential mode.
 
