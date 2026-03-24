@@ -1,6 +1,7 @@
 ---
 name: maxsim:settings
 description: View and modify MaxsimCLI configuration
+argument-hint: ""
 allowed-tools: [Read, Write, Edit, Bash, AskUserQuestion, EnterPlanMode, ExitPlanMode]
 ---
 
