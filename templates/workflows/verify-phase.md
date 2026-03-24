@@ -405,6 +405,28 @@ Return to orchestrator:
 - If gaps_found: gap list and recommended fix plan names
 - If human_needed: items requiring human testing
 
+## Step 10 — Log Verification Metrics
+
+Append a row to `.claude/agent-memory/maxsim-learner/autoresearch-results.tsv`:
+
+```tsv
+{iteration}	{commit_hash}	{checks_passed}/{checks_total}	{delta}	{guard_result}	{status}	Phase {N} verification: {PASS|FAIL}
+```
+
+Where:
+- `iteration` = sequential counter (read last line of TSV, increment)
+- `commit_hash` = current HEAD or `-` if no new commit
+- `checks_passed` / `checks_total` = number of automated checks that passed vs total run
+- `delta` = change in score vs previous verification row, e.g. `+2` or `-1`; use `0` for first entry
+- `guard_result` = `pass` if regression guard passed, `fail` otherwise
+- `status` = `keep` if overall PASS, `discard` if overall FAIL
+
+If the TSV file does not exist, create it with the header line:
+```
+# metric_direction: higher_is_better
+iteration	commit	metric	delta	guard	status	description
+```
+
 </process>
 
 <success_criteria>
@@ -425,4 +447,5 @@ Return to orchestrator:
 - [ ] Rework attempted up to 2 times if guard fails after verify passes
 - [ ] Board transition executed: Done + closed on pass, In Progress on fail
 - [ ] Results returned to orchestrator with status, score, and gap details
+- [ ] Verification metrics appended to `.claude/agent-memory/maxsim-learner/autoresearch-results.tsv` (TSV created with header if missing)
 </success_criteria>

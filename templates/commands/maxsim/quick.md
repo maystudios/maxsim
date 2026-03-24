@@ -25,6 +25,8 @@ Follow @.claude/maxsim/workflows/quick.md end-to-end.
 3. Create a GitHub Issue labeled `type:quick` for the task
 4. Spawn a planner Agent (quick mode) to produce a concise implementation plan
 5. Spawn executor Agent(s) to implement the plan
-6. Commit with atomic message referencing the GitHub Issue
-7. Close the GitHub Issue with completion summary
+6. Spawn a verifier Agent to check the result (tests pass, build succeeds, lint clean)
+7. If verification fails, spawn a fix agent (max 2 retries)
+8. Commit with atomic message referencing the GitHub Issue
+9. Close the GitHub Issue with completion summary
 </process>
