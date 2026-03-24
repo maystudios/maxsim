@@ -11,6 +11,7 @@ import { readStdinJson, playSound, isWindows, isMac, bundledSound } from './shar
 interface StopInput {
   session_id?: string;
   stop_reason?: string;
+  stop_hook_active?: boolean;
   [key: string]: unknown;
 }
 
@@ -36,7 +37,10 @@ function playCompletion(): void {
   }
 }
 
-readStdinJson<StopInput>((_input) => {
+readStdinJson<StopInput>((input) => {
+  if (input.stop_hook_active === true) {
+    process.exit(0);
+  }
   playCompletion();
   process.exit(0);
 });
