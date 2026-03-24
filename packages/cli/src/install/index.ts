@@ -15,6 +15,8 @@ import { installHooks } from './hooks.js';
 import { uninstall } from './uninstall.js';
 import { writeClaudeMd } from './claudemd.js';
 import { VERSION } from '../core/version.js';
+export { checkGhAuth } from './gh-auth.js';
+import { checkGhAuth } from './gh-auth.js';
 
 export function checkNodeVersion(minMajor = 22): void {
   const major = parseInt(process.versions.node.split('.')[0], 10);
@@ -67,6 +69,12 @@ function printHelp(): void {
 }
 
 async function runInstall(projectDir: string, quiet: boolean): Promise<void> {
+  const authCheck = checkGhAuth();
+  if (!authCheck.ok) {
+    console.error(`  Error: ${authCheck.message}`);
+    process.exit(1);
+  }
+
   if (!quiet) {
     console.log(`\n  MaxsimCLI v${VERSION}\n`);
     console.log('  Installing into .claude/ ...\n');
