@@ -46,6 +46,6 @@ docs/*
 !docs/multi-runtime-architecture.md
 analysis/
 gaps.md
-improve.md
+/improve.md
 philosophy.md
 autoresearch-results.tsv

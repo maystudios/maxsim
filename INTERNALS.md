@@ -30,7 +30,7 @@ maxsimcli/                        ← repo root
 │   └── website/                  ← maxsimcli.dev (React + Vite + Tailwind)
 ├── templates/                    ← source templates (copied to dist/ at build time)
 │   ├── agents/                   ← 4 agent definitions
-│   ├── commands/maxsim/          ← 9 slash commands
+│   ├── commands/maxsim/          ← 13 slash commands
 │   ├── skills/                   ← 14 skill modules
 │   ├── workflows/                ← 18 workflow orchestrators
 │   ├── references/               ← reference documents
@@ -118,21 +118,25 @@ Layer 3 — AGENT
 Commands are the only user-facing surface. Workflows are never invoked
 directly. Agents are spawned by workflows, not by commands.
 
-### Commands (9)
+### Commands (13)
 
 Located at `templates/commands/maxsim/`:
 
-| Command    | Workflow loaded        | Purpose                                  |
-|------------|------------------------|------------------------------------------|
-| `go`       | `go.md`                | Auto-detect project state and dispatch   |
-| `init`     | `init.md`              | Initialize project + GitHub structure    |
-| `plan`     | `plan.md`              | Plan a phase (Discussion→Research→Plan)  |
-| `execute`  | `execute.md`           | Execute a phase with agents + worktrees  |
-| `debug`    | `debug.md`             | Systematic debugging flow                |
-| `quick`    | `quick.md`             | Single-issue quick task                  |
-| `progress` | `progress.md`          | Show board status + next recommendation  |
-| `settings` | `settings.md`          | Configure model profile + options        |
-| `help`     | `help.md`              | Command reference                        |
+| Command      | Workflow loaded        | Purpose                                  |
+|--------------|------------------------|------------------------------------------|
+| `go`         | `go.md`                | Auto-detect project state and dispatch   |
+| `init`       | `init.md`              | Initialize project + GitHub structure    |
+| `plan`       | `plan.md`              | Plan a phase (Discussion→Research→Plan)  |
+| `execute`    | `execute.md`           | Execute a phase with agents + worktrees  |
+| `debug`      | `debug.md`             | Systematic debugging flow                |
+| `quick`      | `quick.md`             | Single-issue quick task                  |
+| `improve`    | `improve.md`           | Autoresearch optimization loop           |
+| `fix-loop`   | `fix-loop.md`          | Autonomous error repair loop             |
+| `debug-loop` | `debug-loop.md`        | Scientific method bug hunting loop       |
+| `security`   | `security.md`          | STRIDE + OWASP + red-team audit          |
+| `progress`   | `progress.md`          | Show board status + next recommendation  |
+| `settings`   | `settings.md`          | Configure model profile + options        |
+| `help`       | `help.md`              | Command reference                        |
 
 ### Workflows (18)
 
@@ -382,7 +386,7 @@ directly — it is copied into `dist/assets/templates/` during the build.
 
 ```
 .claude/
-├── commands/maxsim/       ← 9 slash commands (from templates/commands/maxsim/)
+├── commands/maxsim/       ← 13 slash commands (from templates/commands/maxsim/)
 ├── agents/                ← 4 agent definitions + AGENTS.md
 ├── skills/                ← 14 skill modules (one subdirectory each)
 ├── rules/                 ← conventions + verification protocol

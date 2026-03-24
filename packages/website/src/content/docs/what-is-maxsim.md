@@ -16,4 +16,4 @@ Quality control is built into the cycle through verification gates. A phase cann
 
 MaxsimCLI is built exclusively for Claude Code. It uses GitHub as its source of truth — phase plans, decisions, blockers, and task state are tracked as GitHub Issues and comments rather than local files.
 
-MaxsimCLI ships as an npm package and installs markdown files (9 commands, 4 agent definitions, 14 skill modules, and workflow templates) into your project's `.claude/` directory. The "runtime" for MaxsimCLI is Claude Code itself. You use it through slash commands like `/maxsim:plan` and `/maxsim:execute`, not through a CLI binary you keep running.
+MaxsimCLI ships as an npm package and installs markdown files (13 commands, 4 agent definitions, 14 skill modules, and workflow templates) into your project's `.claude/` directory. The "runtime" for MaxsimCLI is Claude Code itself. You use it through slash commands like `/maxsim:plan` and `/maxsim:execute`, not through a CLI binary you keep running.

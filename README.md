@@ -60,7 +60,7 @@ That is the core loop. Init, plan, execute, verify. Each phase is isolated, each
 
 ## What You Get
 
-MAXSIM ships 9 slash commands, 4 agents, 14 skills, and 18 workflows. Here is what that means in practice.
+MAXSIM ships 13 slash commands, 4 agents, 14 skills, and 18 workflows. Here is what that means in practice.
 
 **Spec-driven development.** All work flows through GitHub — phase Issues, sub-issue tasks, Project Board columns, and structured comments. The GitHub Project Board is the single source of truth. Agents read from it and update it as they work.
 
@@ -101,7 +101,7 @@ Run this from your project root. Everything goes into `.claude/`.
 
 The installer copies these files into `.claude/`:
 
-- 9 slash commands (`/maxsim:init`, `/maxsim:plan`, etc.)
+- 13 slash commands (`/maxsim:init`, `/maxsim:plan`, etc.)
 - 4 agent definitions (executor, planner, researcher, verifier)
 - 14 skills (TDD, debugging, code review, and more)
 - 18 workflow files
@@ -114,7 +114,7 @@ The installer copies these files into `.claude/`:
 
 ```
 .claude/
-├── commands/maxsim/          # 9 slash commands
+├── commands/maxsim/          # 13 slash commands
 ├── maxsim/
 │   ├── bin/maxsim-tools.cjs  # Tool binary
 │   ├── workflows/            # 18 workflows
