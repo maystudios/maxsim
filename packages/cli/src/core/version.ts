@@ -1,2 +1,2 @@
-/** MaxsimCLI version — updated by semantic-release. */
-export const VERSION = '5.2.2';
+/** MaxsimCLI version — auto-injected from package.json at build time. */
+export const VERSION = '5.2.4';
