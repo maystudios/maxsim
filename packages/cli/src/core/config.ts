@@ -80,8 +80,14 @@ export function saveConfig(projectDir: string, config: MaxsimConfig): void {
   fs.writeFileSync(configPath, `${JSON.stringify(config, null, 2)}\n`, 'utf8');
 }
 
-/** Resolve the model for a given profile and agent type. */
-export function resolveModel(profile: ModelProfile, agentType: AgentType): Model {
+/** Resolve the model for a given profile and agent type, with optional per-agent overrides. */
+export function resolveModel(
+  profile: ModelProfile,
+  agentType: AgentType,
+  overrides?: Partial<Record<AgentType, Model>>,
+): Model {
+  const override = overrides?.[agentType];
+  if (override) return override;
   const assignment = MODEL_PROFILES[profile];
   return assignment[agentType as keyof typeof assignment];
 }

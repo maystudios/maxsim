@@ -14,6 +14,7 @@ import { copyDir, getTemplatesDir } from './copy.js';
 import { installHooks } from './hooks.js';
 import { uninstall } from './uninstall.js';
 import { writeClaudeMd } from './claudemd.js';
+import { writeManifest } from './manifest.js';
 import { VERSION } from '../core/version.js';
 export { checkGhAuth } from './gh-auth.js';
 import { checkGhAuth } from './gh-auth.js';
@@ -99,14 +100,16 @@ async function runInstall(projectDir: string, quiet: boolean): Promise<void> {
     { src: path.join(templatesDir, 'templates'), dest: path.join(claudeDir, 'maxsim', 'templates') },
   ];
 
+  const installedFiles: string[] = [];
   let totalFiles = 0;
   for (const { src, dest } of copies) {
-    const count = copyDir(src, dest);
-    totalFiles += count;
-    if (!quiet && count > 0) {
+    const copied = copyDir(src, dest);
+    totalFiles += copied;
+    if (!quiet && copied > 0) {
       const label = path.relative(claudeDir, dest);
-      console.log(`  ${label}: ${count} files`);
+      console.log(`  ${label}: ${copied} files`);
     }
+    collectDestFiles(projectDir, dest, installedFiles);
   }
 
   // 1b. Create agent-memory directory
@@ -119,10 +122,13 @@ async function runInstall(projectDir: string, quiet: boolean): Promise<void> {
     fs.mkdirSync(path.dirname(cliBinDest), { recursive: true });
     fs.copyFileSync(cliBinSrc, cliBinDest);
     totalFiles++;
+    installedFiles.push(path.relative(projectDir, cliBinDest));
     if (!quiet) console.log('  maxsim/bin/maxsim-tools.cjs: CLI binary');
   } else {
     console.warn('  Warning: cli.cjs binary not found — maxsim tool commands will be unavailable.');
   }
+
+  writeManifest(projectDir, installedFiles);
 
   // 3. Install hooks
   const hookResult = installHooks(projectDir);
@@ -166,6 +172,19 @@ function runUninstall(projectDir: string, quiet: boolean): void {
       console.log('  Cleaned settings.json');
     }
     console.log('\n  MaxsimCLI has been removed.\n');
+  }
+}
+
+/** Recursively push file paths under `dir` (relative to `projectDir`) into `out`. */
+function collectDestFiles(projectDir: string, dir: string, out: string[]): void {
+  if (!fs.existsSync(dir)) return;
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    const full = path.join(dir, entry.name);
+    if (entry.isDirectory()) {
+      collectDestFiles(projectDir, full, out);
+    } else {
+      out.push(path.relative(projectDir, full));
+    }
   }
 }
 

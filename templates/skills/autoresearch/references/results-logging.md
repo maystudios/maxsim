@@ -7,13 +7,13 @@ The agent tracks every iteration in a structured TSV log. This enables pattern r
 The agent creates the log automatically at Phase 0 (baseline):
 
 1. Create log file with metric direction header and column names.
-2. Add `autoresearch-results.tsv` to `.gitignore`.
+2. Add `.claude/agent-memory/maxsim-learner/autoresearch-results.tsv` to `.gitignore`.
 3. Run verify command to establish baseline metric.
 4. Record baseline as iteration 0.
 
 ## Log Format (TSV)
 
-File: `autoresearch-results.tsv` in the working directory (gitignored).
+File: `.claude/agent-memory/maxsim-learner/autoresearch-results.tsv` (relative to project root, gitignored).
 
 ```tsv
 # metric_direction: higher_is_better

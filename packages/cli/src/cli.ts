@@ -17,7 +17,7 @@ const COMMANDS: Record<string, () => void> = {
     }
     const projectDir = process.cwd();
     const config = loadConfig(projectDir);
-    const model = resolveModel(config.execution.model_profile as ModelProfile, agentType);
+    const model = resolveModel(config.execution.model_profile as ModelProfile, agentType, config.execution.model_overrides);
     if (args.includes('--raw')) {
       process.stdout.write(model.toLowerCase());
     } else {

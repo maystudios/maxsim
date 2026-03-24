@@ -183,6 +183,7 @@ export interface MaxsimConfig {
   version: string;
   execution: {
     model_profile: ModelProfile;
+    model_overrides?: Partial<Record<AgentType, Model>>;
     parallelism: {
       max_agents_per_wave: number;
       max_retries: number;
