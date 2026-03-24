@@ -11,6 +11,8 @@ research and posting the output to GitHub.
 GitHub Issues is the sole source of truth. No local RESEARCH.md file is written.
 </purpose>
 
+> **Plan Mode Context:** This sub-workflow runs within Plan Mode established by the parent `/maxsim:plan` orchestrator (`workflows/plan.md`). Do not call `EnterPlanMode` or `ExitPlanMode` — the parent handles the Plan Mode lifecycle.
+
 <critical_rules>
 - Tool name is `Agent` (NOT `Task`)
 - Agent spawning: Agent(prompt, subagent_type, model, isolation, run_in_background)

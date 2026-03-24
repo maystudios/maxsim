@@ -4,6 +4,8 @@ Verify that a completed phase achieved its GOAL — not just that tasks were mar
 Task completion does not equal goal achievement. This workflow checks the codebase against observable, testable criteria.
 </purpose>
 
+> **Execution Context:** This sub-workflow is spawned as a verifier agent by the parent `/maxsim:execute` orchestrator (`workflows/execute.md`). It runs after Plan Mode has been exited and execution is underway.
+
 <core_principle>
 Verify goal achievement, not task completion. A task "create chat component" can be marked done when the component is a placeholder. The task is done — the goal "working chat interface" is not.
 
