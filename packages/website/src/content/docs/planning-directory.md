@@ -17,7 +17,7 @@ Moving an Issue between columns is how MaxsimCLI tracks progress. Agents update 
 
 ### Issues as phase and task records
 
-Each phase is a GitHub Issue with label `type:phase`. Each task within a phase is a sub-Issue linked to the phase Issue. The Issue body holds the phase description, deliverables, and success criteria. Labels carry status (`status:planned`, `status:executing`, `status:complete`) and type metadata.
+Each phase is a GitHub Issue with label `type:phase`. Each task within a phase is a sub-Issue linked to the phase Issue. The Issue body holds the phase description, deliverables, and success criteria. Labels carry type metadata (`type:phase`, `type:task`, `type:bug`, `type:quick`) and origin tracking (`maxsim:auto`, `maxsim:user`).
 
 ### Comments as persistent context
 

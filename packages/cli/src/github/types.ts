@@ -150,31 +150,16 @@ export interface LabelDef {
   color: string;
 }
 
-/** Complete label taxonomy for MaxsimCLI projects. */
+/** Complete label taxonomy for MaxsimCLI projects — 6 labels in 2 namespaces (§5.3). */
 export const MAXSIM_LABELS: LabelDef[] = [
-  // Type labels (5)
+  // Type labels (4)
   { name: 'type:phase', description: 'A Phase Issue representing a major deliverable', color: '0075ca' },
   { name: 'type:task', description: 'A Task sub-issue within a phase', color: '1d76db' },
   { name: 'type:bug', description: 'Something is broken', color: 'd73a4a' },
   { name: 'type:quick', description: 'A quick, self-contained task', color: '5319e7' },
-  { name: 'type:user-issue', description: 'Created by the user, not by MaxsimCLI', color: '0e8a16' },
-  // Priority labels (4)
-  { name: 'priority:p0-critical', description: 'Blocks all other work; must fix immediately', color: 'b60205' },
-  { name: 'priority:p1-high', description: 'Important; schedule for next execution window', color: 'e4e669' },
-  { name: 'priority:p2-medium', description: 'Standard priority', color: 'fbca04' },
-  { name: 'priority:p3-low', description: 'Nice to have; deferred if needed', color: 'c5def5' },
-  // Status labels (6) — matches spec §8.1
-  { name: 'status:planning', description: 'In the planning stage', color: 'bfd4f2' },
-  { name: 'status:planned', description: 'Plan approved, ready to execute', color: '0e8a16' },
-  { name: 'status:in-progress', description: 'Execution underway', color: 'e4e669' },
-  { name: 'status:in-review', description: 'Undergoing verification', color: 'd4c5f9' },
-  { name: 'status:blocked', description: 'Cannot proceed; dependency not met', color: 'ee0701' },
-  { name: 'status:escalated', description: 'Failed 3 retries; needs human intervention', color: 'b60205' },
-  // MaxsimCLI meta labels (4) — auto-created/needs-triage from spec, lesson/decision kept for project-memory
-  { name: 'maxsim:auto-created', description: 'Created by MaxsimCLI automation', color: 'ededed' },
-  { name: 'maxsim:needs-triage', description: 'User issue awaiting integration into plan', color: 'ededed' },
-  { name: 'maxsim:lesson', description: 'Project learning captured for project-memory', color: 'f9d0c4' },
-  { name: 'maxsim:decision', description: 'Architecture decision captured for project-memory', color: 'd4c5f9' },
+  // MaxsimCLI meta labels (2)
+  { name: 'maxsim:auto', description: 'Created by MaxsimCLI automation', color: 'ededed' },
+  { name: 'maxsim:user', description: 'Created by the user, not by MaxsimCLI', color: '0e8a16' },
 ];
 
 // ── Board Configuration ───────────────────────────────────────────────

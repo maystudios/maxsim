@@ -37,7 +37,7 @@ Before beginning any task in a session:
 2. Identify the active phase from GitHub Issues — if any phase is in progress, resume via `/maxsim:go`
 3. Route to the correct command using the table above
 
-GitHub Issues with label `maxsim:lesson` or `maxsim:decision` are the source of truth for project learnings and architectural decisions. Read them before planning.
+GitHub Issues with label `maxsim:auto` are the source of truth for automation-created content. Issues with label `maxsim:user` track user-created items. Read them before planning.
 
 ---
 
@@ -66,8 +66,8 @@ All persistent project state lives in GitHub, not in local files that disappear 
 | Phase plans | GitHub Sub-Issues on the phase Issue |
 | Roadmap | GitHub Milestones + Phase Issues |
 | Session state | GitHub Project Board column positions + Issue status |
-| Learnings | GitHub Issues — label `maxsim:lesson` |
-| Decisions | GitHub Issues — label `maxsim:decision` |
+| Learnings | GitHub Issue comments on relevant phase/task issues |
+| Decisions | GitHub Issue comments on relevant phase/task issues |
 
 ---
 
@@ -77,7 +77,7 @@ All persistent project state lives in GitHub, not in local files that disappear 
 - Skipping `/maxsim:init` because the project seems simple
 - Ignoring Project Board state and in-progress issues from previous sessions
 - Working outside the current phase without explicit user approval
-- Making architectural decisions without recording them as `maxsim:decision` issues
+- Making architectural decisions without recording them as comments on the relevant phase/task issue
 
 If any of these occur: stop, check the routing table, and follow the workflow.
 

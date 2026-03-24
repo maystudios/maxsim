@@ -226,19 +226,17 @@ Milestone CRUD using `octokit.paginate` for listing.
 
 ### labels.ts
 
-Enforces the 19-label taxonomy defined in `github/types.ts::MAXSIM_LABELS`.
+Enforces the 6-label taxonomy defined in `github/types.ts::MAXSIM_LABELS`.
 
 - `ensureLabels` — paginates existing labels, creates any that are missing.
 - `getLabel`, `createLabel` — individual label operations.
 
-Label taxonomy (19 labels, 4 namespaces):
+Label taxonomy (6 labels, 2 namespaces):
 
-| Namespace   | Labels                                                      |
-|-------------|-------------------------------------------------------------|
-| `type:`     | phase, task, bug, quick, user-issue                         |
-| `priority:` | p0, p1, p2, p3                                              |
-| `status:`   | planning, planned, in-progress, in-review, blocked, escalated |
-| `maxsim:`   | auto-created, needs-triage, lesson, decision                |
+| Namespace   | Labels                  |
+|-------------|-------------------------|
+| `type:`     | phase, task, bug, quick |
+| `maxsim:`   | auto, user              |
 
 ### comments.ts
 
