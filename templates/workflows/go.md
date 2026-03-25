@@ -53,6 +53,7 @@ Returns: `phase_number`, `title`, `issue_number`, `total_tasks`, `completed_task
 
 ```bash
 gh issue list --label "type:bug" --state open --json number,title,createdAt
+gh issue list --state open --json number,title,labels,createdAt
 ```
 
 **3. Git context:**
@@ -127,6 +128,32 @@ Resolution: Issues labeled type:bug trigger /maxsim:debug — run it to investig
 Options:
 1. Route to /maxsim:debug
 2. View bugs on GitHub
+3. Skip and continue anyway
+```
+
+Wait for user response before continuing.
+
+**Problem 3: Unlabeled user-created issues**
+
+Detection rule: From the all-issues list gathered in Step 3, filter client-side for any that have none of the MaxsimCLI labels.
+
+Filter for issues where the `labels` array contains NONE of: `type:phase`, `type:task`, `type:bug`, `type:quick`, `maxsim:auto`, `maxsim:user`.
+
+If unlabeled issues are found:
+
+```
+## Problem Detected
+
+Issue: {N} unlabeled issue(s) on GitHub
+Issues:
+  #{number} — {title} (created {date})
+  ...
+Impact: These issues were likely created directly on GitHub and are not in the pipeline
+Resolution: Apply a `type:` label and `maxsim:user` to integrate them
+
+Options:
+1. Triage now — for each issue, ask user for the type label and apply both `maxsim:user` and the chosen `type:` label via `gh issue edit {N} --add-label "maxsim:user,type:{chosen}"`
+2. View issues on GitHub
 3. Skip and continue anyway
 ```
 
