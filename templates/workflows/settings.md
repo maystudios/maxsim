@@ -118,9 +118,24 @@ AskUserQuestion([
       { label: "Phase", description: "Create branch for each phase." },
       { label: "Milestone", description: "Create branch for the entire milestone." }
     ]
+  },
+  {
+    question: "Override models for individual agent types?",
+    header: "Model Overrides",
+    multiSelect: false,
+    options: [
+      { label: "No overrides (use profile defaults)", description: "All agents use models from the selected profile." },
+      { label: "Custom overrides", description: "Set individual models per agent type (planner/executor/researcher/verifier)." }
+    ]
   }
 ])
 ```
+
+**If "Custom overrides" selected**, use additional `AskUserQuestion` calls for each agent type:
+- Planner: haiku / sonnet / opus (default from profile)
+- Executor: haiku / sonnet / opus (default from profile)
+- Researcher: haiku / sonnet / opus (default from profile)
+- Verifier: haiku / sonnet / opus (default from profile)
 
 ---
 
@@ -144,6 +159,11 @@ node .claude/maxsim/bin/maxsim-tools.cjs config-set automation.auto_commit_on_su
 node .claude/maxsim/bin/maxsim-tools.cjs config-set automation.conventional_commits [true/false]
 node .claude/maxsim/bin/maxsim-tools.cjs config-set automation.co_author "[value]"
 node .claude/maxsim/bin/maxsim-tools.cjs config-set hooks.enabled [true/false]
+# Per-agent model overrides (only if custom overrides selected)
+node .claude/maxsim/bin/maxsim-tools.cjs config-set execution.model_overrides.planner "[haiku/sonnet/opus]"
+node .claude/maxsim/bin/maxsim-tools.cjs config-set execution.model_overrides.executor "[haiku/sonnet/opus]"
+node .claude/maxsim/bin/maxsim-tools.cjs config-set execution.model_overrides.researcher "[haiku/sonnet/opus]"
+node .claude/maxsim/bin/maxsim-tools.cjs config-set execution.model_overrides.verifier "[haiku/sonnet/opus]"
 ```
 
 ---
@@ -190,7 +210,7 @@ Re-run /maxsim:settings anytime to change these.
 
 <success_criteria>
 - [ ] Current config loaded and displayed
-- [ ] User presented with all 7 settings
+- [ ] User presented with all 8 settings
 - [ ] Config updated via maxsim-tools config-set commands
 - [ ] User offered to save as global defaults
 - [ ] Confirmation displayed after save

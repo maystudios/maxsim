@@ -25,6 +25,7 @@ Follow @.claude/maxsim/workflows/settings.md end-to-end.
    - Verifier enabled/disabled
    - Auto-advance between stages
    - Branching strategy (per-phase / per-task / none)
+   - Per-agent model overrides (override individual agent models beyond profile defaults)
 4. Merge answers and write updated config
 5. Display confirmation of saved settings
 </process>
