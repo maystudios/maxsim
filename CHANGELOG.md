@@ -1,3 +1,12 @@
+## [5.13.1](https://github.com/maystudios/maxsimcli/compare/v5.13.0...v5.13.1) (2026-03-25)
+
+
+### Bug Fixes
+
+* core, install & config audit compliance ([35479fb](https://github.com/maystudios/maxsimcli/commit/35479fb1c092f4e8d72de0011e0fa41349d33727))
+* enforce spec compliance in GitHub module (projects, discussions, comments) ([a035b3c](https://github.com/maystudios/maxsimcli/commit/a035b3c308194e0d9953d5cf742d352e83cbbe08))
+* **workflows:** align workflow templates with PROJECT.md spec ([6130159](https://github.com/maystudios/maxsimcli/commit/61301596af31efbf6e48e4cd36f5e48a910f1856))
+
 # [5.13.0](https://github.com/maystudios/maxsimcli/compare/v5.12.0...v5.13.0) (2026-03-25)
 
 
