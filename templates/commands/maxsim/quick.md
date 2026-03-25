@@ -20,13 +20,15 @@ Quick tasks are tracked as GitHub Issues (label: `type:quick`) — separate from
 <process>
 Follow @.claude/maxsim/workflows/quick.md end-to-end.
 
-1. Get task description from $ARGUMENTS or via AskUserQuestion
-2. Clarify scope if ambiguous (one focused question)
-3. Create a GitHub Issue labeled `type:quick` for the task
-4. Spawn a planner Agent (quick mode) to produce a concise implementation plan
-5. Spawn executor Agent(s) to implement the plan
-6. Spawn a verifier Agent to check the result (tests pass, build succeeds, lint clean)
-7. If verification fails, spawn a fix agent (max 2 retries)
-8. Commit with atomic message referencing the GitHub Issue
-9. Close the GitHub Issue with completion summary
+1. **Plan Mode:** Call `EnterPlanMode` before any planning or execution
+2. Get task description from $ARGUMENTS or via AskUserQuestion
+3. Clarify scope if ambiguous (one focused question)
+4. Create a GitHub Issue labeled `type:quick` for the task
+5. Spawn a planner Agent (quick mode) to produce a concise implementation plan
+6. Present the plan to user — Exit Plan Mode via `ExitPlanMode`
+7. Spawn executor Agent(s) to implement the plan
+8. Spawn a verifier Agent to check the result (tests pass, build succeeds, lint clean)
+9. If verification fails, spawn a fix agent (max 2 retries)
+10. Commit with atomic message referencing the GitHub Issue
+11. Close the GitHub Issue with completion summary
 </process>

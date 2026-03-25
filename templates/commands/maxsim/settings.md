@@ -16,9 +16,10 @@ Configuration is stored in `.claude/maxsim/config.json` (project-level). Present
 <process>
 Follow @.claude/maxsim/workflows/settings.md end-to-end.
 
-1. Read current config from CLAUDE.md and `.claude/maxsim/config.json`
-2. Display current settings with descriptions
-3. Use AskUserQuestion to interactively configure:
+1. **Plan Mode:** Call `EnterPlanMode` before presenting settings
+2. Read current config from CLAUDE.md and `.claude/maxsim/config.json`
+3. Display current settings with descriptions
+4. Use AskUserQuestion to interactively configure:
    - Model profile (with per-tier model assignment details)
    - Research stage enabled/disabled
    - Plan-checker enabled/disabled
@@ -26,6 +27,8 @@ Follow @.claude/maxsim/workflows/settings.md end-to-end.
    - Auto-advance between stages
    - Branching strategy (per-phase / per-task / none)
    - Per-agent model overrides (override individual agent models beyond profile defaults)
-4. Merge answers and write updated config
-5. Display confirmation of saved settings
+5. Present proposed configuration changes for review
+6. Exit Plan Mode via `ExitPlanMode` — user reviews and approves changes
+7. Merge answers and write updated config
+8. Display confirmation of saved settings
 </process>
