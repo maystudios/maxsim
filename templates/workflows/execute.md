@@ -452,6 +452,27 @@ git push origin HEAD
 
 **If human_needed:** Present items for human testing. If approved, treat as passed. If issues reported, proceed to Retry Loop.
 
+### 8.2 Error Recovery Protocol
+
+When verification identifies unresolved gaps, recovery proceeds through three tiers:
+
+**Tier 1 — Debug (attempts 1–3):**
+- Spawn a fresh planner to analyze the failure and produce a targeted gap-closure plan
+- Spawn a fresh executor to implement the fix in an isolated worktree
+- Run verification again on the result
+- If successful: phase completes. If fails: advance to next tier.
+
+**Tier 2 — Rollback (after 3 failed attempts):**
+- Revert the failing changes: `git revert HEAD --no-edit`
+- Document which gaps remain unresolved with evidence
+- Surface blockers to the user with exact error output
+
+**Tier 3 — Escalate:**
+- Create a diagnostic GitHub Issue labeled `type:bug` and `maxsim:auto`
+- Include: original spec, all attempt summaries, exact gate failures, root cause analysis
+- Move the phase to "Blocked" on the Project Board
+- Notify the user and await manual intervention
+
 ## 9. Retry Loop (Max 3 Retries — 4 Total Attempts)
 
 ### 9.1 Check attempt budget
