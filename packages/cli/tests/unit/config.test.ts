@@ -9,7 +9,7 @@ import {
   resolveMaxAgents,
   getConfigPath,
 } from '../../src/core/config.js';
-import { Model, ModelProfile, AgentType, DEFAULT_CONFIG, PARALLELISM_LIMITS } from '../../src/core/types.js';
+import { Model, ModelProfile, AgentType, TaskComplexity, DEFAULT_CONFIG, PARALLELISM_LIMITS } from '../../src/core/types.js';
 
 let tmpDir: string;
 
@@ -156,5 +156,39 @@ describe('resolveMaxAgents', () => {
 
   it('large project (>=25 files) uses full profile max for budget profile', () => {
     expect(resolveMaxAgents(ModelProfile.BUDGET, 50)).toBe(PARALLELISM_LIMITS[ModelProfile.BUDGET].max_agents);
+  });
+
+  it('backward compatibility: calling without complexity parameter defaults to medium', () => {
+    const withDefault = resolveMaxAgents(ModelProfile.BALANCED, 50);
+    const withMedium = resolveMaxAgents(ModelProfile.BALANCED, 50, TaskComplexity.MEDIUM);
+    expect(withDefault).toBe(withMedium);
+  });
+
+  it('complexity=simple halves the cap (rounded down, min 1)', () => {
+    const limits = PARALLELISM_LIMITS[ModelProfile.BALANCED];
+    const cap = limits.max_agents;
+    const expected = Math.max(1, Math.floor(cap / 2));
+    expect(resolveMaxAgents(ModelProfile.BALANCED, 50, TaskComplexity.SIMPLE)).toBe(expected);
+  });
+
+  it('complexity=complex uses the full cap', () => {
+    const limits = PARALLELISM_LIMITS[ModelProfile.BALANCED];
+    expect(resolveMaxAgents(ModelProfile.BALANCED, 50, TaskComplexity.COMPLEX)).toBe(limits.max_agents);
+  });
+
+  it('complexity=medium uses the same result as no complexity argument', () => {
+    expect(resolveMaxAgents(ModelProfile.QUALITY, 30, TaskComplexity.MEDIUM)).toBe(
+      resolveMaxAgents(ModelProfile.QUALITY, 30),
+    );
+  });
+
+  it('complexity=simple with small project caps at minimum 1', () => {
+    expect(resolveMaxAgents(ModelProfile.BALANCED, 5, TaskComplexity.SIMPLE)).toBe(2);
+  });
+
+  it('complexity=simple with budget profile large project halves max_agents', () => {
+    const limits = PARALLELISM_LIMITS[ModelProfile.BUDGET];
+    const expected = Math.max(1, Math.floor(limits.max_agents / 2));
+    expect(resolveMaxAgents(ModelProfile.BUDGET, 50, TaskComplexity.SIMPLE)).toBe(expected);
   });
 });

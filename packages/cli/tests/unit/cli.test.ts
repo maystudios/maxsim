@@ -2,8 +2,8 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import * as os from 'node:os';
-import { loadConfig, saveConfig, resolveModel, getConfigPath } from '../../src/core/config.js';
-import { AgentType, Model, ModelProfile, DEFAULT_CONFIG } from '../../src/core/types.js';
+import { loadConfig, saveConfig, resolveModel, resolveMaxAgents, getConfigPath } from '../../src/core/config.js';
+import { AgentType, Model, ModelProfile, TaskComplexity, DEFAULT_CONFIG, PARALLELISM_LIMITS } from '../../src/core/types.js';
 
 let tmpDir: string;
 
@@ -172,5 +172,25 @@ describe('config-ensure-section command logic', () => {
     saveConfig(tmpDir, config);
     const raw = fs.readFileSync(getConfigPath(tmpDir), 'utf8');
     expect(JSON.parse(raw)).toHaveProperty('fresh_section');
+  });
+});
+
+describe('resolve-max-agents command logic', () => {
+  it('returns max agents for a large project when --file-count is provided', () => {
+    expect(resolveMaxAgents(ModelProfile.BALANCED, 50)).toBe(PARALLELISM_LIMITS[ModelProfile.BALANCED].max_agents);
+  });
+
+  it('defaults to file count 0 when --file-count flag is absent (small project cap applies)', () => {
+    expect(resolveMaxAgents(ModelProfile.BALANCED, 0)).toBe(Math.min(5, PARALLELISM_LIMITS[ModelProfile.BALANCED].max_agents));
+  });
+
+  it('invalid complexity value is not a member of TaskComplexity', () => {
+    expect(Object.values(TaskComplexity).includes('bogus' as TaskComplexity)).toBe(false);
+  });
+
+  it('all TaskComplexity values are accepted by resolveMaxAgents without throwing', () => {
+    for (const complexity of Object.values(TaskComplexity)) {
+      expect(() => resolveMaxAgents(ModelProfile.BALANCED, 50, complexity)).not.toThrow();
+    }
   });
 });

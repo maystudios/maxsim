@@ -3,7 +3,7 @@
  * Usage: node cli.cjs <command> [args]
  */
 
-import { loadConfig, saveConfig, resolveModel, AgentType, type ModelProfile } from './core/index.js';
+import { loadConfig, saveConfig, resolveModel, resolveMaxAgents, AgentType, TaskComplexity, type ModelProfile } from './core/index.js';
 
 const args = process.argv.slice(2);
 const command = args[0];
@@ -22,6 +22,32 @@ const COMMANDS: Record<string, () => void> = {
       process.stdout.write(model.toLowerCase());
     } else {
       console.log(model);
+    }
+  },
+  'resolve-max-agents': () => {
+    const projectDir = process.cwd();
+    const config = loadConfig(projectDir);
+    const profile = (args[1] as ModelProfile) || config.execution.model_profile as ModelProfile;
+
+    const fileCountIdx = args.indexOf('--file-count');
+    const fileCount = fileCountIdx >= 0 ? parseInt(args[fileCountIdx + 1], 10) : 0;
+    if (fileCountIdx >= 0 && (isNaN(fileCount) || fileCount < 0)) {
+      console.error('--file-count must be a non-negative integer');
+      process.exit(1);
+    }
+
+    const complexityIdx = args.indexOf('--complexity');
+    const complexityArg = complexityIdx >= 0 ? args[complexityIdx + 1] : TaskComplexity.MEDIUM;
+    if (!Object.values(TaskComplexity).includes(complexityArg as TaskComplexity)) {
+      console.error(`Invalid complexity: ${complexityArg}. Must be: simple, medium, complex`);
+      process.exit(1);
+    }
+
+    const result = resolveMaxAgents(profile, fileCount, complexityArg as TaskComplexity);
+    if (args.includes('--raw')) {
+      process.stdout.write(String(result));
+    } else {
+      console.log(result);
     }
   },
   'config-get': () => {
