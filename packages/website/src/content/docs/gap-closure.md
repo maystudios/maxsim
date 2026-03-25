@@ -4,7 +4,7 @@ title: Gap Closure
 group: Advanced
 ---
 
-When verification finds broken items, it creates focused fix phases automatically. If phase 1 has two broken items, they become phases 1.1 and 1.2. Each has its own PLAN.md and is executed independently.
+When verification finds broken items, it creates focused fix phases automatically. If phase 1 has two broken items, they become phases 1.1 and 1.2. Each has its own plan comment (posted as a GitHub Issue comment with `gap_closure: true` in frontmatter) and is executed independently.
 
 Gap closure is handled as part of the execute workflow. After verification identifies gaps, run `/maxsim:execute` to close them.
 
