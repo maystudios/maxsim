@@ -1,3 +1,17 @@
+# [5.13.0](https://github.com/maystudios/maxsimcli/compare/v5.12.0...v5.13.0) (2026-03-25)
+
+
+### Bug Fixes
+
+* **skill:** remove non-standard version field from autoresearch frontmatter ([e505b8d](https://github.com/maystudios/maxsimcli/commit/e505b8dbc8b74f8d3f226c17c5cabce75aec8ef3))
+* **spec:** update Plan Mode table to match implementation for debug and settings commands ([b0425dc](https://github.com/maystudios/maxsimcli/commit/b0425dcd07fe4392cddab58edbd6fccd6979b4ab))
+
+
+### Features
+
+* **execute:** replace static §7.2 note with active tier selection logic ([79ac65b](https://github.com/maystudios/maxsimcli/commit/79ac65b40994366f55cffb9081be838818ef7836))
+* **settings:** add per-agent model override support to settings workflow ([3e175f2](https://github.com/maystudios/maxsimcli/commit/3e175f255defaea2197f9bec024826d1fe29ef49))
+
 # [5.12.0](https://github.com/maystudios/maxsimcli/compare/v5.11.0...v5.12.0) (2026-03-25)
 
 
