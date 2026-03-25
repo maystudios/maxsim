@@ -27,6 +27,9 @@ Follow @.claude/maxsim/workflows/execute.md end-to-end.
 3. Group task Issues by wave — re-evaluate wave composition before each spawn against current GitHub state. Present the execution plan to the user for review.
 4. Exit Plan Mode via `ExitPlanMode` — user reviews and approves the execution plan
 5. Execute parallel Agents within each wave, sequential across waves
+   - Tier 1 (default): each Agent uses `isolation: "worktree"` and `run_in_background: true`
+   - Tier 2 (opt-in, `competition_strategy: deep`): Agent Teams with `SendMessage` debate — requires `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`
+   - Graceful degradation: if Tier 2 is unavailable, falls back to Tier 1 automatically
 6. Each Agent updates its GitHub Issue label on start and completion
 7. After all tasks complete, spawn a verifier Agent to check acceptance criteria
 8. On verification failure, auto-retry with gap-closure context (max 3 retries, 4 total attempts)

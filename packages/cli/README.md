@@ -154,6 +154,10 @@ Removes MAXSIM files from `.claude/`. Your own skills, agents, and Claude Code c
 | `/maxsim:quick <description>` | Quick task — create a GitHub Issue and execute in simplified flow |
 | `/maxsim:progress` | Show project status from GitHub Project Board with next-action recommendation |
 | `/maxsim:debug` | Systematic debugging with reproduce-hypothesize-isolate-verify-fix cycle |
+| `/maxsim:debug-loop [symptom]` | Autonomous bug hunting with hypothesis testing |
+| `/maxsim:fix-loop [error-command]` | Autonomous error repair until zero errors remain |
+| `/maxsim:improve [metric-command]` | Autonomous optimization loop against any metric |
+| `/maxsim:security [scope]` | Security audit — STRIDE + OWASP + red-team (read-only) |
 | `/maxsim:settings` | View and modify MaxsimCLI configuration |
 | `/maxsim:help` | Show available MaxsimCLI commands and usage |
 
@@ -210,7 +214,7 @@ Phase numbers are flexible. Integer (`01`, `02`), letter suffixes for parallel t
 | Agent | Role | What it does |
 |-------|------|-------------|
 | Executor | Builds things | Reads plans, makes code changes, commits atomically, handles deviations |
-| Planner | Creates plans | Turns research into structured PLAN.md files with tasks, waves, and dependencies |
+| Planner | Creates plans | Turns research into structured plan comments on GitHub Issues with tasks, waves, and dependencies |
 | Researcher | Investigates | Explores the codebase, gathers technical context, can use Brave Search |
 | Verifier | Checks results | Validates plan structure, artifacts, requirement evidence, commit integrity |
 
