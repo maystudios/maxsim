@@ -1,5 +1,5 @@
 {
-  "version": "5.12.0",
+  "version": "0.0.0-dev",
   "execution": {
     "model_profile": "balanced",
     "parallelism": {
@@ -10,11 +10,11 @@
     "verification": {
       "strict_mode": true,
       "gates": [
-        "tests",
-        "build",
-        "lint",
-        "spec",
-        "review"
+        "tests_pass",
+        "build_succeeds",
+        "lint_clean",
+        "spec_compliance",
+        "code_review"
       ],
       "require_code_review": true,
       "auto_resolve_conflicts": true
@@ -35,5 +35,14 @@
   },
   "hooks": {
     "enabled": true
+  },
+  "workflow": {
+    "research": true,
+    "plan_checker": true,
+    "verifier": true,
+    "auto_advance": false
+  },
+  "git": {
+    "branching_strategy": "phase"
   }
 }
