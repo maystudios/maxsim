@@ -28,4 +28,5 @@ Follow @.claude/maxsim/workflows/go.md end-to-end.
 3. Enter Plan Mode — show detection reasoning and proposed action
 4. Wait for user approval (Ctrl+C cancels)
 5. Execute approved action by spawning the appropriate Agent
+6. Report the result — print a completion summary or surface the error with a recovery suggestion
 </process>
