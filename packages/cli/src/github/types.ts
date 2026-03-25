@@ -133,7 +133,7 @@ export interface MaxsimIssueState {
 
 /** Structured comment metadata from HTML comment markers. */
 export interface MaxsimCommentMeta {
-  type: 'plan' | 'research' | 'context' | 'progress' | 'verification' | 'summary' | 'error' | 'escalation' | 'handoff' | 'user-intent';
+  type: 'plan' | 'research' | 'context' | 'progress' | 'verification' | 'summary' | 'error' | 'escalation' | 'handoff' | 'user-intent' | 'phase-complete' | 'checkpoint';
   phase?: number;
   task?: number;
   [key: string]: unknown;

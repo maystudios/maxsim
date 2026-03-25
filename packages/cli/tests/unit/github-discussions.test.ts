@@ -119,12 +119,16 @@ function createDiscussionResponse(discussion: typeof MOCK_DISCUSSION_RAW = MOCK_
 }
 
 /** Build the GraphQL response envelope for a discussions list query. */
-function listDiscussionsResponse(discussions: typeof MOCK_DISCUSSION_RAW[] = [MOCK_DISCUSSION_RAW]): string {
+function listDiscussionsResponse(
+  discussions: typeof MOCK_DISCUSSION_RAW[] = [MOCK_DISCUSSION_RAW],
+  pageInfo: { hasNextPage: boolean; endCursor: string | null } = { hasNextPage: false, endCursor: null },
+): string {
   return JSON.stringify({
     data: {
       repository: {
         discussions: {
           nodes: discussions,
+          pageInfo,
         },
       },
     },
@@ -321,6 +325,28 @@ describe('listDiscussions', () => {
     expect(graphqlCall).toBeDefined();
     const ghArgs = graphqlCall?.[1] as string[];
     expect(ghArgs).toContain('owner=customowner');
+  });
+
+  it('paginates through multiple pages and returns all discussions', () => {
+    const disc1 = { ...MOCK_DISCUSSION_RAW, number: 1, id: 'D_1', title: 'Discussion 1' };
+    const disc2 = { ...MOCK_DISCUSSION_RAW, number: 2, id: 'D_2', title: 'Discussion 2' };
+    const disc3 = { ...MOCK_DISCUSSION_RAW, number: 3, id: 'D_3', title: 'Discussion 3' };
+
+    // First page: 2 discussions with hasNextPage=true
+    // Second page: 1 discussion with hasNextPage=false
+    setupExecMock(
+      listDiscussionsResponse([disc1, disc2], { hasNextPage: true, endCursor: 'cursor_abc' }),
+      listDiscussionsResponse([disc3], { hasNextPage: false, endCursor: null }),
+    );
+
+    const result = listDiscussions();
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.data).toHaveLength(3);
+    expect(result.data[0].number).toBe(1);
+    expect(result.data[1].number).toBe(2);
+    expect(result.data[2].number).toBe(3);
   });
 });
 

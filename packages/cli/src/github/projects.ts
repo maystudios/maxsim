@@ -257,10 +257,11 @@ export async function ensureProjectBoard(
     ]);
 
     if (!updateResult.ok) {
-      console.warn(
-        `Warning: Failed to add missing Status options (${missingColumns.map((c) => c.name).join(', ')}): ${updateResult.error}. ` +
-        'You may need to add them manually via the GitHub Projects UI.',
-      );
+      return {
+        ok: false,
+        error: `Failed to add missing Status options (${missingColumns.map((c) => c.name).join(', ')}): ${updateResult.error}`,
+        code: 'UNKNOWN',
+      };
     }
   }
 

@@ -162,10 +162,19 @@ export function listDiscussions(
   }
 
   const hasCategory = categoryId !== undefined;
-  const query = `
-    query($owner: String!, $repo: String!, $first: Int!${hasCategory ? ', $categoryId: ID!' : ''}) {
+
+  const allNodes: RawDiscussion[] = [];
+  let hasNextPage = true;
+  let endCursor: string | null = null;
+
+  while (hasNextPage) {
+    const afterClause = endCursor ? `, after: $after` : '';
+    const afterVar = endCursor ? ', $after: String!' : '';
+
+    const query = `
+    query($owner: String!, $repo: String!, $first: Int!${hasCategory ? ', $categoryId: ID!' : ''}${afterVar}) {
       repository(owner: $owner, name: $repo) {
-        discussions(first: $first${hasCategory ? ', categoryId: $categoryId' : ''}) {
+        discussions(first: $first${hasCategory ? ', categoryId: $categoryId' : ''}${afterClause}) {
           nodes {
             number
             id
@@ -176,31 +185,54 @@ export function listDiscussions(
             createdAt
             updatedAt
           }
+          pageInfo {
+            hasNextPage
+            endCursor
+          }
         }
       }
     }
   `.trim();
 
-  const args = [
-    'api', 'graphql',
-    '-f', `query=${query}`,
-    '-f', `owner=${owner}`,
-    '-f', `repo=${repoName}`,
-    '-F', `first=${first}`,
-  ];
+    const args = [
+      'api', 'graphql',
+      '-f', `query=${query}`,
+      '-f', `owner=${owner}`,
+      '-f', `repo=${repoName}`,
+      '-F', `first=${first}`,
+    ];
 
-  if (hasCategory) {
-    args.push('-f', `categoryId=${categoryId}`);
+    if (hasCategory) {
+      args.push('-f', `categoryId=${categoryId}`);
+    }
+
+    if (endCursor) {
+      args.push('-f', `after=${endCursor}`);
+    }
+
+    const result = ghJson<{
+      data: {
+        repository: {
+          discussions: {
+            nodes: RawDiscussion[];
+            pageInfo: { hasNextPage: boolean; endCursor: string | null };
+          };
+        };
+      };
+    }>(args);
+
+    if (!result.ok) return result;
+
+    const discussions = result.data?.data?.repository?.discussions;
+    const nodes = discussions?.nodes ?? [];
+    allNodes.push(...nodes);
+
+    const pageInfo = discussions?.pageInfo;
+    hasNextPage = pageInfo?.hasNextPage ?? false;
+    endCursor = pageInfo?.endCursor ?? null;
   }
 
-  const result = ghJson<{
-    data: { repository: { discussions: { nodes: RawDiscussion[] } } };
-  }>(args);
-
-  if (!result.ok) return result;
-
-  const nodes = result.data?.data?.repository?.discussions?.nodes ?? [];
-  return { ok: true, data: nodes.map(mapDiscussion) };
+  return { ok: true, data: allNodes.map(mapDiscussion) };
 }
 
 export function getDiscussion(

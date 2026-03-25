@@ -656,6 +656,61 @@ describe('ensureProjectBoard', () => {
     expect(graphqlCalls.length).toBe(1);
   });
 
+  it('returns ok: false when GraphQL mutation to add missing Status options fails', async () => {
+    // Status field exists but is missing columns, and the GraphQL update fails.
+    // We need a custom mock because setupExecMock catches all `gh api` calls
+    // as getRepoInfo type-detection. Here we differentiate `gh api graphql`
+    // (the mutation) from `gh api /users/...` (the type check).
+    const partialFields = {
+      fields: [
+        {
+          id: 'PVTSSF_status',
+          name: 'Status',
+          type: 'SINGLE_SELECT',
+          options: [
+            { id: 'opt_backlog', name: 'Backlog', color: 'GRAY' },
+          ],
+        },
+      ],
+    };
+    const projectList = { projects: [MOCK_PROJECT] };
+    const ghResponses = [
+      JSON.stringify(projectList),
+      JSON.stringify(partialFields),
+    ];
+    let callIndex = 0;
+    execFileSyncMock.mockImplementation((_cmd: string, args?: readonly string[]) => {
+      const argList = args ?? [];
+
+      // git calls used by getRepoInfo
+      if (_cmd === 'git') {
+        if (argList[0] === 'remote') return REPO_REMOTE_URL;
+      }
+
+      // gh api /users/* call used to detect org/user type
+      if (_cmd === 'gh' && argList[0] === 'api' && String(argList[1]).startsWith('/users/')) {
+        return 'User';
+      }
+
+      // gh api graphql — the mutation call should fail
+      if (_cmd === 'gh' && argList[0] === 'api' && argList[1] === 'graphql') {
+        throw new Error('gh: GraphQL mutation failed');
+      }
+
+      // All other gh calls — dispatch from the queue
+      const response = ghResponses[callIndex++];
+      if (response instanceof Error) throw response;
+      return response ?? '';
+    });
+
+    const result = await ensureProjectBoard('My Board', 'testorg');
+
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.code).toBe('UNKNOWN');
+    expect(result.error).toContain('Failed to add missing Status options');
+  });
+
   it('propagates error from findProject', async () => {
     setupExecMock(new Error('gh: 401 Unauthorized'));
 

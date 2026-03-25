@@ -120,6 +120,10 @@ describe('parseCommentMeta', () => {
   it('returns null for non-maxsim comments', () => {
     expect(parseCommentMeta('Just a normal comment')).toBeNull();
   });
+
+  it('returns null for invalid comment types', () => {
+    expect(parseCommentMeta('<!-- maxsim:type=INVALID_TYPE -->')).toBeNull();
+  });
 });
 
 describe('formatIssueMeta', () => {
