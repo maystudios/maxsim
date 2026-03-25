@@ -33,8 +33,12 @@ Invoke the `autoresearch` skill (debug workflow) to drive the investigation loop
    - **Scope** — which files/directories are likely involved (or "unknown")
 3. Attempt initial reproduction — run the reproduction command to confirm the bug exists
 4. Create a GitHub Issue labeled `debug` to track the session
-5. Show the investigation plan and confirm with user
-6. Exit Plan Mode via ExitPlanMode
+5. Show the investigation plan and ask user to confirm
+6. **Handle user response:**
+   - **If user approves:** proceed to step 7
+   - **If user requests changes:** revise the relevant parameters (scope, reproduction command, investigation approach). If the reproduction command changed, re-attempt reproduction (step 3). Update the GitHub Issue body with the revised plan. Return to step 5 (stay in Plan Mode).
+   - **If user cancels:** close the GitHub Issue created in step 4 (`gh issue close {ISSUE_NUM} --comment "Debug session cancelled by user before investigation began"`), Exit Plan Mode via ExitPlanMode, and stop.
+7. Exit Plan Mode via ExitPlanMode
 
 **Phase 2 — Debug Loop**
 
