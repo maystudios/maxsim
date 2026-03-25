@@ -1,3 +1,15 @@
+# [5.14.0](https://github.com/maystudios/maxsimcli/compare/v5.13.2...v5.14.0) (2026-03-25)
+
+
+### Bug Fixes
+
+* align planner agent tools with PROJECT.md §7.1 spec ([bb17a64](https://github.com/maystudios/maxsimcli/commit/bb17a64059b77bd98d3102e8787866ec968e6b7c))
+
+
+### Features
+
+* add competitive_enabled and worktree path/branch templates to config ([5188481](https://github.com/maystudios/maxsimcli/commit/5188481e269ea0cebd115aa4c5ef0c921074feb5))
+
 ## [5.13.2](https://github.com/maystudios/maxsimcli/compare/v5.13.1...v5.13.2) (2026-03-25)
 
 
