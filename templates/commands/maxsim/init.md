@@ -21,9 +21,9 @@ GitHub is the sole source of truth. Init creates GitHub Milestones and Issues �
 <process>
 Follow @.claude/maxsim/workflows/init.md end-to-end.
 
-1. Scan repo structure (language, framework, existing CI)
-2. Interview user: project goal, scope, constraints, success criteria
-3. Create GitHub Milestone for this project/version
+1. Scan repo in parallel — spawn Research agents to analyze architecture, frameworks, CI/CD, tests, dependencies, and documentation
+2. Interview user: project name, description, goals, tech stack, conventions, testing strategy, deployment, acceptance criteria, no-gos, risks
+3. GitHub Setup — ensure standard labels, create Project Board (Kanban), create Milestone, offer repo creation if needed
 4. Write CLAUDE.md with project context and MaxsimCLI config
 5. Optionally generate Roadmap as GitHub Issues (phases)
 6. Confirm setup and suggest `/maxsim:go` as next step
