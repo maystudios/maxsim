@@ -92,3 +92,29 @@ All skills use `user-invocable: false` -- agents auto-invoke them based on descr
 ## Planner Read-Only Enforcement
 
 The `planner` agent runs with `permissionMode: plan`. This enforces read-only access to the filesystem -- the planner can analyze the codebase and return plan content, but cannot execute commands that modify source files or run builds. This prevents the planner from accidentally beginning execution during the planning phase.
+
+## Tier 2 — Agent Teams
+
+When `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` is set and Claude Code supports it, MaxsimCLI can use multi-agent orchestration via Agent Teams.
+
+### Activation
+
+Tier 2 activates when:
+1. Environment variable `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` is set to `1`
+2. A `TeamCreate` probe succeeds (feature is available in the runtime)
+
+If either condition fails, all workflows gracefully degrade to Tier 1 (subagents via the `Agent` tool).
+
+### Communication
+
+Teams coordinate exclusively through:
+- **Task lists** — `.claude/tasks/{team-name}/` for pending work
+- **GitHub Issues** — Phase tracking, task sub-issues, plan comments
+- **Handoff contracts** — Structured output posted as GitHub Issue comments
+- **SendMessage** — Direct inter-agent messages within the same team
+
+### Hooks
+
+Two hooks support Tier 2 operations:
+- `maxsim-teammate-idle` (TeammateIdle) — Checks for pending tasks and assigns idle teammates
+- `maxsim-task-completed` (TaskCompleted) — Runs verification gates (test, build, lint) before allowing task completion
