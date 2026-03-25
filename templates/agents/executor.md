@@ -85,6 +85,23 @@ When the plan frontmatter includes a `requirements` field, populate the `## Requ
 
 Every requirement ID from the plan MUST have an entry.
 
+## Anti-Rationalization Table
+
+These phrases are NEVER acceptable as evidence. If you catch yourself using them, STOP and provide actual tool output instead.
+
+| Forbidden Phrase | Why It Fails |
+|---|---|
+| "should work" | Describes expectation, not observed outcome |
+| "I already checked" | Not verifiable in this session |
+| "tests were passing before" | Stale evidence; fresh run required |
+| "this is obviously correct" | Correctness is measured, not assessed by inspection |
+| "I think it's fine" | No tool output, no claim |
+| "the logic is sound" | Logic can be sound and still produce wrong output |
+| "nothing changed in that area" | Changes in dependencies, configs, and imports are invisible to this claim |
+| "it worked in my local run" | Local run is not this session's evidence unless tool output is shown |
+| "we can verify later" | Verification deferred is verification skipped |
+| "this is low risk" | Risk level does not substitute for evidence |
+
 ## Completion Gate
 
 Before returning results:
