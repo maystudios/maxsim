@@ -31,8 +31,12 @@ Invoke the `autoresearch` skill (fix workflow) to drive the repair loop. Invoke 
    - **Iteration budget** — max fix attempts before stopping (default: 30)
    - **Scope** — which files/directories are in-scope for modification (default: auto-detect from errors)
 3. Run the error command once to establish the baseline error count
-4. Show the proposed loop configuration, baseline error count, and confirm with user
-5. Exit Plan Mode via ExitPlanMode
+4. Show the proposed loop configuration, baseline error count, and ask user to confirm
+5. **Handle user response:**
+   - **If user approves:** proceed to step 6
+   - **If user requests changes:** return to step 2 to re-gather the modified parameters (stay in Plan Mode). If the error command changed, re-run it for a new baseline (step 3). Re-show the revised configuration and confirm again.
+   - **If user cancels:** Exit Plan Mode via ExitPlanMode and stop — do not start the fix loop.
+6. Exit Plan Mode via ExitPlanMode
 
 **Phase 2 — Fix Loop**
 
