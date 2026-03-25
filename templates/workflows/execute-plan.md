@@ -184,6 +184,25 @@ Self-check result:
 - All key files exist + all commits found + all sub-issues closed → `## Self-Check: PASSED`
 - Any miss → `## Self-Check: FAILED — {reason}`
 
+## Step 5a — Review Cycle
+
+Before posting the summary, run a focused review cycle:
+
+| Stage | Check | Action on Fail |
+|-------|-------|----------------|
+| Spec Review | Do outputs match all plan requirements and acceptance criteria? | Fix gaps (1 retry) |
+| Code Review | Does code pass linting? All tests pass? No anti-patterns? | Fix issues (1 retry) |
+| Simplify | Can code be cleaner? Any dead code, redundancy, or unnecessary complexity? | Refactor (1 retry) |
+| Final Review | Overall quality approved? Ready to merge? | Accept or flag for orchestrator |
+
+For each stage:
+1. Run the check
+2. If PASS: advance to next stage
+3. If FAIL: attempt a targeted fix (max 1 retry per stage)
+4. If retry fails: record as BLOCKED and proceed (the orchestrator handles escalation)
+
+Record results in the summary comment's `## Review Cycle` section with: stage name, result (PASS/FAIL/BLOCKED/SKIPPED), attempt count, and findings.
+
 ## Step 6 — Post Summary to GitHub
 
 Build summary content and post as a comment on the phase issue.

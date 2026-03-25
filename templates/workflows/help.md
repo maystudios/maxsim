@@ -66,7 +66,7 @@ Execute all plans in a phase using wave-ordered parallel agents.
 
 - Runs plans in wave order (parallel within waves, sequential across waves)
 - Auto-verifies after execution via GitHub Issue task completion
-- Retries failed verification (max 2 retries, 3 total attempts)
+- Retries failed verification (max 3 retries, 4 total attempts)
 
 ```
 /maxsim:execute 3

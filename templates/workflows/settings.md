@@ -110,6 +110,15 @@ AskUserQuestion([
     ]
   },
   {
+    question: "Auto-advance: Should MaxsimCLI automatically proceed between stages (research → plan → execute) without waiting for confirmation?",
+    header: "Auto-Advance",
+    multiSelect: false,
+    options: [
+      { label: "Yes", description: "Automatically proceed between stages without confirmation. Maps to config key: workflow.auto_advance" },
+      { label: "No (Recommended)", description: "Pause between stages for user confirmation. Maps to config key: workflow.auto_advance" }
+    ]
+  },
+  {
     question: "Git branching strategy?",
     header: "Branching",
     multiSelect: false,
@@ -157,6 +166,7 @@ node .claude/maxsim/bin/maxsim-tools.cjs config-set worktrees.auto_cleanup [true
 node .claude/maxsim/bin/maxsim-tools.cjs config-set worktrees.branch_prefix "[value]"
 node .claude/maxsim/bin/maxsim-tools.cjs config-set automation.auto_commit_on_success [true/false]
 node .claude/maxsim/bin/maxsim-tools.cjs config-set automation.conventional_commits [true/false]
+node .claude/maxsim/bin/maxsim-tools.cjs config-set workflow.auto_advance [true/false]
 node .claude/maxsim/bin/maxsim-tools.cjs config-set automation.co_author "[value]"
 node .claude/maxsim/bin/maxsim-tools.cjs config-set hooks.enabled [true/false]
 # Per-agent model overrides (only if custom overrides selected)
@@ -210,7 +220,7 @@ Re-run /maxsim:settings anytime to change these.
 
 <success_criteria>
 - [ ] Current config loaded and displayed
-- [ ] User presented with all 8 settings
+- [ ] User presented with all 9 settings
 - [ ] Config updated via maxsim-tools config-set commands
 - [ ] User offered to save as global defaults
 - [ ] Confirmation displayed after save
