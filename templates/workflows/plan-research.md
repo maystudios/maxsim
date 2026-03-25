@@ -112,7 +112,32 @@ Each domain should be independently investigatable by a separate agent.
 
 Select 5-10 domains most relevant to this phase. Define a focused research question for each.
 
-## Step 6: Spawn Parallel Research Agents
+## Step 6: Tier Selection
+
+Before spawning researcher agents, evaluate the execution tier:
+
+1. **Check Tier 2 availability:**
+   - Verify `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` env var is set (MaxsimCLI installer enables this by default)
+   - Read `config.execution.parallelism.competition_strategy` from `.claude/maxsim/config.json`
+
+2. **If Tier 2 is available AND `competition_strategy` is `deep`:**
+   - Use Agent Teams cross-checking pattern:
+     - `TeamCreate` to create a research team
+     - Spawn 5-10 researcher teammates, each investigating a different domain independently
+     - Researchers use `SendMessage` to share findings and challenge each other's sources, conclusions, and recommended approaches
+     - Coordinator collects validated findings, flagging areas where agents agree or disagree, and synthesizes a higher-confidence research document
+   - This improves research quality by exposing weak sources and conflicting evidence before the planner acts on findings
+
+3. **If Tier 2 is NOT available (env var unset, feature not yet stable, or `competition_strategy` is `none`/`quick`/`standard`):**
+   - **Graceful degradation to Tier 1** — inform the user:
+     > "Research gathering: using Tier 1 subagents (Agent Teams not available or not required). Each researcher works independently; coordinator collates findings."
+   - Proceed with Tier 1 batch agents as described below (current default path, fully functional)
+
+> **Graceful degradation guarantee:** Per PROJECT.md §7.2, if Agent Teams are unavailable (env var not set, unsupported plan, or feature not yet stable), MaxsimCLI falls back to Tier 1 subagents for all workflows. The user is informed but not blocked.
+
+---
+
+## Step 7: Spawn Parallel Research Agents
 
 Display:
 ```
@@ -174,7 +199,7 @@ Return findings as structured markdown:
 Spawn all research agents in parallel using `run_in_background=true`. Do not await any
 individual agent before spawning the next.
 
-## Step 7: Collect and Aggregate Findings
+## Step 8: Collect and Aggregate Findings
 
 After all background agents complete, collect their results.
 
@@ -221,7 +246,7 @@ For each agent result:
 *Agents: {N} researchers across {N} domains*
 ```
 
-## Step 8: Post Research to GitHub
+## Step 9: Post Research to GitHub
 
 Post the consolidated research as a comment on the phase GitHub Issue:
 
@@ -242,7 +267,7 @@ Display confirmation:
 Research complete. Findings from {N} agents posted to GitHub Issue #{phase_issue_number}.
 ```
 
-## Step 9: Handle Agent Failures
+## Step 10: Handle Agent Failures
 
 If any research agent fails or returns no findings:
 
@@ -262,7 +287,7 @@ Research partially failed. Only {N}/{total} agents returned findings.
 
 Wait for user choice.
 
-## Step 10: Return to Orchestrator
+## Step 11: Return to Orchestrator
 
 After research is posted to GitHub (or research is skipped), return control to the plan.md
 orchestrator. Do NOT show gate confirmation or next steps -- the orchestrator handles the gate
@@ -275,6 +300,9 @@ between Research and Planning.
 - [ ] Existing research detected from GitHub Issue comment (<!-- maxsim:type=research --> marker) and reused unless --force-research
 - [ ] Phase context read from GitHub Issue (context comment + issue body)
 - [ ] 5-10 research domains defined based on phase characteristics
+- [ ] Tier selection evaluated: CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS env var and config.execution.parallelism.competition_strategy checked
+- [ ] Tier 2 path (Agent Teams cross-checking) used when env var set and strategy is `deep`
+- [ ] Graceful degradation to Tier 1 with user notification when Tier 2 is not available
 - [ ] All research agents spawned in parallel using run_in_background=true
 - [ ] Agent tool used (not Task) for all agent spawning
 - [ ] Each agent investigates a distinct, focused domain

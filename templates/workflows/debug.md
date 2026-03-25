@@ -94,7 +94,32 @@ Wait for user confirmation to proceed (unless symptoms are fully specified in `$
 
 ---
 
-## Step 3: Reproduce — Confirm the Problem
+## Step 3: Tier Selection
+
+Before spawning debugging agents, evaluate the execution tier:
+
+1. **Check Tier 2 availability:**
+   - Verify `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` env var is set (MaxsimCLI installer enables this by default)
+   - Read `config.execution.parallelism.competition_strategy` from `.claude/maxsim/config.json`
+
+2. **If Tier 2 is available AND `competition_strategy` is `deep`:**
+   - Use Agent Teams collaborative debugging pattern:
+     - `TeamCreate` to create a debug team
+     - Spawn 2-3 hypothesis investigator teammates, each exploring a different root-cause theory
+     - Teammates use `SendMessage` to challenge each other's hypotheses — a hypothesis only survives if it holds up to adversarial cross-examination
+     - Coordinator collects surviving theories and selects the most evidence-backed root cause
+   - This fights LLM anchoring bias (first plausible hypothesis wins by default)
+
+3. **If Tier 2 is NOT available (env var unset, feature not yet stable, or `competition_strategy` is `none`/`quick`/`standard`):**
+   - **Graceful degradation to Tier 1** — inform the user:
+     > "Collaborative debugging: using Tier 1 subagents (Agent Teams not available or not required). Each agent investigates independently; coordinator synthesizes findings."
+   - Proceed with Tier 1 subagents as described below (current default path, fully functional)
+
+> **Graceful degradation guarantee:** Per PROJECT.md §7.2, if Agent Teams are unavailable (env var not set, unsupported plan, or feature not yet stable), MaxsimCLI falls back to Tier 1 subagents for all workflows. The user is informed but not blocked.
+
+---
+
+## Step 4: Reproduce — Confirm the Problem
 
 Spawn a verifier agent to drive steps 1–4 of the `systematic-debugging` skill (Reproduce, Hypothesize, Isolate, Verify):
 
@@ -171,7 +196,7 @@ Options:
 3. Manual — I'll fix it myself (close debug issue as resolved)
 ```
 
-Proceed to step 4 (ExitPlanMode + Fix).
+Proceed to step 5 (ExitPlanMode + Fix).
 
 **CHECKPOINT reached:**
 
@@ -196,7 +221,7 @@ If the user provides more context, update `$DESCRIPTION` / `$ERROR` / `$REPRO_ST
 
 ---
 
-## Step 4: ExitPlanMode — Confirm the Fix
+## Step 5: ExitPlanMode — Confirm the Fix
 
 Call `ExitPlanMode`.
 
@@ -219,7 +244,7 @@ Wait for user confirmation before spawning the executor.
 
 ---
 
-## Step 5: Fix — Implement the Fix
+## Step 6: Fix — Implement the Fix
 
 Spawn an executor agent to implement the fix (step 5 of the `systematic-debugging` skill):
 
@@ -256,7 +281,7 @@ Extract `$COMMIT_HASH` and `$FIX_SUMMARY` from executor output.
 
 ---
 
-## Step 6: Confirm — Verify the Fix
+## Step 7: Confirm — Verify the Fix
 
 Spawn a verifier agent to confirm the fix (step 6 of the `systematic-debugging` skill):
 
@@ -294,7 +319,7 @@ If FAIL: display issues, ask user whether to retry the fix or accept as-is.
 
 ---
 
-## Step 7: Report — Post Results and Close Issue
+## Step 8: Report — Post Results and Close Issue
 
 Post a resolution comment to the GitHub Issue:
 
@@ -347,6 +372,9 @@ Verification: $VERIFY_STATUS
 - [ ] Open debug Issues checked on GitHub before starting a new session
 - [ ] GitHub Issue created with label "type:bug" and moved to "In Progress"
 - [ ] EnterPlanMode called before presenting the debugging plan
+- [ ] Tier selection evaluated: CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS env var and config.execution.parallelism.competition_strategy checked
+- [ ] Tier 2 path (Agent Teams collaborative debugging) used when env var set and strategy is `deep`
+- [ ] Graceful degradation to Tier 1 with user notification when Tier 2 is not available
 - [ ] Verifier agent spawned with subagent_type="verifier" and isolation="worktree"
 - [ ] Verifier drives systematic-debugging steps 1–4 (Reproduce, Hypothesize, Isolate, Verify)
 - [ ] Checkpoint, INCONCLUSIVE, and ROOT_CAUSE return paths handled
