@@ -9,6 +9,7 @@ export {
   AgentType,
   Model,
   ModelProfile,
+  TaskComplexity,
   VerificationGate,
   VerificationResult,
   TaskState,

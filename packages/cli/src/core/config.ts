@@ -9,6 +9,7 @@ import {
   type Model,
   type ModelProfile,
   type AgentType,
+  TaskComplexity,
   DEFAULT_CONFIG,
   MODEL_PROFILES,
   PARALLELISM_LIMITS,
@@ -84,12 +85,17 @@ export function saveConfig(projectDir: string, config: MaxsimConfig): void {
 /** Resolve max agents for a profile, applying the small-project scaling rule from PROJECT.md §7.4. */
 export function resolveMaxAgents(
   profile: ModelProfile,
-  projectFileCount: number
+  projectFileCount: number,
+  complexity: TaskComplexity = TaskComplexity.MEDIUM,
 ): number {
   const limits = PARALLELISM_LIMITS[profile];
-  if (projectFileCount < 10) return Math.min(5, limits.max_agents);
-  if (projectFileCount < 25) return Math.min(Math.floor(limits.max_agents / 2), limits.typical_range[1]);
-  return limits.max_agents;
+  let cap: number;
+  if (projectFileCount < 10) cap = Math.min(5, limits.max_agents);
+  else if (projectFileCount < 25) cap = Math.min(Math.floor(limits.max_agents / 2), limits.typical_range[1]);
+  else cap = limits.max_agents;
+
+  if (complexity === TaskComplexity.SIMPLE) return Math.max(1, Math.floor(cap / 2));
+  return cap;
 }
 
 /** Resolve the model for a given profile and agent type, with optional per-agent overrides. */

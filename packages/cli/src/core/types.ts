@@ -81,6 +81,14 @@ export const ModelProfile = {
 } as const;
 export type ModelProfile = (typeof ModelProfile)[keyof typeof ModelProfile];
 
+/** Task complexity levels for agent parallelism scaling. */
+export const TaskComplexity = {
+  SIMPLE: 'simple',
+  MEDIUM: 'medium',
+  COMPLEX: 'complex',
+} as const;
+export type TaskComplexity = (typeof TaskComplexity)[keyof typeof TaskComplexity];
+
 /** Verification gate types. */
 export const VerificationGate = {
   TESTS_PASS: 'tests_pass',
