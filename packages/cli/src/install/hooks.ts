@@ -34,6 +34,11 @@ export function installHooks(projectDir: string): { installed: string[] } {
   const installed: string[] = [];
 
   if (copied === 0) {
+    // Guarantee settings.json exists even if no hooks were copied
+    if (!fs.existsSync(settingsPath)) {
+      fs.mkdirSync(path.dirname(settingsPath), { recursive: true });
+      fs.writeFileSync(settingsPath, `${JSON.stringify({ hooks: {} }, null, 2)}\n`, 'utf8');
+    }
     return { installed };
   }
 
