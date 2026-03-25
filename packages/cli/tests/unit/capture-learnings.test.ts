@@ -302,16 +302,16 @@ describe('extractPattern', () => {
   });
 
   it('caps result at 200 characters', () => {
-    const longLine = 'Pattern: ' + 'x'.repeat(300);
+    const longLine = `Pattern: ${'x'.repeat(300)}`;
     const result = extractPattern(longLine);
     expect(result).toBeDefined();
-    expect(result!.length).toBe(200);
+    expect(result?.length).toBe(200);
   });
 
   it('uses last 200 chars as final fallback when no sentences found', () => {
-    const msg = 'no punctuation here just a long stream of words ' + 'word '.repeat(50);
+    const msg = `no punctuation here just a long stream of words ${'word '.repeat(50)}`;
     const result = extractPattern(msg);
     expect(result).toBeDefined();
-    expect(result!.length).toBeLessThanOrEqual(200);
+    expect(result?.length).toBeLessThanOrEqual(200);
   });
 });
