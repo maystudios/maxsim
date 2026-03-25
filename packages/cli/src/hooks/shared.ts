@@ -103,13 +103,15 @@ export function playSound(soundFile: string): void {
       // For named system sounds (no extension) fall back to rundll32.
       const isWav = soundFile.toLowerCase().endsWith('.wav');
       if (isWav) {
+        // Use double-quoted string which handles spaces and most special chars
+        const escaped = soundFile.replace(/"/g, '\\"');
         spawnSync(
           'powershell',
           [
             '-NoProfile',
             '-NonInteractive',
             '-Command',
-            `$p='${soundFile.replace(/'/g, "''")}'; (New-Object System.Media.SoundPlayer $p).PlaySync()`,
+            `$p="${escaped}"; (New-Object System.Media.SoundPlayer $p).PlaySync()`,
           ],
           { stdio: 'ignore' },
         );
@@ -134,4 +136,18 @@ export function playSound(soundFile: string): void {
   } catch {
     // Never crash on sound failure
   }
+}
+
+/**
+ * Send a JSON stop signal to terminate a teammate.
+ * Outputs the stop payload to stdout and exits cleanly.
+ * Use this when a teammate should be permanently stopped (not just blocked).
+ *
+ * For blocking (retry behavior), use: process.stderr.write(msg); process.exit(2);
+ * For stopping (permanent), use: stopTeammate(reason);
+ */
+export function stopTeammate(reason: string): never {
+  const payload = JSON.stringify({ continue: false, stopReason: reason });
+  process.stdout.write(`${payload}\n`);
+  process.exit(0);
 }
