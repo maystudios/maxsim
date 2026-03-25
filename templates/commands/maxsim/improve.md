@@ -25,14 +25,20 @@ Invoke the `autoresearch` skill to drive the optimization loop. Invoke the `veri
 **Phase 1 — Setup (Plan Mode)**
 
 1. Enter Plan Mode via EnterPlanMode
-2. Gather loop parameters via AskUserQuestion:
-   - **Metric command** — the command whose output is the optimization target (from $ARGUMENTS or ask)
-   - **Guard command** — regression check that must always pass (e.g., `npm test`)
-   - **Direction** — minimize or maximize the metric
-   - **Iteration budget** — max iterations before stopping (default: 20)
-   - **Scope** — which files/directories are in-scope for modification
-3. Show the proposed loop configuration and confirm with user
-4. Exit Plan Mode via ExitPlanMode
+2. Gather loop parameters via two AskUserQuestion calls:
+   **Batch 1** (required — 4 questions):
+   - Metric command (the command to run and extract a number from)
+   - Guard command (regression check, e.g., `npm test`)
+   - Metric direction (`lower_is_better` or `higher_is_better`)
+   - Iteration budget (default: 20)
+
+   **Batch 2** (scope and constraints — 3 questions):
+   - Scope (files/directories to modify)
+   - Files to NEVER modify (test files, guard files, config)
+   - Starting approach (optional — first idea to try)
+3. Dry-run: Execute the metric command once to establish baseline. Execute the guard command to confirm it passes. If either fails, ask the user to fix before proceeding.
+4. Show the proposed loop configuration and confirm with user
+5. Exit Plan Mode via ExitPlanMode
 
 **Phase 2 — Optimization Loop**
 
@@ -46,7 +52,7 @@ Run the 8-phase autoresearch loop, one iteration at a time:
 6. **Guard** — run the guard command to check for regressions
    - Guard failure + verify pass → rework (max 2 attempts), then discard
 7. **Decide** — metric improved AND guard passed → keep; otherwise → `git revert HEAD --no-edit`
-8. **Log** — append iteration result to the TSV file (date, iteration, approach, metric-value, outcome, commit-hash, notes)
+8. **Log** — append iteration result to the TSV file (iteration, commit, metric, delta, guard, status, description)
 
 **Stuck Detection:**
 After 5 consecutive discards or crashes:
