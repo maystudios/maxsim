@@ -197,7 +197,6 @@ export interface MaxsimConfig {
     };
   };
   worktrees: {
-    basePath: string;
     auto_cleanup: boolean;
     branch_prefix: string;
   };
@@ -247,7 +246,6 @@ export const DEFAULT_CONFIG: MaxsimConfig = {
     },
   },
   worktrees: {
-    basePath: '.maxsim-worktrees/',
     auto_cleanup: true,
     branch_prefix: 'maxsim/',
   },
