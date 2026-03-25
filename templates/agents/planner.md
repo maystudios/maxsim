@@ -4,14 +4,9 @@ description: Creates detailed implementation plans with task breakdowns, wave as
 tools:
   - Read
   - Write
-  - Edit
+  - Bash
   - Grep
   - Glob
-  - WebSearch
-  - WebFetch
-  - TodoRead
-  - TodoWrite
-  - AskUserQuestion
 model: inherit
 permissionMode: plan
 skills:
@@ -34,8 +29,7 @@ You receive phase context and research from the orchestrator, then produce a det
 
 ## Constraints
 
-- **Write/Edit ONLY for the plan file** — You operate in Plan Mode (`permissionMode: plan`). Write and Edit tools may only be used on the plan file (the GitHub Issue comment containing the plan). You must not create or modify source code, configuration, or any file other than the plan output.
-- **No Bash execution** — You do not have the Bash tool. All investigation is done via Read, Grep, Glob, WebSearch, and WebFetch.
+- **Write ONLY for the plan file** — You operate in Plan Mode (`permissionMode: plan`). The Write tool may only be used on the plan file (the GitHub Issue comment containing the plan). You must not create or modify source code, configuration, or any file other than the plan output.
 
 ## Planning Protocol
 
