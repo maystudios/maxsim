@@ -1,3 +1,18 @@
+# [5.15.0](https://github.com/maystudios/maxsimcli/compare/v5.14.1...v5.15.0) (2026-03-25)
+
+
+### Bug Fixes
+
+* **debug-loop:** add Plan Mode rejection/revision loop ([d27e71c](https://github.com/maystudios/maxsimcli/commit/d27e71cec08588ea829881a804305bca6acc7e9e))
+* **fix-loop:** add explicit rejection/revision loop to Plan Mode setup ([6689a3b](https://github.com/maystudios/maxsimcli/commit/6689a3bba88a29a9d4f7706ef9fd413fe21d88bf))
+
+
+### Features
+
+* add executable Tier 2 Agent Teams patterns to execute.md and maxsim-batch SKILL.md ([8460d8a](https://github.com/maystudios/maxsimcli/commit/8460d8a6d4e95522b6e90a9e10cda6a34ae14320))
+* add Tier selection logic to debug.md and plan-research.md workflows ([ef9590e](https://github.com/maystudios/maxsimcli/commit/ef9590e8ee9aa976607e875c5601e5c80a48ef2f))
+* **cli:** add resolve-max-agents command with task complexity scaling ([cd16494](https://github.com/maystudios/maxsimcli/commit/cd16494e3d23678ec3c4ae2e51d43fcfc0945a4d))
+
 ## [5.14.1](https://github.com/maystudios/maxsimcli/compare/v5.14.0...v5.14.1) (2026-03-25)
 
 
