@@ -28,6 +28,7 @@ import {
   appendLearning,
   pruneMemory,
   sessionCommits,
+  extractPattern,
   MEMORY_MAX_LINES,
   today,
 } from '../../src/hooks/maxsim-capture-learnings.js';
@@ -85,25 +86,25 @@ describe('appendLearning', () => {
     expect(fs.existsSync(path.dirname(memPath))).toBe(true);
   });
 
-  it('appends a session header with the correct date', () => {
+  it('appends a session header with the correct date in pipe-delimited format', () => {
     const memPath = path.join(tmpDir, 'MEMORY.md');
-    appendLearning(memPath, undefined, [], undefined, undefined);
+    appendLearning(memPath, 'sess1234abcd', [], 'user_exit', undefined);
     const content = fs.readFileSync(memPath, 'utf8');
-    expect(content).toContain(`## Session ${today()}`);
+    expect(content).toContain(`### ${today()} | sess1234 | user_exit | 0 commits`);
   });
 
   it('includes session ID (first 8 chars) in the header', () => {
     const memPath = path.join(tmpDir, 'MEMORY.md');
     appendLearning(memPath, 'abc12345xyz', [], undefined, undefined);
     const content = fs.readFileSync(memPath, 'utf8');
-    expect(content).toContain('(abc12345)');
+    expect(content).toContain('| abc12345 |');
   });
 
-  it('includes stop_reason in square brackets in the header', () => {
+  it('includes stop_reason in the pipe-delimited header', () => {
     const memPath = path.join(tmpDir, 'MEMORY.md');
     appendLearning(memPath, undefined, [], 'user_exit', undefined);
     const content = fs.readFileSync(memPath, 'utf8');
-    expect(content).toContain('[user_exit]');
+    expect(content).toContain('| user_exit |');
   });
 
   it('writes "no commits recorded this session" when commits array is empty', () => {
@@ -113,19 +114,18 @@ describe('appendLearning', () => {
     expect(content).toContain('- no commits recorded this session');
   });
 
-  it('writes each commit on its own line with "- commit:" prefix', () => {
+  it('writes all commits on a single "- commits:" line', () => {
     const memPath = path.join(tmpDir, 'MEMORY.md');
     appendLearning(memPath, undefined, ['abc1234 fix bug', 'def5678 add feature'], undefined, undefined);
     const content = fs.readFileSync(memPath, 'utf8');
-    expect(content).toContain('- commit: abc1234 fix bug');
-    expect(content).toContain('- commit: def5678 add feature');
+    expect(content).toContain('- commits: abc1234 fix bug, def5678 add feature');
   });
 
-  it('records the commit count on a summary line', () => {
+  it('records the commit count in the header', () => {
     const memPath = path.join(tmpDir, 'MEMORY.md');
     appendLearning(memPath, undefined, ['a', 'b', 'c'], undefined, undefined);
     const content = fs.readFileSync(memPath, 'utf8');
-    expect(content).toContain('- 3 commit(s) made this session');
+    expect(content).toContain('| 3 commits');
   });
 
   it('includes pattern summary when provided', () => {
@@ -149,15 +149,15 @@ describe('appendLearning', () => {
     appendLearning(memPath, 'session2', ['commit-b'], undefined, undefined);
     const content = fs.readFileSync(memPath, 'utf8');
     expect(content).toContain('# Existing content');
-    expect(content).toContain('(session1)');
-    expect(content).toContain('(session2)');
+    expect(content).toContain('| session1 |');
+    expect(content).toContain('| session2 |');
   });
 
-  it('omits stop_reason bracket when stop_reason is undefined', () => {
+  it('uses "unknown" for stop_reason when undefined', () => {
     const memPath = path.join(tmpDir, 'MEMORY.md');
     appendLearning(memPath, undefined, [], undefined, undefined);
     const content = fs.readFileSync(memPath, 'utf8');
-    expect(content).not.toMatch(/\[.*\]/);
+    expect(content).toContain('| unknown |');
   });
 });
 
@@ -262,5 +262,56 @@ describe('sessionCommits', () => {
 
     const result = sessionCommits('/some/project', 'startsha');
     expect(result).toEqual(['fallback-commit']);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// extractPattern
+// ---------------------------------------------------------------------------
+
+describe('extractPattern', () => {
+  it('returns undefined for empty/whitespace input', () => {
+    expect(extractPattern('')).toBeUndefined();
+    expect(extractPattern('   ')).toBeUndefined();
+    expect(extractPattern('\n\n')).toBeUndefined();
+  });
+
+  it('finds a line starting with "Pattern:" prefix', () => {
+    const msg = 'Some preamble.\nPattern: always run tests before committing.\nMore text.';
+    expect(extractPattern(msg)).toBe('Pattern: always run tests before committing.');
+  });
+
+  it('finds a line starting with "Learning:" prefix', () => {
+    const msg = 'Debugging session complete.\nLearning: the config file must be UTF-8.';
+    expect(extractPattern(msg)).toBe('Learning: the config file must be UTF-8.');
+  });
+
+  it('finds a bullet-prefixed learning line', () => {
+    const msg = 'Summary:\n- Found that the API rate limits at 100 req/s.';
+    expect(extractPattern(msg)).toBe('- Found that the API rate limits at 100 req/s.');
+  });
+
+  it('extracts bullet points when there are 1-5 of them', () => {
+    const msg = 'Results:\n- Added auth module\n- Fixed login bug\n- Updated tests';
+    expect(extractPattern(msg)).toBe('- Added auth module; - Fixed login bug; - Updated tests');
+  });
+
+  it('falls back to the last sentence when no prefix or bullets match', () => {
+    const msg = 'I refactored several files. The build is now green. All tests pass.';
+    expect(extractPattern(msg)).toBe('All tests pass.');
+  });
+
+  it('caps result at 200 characters', () => {
+    const longLine = 'Pattern: ' + 'x'.repeat(300);
+    const result = extractPattern(longLine);
+    expect(result).toBeDefined();
+    expect(result!.length).toBe(200);
+  });
+
+  it('uses last 200 chars as final fallback when no sentences found', () => {
+    const msg = 'no punctuation here just a long stream of words ' + 'word '.repeat(50);
+    const result = extractPattern(msg);
+    expect(result).toBeDefined();
+    expect(result!.length).toBeLessThanOrEqual(200);
   });
 });

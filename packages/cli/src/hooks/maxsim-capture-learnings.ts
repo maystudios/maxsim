@@ -28,6 +28,7 @@ interface StopInput {
 }
 
 export const MEMORY_MAX_LINES = 180;
+const PATTERN_MAX_LENGTH = 200;
 
 /** Formats today's date as YYYY-MM-DD. */
 export function today(): string {
@@ -79,6 +80,43 @@ export function pruneMemory(memoryPath: string): void {
   }
 }
 
+const PATTERN_PREFIXES = [
+  'pattern:', 'learning:', 'key finding:', 'insight:',
+  'what worked:', 'what failed:', 'takeaway:', 'note:',
+  'discovered:', 'found that', 'issue was', 'fixed by',
+];
+
+/** Extract meaningful patterns from the assistant's last message. */
+export function extractPattern(message: string): string | undefined {
+  const trimmed = message.trim();
+  if (!trimmed) return undefined;
+
+  const lines = message.split('\n');
+
+  for (const line of lines) {
+    const stripped = line.trim();
+    const lower = stripped.toLowerCase();
+    for (const prefix of PATTERN_PREFIXES) {
+      if (lower.startsWith(prefix) || lower.startsWith(`- ${prefix}`)) {
+        return stripped.slice(0, PATTERN_MAX_LENGTH);
+      }
+    }
+  }
+
+  const bullets = lines.filter(l => /^\s*[-*]\s+/.test(l)).map(l => l.trim());
+  if (bullets.length > 0 && bullets.length <= 5) {
+    return bullets.join('; ').slice(0, PATTERN_MAX_LENGTH);
+  }
+
+  // Last sentence is more likely a summary than the first
+  const sentences = message.match(/[^.!?]+[.!?]+/g);
+  if (sentences && sentences.length > 0) {
+    return sentences[sentences.length - 1].trim().slice(0, PATTERN_MAX_LENGTH);
+  }
+
+  return trimmed.slice(-PATTERN_MAX_LENGTH);
+}
+
 /** Appends a learning entry to the MEMORY.md file, creating dirs as needed. */
 export function appendLearning(
   memoryPath: string,
@@ -90,18 +128,17 @@ export function appendLearning(
   const dir = path.dirname(memoryPath);
   fs.mkdirSync(dir, { recursive: true });
 
-  const sessionLabel = sessionId ? ` (${sessionId.slice(0, 8)})` : '';
-  const reasonLabel = stopReason ? ` [${stopReason}]` : '';
+  const sessionLabel = sessionId ? sessionId.slice(0, 8) : 'unknown';
+  const reasonLabel = stopReason ?? 'unknown';
 
-  const commitLines =
+  const commitLine =
     commits.length > 0
-      ? commits.map((c) => `- commit: ${c}`).join('\n')
+      ? `- commits: ${commits.join(', ')}`
       : '- no commits recorded this session';
 
   const parts = [
-    `## Session ${today()}${sessionLabel}${reasonLabel}`,
-    `- ${commits.length} commit(s) made this session`,
-    commitLines,
+    `### ${today()} | ${sessionLabel} | ${reasonLabel} | ${commits.length} commits`,
+    commitLine,
   ];
 
   if (patternSummary) {
@@ -140,7 +177,7 @@ readStdinJson<StopInput>((input) => {
       : recentCommits(projectDir, 5);
 
     const trimmedMessage = input.last_assistant_message?.trim();
-    const patternSummary = trimmedMessage ? trimmedMessage.slice(0, 200) : undefined;
+    const patternSummary = trimmedMessage ? extractPattern(trimmedMessage) : undefined;
 
     appendLearning(memoryPath, input.session_id, commits, input.stop_reason, patternSummary);
     pruneMemory(memoryPath);
