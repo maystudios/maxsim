@@ -118,3 +118,21 @@ Teams coordinate exclusively through:
 Two hooks support Tier 2 operations:
 - `maxsim-teammate-idle` (TeammateIdle) — Checks for pending tasks and assigns idle teammates
 - `maxsim-task-completed` (TaskCompleted) — Runs verification gates (test, build, lint) before allowing task completion
+
+### Architecture
+
+| Component | Role | Storage |
+|-----------|------|---------|
+| Team lead | Creates team, spawns teammates, coordinates | Main session |
+| Teammates | Independent Claude Code instances | `~/.claude/teams/{team-name}/config.json` |
+| Task list | Shared work items with dependency tracking | `~/.claude/tasks/{team-name}/{id}.json` |
+| Mailbox | Per-agent message queues | `~/.claude/teams/{team-name}/inboxes/{name}.json` |
+
+### Key Constraints
+
+- One team per session, no nested teams
+- Lead is fixed (no promotion/transfer)
+- Teammates load CLAUDE.md + MCP + skills at spawn, but NOT lead's conversation history
+- 3-5 teammates recommended, 5-6 tasks per teammate
+- File locking prevents race conditions on task claiming
+- Avoid two teammates editing the same file (causes overwrites)
