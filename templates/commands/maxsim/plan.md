@@ -24,6 +24,8 @@ Re-entry: If phase is already planned, show status and offer options (view, re-p
 </context>
 
 <process>
+Plan Mode: This command uses EnterPlanMode during the Discussion and Planning stages. Call ExitPlanMode before executing the approved plan.
+
 Follow @.claude/maxsim/workflows/plan.md end-to-end.
 
 1. Detect current stage from GitHub Issue labels on the phase Issue

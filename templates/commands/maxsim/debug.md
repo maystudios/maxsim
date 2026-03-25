@@ -18,6 +18,8 @@ GitHub is the sole source of truth. Check for open Issues labeled `debug` to det
 </context>
 
 <process>
+Plan Mode: Use EnterPlanMode when presenting symptom analysis and proposed diagnosis. Call ExitPlanMode before spawning the executor Agent for the fix.
+
 Follow @.claude/maxsim/workflows/debug.md end-to-end. Invoke the `systematic-debugging` skill at step 3 to drive the reproduce-hypothesize-isolate-verify-fix cycle.
 
 1. Check GitHub for open Issues labeled `debug` (active sessions)

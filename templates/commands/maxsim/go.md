@@ -25,7 +25,7 @@ Follow @.claude/maxsim/workflows/go.md end-to-end.
 
 1. Read GitHub Project Board state via `gh` CLI
 2. Detect what's next using the priority list above
-3. Enter Plan Mode — show detection reasoning and proposed action
+3. Enter Plan Mode via EnterPlanMode — show detection reasoning and proposed action
 4. Wait for user approval (Ctrl+C cancels)
 5. Execute approved action by spawning the appropriate Agent
 6. Report the result — print a completion summary or surface the error with a recovery suggestion
