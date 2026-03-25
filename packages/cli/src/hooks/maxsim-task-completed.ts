@@ -10,6 +10,16 @@
  *  - Always handles errors gracefully — never crashes.
  */
 
+/**
+ * Output formats:
+ * - Exit 0: Allow task completion (all gates passed)
+ * - Exit 2 + stderr: Block completion — gates failed, agent must fix before completing
+ * - JSON stdout { continue: false, stopReason: "..." } + exit 0: Stop the teammate entirely
+ *
+ * Currently uses exit 2 (block + report) when test/build/lint gates fail.
+ * Use stopTeammate() from shared.ts for permanent stop scenarios.
+ */
+
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { spawnSync } from 'node:child_process';

@@ -9,6 +9,16 @@
  *  - Always handles errors gracefully — never crashes.
  */
 
+/**
+ * Output formats:
+ * - Exit 0: Allow the teammate to remain idle (no pending tasks)
+ * - Exit 2 + stderr: Block idle and redirect — "Pick up the next available task."
+ * - JSON stdout { continue: false, stopReason: "..." } + exit 0: Stop the teammate entirely
+ *
+ * Currently uses exit 2 (block + redirect) when pending tasks exist.
+ * Use stopTeammate() from shared.ts for permanent stop scenarios.
+ */
+
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
