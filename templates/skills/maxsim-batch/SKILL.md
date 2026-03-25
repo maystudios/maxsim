@@ -89,11 +89,33 @@ Agent Teams (available since Claude Code v2.1.32, Feb 2026) enable inter-agent c
 
 **Current status:** Infrastructure is in place (env var, hooks). Workflow templates that invoke `TeamCreate`/`SendMessage` for Tier 2 patterns (competitive implementation, multi-reviewer code review, collaborative debugging) are planned but not yet implemented. All workflows currently use Tier 1 subagents. See PROJECT.md §7.2 for the full specification.
 
+### Tier Selection Logic
+
+MaxsimCLI chooses the tier automatically based on the workflow:
+
+| Workflow | Tier | Reason |
+|----------|------|--------|
+| Phase execution (independent tasks) | Tier 1 (Subagents) | Tasks don't need to communicate |
+| Codebase scanning | Tier 1 (Subagents) | Read-only, report back |
+| Research gathering | Tier 1 (Subagents) | Collect and report |
+| Competitive implementation | Tier 2 (Agent Teams) | Agents need to debate |
+| Multi-dimensional code review | Tier 2 (Agent Teams) | Findings need cross-checking |
+| Collaborative debugging | Tier 2 (Agent Teams) | Hypotheses need adversarial testing |
+| Architecture exploration | Tier 2 (Agent Teams) | Requires discussion |
+
 **When Tier 2 is ready, it will be used for:**
 - Competitive implementation with adversarial debate
 - Multi-dimensional code review (security + performance + test coverage)
 - Collaborative debugging with competing hypotheses
 - Cross-layer feature work (frontend + backend + tests)
+
+### Graceful Degradation
+
+If Agent Teams are unavailable (env var `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` not set, unsupported plan, or feature not yet stable), MaxsimCLI falls back to Tier 1 subagents for all workflows. Inform the user with this exact message:
+
+> "Competitive mode: using Tier 1 subagents (Agent Teams not available or not required for this strategy). Each executor works independently; verifier selects the best result."
+
+The user is informed but not blocked. All workflows remain fully functional via Tier 1.
 
 ## Limits
 
