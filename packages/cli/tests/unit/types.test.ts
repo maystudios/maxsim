@@ -235,4 +235,13 @@ describe('DEFAULT_CONFIG', () => {
     expect(DEFAULT_CONFIG.git).toBeDefined();
     expect(DEFAULT_CONFIG.git.branching_strategy).toBe('phase');
   });
+
+  it('includes competitive_enabled default as false', () => {
+    expect(DEFAULT_CONFIG.execution.competitive_enabled).toBe(false);
+  });
+
+  it('includes worktree path and branch templates', () => {
+    expect(DEFAULT_CONFIG.worktrees.path_template).toBe('.claude/worktrees/agent-{id}/');
+    expect(DEFAULT_CONFIG.worktrees.branch_template).toBe('maxsim/phase-{N}-task-{id}');
+  });
 });

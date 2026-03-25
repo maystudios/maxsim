@@ -183,6 +183,7 @@ export interface MaxsimConfig {
   version: string;
   execution: {
     model_profile: ModelProfile;
+    competitive_enabled: boolean;
     model_overrides?: Partial<Record<AgentType, Model>>;
     parallelism: {
       max_agents_per_wave: number;
@@ -199,6 +200,8 @@ export interface MaxsimConfig {
   worktrees: {
     auto_cleanup: boolean;
     branch_prefix: string;
+    path_template: string;
+    branch_template: string;
   };
   automation: {
     auto_commit_on_success: boolean;
@@ -227,6 +230,7 @@ export const DEFAULT_CONFIG: MaxsimConfig = {
   version: VERSION,
   execution: {
     model_profile: ModelProfile.BALANCED,
+    competitive_enabled: false,
     parallelism: {
       max_agents_per_wave: 3,
       max_retries: 3,
@@ -248,6 +252,8 @@ export const DEFAULT_CONFIG: MaxsimConfig = {
   worktrees: {
     auto_cleanup: true,
     branch_prefix: 'maxsim/',
+    path_template: '.claude/worktrees/agent-{id}/',
+    branch_template: 'maxsim/phase-{N}-task-{id}',
   },
   automation: {
     auto_commit_on_success: true,
