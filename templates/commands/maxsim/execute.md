@@ -6,7 +6,7 @@ allowed-tools: [Read, Write, Edit, Bash, Grep, Glob, Agent, EnterPlanMode, ExitP
 ---
 
 <objective>
-Execute all task Issues in a phase using parallel Agents, auto-verify results, and retry on failure (max 2 retries, 3 total attempts). GitHub Issues track task state throughout.
+Execute all task Issues in a phase using parallel Agents, auto-verify results, and retry on failure (max 3 retries, 4 total attempts). GitHub Issues track task state throughout.
 </objective>
 
 <context>
@@ -23,9 +23,9 @@ Re-entry: If phase is already executed and verified, show status and offer optio
 Follow @.claude/maxsim/workflows/execute.md end-to-end.
 
 1. Detect phase state from GitHub Project Board (already done / partially executed / ready)
-2. Group task Issues by wave — execute parallel Agents within each wave, sequential across waves
+2. Group task Issues by wave — re-evaluate wave composition before each spawn against current GitHub state, execute parallel Agents within each wave, sequential across waves
 3. Each Agent updates its GitHub Issue label on start and completion
 4. After all tasks complete, spawn a verifier Agent to check acceptance criteria
-5. On verification failure, auto-retry with gap-closure context (max 2 retries, 3 total attempts)
+5. On verification failure, auto-retry with gap-closure context (max 3 retries, 4 total attempts)
 6. On final failure, report what failed and surface options to user
 </process>

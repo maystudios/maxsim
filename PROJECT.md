@@ -113,6 +113,7 @@ GitHub is not optional. MaxsimCLI requires:
 Only `.claude/` exists locally. Additionally:
 
 - `CLAUDE.md` in project root — Auto-generated during install. Contains a full command reference table with Quick Start pointing to `/maxsim:go`. Claude Code reads this automatically at session start.
+- `.gitignore` in project root — Install appends two entries (`.claude/agent-memory/` and `autoresearch-results.tsv`) to keep per-machine agent memory and metric data out of version control. If `.gitignore` does not exist, it is created.
 - No other MaxsimCLI files in the project root or anywhere outside `.claude/`.
 
 ### 5.5 State Tracking
@@ -125,7 +126,7 @@ The project state IS the GitHub Project Board:
 - Issue labels = type categorization (`type:phase`, `type:task`, `type:bug`, `type:quick`) and origin (`maxsim:auto`, `maxsim:user`)
 - Issue relations = dependency tracking (native GitHub "blocked by" / "blocking")
 
-No local state file. No sync mechanism needed. No local cache. GitHub is always authoritative.
+No local state file. No sync mechanism needed. No project-state cache — GitHub is always authoritative. A lightweight update-check cache (`os.tmpdir()/.maxsimcli-update-cache.json`, 1-hour TTL) avoids redundant npm registry calls; this is ephemeral utility data in the OS temp directory, not project state.
 
 ### 5.6 Multi-Project Isolation
 
