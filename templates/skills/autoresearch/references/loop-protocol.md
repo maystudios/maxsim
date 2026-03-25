@@ -93,10 +93,11 @@ If verification exceeds 2x normal time, kill and treat as crash.
 
 Some metrics are inherently noisy (benchmark times, ML accuracy). Strategies:
 
-- **Multi-run verification:** Run verify N times, use the median.
-- **Minimum improvement threshold:** Ignore improvements smaller than the noise floor.
-- **Confirmation run:** Re-verify before making a final keep decision.
-- **Environment pinning:** Pin random seeds, use deterministic test ordering, flush caches.
+- **For improvements of 1–5%:** Run the verify command 3 times and use the median result.
+- **For improvements >5%:** Run the verify command 5 times and use the median result.
+- **Minimum improvement threshold:** Ignore improvements smaller than the noise floor (typically 0.5% for benchmarks).
+- **Confirmation run:** After accepting an improvement, re-verify once more before making the final keep decision.
+- **Environment pinning:** Pin random seeds, use deterministic test ordering, flush caches between runs.
 
 ## Phase 5.5: Guard (Regression Check)
 

@@ -167,3 +167,42 @@ Do not attempt a 4th run without user acknowledgment and revised instructions.
 | Skipping Gate 4 after Gate 3 passes | Declaring done without regression check | Gate 3 and Gate 4 are both required; neither is optional |
 | Conflating "no errors" with "correct output" | Exit code 0 but wrong behavior | Evidence must show correct output, not just absence of error |
 | Writing evidence after the fact | Constructing output from memory | Run the command, capture the output, paste it verbatim |
+
+---
+
+## 5-Step Verification Process
+
+When verification fails, follow this structured process:
+
+1. **Run the check command one final time** — capture fresh output as evidence
+2. **Construct diagnostic summary** — compare spec expectations vs actual output
+3. **Identify root cause** — is it a spec problem, environment problem, or implementation problem?
+4. **Propose next step** — rewrite spec, fix environment, reduce scope, or escalate
+5. **Escalate if unresolved** — create a diagnostic GitHub Issue with all evidence
+
+---
+
+## GitHub Issue Escalation
+
+When a task fails verification after 3 attempts, escalate by creating (or commenting on) a GitHub Issue:
+
+1. **Original task spec** — quoted from the plan comment
+2. **What was attempted** — brief factual summary of each attempt
+3. **The specific gate that failed** — exact error output from each run
+4. **Root cause analysis** — spec/environment/implementation classification
+5. **Proposed next step** — rewrite spec, fix environment, reduce scope, or request user input
+
+Label the issue with `type:bug` and `maxsim:auto`.
+
+---
+
+## Fresh Executor Context
+
+Each retry attempt MUST use a fresh executor agent:
+
+- Do NOT reuse the previous executor (spawn a new one)
+- Provide the full task spec (do not assume prior context carries over)
+- Include the diagnostic summary from the failed run
+- Include revised instructions based on root cause analysis
+
+Treat each fresh executor as a cold start. Do NOT reference or build upon any previous attempt's reasoning or partial work.
