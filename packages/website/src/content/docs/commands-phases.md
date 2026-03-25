@@ -17,11 +17,11 @@ Phase lifecycle is managed through two commands: `/maxsim:plan` for planning and
 /maxsim:plan
 {% /codeblock %}
 
-Each PLAN.md is a structured document with frontmatter (phase, plan number, type, wave, dependencies), an objective, task breakdown with type annotations, verification criteria, and success conditions.
+Each plan is a structured GitHub Issue comment with frontmatter (phase, plan number, type, wave, dependencies), an objective, task breakdown with type annotations, verification criteria, and success conditions.
 
 ### Execution with `/maxsim:execute`
 
-`/maxsim:execute` reads all PLAN.md files for a phase, groups them by wave, and runs each wave's plans in parallel using isolated worktrees. Auto-verify runs after execution completes. Gap closure is handled automatically.
+`/maxsim:execute` reads all plan comments from the phase GitHub Issue, groups them by wave, and runs each wave's plans in parallel using isolated worktrees. Auto-verify runs after execution completes. Gap closure is handled automatically.
 
 {% codeblock language="bash" %}
 /maxsim:execute

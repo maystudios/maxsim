@@ -10,7 +10,7 @@ const TERMINAL_LINES = [
   { prompt: false, text: "Planning phase 02-Auth-System...", delay: 0.6 },
   { prompt: false, text: "Spawning researcher agent (claude-sonnet-4-20250514)", delay: 1.0 },
   { prompt: false, text: "Research complete. 4 decisions captured.", delay: 1.6 },
-  { prompt: false, text: "Generating 02-01-PLAN.md (12 tasks)", delay: 2.1 },
+  { prompt: false, text: "Publishing plan to GitHub Issue #2 (12 tasks)", delay: 2.1 },
   { prompt: false, text: "Phase plan verified. Ready to execute.", delay: 2.7, accent: true },
 ];
 
