@@ -1,3 +1,17 @@
+# [5.12.0](https://github.com/maystudios/maxsimcli/compare/v5.11.0...v5.12.0) (2026-03-25)
+
+
+### Bug Fixes
+
+* **execute:** align retry count, adaptive waves, tier-2 note, and push rationale with §6.4-6.5 spec ([a4990da](https://github.com/maystudios/maxsimcli/commit/a4990da56495c81b89d43e9726e56e3ecda090c2))
+
+
+### Features
+
+* **go:** add Problem 3 unlabeled user-created issue triage detection ([800b0b8](https://github.com/maystudios/maxsimcli/commit/800b0b857acfdc33bae8fd0990ba894178d00c44))
+* **go:** add Step 6 report-results to /maxsim:go process ([528aa2f](https://github.com/maystudios/maxsimcli/commit/528aa2f4f2bf4f8a489f316aa8cfdd9a0b06a809))
+* **skills:** add user-created issue triage section to github-operations ([f0e5822](https://github.com/maystudios/maxsimcli/commit/f0e5822956d91d989cd5baa886d3726944f6776d))
+
 # [5.11.0](https://github.com/maystudios/maxsimcli/compare/v5.10.0...v5.11.0) (2026-03-24)
 
 
