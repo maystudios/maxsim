@@ -168,6 +168,7 @@ Best iteration: #{n} — {description}
 4. Try combining 2-3 previously successful changes.
 5. Try the opposite of what has not been working.
 6. Try a radical architectural change.
+7. **Escalate** — If still stuck after all above: create a diagnostic GitHub Issue (`gh issue create --label "type:bug" --label "maxsim:auto" --title "Stuck: [scope] after [N] consecutive failures" --body "[full context: iterations attempted, approaches tried, current metric value, TSV log summary, suspected blockers]"`) and escalate to the user. Do not continue the loop — wait for human guidance.
 
 ## Crash Recovery
 
