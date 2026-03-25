@@ -5,7 +5,7 @@ Before executing any step in this workflow, verify:
 </sanity_check>
 
 <purpose>
-Wave-based parallel orchestrator for phase execution. GitHub Issues is the SOLE source of truth for plans, task status, and completion. Every executor runs in an isolated git worktree. Agents are spawned in a SINGLE message block per wave for maximum parallelism. Verification is automatic and strict (max 3 total attempts).
+Wave-based parallel orchestrator for phase execution. GitHub Issues is the SOLE source of truth for plans, task status, and completion. Every executor runs in an isolated git worktree. Agents are spawned in a SINGLE message block per wave for maximum parallelism. Verification is automatic and strict (max 4 total attempts).
 </purpose>
 
 <process>
@@ -167,6 +167,8 @@ Execute each wave in sequence. Within a wave, spawn ALL agents in a SINGLE messa
 
 ### 6.1 Describe wave before spawning
 
+> **Wave Adaptation:** Before spawning each wave, re-read the plan inventory from GitHub to check if any tasks have been completed or added since Plan Mode was exited. If the wave structure has changed, re-group incomplete plans by wave number and display the updated plan before spawning.
+
 For each plan in the wave, read its `objective`. Display:
 
 ```
@@ -223,7 +225,7 @@ When competitive mode is active for a task:
 4. The verifier selects the better implementation based on: correctness, code quality, test coverage, and simplicity
 5. Discard the losing implementation's worktree branch
 
-> **Note:** Competitive implementation with Agent Teams debate pattern (Tier 2) is planned but not yet available. This uses Tier 1 subagents only.
+> **Note:** Competitive implementation with Agent Teams debate pattern (Tier 2) is available when Agent Teams are supported (see §7.2). When Agent Teams are unavailable, graceful degradation to Tier 1 subagents applies — two independent executors compete without inter-agent debate.
 
 ### 6.4 Wait for all wave agents to complete
 
@@ -414,6 +416,8 @@ Mark phase complete:
 node .claude/maxsim/bin/maxsim-tools.cjs phase complete "${PHASE_NUMBER}"
 ```
 
+> **Push strategy:** A single push occurs after full phase verification rather than per-wave, to avoid pushing partially-verified work. Each wave's merges are committed locally and verified by the test suite (step 6.8) before the next wave begins. If execution is interrupted, local commits preserve progress for re-entry via `/maxsim:execute`.
+
 Push changes to remote:
 ```bash
 git push origin HEAD
@@ -423,16 +427,16 @@ git push origin HEAD
 
 **If human_needed:** Present items for human testing. If approved, treat as passed. If issues reported, proceed to Retry Loop.
 
-## 9. Retry Loop (Max 2 Retries — 3 Total Attempts)
+## 9. Retry Loop (Max 3 Retries — 4 Total Attempts)
 
 ### 9.1 Check attempt budget
 
-If `attempt_count > 2`:
+If `attempt_count > 3`:
 ```
-## Verification Failed After 3 Attempts
+## Verification Failed After 4 Attempts
 
 Status: Could not resolve all gaps
-Attempts: 3 (initial + 2 retries)
+Attempts: 4 (initial + 3 retries)
 
 ### What Failed
 {List unresolved gaps with evidence from verification comment}
@@ -444,7 +448,7 @@ Attempts: 3 (initial + 2 retries)
 
 #### Diagnostic GitHub Issue
 
-When all 3 attempts are exhausted, create a diagnostic GitHub Issue:
+When all 4 attempts are exhausted, create a diagnostic GitHub Issue:
 
 ```bash
 TMPFILE=$(mktemp)
@@ -459,6 +463,7 @@ cat > "$TMPFILE" << 'BODY_EOF'
 - Attempt 1: {result}
 - Attempt 2: {result}
 - Attempt 3: {result}
+- Attempt 4: {result}
 
 ## Suggested Investigation
 - Review the task requirements for ambiguity
@@ -466,7 +471,7 @@ cat > "$TMPFILE" << 'BODY_EOF'
 - Consider breaking the task into smaller sub-tasks
 BODY_EOF
 gh issue create \
-  --title "fix: [Phase {N}] Task {id} failed after 3 attempts" \
+  --title "fix: [Phase {N}] Task {id} failed after 4 attempts" \
   --body-file "$TMPFILE" \
   --label "type:bug" --label "maxsim:auto"
 ```
@@ -477,7 +482,7 @@ Exit workflow.
 
 ### 9.2 Plan gap closure
 
-Display: "Verification failed. Retrying... (attempt {attempt_count + 1}/3)"
+Display: "Verification failed. Retrying... (attempt {attempt_count + 1}/4)"
 
 Resolve planner model:
 ```bash
@@ -606,7 +611,7 @@ Phase issue: #{phase_issue_number} (closed)
 - [ ] Phase issue moved to "Done" on verification pass
 - [ ] Summaries posted as GitHub comments: <!-- maxsim:type=summary -->
 - [ ] Verification results posted as GitHub comments: <!-- maxsim:type=verification -->
-- [ ] Retry loop with gap closure (max 2 retries, 3 total attempts)
+- [ ] Retry loop with gap closure (max 3 retries, 4 total attempts)
 - [ ] git push after successful verification
 - [ ] Checkpoint before /clear posts to GitHub issue
 </success_criteria>
