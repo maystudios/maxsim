@@ -392,8 +392,8 @@ Small projects (< 10 files) use fewer agents regardless of profile. The exact co
 | `/maxsim:improve` | Yes | Modifies code autonomously |
 | `/maxsim:fix-loop` | Yes | Repairs code autonomously |
 | `/maxsim:debug-loop` | Yes | May modify code |
-| `/maxsim:debug [desc]` | No | Interactive, user guides each step |
-| `/maxsim:settings` | No | Only changes MaxsimCLI config |
+| `/maxsim:debug [desc]` | Yes | Shows debugging plan + fix approach for approval before executing fix |
+| `/maxsim:settings` | Yes | Shows current config for review before writing changes |
 | `/maxsim:security` | No | Read-only audit |
 | `/maxsim:progress` | No | Read-only status display |
 | `/maxsim:help` | No | Read-only text display |
