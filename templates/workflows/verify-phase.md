@@ -226,6 +226,68 @@ Agent(
 
 Wait for all three review agents to complete before proceeding.
 
+### Step 4b — Two-Stage Sequential Review (Optional)
+
+When `verification.strict_mode` is enabled in the project config, run an additional two-stage sequential review after the parallel agents complete. Each stage uses a fresh verifier subagent to prevent anchoring bias.
+
+**Stage 1 — Spec Compliance:**
+
+Spawn a fresh verifier agent:
+```
+Agent(
+  subagent_type="Explore",
+  model="{verifier_model}",
+  prompt="
+    You are performing a spec compliance review for phase {phase_number}: {phase_name}.
+
+    Read the phase requirements from GitHub Issue #{phase_issue_number}.
+    Read all files modified in this phase.
+
+    For EACH requirement listed in the issue, verify it is implemented with evidence:
+
+    CLAIM: Requirement [ID] — [description]
+    EVIDENCE: [file:line or command]
+    OUTPUT: [actual result observed]
+    VERDICT: PASS | FAIL — [reason]
+
+    End with: SPEC COMPLIANCE: PASS or SPEC COMPLIANCE: FAIL — [list of unmet requirements]
+  "
+)
+```
+
+Wait for Stage 1 to complete. If it fails, include the failures in the final report.
+
+**Stage 2 — Code Quality (fresh subagent):**
+
+Spawn a NEW verifier agent (do NOT reuse the Stage 1 agent):
+```
+Agent(
+  subagent_type="Explore",
+  model="{verifier_model}",
+  prompt="
+    You are performing a code quality deep review for phase {phase_number}: {phase_name}.
+
+    Context: Spec compliance review has already been completed.
+    Read all files modified in this phase.
+
+    Focus on implementation quality beyond spec compliance:
+    - Architecture and design pattern adherence
+    - Error handling completeness
+    - Edge case coverage
+    - Code maintainability and clarity
+    - No dead code, no unnecessary complexity
+
+    For each finding:
+    CLAIM: [what was checked]
+    EVIDENCE: [file:line]
+    OUTPUT: [observed behavior or code pattern]
+    VERDICT: PASS | FAIL — [reason]
+
+    End with: CODE QUALITY: PASS or CODE QUALITY: FAIL — [issues found]
+  "
+)
+```
+
 ## Step 5 — Identify Human Verification Items
 
 Some checks cannot be automated. Flag these for human review:
@@ -258,6 +320,7 @@ Why manual: {why automated checks cannot cover this}
 - Security review: PASS
 - Quality review: PASS (no blockers)
 - Efficiency review: PASS (no blockers)
+- If strict_mode was on: Spec compliance review PASS and Code quality review PASS
 
 **FAIL** — Any of:
 - Any must-have truth: FAILED
@@ -267,6 +330,7 @@ Why manual: {why automated checks cannot cover this}
 - Build: FAIL
 - Any Blocker anti-pattern
 - Security or Quality review: FAIL with blockers
+- If strict_mode was on: Spec compliance review FAIL or Code quality review FAIL
 
 **HUMAN_NEEDED** — All automated checks PASS but human verification items remain unreviewed.
 
@@ -292,6 +356,8 @@ checks:
   security_review: pass | fail
   quality_review: pass | fail
   efficiency_review: pass | fail
+  spec_compliance_review: pass | fail | skipped
+  code_quality_review: pass | fail | skipped
 ---
 
 ## Verification: Phase {phase_number} — {phase_name}
@@ -328,6 +394,8 @@ checks:
 | Security | {PASS/FAIL} | {issues if fail} |
 | Quality | {PASS/FAIL} | {blockers if fail} |
 | Efficiency | {PASS/FAIL} | {blockers if fail} |
+| Spec Compliance | {PASS/FAIL/SKIPPED} | strict_mode only; {unmet requirements if fail} |
+| Code Quality (deep) | {PASS/FAIL/SKIPPED} | strict_mode only; {issues if fail} |
 
 ## Anti-Patterns Found
 
