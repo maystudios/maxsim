@@ -74,12 +74,16 @@ export function parseIssueState(body: string): MaxsimIssueState | null {
   };
 }
 
+const VALID_COMMENT_TYPES = new Set(['plan', 'research', 'context', 'progress', 'verification', 'summary', 'error', 'escalation', 'handoff', 'user-intent', 'phase-complete', 'checkpoint'] as const);
+
 /** Extract comment metadata from the first line HTML comment. */
 export function parseCommentMeta(body: string): MaxsimCommentMeta | null {
   const match = body.match(COMMENT_META_REGEX);
   if (!match) return null;
 
-  const type = match[1] as MaxsimCommentMeta['type'];
+  const type = match[1];
+  if (!(VALID_COMMENT_TYPES as ReadonlySet<string>).has(type)) return null;
+
   const attrs: Record<string, unknown> = { type };
 
   // Parse space-separated key=value pairs
