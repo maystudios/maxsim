@@ -23,7 +23,7 @@ export {
 export { loadConfig, saveConfig, resolveModel, resolveMaxAgents, getConfigPath } from './config.js';
 
 // Version
-export { VERSION } from './version.js';
+export { VERSION, parseVersion, isVersionAtLeast, getVersion } from './version.js';
 
 // Utils
 export { claudeDir, maxsimDir, agentMemoryDir, configPath, parseFrontmatter } from './utils.js';

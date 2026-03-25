@@ -1,5 +1,5 @@
 {
-  "version": "6.0.0",
+  "version": "5.12.0",
   "execution": {
     "model_profile": "balanced",
     "parallelism": {
@@ -9,7 +9,13 @@
     },
     "verification": {
       "strict_mode": true,
-      "gates": ["tests", "build", "lint", "spec", "review"],
+      "gates": [
+        "tests",
+        "build",
+        "lint",
+        "spec",
+        "review"
+      ],
       "require_code_review": true,
       "auto_resolve_conflicts": true
     }

@@ -17,7 +17,7 @@ import {
   PARALLELISM_LIMITS,
   DEFAULT_CONFIG,
 } from '../../src/core/types.js';
-import { VERSION } from '../../src/core/version.js';
+import { VERSION, parseVersion, isVersionAtLeast, getVersion } from '../../src/core/version.js';
 
 describe('CmdResult', () => {
   it('cmdOk creates a successful result with data', () => {
@@ -145,6 +145,49 @@ describe('VERSION', () => {
     expect(VERSION).toBeDefined();
     expect(typeof VERSION).toBe('string');
     expect(VERSION.length).toBeGreaterThan(0);
+  });
+});
+
+describe('parseVersion', () => {
+  it('parses a valid semver string', () => {
+    expect(parseVersion('1.2.3')).toEqual({ major: 1, minor: 2, patch: 3 });
+  });
+
+  it('parses semver with pre-release suffix', () => {
+    expect(parseVersion('2.0.1-beta.1')).toEqual({ major: 2, minor: 0, patch: 1 });
+  });
+
+  it('returns null for invalid strings', () => {
+    expect(parseVersion('invalid')).toBeNull();
+    expect(parseVersion('')).toBeNull();
+  });
+});
+
+describe('getVersion', () => {
+  it('returns a non-empty string matching VERSION', () => {
+    const v = getVersion();
+    expect(typeof v).toBe('string');
+    expect(v.length).toBeGreaterThan(0);
+    expect(v).toBe(VERSION);
+  });
+});
+
+describe('isVersionAtLeast', () => {
+  it('returns true when current version meets the minimum', () => {
+    // Current VERSION should be at least 1.0.0
+    expect(isVersionAtLeast('1.0.0')).toBe(true);
+  });
+
+  it('returns true when current version equals the minimum', () => {
+    expect(isVersionAtLeast(VERSION)).toBe(true);
+  });
+
+  it('returns false when minimum is higher than current', () => {
+    expect(isVersionAtLeast('999.0.0')).toBe(false);
+  });
+
+  it('returns false for invalid version strings', () => {
+    expect(isVersionAtLeast('invalid')).toBe(false);
   });
 });
 
