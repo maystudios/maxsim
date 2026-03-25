@@ -1,3 +1,16 @@
+## [5.13.2](https://github.com/maystudios/maxsimcli/compare/v5.13.1...v5.13.2) (2026-03-25)
+
+
+### Bug Fixes
+
+* **agents:** align planner tools with spec §8.2 Plan Mode, add write constraint ([de2b5d5](https://github.com/maystudios/maxsimcli/commit/de2b5d5e8f33faaa181861dbcf3c5ec5f134340d))
+* **agents:** document read-only constraint in researcher agent ([fda73f4](https://github.com/maystudios/maxsimcli/commit/fda73f446a01ad04e17a83b1cb52d0761d1f7f44))
+* **autoresearch:** add GitHub Issue escalation as step 7 in stuck detection ([a0475cf](https://github.com/maystudios/maxsimcli/commit/a0475cf332eeca33e2c12a4ab0c27579ac214c52))
+* **commands:** add explicit EnterPlanMode/ExitPlanMode to execute, quick, settings ([e473725](https://github.com/maystudios/maxsimcli/commit/e473725e4dca11742e23d3fb92cdb40561420f96))
+* **config:** align template config.json with DEFAULT_CONFIG gate values and sections ([2421046](https://github.com/maystudios/maxsimcli/commit/2421046a0cd99ede5efb4200765ed1bb6371831f))
+* **hooks:** improve pattern extraction and structured MEMORY.md entries ([44c84f3](https://github.com/maystudios/maxsimcli/commit/44c84f343aa6e7f1ea117e5f764bcd022fc89594))
+* **self-improvement:** fix TSV columns, add two-batch wizard, add two-stage review ([eab545a](https://github.com/maystudios/maxsimcli/commit/eab545a6d222970c2554e09fcb86fc47786d9a1d))
+
 ## [5.13.1](https://github.com/maystudios/maxsimcli/compare/v5.13.0...v5.13.1) (2026-03-25)
 
 
