@@ -1,3 +1,10 @@
+# [5.16.0](https://github.com/maystudios/maxsimcli/compare/v5.15.0...v5.16.0) (2026-03-25)
+
+
+### Features
+
+* close all audit gaps — tests, spec docs, config, verification, website polish ([96680df](https://github.com/maystudios/maxsimcli/commit/96680df097b44e32af5717aa3087ea3ae06bd099))
+
 # [5.15.0](https://github.com/maystudios/maxsimcli/compare/v5.14.1...v5.15.0) (2026-03-25)
 
 
