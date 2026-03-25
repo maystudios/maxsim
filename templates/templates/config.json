@@ -1,7 +1,8 @@
 {
-  "version": "0.0.0-dev",
+  "version": "5.13.1",
   "execution": {
     "model_profile": "balanced",
+    "competitive_enabled": false,
     "parallelism": {
       "max_agents_per_wave": 3,
       "max_retries": 3,
@@ -22,7 +23,9 @@
   },
   "worktrees": {
     "auto_cleanup": true,
-    "branch_prefix": "maxsim/"
+    "branch_prefix": "maxsim/",
+    "path_template": ".claude/worktrees/agent-{id}/",
+    "branch_template": "maxsim/phase-{N}-task-{id}"
   },
   "automation": {
     "auto_commit_on_success": true,
