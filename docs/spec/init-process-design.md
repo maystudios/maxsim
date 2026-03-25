@@ -27,7 +27,7 @@ Before specifying mechanics, establish the principles that govern every decision
 
 **4. Fail fast on prerequisites.** If GitHub remote is missing or `gh` is not authenticated, stop immediately with a clear fix. Do not degrade gracefully into local-only mode — that creates a false sense of completion.
 
-**5. The init output is the source of truth.** Every planning document created here becomes the canonical reference for all downstream phases. Invest depth here, reap compounding returns throughout the project.
+**5. GitHub is the source of truth.** Every planning artifact — phases, tasks, requirements, status — lives on GitHub (Issues, Project Board, Milestones, Wiki). The only local artifact is `.claude/maxsim/config.json` and `CLAUDE.md`. Invest depth here, reap compounding returns throughout the project.
 
 **6. Adaptive, not scripted.** Greenfield and brownfield projects have fundamentally different information needs. The process must branch meaningfully at every stage, not merely display different banners.
 
@@ -40,17 +40,24 @@ The `/maxsim:init` command is a router, not a monolith. It detects project state
 ### State Detection Matrix
 
 ```bash
-PLANNING_EXISTS=$(test -d .planning && echo "true" || echo "false")
-ROADMAP_EXISTS=$(test -f .planning/ROADMAP.md && echo "true" || echo "false")
+INITIALIZED=$(test -f .claude/maxsim/config.json && echo "true" || echo "false")
 ```
 
-| `.planning/` exists | `ROADMAP.md` exists | Route |
-|---------------------|---------------------|-------|
-| false | — | **Scenario A:** New Project (greenfield) |
-| true | false | **Scenario B:** Existing Project (brownfield init) |
-| true | true | **Scenario C/D:** Active or complete milestone |
+Additionally, check GitHub for existing project state:
 
-For Scenario C vs D: check if all phases show `status: complete`. If yes → Scenario D (Milestone Complete). Otherwise → Scenario C (Active Milestone).
+```bash
+gh repo view --json name,url,isEmpty 2>/dev/null || echo "NO_REPO"
+HAS_CODE=$(test -n "$(ls -A . 2>/dev/null | grep -v '^\.git$' | head -1)" && echo "true" || echo "false")
+```
+
+| Initialized | Repo exists | Has code | Route |
+|-------------|-------------|----------|-------|
+| false | false | — | **Scenario A:** New Project (greenfield) |
+| false | true (empty) | false | **Scenario A:** New Project (greenfield) |
+| false | true | true | **Scenario B:** Existing Project (brownfield init) |
+| true | — | — | **Scenario C/D:** Already initialized — show status, offer reinit |
+
+For Scenario C vs D: query the GitHub Project Board to check if all phase issues are in the "Done" column. If yes → Scenario D (Milestone Complete). Otherwise → Scenario C (Active Milestone).
 
 ### Brownfield Detection Signals
 
@@ -86,87 +93,83 @@ Extract everything knowable from the filesystem before asking a single question.
 
 The scan uses specialized agents that run simultaneously. Each agent has a narrow focus — this is why 30 agents outperforms 4 generalists. Narrow focus means the agent can go deep without running out of context capacity.
 
-**Agent grouping strategy:** Spawn in waves of 5-8 agents using `Task(run_in_background=true)`. More than 8 simultaneous agents risks API rate limits; batching 3-5 concurrent is the most reliable pattern per current Claude Code sub-agent best practices.
+**Agent grouping strategy:** Spawn in waves of 5-8 agents using `Agent(isolation:"worktree", run_in_background:true)`. More than 8 simultaneous agents risks API rate limits; batching 3-5 concurrent is the most reliable pattern per current Claude Code sub-agent best practices. Each agent returns a JSON object; no local files are written.
 
 #### Wave 1: Foundation (run first, others may depend on findings)
 
-| Agent | Output File | Focus |
-|-------|-------------|-------|
-| `stack-detector` | `STACK.md` | Languages, runtimes, frameworks, package managers |
-| `manifest-reader` | `MANIFESTS.md` | package.json, pyproject.toml, go.mod, Cargo.toml — all deps with versions |
-| `structure-mapper` | `STRUCTURE.md` | Directory tree, entry points, module boundaries |
-| `readme-parser` | `README-ANALYSIS.md` | What the README claims, how complete it is |
-| `git-historian` | `GIT-HISTORY.md` | Commit frequency, contributors, branch patterns, last active areas |
+| Agent | JSON Output Key | Focus |
+|-------|-----------------|-------|
+| `stack-detector` | `stack` | Languages, runtimes, frameworks, package managers |
+| `manifest-reader` | `manifests` | package.json, pyproject.toml, go.mod, Cargo.toml — all deps with versions |
+| `structure-mapper` | `structure` | Directory tree, entry points, module boundaries |
+| `readme-parser` | `readme_analysis` | What the README claims, how complete it is |
+| `git-historian` | `git_history` | Commit frequency, contributors, branch patterns, last active areas |
 
 #### Wave 2: Architecture (after Wave 1 completes)
 
-| Agent | Output File | Focus |
-|-------|-------------|-------|
-| `arch-detective` | `ARCHITECTURE.md` | Patterns (MVC, hexagonal, microservices, monolith), layers, data flow |
-| `api-scanner` | `API-SURFACE.md` | Exposed endpoints, GraphQL schema, tRPC routers, WebSocket handlers |
-| `data-model-reader` | `DATA-MODEL.md` | DB schema, ORM models, migration files, data relationships |
-| `auth-detector` | `AUTH.md` | Authentication mechanism (JWT, sessions, OAuth), authorization approach |
-| `config-reader` | `CONFIG.md` | Environment variables, `.env.example`, feature flags, secrets patterns |
+| Agent | JSON Output Key | Focus |
+|-------|-----------------|-------|
+| `arch-detective` | `architecture` | Patterns (MVC, hexagonal, microservices, monolith), layers, data flow |
+| `api-scanner` | `api_surface` | Exposed endpoints, GraphQL schema, tRPC routers, WebSocket handlers |
+| `data-model-reader` | `data_model` | DB schema, ORM models, migration files, data relationships |
+| `auth-detector` | `auth` | Authentication mechanism (JWT, sessions, OAuth), authorization approach |
+| `config-reader` | `config` | Environment variables, `.env.example`, feature flags, secrets patterns |
 
 #### Wave 3: Quality & Operations
 
-| Agent | Output File | Focus |
-|-------|-------------|-------|
-| `test-scanner` | `TESTING.md` | Test frameworks, coverage config, test patterns, what's covered |
-| `ci-reader` | `CI-CD.md` | CI pipelines, deployment steps, environments (dev/staging/prod) |
-| `lint-formatter` | `CODE-STYLE.md` | ESLint/Prettier/Ruff/golangci config, formatting rules |
-| `error-handler-detector` | `ERROR-HANDLING.md` | How errors propagate, logging patterns, error boundaries |
-| `perf-scanner` | `PERFORMANCE.md` | Caching layers, CDN config, bundle analysis config, DB indexing |
+| Agent | JSON Output Key | Focus |
+|-------|-----------------|-------|
+| `test-scanner` | `testing` | Test frameworks, coverage config, test patterns, what's covered |
+| `ci-reader` | `ci_cd` | CI pipelines, deployment steps, environments (dev/staging/prod) |
+| `lint-formatter` | `code_style` | ESLint/Prettier/Ruff/golangci config, formatting rules |
+| `error-handler-detector` | `error_handling` | How errors propagate, logging patterns, error boundaries |
+| `perf-scanner` | `performance` | Caching layers, CDN config, bundle analysis config, DB indexing |
 
 #### Wave 4: Security & Concerns
 
-| Agent | Output File | Focus |
-|-------|-------------|-------|
-| `security-scanner` | `SECURITY.md` | Dependency vulnerabilities (audit), secrets in code, auth gaps |
-| `debt-detector` | `TECH-DEBT.md` | TODO/FIXME/HACK comments, deprecated APIs in use, outdated deps |
-| `dependency-graph` | `DEPENDENCIES.md` | Internal module dependencies, circular dependencies |
-| `bundle-analyzer` | `BUILD.md` | Build tooling (Webpack/Vite/esbuild), build output size, optimization |
-| `monitoring-scanner` | `OBSERVABILITY.md` | Logging setup, error tracking (Sentry), APM, analytics |
+| Agent | JSON Output Key | Focus |
+|-------|-----------------|-------|
+| `security-scanner` | `security` | Dependency vulnerabilities (audit), secrets in code, auth gaps |
+| `debt-detector` | `tech_debt` | TODO/FIXME/HACK comments, deprecated APIs in use, outdated deps |
+| `dependency-graph` | `dependencies` | Internal module dependencies, circular dependencies |
+| `bundle-analyzer` | `build` | Build tooling (Webpack/Vite/esbuild), build output size, optimization |
+| `monitoring-scanner` | `observability` | Logging setup, error tracking (Sentry), APM, analytics |
 
 #### Wave 5: Product & Domain
 
-| Agent | Output File | Focus |
-|-------|-------------|-------|
-| `feature-lister` | `FEATURES.md` | What the app actually does (inferred from routes, components, models) |
-| `ui-scanner` | `UI-PATTERNS.md` | Component library, design system, UI patterns, accessibility config |
-| `i18n-detector` | `INTERNATIONALIZATION.md` | i18n setup, supported locales, translation files |
-| `notification-scanner` | `NOTIFICATIONS.md` | Email, push, in-app, WebSocket notification setup |
-| `file-upload-scanner` | `FILE-HANDLING.md` | File upload patterns, storage (S3, local, CDN), image processing |
+| Agent | JSON Output Key | Focus |
+|-------|-----------------|-------|
+| `feature-lister` | `features` | What the app actually does (inferred from routes, components, models) |
+| `ui-scanner` | `ui_patterns` | Component library, design system, UI patterns, accessibility config |
+| `i18n-detector` | `i18n` | i18n setup, supported locales, translation files |
+| `notification-scanner` | `notifications` | Email, push, in-app, WebSocket notification setup |
+| `file-upload-scanner` | `file_handling` | File upload patterns, storage (S3, local, CDN), image processing |
 
 #### Wave 6: Scale & Infrastructure
 
-| Agent | Output File | Focus |
-|-------|-------------|-------|
-| `infra-scanner` | `INFRASTRUCTURE.md` | Docker, Kubernetes, Terraform, cloud provider config |
-| `cache-detector` | `CACHING.md` | Redis, memcached, CDN, service worker, in-memory cache |
-| `search-scanner` | `SEARCH.md` | Elasticsearch, Algolia, vector search, full-text search setup |
-| `queue-scanner` | `QUEUES.md` | Job queues (Bull, Sidekiq, Celery), background workers |
-| `third-party-scanner` | `INTEGRATIONS.md` | Stripe, SendGrid, Twilio, Cloudinary, and other external services |
+| Agent | JSON Output Key | Focus |
+|-------|-----------------|-------|
+| `infra-scanner` | `infrastructure` | Docker, Kubernetes, Terraform, cloud provider config |
+| `cache-detector` | `caching` | Redis, memcached, CDN, service worker, in-memory cache |
+| `search-scanner` | `search` | Elasticsearch, Algolia, vector search, full-text search setup |
+| `queue-scanner` | `queues` | Job queues (Bull, Sidekiq, Celery), background workers |
+| `third-party-scanner` | `integrations` | Stripe, SendGrid, Twilio, Cloudinary, and other external services |
 
 #### Wave 7: Conventions & Patterns (depth pass)
 
-| Agent | Output File | Focus |
-|-------|-------------|-------|
-| `naming-convention-agent` | `NAMING.md` | File naming, variable naming, function naming patterns in actual code |
-| `import-pattern-agent` | `IMPORTS.md` | Import organization, path aliases, barrel files |
-| `testing-pattern-agent` | `TEST-PATTERNS.md` | How tests are structured, mock patterns, test data factories |
-| `documentation-scanner` | `DOCUMENTATION.md` | JSDoc, inline docs, external docs, documentation coverage |
-| `migration-scanner` | `MIGRATIONS.md` | DB migration history, migration strategy, pending migrations |
+| Agent | JSON Output Key | Focus |
+|-------|-----------------|-------|
+| `naming-convention-agent` | `naming` | File naming, variable naming, function naming patterns in actual code |
+| `import-pattern-agent` | `imports` | Import organization, path aliases, barrel files |
+| `testing-pattern-agent` | `test_patterns` | How tests are structured, mock patterns, test data factories |
+| `documentation-scanner` | `documentation` | JSDoc, inline docs, external docs, documentation coverage |
+| `migration-scanner` | `migrations` | DB migration history, migration strategy, pending migrations |
 
 ### Aggregation: Synthesizer Agent
 
-After all waves complete, a single synthesizer agent reads all output files and produces:
+After all waves complete, a single synthesizer agent reads all JSON outputs from the wave agents and produces a unified `SCAN_FINDINGS` object in memory. This object is passed directly to the interview phase — no local files are written.
 
-```
-.planning/codebase/SYNTHESIS.md
-```
-
-Synthesis format:
+Synthesis format (structured as a single JSON object with the following conceptual sections):
 
 ```markdown
 # Codebase Synthesis
@@ -230,17 +233,18 @@ These are the things the agent scan found that should inform or skip interview q
 The synthesizer agent operates after all wave agents report completion. Implementation:
 
 ```
-// After all Task() calls with run_in_background=true complete:
-Task(
-  subagent_type="synthesizer",
-  model="{synthesizer_model}",
-  run_in_background=false,  // Wait for this one
-  description="Synthesize codebase scan results",
-  prompt="Read all files in .planning/codebase/.
-  Write .planning/codebase/SYNTHESIS.md using the synthesis template.
-  Your job is to produce a structured overview that an AI interview agent
+// After all Agent() calls with run_in_background:true complete:
+Agent(
+  isolation: "worktree",
+  run_in_background: false,  // Wait for this one
+  description: "Synthesize codebase scan results",
+  prompt: "You have the following JSON outputs from codebase scan agents:
+  [all wave agent JSON outputs inlined].
+  Synthesize these into a single SCAN_FINDINGS JSON object.
+  Your job is to produce a structured overview that the interview phase
   can use to skip redundant questions and focus on what's actually unknown.
-  Be specific. Cite file paths as evidence. Flag contradictions."
+  Be specific. Cite file paths as evidence. Flag contradictions.
+  Return the SCAN_FINDINGS JSON object."
 )
 ```
 
@@ -282,7 +286,7 @@ The scan tells us what exists. The interview tells us:
 
 ### Pre-Interview: Loading Scan Context
 
-Before asking any question, the interview agent reads `SYNTHESIS.md` and builds an internal map:
+Before asking any question, the interview agent reads the `SCAN_FINDINGS` object and builds an internal map:
 
 ```
 CONFIRMED domains: [list from synthesis "Key Findings for Interview"]
@@ -307,7 +311,7 @@ For **brownfield projects:**
 ```
 "I've scanned the codebase. Here's what I found:
 
-[Synthesis summary — 5-8 bullet points from SYNTHESIS.md]
+[Synthesis summary — 5-8 bullet points from SCAN_FINDINGS]
 
 A few things jumped out: [key concerns or discrepancies]
 
@@ -447,7 +451,7 @@ Purpose: Surface what the user knows they don't know.
 | "What would cause you to stop this project?" | When scope feels uncertain |
 | "What do you need to learn or research before this can succeed?" | When technology choices are speculative |
 
-Concerns from the scan (in `SYNTHESIS.md`) are raised here:
+Concerns from the scan (in `SCAN_FINDINGS`) are raised here:
 "I noticed [specific concern from scan]. Is that something we need to address in this milestone?"
 
 ### Greenfield vs. Brownfield Adaptive Differences
@@ -484,7 +488,7 @@ Questions asked via AskUserQuestion support voice input naturally when the Claud
 
 **Never ask about:** The user's technical experience level. Claude builds. The user directs. This distinction matters.
 
-### Gate Logic: When to Offer "Create PROJECT.md"
+### Gate Logic: When to Offer "Proceed to GitHub Setup"
 
 Two conditions must both be true:
 
@@ -506,8 +510,8 @@ Coverage: 14/16 relevant domains (88%) — 11 rounds
 
 Then offer the gate via AskUserQuestion:
 - header: "Ready?"
-- question: "Ready to write the project documents?"
-- options: ["Write documents", "Keep exploring"]
+- question: "Ready to set up GitHub and initialize the project?"
+- options: ["Set up GitHub", "Keep exploring"]
 
 ---
 
@@ -595,61 +599,40 @@ gh api graphql -f query='
 '
 ```
 
-**Kanban columns to create:**
+**Kanban columns (v6 standard):**
 
 | Column | Purpose |
 |--------|---------|
-| Backlog | Phases not yet started |
-| In Planning | Phase currently being planned |
-| In Progress | Phase actively being executed |
-| In Review | Phase waiting for verification |
-| Done | Phase verified and complete |
-| Blocked | Phase paused waiting for external input |
+| Backlog | Issues not yet prioritized |
+| To Do | Issues ready to be worked on |
+| In Progress | Issue actively being executed |
+| In Review | Issue waiting for verification |
+| Done | Issue verified and complete |
 
-**Required fields to add to the board:**
-
-| Field | Type | Values |
-|-------|------|--------|
-| Status | Single select | Backlog, Planning, In Progress, Review, Done, Blocked |
-| Phase | Number | 1-N |
-| Priority | Single select | Critical, High, Medium, Low |
-| Effort | Single select | Small (< 1 day), Medium (1-3 days), Large (3-7 days) |
-| Sprint | Iteration | Auto-created |
+These columns map directly to v6 state tracking — the column an issue is in IS its status. No separate status labels needed.
 
 ### Labels
 
 Create a standard label set for the repository. These labels structure all Issues created during the project lifecycle:
 
+In v6, labels are managed via the maxsim-tools CLI to ensure consistency:
+
 ```bash
-# Phase labels
-gh label create "phase" --color "0052cc" --description "Phase tracking issue"
-gh label create "plan" --color "1d76db" --description "Execution plan within a phase"
-gh label create "milestone" --color "e4e669" --description "Milestone tracking"
-
-# Status labels
-gh label create "status: backlog" --color "d3d3d3" --description "Not yet started"
-gh label create "status: in-progress" --color "0075ca" --description "Currently being worked on"
-gh label create "status: blocked" --color "e11d48" --description "Blocked, needs attention"
-gh label create "status: done" --color "2da44e" --description "Complete and verified"
-
-# Type labels
-gh label create "type: feature" --color "5319e7" --description "New feature or capability"
-gh label create "type: fix" --color "d93f0b" --description "Bug fix"
-gh label create "type: refactor" --color "f9d0c4" --description "Code improvement without behavior change"
-gh label create "type: docs" --color "fef2c0" --description "Documentation"
-gh label create "type: test" --color "c2e0c6" --description "Test coverage"
-gh label create "type: chore" --color "bfd4f2" --description "Maintenance, tooling, dependencies"
-
-# Priority labels
-gh label create "priority: critical" --color "b60205" --description "Must be done immediately"
-gh label create "priority: high" --color "e11d48" --description "Important, do next"
-gh label create "priority: medium" --color "fbca04" --description "Normal priority"
-gh label create "priority: low" --color "0e8a16" --description "Nice to have"
-
-# Maxsim-specific labels
-gh label create "maxsim: generated" --color "6f42c1" --description "Created by Maxsim automation"
-gh label create "maxsim: phase-issue" --color "6f42c1" --description "Maxsim phase tracking issue"
+node .claude/maxsim/bin/maxsim-tools.cjs github ensure-labels
 ```
+
+This creates the standard MAXSIM v6 label set — 6 labels in 2 namespaces:
+
+| Label | Description |
+|-------|-------------|
+| `type:phase` | Phase tracking issue |
+| `type:task` | Task within a phase (sub-issue) |
+| `type:bug` | Bug fix |
+| `type:quick` | Quick task (not part of a phase) |
+| `maxsim:auto` | Created by MAXSIM automation |
+| `maxsim:user` | Created by a human user |
+
+Status is NOT tracked via labels in v6 — it is tracked via the GitHub Project Board columns (Backlog / To Do / In Progress / In Review / Done).
 
 ### Initial Milestone
 
@@ -677,7 +660,7 @@ gh issue create \
   --body "$(cat <<'EOF'
 ## What Is This?
 
-[1-2 sentence description from PROJECT.md]
+[1-2 sentence description from interview context]
 
 ## Why It Exists
 
@@ -689,28 +672,29 @@ gh issue create \
 
 ## What "Done" Looks Like
 
-[Acceptance criteria — top 3-5 from ACCEPTANCE-CRITERIA.md]
+[Acceptance criteria — top 3-5 from interview responses]
 
 ## Key Decisions
 
-[Table of major decisions from DECISIONS.md — top 5]
+[Table of major decisions from interview — top 5]
 
 ## Explicit No-Gos
 
-[List from NO-GOS.md — top items]
+[No-go items from interview responses]
 
 ## Tech Stack
 
-[Summary from SYNTHESIS.md or STACK.md]
+[Summary from SCAN_FINDINGS or interview responses]
 
 ## Resources
 
-- [Roadmap](#) — link to ROADMAP.md or GitHub Project board
-- [Requirements](#) — link to GitHub Wiki
-- [Conventions](#) — link to GitHub Wiki
+- [Project Board](#) — GitHub Project Board (Kanban: Backlog / To Do / In Progress / In Review / Done)
+- [Milestones](#) — GitHub Milestones for roadmap tracking
+- [Conventions](#) — GitHub Wiki
+- [Requirements](#) — GitHub Wiki
 
 ---
-*Created by /maxsim:init on [date]. Update by editing .planning/PROJECT.md and running /maxsim:sync.*
+*Created by /maxsim:init on [date]. Managed via GitHub Issues and Project Board.*
 EOF
 )"
 ```
@@ -744,7 +728,7 @@ git clone "https://github.com/$OWNER/$REPO.wiki.git" /tmp/wiki-$REPO 2>/dev/null
 cat > /tmp/wiki-$REPO/Conventions.md << 'EOF'
 # Project Conventions
 
-[Content from .planning/codebase/CONVENTIONS.md or .planning/CONVENTIONS.md]
+[Content from scan findings and interview responses]
 
 ## File Naming
 
@@ -767,7 +751,7 @@ cat > /tmp/wiki-$REPO/Conventions.md << 'EOF'
 [From config questions]
 
 ---
-*Managed by MaxsimCLI. Source of truth: `.planning/` directory.*
+*Managed by MaxsimCLI. Source of truth: GitHub Issues and Project Board.*
 EOF
 
 cd /tmp/wiki-$REPO && git add . && git commit -m "Initialize conventions (via maxsim:init)" && git push
@@ -781,10 +765,10 @@ Write project requirements to the Wiki for team visibility:
 cat > /tmp/wiki-$REPO/Requirements.md << 'EOF'
 # Project Requirements
 
-[Content from .planning/REQUIREMENTS.md]
+[Content from interview responses and scan findings]
 
 ---
-*Managed by MaxsimCLI. Source of truth: `.planning/REQUIREMENTS.md`*
+*Managed by MaxsimCLI. Source of truth: GitHub Issues and Wiki.*
 EOF
 ```
 
@@ -821,7 +805,7 @@ Write to project root as `CLAUDE.md`:
 
 ## Architecture
 
-[2-4 sentences from ARCHITECTURE.md — pattern, key layers, data flow]
+[2-4 sentences from scan findings — pattern, key layers, data flow]
 
 ## Key Files & Directories
 
@@ -833,11 +817,11 @@ Write to project root as `CLAUDE.md`:
 
 ## Conventions
 
-- [Most important convention from CONVENTIONS.md]
+- [Most important convention from scan/interview]
 - [Second most important]
 - [Third most important]
 
-See `.planning/codebase/CONVENTIONS.md` for full conventions.
+See the GitHub Wiki Conventions page for full conventions.
 
 ## Testing
 
@@ -848,18 +832,18 @@ See `.planning/codebase/CONVENTIONS.md` for full conventions.
 
 ## No-Gos
 
-[Top 3-5 from NO-GOS.md — the ones that would affect day-to-day coding]
+[Top 3-5 no-gos from interview — the ones that would affect day-to-day coding]
 
 ## Working with MaxsimCLI
 
-- Current phase: See `.planning/STATE.md`
-- Roadmap: See `.planning/ROADMAP.md`
-- Requirements: See `.planning/REQUIREMENTS.md`
+- Current phase: Check the GitHub Project Board (Backlog / To Do / In Progress / In Review / Done)
+- Roadmap: See GitHub Milestones and Phase Issues
+- Requirements: See GitHub Wiki Requirements page
 - Run `/maxsim:progress` to see full project status
 
 ## Context
 
-- Stack: [from STACK.md]
+- Stack: [from scan findings]
 - Deployment: [from scan]
 - Auth: [from scan]
 ```
@@ -892,7 +876,7 @@ Create `.claude/settings.json` with project-specific Claude Code settings:
       "Bash(ls:*)",
       "Bash(find:*)",
       "Bash(grep:*)",
-      "Write(**/.planning/*)",
+      "Write(**/.claude/*)",
       "Write(**/CLAUDE.md)",
       "Read(**)"
     ],
@@ -945,9 +929,10 @@ Update `.gitignore` to track `.claude/` but ignore secrets:
 
 ```gitignore
 # MaxsimCLI
-.planning/         # Tracked if commit_docs=true, excluded if false
-!.claude/          # Always track .claude/
-.claude/*.env      # But not any env files in .claude/
+!.claude/              # Always track .claude/
+.claude/agent-memory/  # Per-machine agent memory — not tracked
+.claude/*.env          # But not any env files in .claude/
+autoresearch-results.tsv  # Metric data — not tracked
 ```
 
 ### Register Hooks
@@ -1005,10 +990,10 @@ Write `.claude/settings.json` hooks section:
 ```
 
 Hook purposes:
-- `pre-bash`: Log command intent to STATE.md for session continuity
-- `post-bash`: Detect failures, update STATE.md activity log
-- `post-write`: Track which planning documents were modified
-- `session-end`: Write session summary to STATE.md for `/maxsim:resume-work`
+- `pre-bash`: Log command intent for session continuity
+- `post-bash`: Detect failures, update activity log
+- `post-write`: Track which files were modified
+- `session-end`: Write session summary for `/maxsim:resume-work`
 
 ---
 
@@ -1030,14 +1015,13 @@ AskUserQuestion:
 
 ### If Yes: Generate Full Roadmap
 
-The roadmap agent reads:
-- `.planning/PROJECT.md` — vision and requirements
-- `.planning/REQUIREMENTS.md` — full requirements list
-- `.planning/ACCEPTANCE-CRITERIA.md` — success criteria
-- `.planning/DECISIONS.md` — locked decisions
-- `.planning/NO-GOS.md` — exclusions
-- `.planning/codebase/SYNTHESIS.md` — existing state (brownfield)
-- `config.json` — depth setting (quick/standard/comprehensive)
+The roadmap agent reads from the `PROJECT_CONTEXT` object (gathered during interview) and `SCAN_FINDINGS` (from scan phase):
+- Project vision, goals, and requirements — from interview responses
+- Acceptance criteria — from interview responses
+- Key decisions — from interview responses
+- No-gos / exclusions — from interview responses
+- Existing codebase state (brownfield) — from `SCAN_FINDINGS`
+- `.claude/maxsim/config.json` — project config and depth setting
 
 Phase count by depth setting:
 - Quick: 3-5 phases
@@ -1150,22 +1134,19 @@ Phases: [N]
 GitHub: [repo URL]
 Board: [project board URL]
 
-Documents created:
-  ✓ .planning/config.json
-  ✓ .planning/PROJECT.md
-  ✓ .planning/REQUIREMENTS.md
-  ✓ .planning/ROADMAP.md
-  ✓ .planning/STATE.md
-  ✓ .planning/DECISIONS.md
-  ✓ .planning/ACCEPTANCE-CRITERIA.md
-  ✓ .planning/NO-GOS.md
-  ✓ .planning/CONVENTIONS.md
+Artifacts created:
+  ✓ .claude/maxsim/config.json
   ✓ CLAUDE.md
-  ✓ .claude/settings.json
+  ✓ GitHub Project Board ({project_name} — MAXSIM)
+  ✓ GitHub Milestone (Milestone 1)
+  ✓ GitHub Labels (type:phase, type:task, type:bug, type:quick, maxsim:auto, maxsim:user)
+  ✓ GitHub Wiki (Conventions, Requirements)
+  ✓ Pinned Project Overview Issue
+  ✓ Phase Issues (if roadmap generated)
 
 Next step:
   /maxsim:plan 1     — Plan Phase 1 in detail
-  /maxsim:go         — Start executing (YOLO mode)
+  /maxsim:go         — Start executing
 ```
 
 ---
@@ -1175,76 +1156,56 @@ Next step:
 ### Greenfield Project (no existing code)
 
 ```
-1. Router: detect state → Scenario A (New Project)
-2. Router: run `maxsim-tools init new-project` → load INIT_CONTEXT
-3. Router: delegate to new-project.md workflow
-4. [new-project.md]: GitHub prerequisites gate
-5. [new-project.md]: Brownfield offer (skip — no code detected)
-6. [new-project.md]: Open question "What do you want to build?"
-7. [new-project.md]: Deep questioning loop (10+ rounds, 80%+ coverage)
-8. [new-project.md]: No-gos confirmation
-9. [new-project.md]: Write PROJECT.md
-10. [new-project.md]: Generate artefakte (DECISIONS, ACCEPTANCE-CRITERIA, NO-GOS, CONVENTIONS)
-11. [new-project.md]: Workflow preferences (config.json)
-12. [new-project.md]: Optional: domain research agents
-13. [new-project.md]: Write REQUIREMENTS.md
-14. [Phase 3]: GitHub setup (labels, board, milestone, pinned issue, wiki)
-15. [Phase 4]: Write CLAUDE.md
-16. [Phase 4]: Configure .claude/settings.json
-17. [Phase 4]: Install MaxsimCLI files to .claude/
-18. [Phase 4]: Register hooks
-19. [Phase 5]: Roadmap offer → generate if yes → create GitHub issues
-20. Display completion banner
+1. Router: detect state → no config.json, no repo or empty repo → Scenario A (New Project)
+2. Router: delegate to new-project.md workflow
+3. [new-project.md]: GitHub prerequisites gate (gh auth, git remote)
+4. [new-project.md]: EnterPlanMode
+5. [new-project.md]: Open question "What do you want to build?"
+6. [new-project.md]: Deep questioning loop (adaptive, scan-informed if code exists)
+7. [new-project.md]: No-gos confirmation
+8. [new-project.md]: Collect PROJECT_CONTEXT from all interview responses
+9. [Phase 3]: GitHub setup (ensure labels, create project board, create milestone)
+10. [Phase 4]: Write .claude/maxsim/config.json
+11. [Phase 4]: Write CLAUDE.md (via maxsim-tools or direct)
+12. [Phase 4]: Commit initialization files
+13. [Phase 4]: ExitPlanMode
+14. [Phase 5]: Roadmap offer → generate if yes → create GitHub phase issues + add to board
+15. Display completion banner
 ```
 
-### Brownfield Project (existing codebase, no .planning/)
+### Brownfield Project (existing codebase, not yet initialized)
 
 ```
-1. Router: detect state → Scenario B (Existing Project)
-2. Router: run `maxsim-tools init init-existing` → load INIT_CONTEXT
-3. Router: delegate to init-existing.md workflow
-4. [init-existing.md]: GitHub prerequisites gate
-5. [init-existing.md]: Conflict resolution (no conflict — fresh init)
-6. [init-existing.md]: SCAN PHASE — Wave 1 through Wave 7 (30+ parallel agents)
-7. [init-existing.md]: Synthesizer agent → SYNTHESIS.md
-8. [init-existing.md]: README validation — compare claims vs. findings
-9. [init-existing.md]: Config questions (workflow preferences)
-10. [init-existing.md]: Existing state confirmation (show scan findings)
-11. [init-existing.md]: INTERVIEW PHASE — scan-informed adaptive questioning
-12. [init-existing.md]: No-gos confirmation
-13. [init-existing.md]: Write PROJECT.md (with Validated requirements from existing code)
-14. [init-existing.md]: Generate artefakte
-15. [Phase 3]: GitHub setup
-16. [Phase 4]: Write CLAUDE.md (includes scan findings)
-17. [Phase 4]: Configure .claude/settings.json
-18. [Phase 4]: Install MaxsimCLI files
-19. [Phase 4]: Register hooks
-20. [Phase 5]: Roadmap offer
-21. Display completion banner
+1. Router: detect state → no config.json, repo has code → Scenario B (Existing Project)
+2. Router: delegate to init-existing.md workflow
+3. [init-existing.md]: GitHub prerequisites gate (gh auth, git remote)
+4. [init-existing.md]: EnterPlanMode
+5. [init-existing.md]: SCAN PHASE — 10-12 parallel worktree agents returning JSON
+6. [init-existing.md]: Synthesizer agent → SCAN_FINDINGS object (in memory)
+7. [init-existing.md]: Present findings summary to user
+8. [init-existing.md]: INTERVIEW PHASE — scan-informed adaptive questioning (confirm/correct scan, establish goals, no-gos)
+9. [init-existing.md]: Collect PROJECT_CONTEXT from all responses
+10. [Phase 3]: GitHub setup (ensure labels, create project board, create milestone)
+11. [Phase 4]: Write .claude/maxsim/config.json (includes scan metadata)
+12. [Phase 4]: Write CLAUDE.md (via maxsim-tools or direct, includes scan findings)
+13. [Phase 4]: Commit initialization files
+14. [Phase 4]: ExitPlanMode
+15. [Phase 5]: Roadmap offer → generate if yes → create GitHub phase issues + add to board
+16. Display completion banner
 ```
 
 ---
 
 ## State Management
 
-All init state is written to `.planning/STATE.md` with checkpoints. If the init process is interrupted (context overflow, user abandons), the next run of `/maxsim:init` detects the partial state via the conflict resolution step and offers to resume.
+Project state is tracked on the GitHub Project Board — not in local files. The board columns (Backlog / To Do / In Progress / In Review / Done) represent issue status. Milestone completion percentage represents roadmap progress. Issue comments store plans, research, context, and summaries.
 
-Checkpoint format:
+If the init process is interrupted (context overflow, user abandons), the next run of `/maxsim:init` detects the partial state by checking:
+1. Whether `.claude/maxsim/config.json` exists (local setup completed)
+2. Whether the GitHub Project Board exists (GitHub setup completed)
+3. Whether phase issues exist on the board (roadmap completed)
 
-```json
-{
-  "init_stage": "github_setup",
-  "init_started": "2026-03-22T14:30:00Z",
-  "scan_complete": true,
-  "interview_complete": true,
-  "github_setup_complete": false,
-  "local_setup_complete": false,
-  "roadmap_complete": false,
-  "last_checkpoint": "2026-03-22T15:45:00Z"
-}
-```
-
-On resume, the init detects the last completed checkpoint and skips to the appropriate step.
+The router offers to resume or reinitialize based on these signals.
 
 ---
 
@@ -1252,11 +1213,11 @@ On resume, the init detects the last completed checkpoint and skips to the appro
 
 | Decision | Rationale | Alternative Considered |
 |----------|-----------|----------------------|
-| 30+ agents vs 4 | Narrow focus per agent enables deeper analysis within context limits | 4 broad agents: faster but shallower, misses domain-specific patterns |
-| Wave batching (5-8 per wave) | Avoids API rate limits while maximizing parallelism | All 30 at once: risks rate limit failures; sequential: 8x slower |
+| 10-12 parallel agents (v6) vs 30+ (earlier spec) | Practical concurrency that avoids API rate limits while still getting deep coverage | 30+ agents: risks rate limit failures and excessive API cost |
+| Wave batching (5-8 per wave) | Avoids API rate limits while maximizing parallelism | All at once: risks rate limit failures; sequential: much slower |
 | Hard GitHub prerequisite | Forces correct setup before any work, avoids "almost initialized" state | Local-only fallback: produces incomplete init that fails later |
-| 10 round minimum interview | Ensures sufficient depth; prevents premature proceed | 5 rounds: too shallow for complex projects; no minimum: users rush through |
-| Synthesizer agent after scan | Single agent creates coherent view; prevents interview agent needing to read 30 files | Interview agent reads all files: context overflow on large repos |
+| GitHub-first (no local .planning/) | Single source of truth eliminates sync issues; team members see state without cloning | Local .planning/ files: must be synced, can diverge, invisible to team |
+| Synthesizer agent after scan | Single agent creates coherent SCAN_FINDINGS object; prevents interview agent needing to parse 10+ agent outputs | Interview agent reads all outputs: context overflow on large repos |
 | CLAUDE.md target 50-150 lines | Balances context richness vs. token cost per conversation | Comprehensive CLAUDE.md: too much competing context; minimal: agents miss conventions |
 | Pinned GitHub issue | Makes project overview visible without dev tools | Wiki homepage: less visible; README: conflicts with public documentation |
 | Adaptive interview (scan-informed) | Eliminates questions we can answer from code; makes interview about what matters | Same interview for all projects: wastes time, annoys users with known answers |

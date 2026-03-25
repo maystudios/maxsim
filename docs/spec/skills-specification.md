@@ -1,10 +1,10 @@
 # MaxsimCLI Skills Specification
 
-**Version:** 5.0
-**Date:** 2026-03-22
-**Status:** Authoritative design spec for the 14-skill target state
+**Version:** 6.0
+**Date:** 2026-03-26
+**Status:** Authoritative design spec for the 15-skill target state
 
-This document defines the exact content structure for each of the 14 MaxsimCLI skills. Each entry covers: Anthropic-compliant name and description, section outline with key content, agent preload assignments, cross-skill references, and estimated line count.
+This document defines the exact content structure for each of the 15 MaxsimCLI skills. Each entry covers: Anthropic-compliant name and description, section outline with key content, agent preload assignments, cross-skill references, and estimated line count.
 
 ---
 
@@ -38,8 +38,9 @@ All skills follow Anthropic's Claude Code skill conventions:
 | 10 | `github-operations` | Agent-internal | NEW — merge of 2 existing skills |
 | 11 | `research` | Agent-internal | NEW — merge of 2 existing skills |
 | 12 | `project-memory` | User-facing | NEW skill |
-| 13 | `using-maxsim` | User-facing | UPDATE for v5 commands |
+| 13 | `using-maxsim` | User-facing | UPDATE for v6 commands |
 | 14 | `maxsim-simplify` | User-facing | Keep as-is |
+| 15 | `autoresearch` | User-facing | NEW skill |
 
 ---
 
@@ -649,7 +650,7 @@ Preloaded by **researcher** agent. Listed as an on-demand skill for planner agen
 
 ### Rationale for Creation
 
-The existing `memory-management` skill defines a local-file-based persistence model (CLAUDE.md, STATE.md, LESSONS.md). In v5, MAXSIM uses GitHub Issues as the single source of truth for project artifacts. A new skill is needed that: (1) establishes GitHub Issues as the canonical store for cross-session learnings, (2) defines what categories of knowledge to persist, (3) specifies the GitHub-native write pattern, and (4) explains the relationship between local files and GitHub state. This replaces `memory-management` in the 14-skill target set.
+The existing `memory-management` skill defines a local-file-based persistence model (CLAUDE.md, STATE.md, LESSONS.md). In v5, MAXSIM uses GitHub Issues as the single source of truth for project artifacts. A new skill is needed that: (1) establishes GitHub Issues as the canonical store for cross-session learnings, (2) defines what categories of knowledge to persist, (3) specifies the GitHub-native write pattern, and (4) explains the relationship between local files and GitHub state. This replaces `memory-management` in the 15-skill target set.
 
 ### Frontmatter
 
@@ -736,7 +737,7 @@ Not preloaded. User-invocable on-demand. Executor agent may receive it via orche
 
 ---
 
-## Skill 13: `using-maxsim` *(UPDATE for v5)*
+## Skill 13: `using-maxsim` *(UPDATE for v6)*
 
 ### Frontmatter
 
@@ -752,7 +753,7 @@ description: >-
 
 ### Disposition
 
-Update to accurately reflect the v5 command surface (9 commands) and the 14-skill target set. The current skill references outdated skill names (`verification-before-completion`, `sdd`, `memory-management`) that do not exist in the target state. The routing table and agent model sections are correct. The skills table needs to be updated.
+Update to accurately reflect the v6 command surface (13 commands) and the 15-skill target set. The current skill references outdated skill names (`verification-before-completion`, `sdd`, `memory-management`) that do not exist in the target state. The routing table and agent model sections are correct. The skills table needs to be updated.
 
 ### Section Outline
 
@@ -763,7 +764,7 @@ Update to accurately reflect the v5 command surface (9 commands) and the 14-skil
    - Check STATE.md for last checkpoint
    - Check current phase in ROADMAP.md
    - Route using the command table
-4. **Command Surface (9 commands)** — updated routing table:
+4. **Command Surface (13 commands)** — updated routing table:
 
    | Situation | Command |
    |-----------|---------|
@@ -778,9 +779,13 @@ Update to accurately reflect the v5 command surface (9 commands) and the 14-skil
    | Don't know what to do next | `/maxsim:go` |
    | Change workflow settings | `/maxsim:settings` |
    | Need command reference | `/maxsim:help` |
+   | Optimize code against a metric | `/maxsim:improve` |
+   | Iteratively fix errors until zero remain | `/maxsim:fix-loop` |
+   | Autonomous bug hunting with hypothesis testing | `/maxsim:debug-loop` |
+   | Security audit (STRIDE + OWASP + red-team) | `/maxsim:security` |
 
 5. **Agent Model (4 agents)** — keep existing table (executor / planner / researcher / verifier) — this is correct in the current skill
-6. **Skills** *(UPDATE — replace old skill names with v5 target names)*:
+6. **Skills** *(UPDATE — replace old skill names with v6 target names)*:
 
    | Skill | When It Activates |
    |-------|-------------------|
@@ -806,7 +811,7 @@ Not preloaded. User-invocable on-demand (this is the orientation/routing skill f
 - Check the routing table before starting any task — do not proceed ad-hoc
 - Explicit user approval required before working outside the current phase
 - STATE.md checkpoints from previous sessions must be acknowledged before proceeding
-- The 9-command surface is complete — there is no other entry point for MAXSIM work
+- The 13-command surface is complete — there is no other entry point for MAXSIM work
 
 ### Estimated Line Count
 
@@ -866,6 +871,71 @@ Not preloaded. User-invocable on-demand. Verifier agent may receive it as a sugg
 
 ---
 
+## Skill 15: `autoresearch` *(NEW)*
+
+### Rationale for Creation
+
+v6 introduces four autonomous loop commands (`/maxsim:improve`, `/maxsim:fix-loop`, `/maxsim:debug-loop`, `/maxsim:security`) that share a common constraint-driven iteration pattern: modify, verify, keep or discard, repeat. Rather than embedding the loop protocol in each command's agent prompt, a dedicated skill centralizes the iteration mechanics, decision rules, and results-logging format. Six reference workflows in `references/` provide domain-specific protocols that the skill dispatches to based on the command invoked.
+
+### Frontmatter
+
+```yaml
+---
+name: autoresearch
+description: >-
+  Autonomous optimization loop with reference workflows. Powers /maxsim:improve,
+  /maxsim:fix-loop, /maxsim:debug-loop, /maxsim:security. Used when running
+  autonomous optimization, error repair, bug hunting, or security audit loops.
+---
+```
+
+### Section Outline
+
+1. **When to Activate** — trigger table mapping each of the 4 commands plus general "repeated iteration with measurable outcomes" trigger
+2. **Subcommands** — routing table: `/maxsim:improve` (default loop), `/maxsim:debug-loop` → `references/debug.md`, `/maxsim:fix-loop` → `references/fix.md`, `/maxsim:security` → `references/security.md`
+3. **Interactive Setup Gate** — required context per command: improve (Goal, Scope, Metric, Direction, Verify), debug-loop (Issue/Symptom, Scope), fix-loop (Target, Scope), security (Scope, Depth)
+4. **Bounded Iterations** — `Iterations: N` for bounded runs; default is unbounded (loop until interrupted); early completion on goal achieved
+5. **Setup Phase** — inline config extraction or interactive 2-batch collection; dry-run verify command; 7 setup steps (read scope, define goal, define scope, define guard, create results log, establish baseline, confirm and begin)
+6. **The Loop** — `LOOP (FOREVER or N times)`: Review → Ideate → Modify (ONE change) → Commit → Verify → Guard → Decide (keep/discard/revert/crash-fix) → Log → Repeat; references `references/loop-protocol.md`
+7. **Critical Rules** — 8 rules: loop until done, read before write, one change per iteration, mechanical verification only, automatic rollback, simplicity wins, git is memory (`experiment:` prefix, `git revert` not `git reset --hard`), when stuck think harder
+8. **Principles Reference** — points to `references/core-principles.md` (7 generalizable principles)
+9. **Adapting to Different Domains** — table mapping domain (backend, frontend, performance, refactoring, security, debugging, fixing) to metric, scope, verify command, and guard
+10. **Debug Loop Summary** — autonomous bug-hunting: scientific method, hypothesis testing, classify as confirmed/disproven/inconclusive; references `references/debug.md`
+11. **Fix Loop Summary** — autonomous error repair: detect, prioritize (build > types > tests > lint), fix ONE, commit, verify, guard, decide, log; references `references/fix.md`
+12. **Security Audit Summary** — STRIDE + OWASP + red-team adversarial analysis; 4 red-team lenses; code evidence required; composite metric; `--diff`, `--fix`, `--fail-on` flags; references `references/security.md`
+13. **Results Logging** — TSV format per `references/results-logging.md`; valid statuses: baseline, keep, keep (reworked), discard, crash, no-op, hook-blocked
+
+### Reference Workflows (6 files in `references/`)
+
+| File | Purpose |
+|------|---------|
+| `loop-protocol.md` | Core iteration protocol: review, ideate, modify, commit, verify, guard, decide, log |
+| `debug.md` | Debug loop: scientific method with hypothesis testing and classification |
+| `fix.md` | Fix loop: error detection, prioritization, atomic repair, verification |
+| `security.md` | Security audit: STRIDE + OWASP + red-team adversarial analysis |
+| `results-logging.md` | TSV results log format and protocol for all loop types |
+| `core-principles.md` | 7 generalizable principles behind autonomous iteration |
+
+### Agent Preload Assignment
+
+Not preloaded. User-invocable on-demand. Activates when any of the 4 autonomous loop commands is invoked (`/maxsim:improve`, `/maxsim:fix-loop`, `/maxsim:debug-loop`, `/maxsim:security`).
+
+### Key Behavioral Rules
+
+- One change per iteration — atomic changes for clear causality
+- Mechanical verification only — no subjective judgments, use metrics
+- Automatic rollback on failure — `git revert` (not `git reset --hard`) preserves experiment history
+- Every experiment committed with `experiment:` prefix before verification
+- Results log updated after every iteration — no silent iterations
+- Bounded loops stop after N iterations and print a final summary
+- Security audit is read-only by default — `--fix` flag required to auto-remediate
+
+### Estimated Line Count
+
+~169 lines (SKILL.md body, excluding reference files)
+
+---
+
 ## Summary Table
 
 | # | Skill Name | user-invocable | Preloaded By | Disposition | Target Lines |
@@ -882,18 +952,19 @@ Not preloaded. User-invocable on-demand. Verifier agent may receive it as a sugg
 | 10 | `github-operations` | false | none (available_skills) | NEW merge of 2 skills | ~160 |
 | 11 | `research` | false | researcher | NEW merge of 2 skills | ~190 |
 | 12 | `project-memory` | true | none | NEW skill | ~110 |
-| 13 | `using-maxsim` | true | none | Update skills table for v5 | ~85 |
+| 13 | `using-maxsim` | true | none | Update skills table for v6 | ~85 |
 | 14 | `maxsim-simplify` | true | none | Keep as-is | ~91 |
+| 15 | `autoresearch` | true | none | NEW skill | ~169 |
 
-**Total estimated lines across all 14 skills:** ~1,570 lines
-**Maximum allowed (14 × 500):** 7,000 lines
+**Total estimated lines across all 15 skills:** ~1,739 lines
+**Maximum allowed (15 × 500):** 7,500 lines
 **All skills well within the 500-line body limit.**
 
 ---
 
 ## Skills Being Retired
 
-The following skills exist in the current codebase but are not in the 14-skill target set:
+The following skills exist in the current codebase but are not in the 15-skill target set:
 
 | Skill | Reason for Retirement |
 |-------|----------------------|

@@ -10,14 +10,11 @@ group: Advanced
 # Quick task — minimal agents, fast execution
 /maxsim:quick
 
-# Full agents — same as execute-phase for a single task
-/maxsim:quick --full
-
-# Manage todos as GitHub Issues
-/maxsim:quick --todo
+# Quick task with inline description
+/maxsim:quick fix the border radius on the login button
 {% /codeblock %}
 
-The `--todo` flag integrates with GitHub Issues. It lets you create, view, and resolve todos directly from the CLI, with each todo tracked as a GitHub Issue in your repository.
+The command accepts an optional description argument. If omitted, MaxsimCLI prompts you for a task description interactively.
 
 When to use quick vs execute-phase: use quick for tasks you could describe in one sentence that have no dependencies on other planned work. Use execute-phase when the task is part of a planned phase, has multiple sub-tasks, or needs the plan-checker's validation.
 

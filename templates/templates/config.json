@@ -1,8 +1,9 @@
 {
-  "version": "5.13.1",
+  "version": "5.14.1",
   "execution": {
     "model_profile": "balanced",
     "competitive_enabled": false,
+    "model_overrides": {},
     "parallelism": {
       "max_agents_per_wave": 3,
       "max_retries": 3,

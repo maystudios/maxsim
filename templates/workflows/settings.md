@@ -22,7 +22,12 @@ Parse current values (use defaults if field is absent):
 - `workflow.plan_checker` — true | false (default: true)
 - `workflow.verifier` — true | false (default: true)
 - `workflow.auto_advance` — true | false (default: false)
-- `parallelism` — "conservative" | "standard" | "aggressive" (default: "standard")
+- `parallelism` — derived from `execution.model_profile`:
+  - quality → max 40 agents (typical 20-40)
+  - balanced → max 20 agents (typical 10-20)
+  - budget → max 10 agents (typical 5-10)
+  Actual count is dynamically scaled by project size (small projects <10 files use fewer agents).
+  Resolve current limit: `node .claude/maxsim/bin/maxsim-tools.cjs resolve-max-agents`
 - `git.branching_strategy` — "none" | "phase" | "milestone" (default: "none")
 
 Call `EnterPlanMode` before presenting current settings to the user. After the user confirms all changes, call `ExitPlanMode` before writing to config.json.
@@ -41,7 +46,7 @@ Display current settings before prompting for changes:
 | Plan Checker      | [On/Off] |
 | Verifier          | [On/Off] |
 | Auto-Advance      | [On/Off] |
-| Parallelism       | [conservative/standard/aggressive] |
+| Parallelism       | [profile-derived: quality 20-40 / balanced 10-20 / budget 5-10] |
 | Git Branching     | [none/phase/milestone] |
 ```
 
@@ -89,13 +94,13 @@ AskUserQuestion([
     ]
   },
   {
-    question: "Parallelism — how many executor agents run at once?",
+    question: "Parallelism — max executor agents per wave (derived from model profile). Actual count is dynamically scaled by project size via `resolve-max-agents`.",
     header: "Parallelism",
     multiSelect: false,
     options: [
-      { label: "Conservative", description: "1 executor at a time. Lowest resource use." },
-      { label: "Standard (Recommended)", description: "Parallel within waves (respects plan dependencies)." },
-      { label: "Aggressive", description: "Maximum parallel execution. Fastest, highest cost." }
+      { label: "Quality limits (max 40, typical 20-40)", description: "Matches quality profile. Highest throughput, highest cost." },
+      { label: "Balanced limits (max 20, typical 10-20) (Recommended)", description: "Matches balanced profile. Good throughput/cost ratio." },
+      { label: "Budget limits (max 10, typical 5-10)", description: "Matches budget profile. Lowest resource use." }
     ]
   },
   {

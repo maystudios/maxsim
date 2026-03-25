@@ -226,9 +226,9 @@ Agent(
 
 Wait for all three review agents to complete before proceeding.
 
-### Step 4b — Two-Stage Sequential Review (Optional)
+### Step 4b — Two-Stage Sequential Review
 
-When `verification.strict_mode` is enabled in the project config, run an additional two-stage sequential review after the parallel agents complete. Each stage uses a fresh verifier subagent to prevent anchoring bias.
+Run a two-stage sequential review after the parallel agents complete. Each stage uses a fresh verifier subagent to prevent anchoring bias.
 
 **Stage 1 — Spec Compliance:**
 
@@ -243,7 +243,8 @@ Agent(
     Read the phase requirements from GitHub Issue #{phase_issue_number}.
     Read all files modified in this phase.
 
-    For EACH requirement listed in the issue, verify it is implemented with evidence:
+    For EACH requirement listed in the issue, verify it is implemented with evidence.
+    Compare issue acceptance criteria against actual code changes to confirm planned tasks were implemented.
 
     CLAIM: Requirement [ID] — [description]
     EVIDENCE: [file:line or command]
@@ -320,7 +321,8 @@ Why manual: {why automated checks cannot cover this}
 - Security review: PASS
 - Quality review: PASS (no blockers)
 - Efficiency review: PASS (no blockers)
-- If strict_mode was on: Spec compliance review PASS and Code quality review PASS
+- Spec compliance review: PASS
+- Code quality review: PASS
 
 **FAIL** — Any of:
 - Any must-have truth: FAILED
@@ -330,7 +332,8 @@ Why manual: {why automated checks cannot cover this}
 - Build: FAIL
 - Any Blocker anti-pattern
 - Security or Quality review: FAIL with blockers
-- If strict_mode was on: Spec compliance review FAIL or Code quality review FAIL
+- Spec compliance review: FAIL
+- Code quality review: FAIL
 
 **HUMAN_NEEDED** — All automated checks PASS but human verification items remain unreviewed.
 
@@ -356,8 +359,8 @@ checks:
   security_review: pass | fail
   quality_review: pass | fail
   efficiency_review: pass | fail
-  spec_compliance_review: pass | fail | skipped
-  code_quality_review: pass | fail | skipped
+  spec_compliance_review: pass | fail
+  code_quality_review: pass | fail
 ---
 
 ## Verification: Phase {phase_number} — {phase_name}
@@ -394,8 +397,8 @@ checks:
 | Security | {PASS/FAIL} | {issues if fail} |
 | Quality | {PASS/FAIL} | {blockers if fail} |
 | Efficiency | {PASS/FAIL} | {blockers if fail} |
-| Spec Compliance | {PASS/FAIL/SKIPPED} | strict_mode only; {unmet requirements if fail} |
-| Code Quality (deep) | {PASS/FAIL/SKIPPED} | strict_mode only; {issues if fail} |
+| Spec Compliance | {PASS/FAIL} | {unmet requirements if fail} |
+| Code Quality (deep) | {PASS/FAIL} | {issues if fail} |
 
 ## Anti-Patterns Found
 

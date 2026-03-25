@@ -10,7 +10,7 @@ const command = args[0];
 
 const COMMANDS: Record<string, () => void> = {
   'resolve-model': () => {
-    const agentType = args[1]?.toUpperCase() as AgentType;
+    const agentType = args[1]?.toLowerCase() as AgentType;
     if (!agentType || !Object.values(AgentType).includes(agentType)) {
       console.error(`Invalid agent type: ${args[1]}`);
       process.exit(1);
@@ -31,7 +31,7 @@ const COMMANDS: Record<string, () => void> = {
 
     const fileCountIdx = args.indexOf('--file-count');
     const fileCount = fileCountIdx >= 0 ? parseInt(args[fileCountIdx + 1], 10) : 0;
-    if (fileCountIdx >= 0 && (isNaN(fileCount) || fileCount < 0)) {
+    if (fileCountIdx >= 0 && (Number.isNaN(fileCount) || fileCount < 0)) {
       console.error('--file-count must be a non-negative integer');
       process.exit(1);
     }

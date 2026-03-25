@@ -6,7 +6,7 @@ allowed-tools: [Read, Write, Edit, Bash, AskUserQuestion, EnterPlanMode, ExitPla
 ---
 
 <objective>
-Interactively view and modify MaxsimCLI configuration: model profile, pipeline toggles (research, plan-checker, verifier, auto-advance), and branching strategy.
+Interactively view and modify MaxsimCLI configuration: model profile, pipeline toggles (research, plan-checker, verifier, auto-advance), parallelism limits, competition strategy, and branching strategy.
 </objective>
 
 <context>
@@ -25,6 +25,8 @@ Follow @.claude/maxsim/workflows/settings.md end-to-end.
    - Plan-checker enabled/disabled
    - Verifier enabled/disabled
    - Auto-advance between stages
+   - Parallelism limits (profile-derived: quality 20-40, balanced 10-20, budget 5-10)
+   - Competition strategy (none / quick / standard / deep)
    - Branching strategy (per-phase / per-task / none)
    - Per-agent model overrides (override individual agent models beyond profile defaults)
 5. Present proposed configuration changes for review

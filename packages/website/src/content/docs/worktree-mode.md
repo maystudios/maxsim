@@ -8,15 +8,20 @@ Worktree mode gives each agent an isolated git environment so multiple agents ca
 
 ### Configuration
 
-Set `worktree_mode` in `.claude/settings.json`:
+Configure worktrees under the `worktrees` key in your MaxsimCLI config:
 
 {% codeblock language="json" %}
 {
-  "worktree_mode": "auto"
+  "worktrees": {
+    "auto_cleanup": true,
+    "branch_prefix": "maxsim/",
+    "path_template": ".claude/worktrees/agent-{id}/",
+    "branch_template": "maxsim/phase-{N}-task-{id}"
+  }
 }
 {% /codeblock %}
 
-{% doctable headers=["Value", "Behavior"] rows=[["auto", "MaxsimCLI decides based on the number of agents dispatched. Single-agent tasks skip worktrees; multi-agent tasks use them. This is the default."], ["always", "Every agent gets its own worktree, even for single-agent tasks."], ["never", "All agents share the main working directory. Use this if your project has issues with worktrees or you prefer sequential execution."]] %}
+{% doctable headers=["Key", "Default", "Description"] rows=[["auto_cleanup", "true", "Automatically remove worktree directories after the agent completes and its branch is merged."], ["branch_prefix", "maxsim/", "Prefix for worktree branch names."], ["path_template", ".claude/worktrees/agent-{id}/", "Directory template for worktree checkouts. {id} is replaced with the agent ID."], ["branch_template", "maxsim/phase-{N}-task-{id}", "Branch name template. {N} is the phase number, {id} is the agent or task ID."]] %}
 {% /doctable %}
 
 ### How it works

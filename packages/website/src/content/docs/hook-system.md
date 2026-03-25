@@ -16,5 +16,3 @@ The maxsim-check-update hook runs once at session start and checks npm for a new
 The maxsim-notification-sound and maxsim-stop-sound hooks provide audio feedback so you know when work finishes or a session ends, even if you have switched away from the terminal.
 
 The maxsim-capture-learnings hook runs at session stop and writes any notable findings or decisions from the session into agent memory for future context.
-
-A `maxsim-sync-reminder` hook exists in the codebase but is currently a no-op.

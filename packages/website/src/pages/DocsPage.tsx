@@ -246,20 +246,20 @@ export default function DocsPage() {
         <title>Documentation: MaxsimCLI</title>
         <meta
           name="description"
-          content="MaxsimCLI docs: installation, commands, workflows, phases, milestones, and the planning directory. Everything you need to get started."
+          content="MaxsimCLI docs: installation, commands, workflows, phases, milestones, and the GitHub Project Board. Everything you need to get started."
         />
         <link rel="canonical" href="https://maxsimcli.dev/docs" />
         <meta property="og:url" content="https://maxsimcli.dev/docs" />
         <meta property="og:title" content="Documentation: MaxsimCLI" />
         <meta
           property="og:description"
-          content="MaxsimCLI docs: installation, commands, workflows, phases, milestones, and the planning directory."
+          content="MaxsimCLI docs: installation, commands, workflows, phases, milestones, and the GitHub Project Board."
         />
         <meta name="twitter:url" content="https://maxsimcli.dev/docs" />
         <meta name="twitter:title" content="Documentation: MaxsimCLI" />
         <meta
           name="twitter:description"
-          content="MaxsimCLI docs: installation, commands, workflows, phases, milestones, and the planning directory."
+          content="MaxsimCLI docs: installation, commands, workflows, phases, milestones, and the GitHub Project Board."
         />
       </Helmet>
       <div className="min-h-screen bg-[#09090b] text-zinc-100 font-sans antialiased">

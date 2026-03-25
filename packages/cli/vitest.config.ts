@@ -4,6 +4,6 @@ export default defineConfig({
   test: {
     testTimeout: 30_000,
     passWithNoTests: false,
-    include: ['tests/unit/**/*.test.ts'],
+    include: ['tests/unit/**/*.test.ts', 'tests/integration/**/*.test.ts'],
   },
 });
