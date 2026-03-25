@@ -1,3 +1,10 @@
+## [5.14.1](https://github.com/maystudios/maxsimcli/compare/v5.14.0...v5.14.1) (2026-03-25)
+
+
+### Bug Fixes
+
+* add Tier 2 architecture table and constraints to AGENTS.md ([0f92e45](https://github.com/maystudios/maxsimcli/commit/0f92e4521a9f3442ef2f6b7b4db8da39b0279a1a))
+
 # [5.14.0](https://github.com/maystudios/maxsimcli/compare/v5.13.2...v5.14.0) (2026-03-25)
 
 
