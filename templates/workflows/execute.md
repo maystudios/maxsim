@@ -235,12 +235,95 @@ Before spawning competitive agents, evaluate the execution tier:
    - Read `config.execution.parallelism.competition_strategy` from `.claude/maxsim/config.json`
 
 2. **If Tier 2 is available AND `competition_strategy` is `deep`:**
-   - Use Agent Teams debate pattern:
-     - `TeamCreate` to create a competition team
-     - Spawn 2-3 teammates, each solving the same task independently
-     - Teammates use `SendMessage` to actively challenge each other's approaches
-     - The theory/implementation that survives adversarial cross-examination wins
-   - This fights LLM anchoring bias (first plausible answer wins)
+
+   Use the Agent Teams debate pattern. Create a competition team and spawn teammates who implement independently, then actively challenge each other.
+
+   **Step 2a -- Create the competition team:**
+   ```
+   TeamCreate(
+     team_name: "competition-phase-{N}-task-{id}",
+     description: "Competitive implementation: {task_description}"
+   )
+   ```
+
+   **Step 2b -- Spawn 2-3 competing teammates:**
+   For each competitor (2 minimum, 3 for critical tasks), spawn a teammate with a distinct approach variation. Each teammate works in its own worktree.
+   ```
+   // Teammate A -- conservative approach
+   Spawn teammate "competitor-a" with prompt:
+     "Implement {task_description} using approach: CONSERVATIVE.
+      Prefer existing patterns, minimal new abstractions, conventional solutions.
+      Work in isolation. Do not coordinate with other teammates until review phase.
+      [full task context: phase issue #{phase_issue_number}, plan content, success criteria]"
+   Model: {executor_model}
+
+   // Teammate B -- innovative approach
+   Spawn teammate "competitor-b" with prompt:
+     "Implement {task_description} using approach: INNOVATIVE.
+      Optimize for performance and elegance, explore novel patterns where justified.
+      Work in isolation. Do not coordinate with other teammates until review phase.
+      [full task context: phase issue #{phase_issue_number}, plan content, success criteria]"
+   Model: {executor_model}
+
+   // Teammate C -- (only for critical tasks) defensive approach
+   Spawn teammate "competitor-c" with prompt:
+     "Implement {task_description} using approach: DEFENSIVE.
+      Maximize error handling, edge case coverage, and robustness over brevity.
+      Work in isolation. Do not coordinate with other teammates until review phase.
+      [full task context: phase issue #{phase_issue_number}, plan content, success criteria]"
+   Model: {executor_model}
+   ```
+
+   **Step 2c -- Debate phase (teammates challenge each other):**
+   After all teammates complete their implementations, each reviews the others' work via `SendMessage`:
+   ```
+   SendMessage({
+     type: "message",
+     recipient: "competitor-b",
+     content: "Review competitor-a's implementation. Identify weaknesses, edge cases missed, and potential issues. Be adversarial -- find real problems, not style preferences. Report: (1) correctness issues, (2) missing edge cases, (3) maintainability concerns.",
+     summary: "Requesting adversarial review of competitor-a's work"
+   })
+
+   SendMessage({
+     type: "message",
+     recipient: "competitor-a",
+     content: "Review competitor-b's implementation. Identify weaknesses, edge cases missed, and potential issues. Be adversarial -- find real problems, not style preferences. Report: (1) correctness issues, (2) missing edge cases, (3) maintainability concerns.",
+     summary: "Requesting adversarial review of competitor-b's work"
+   })
+   ```
+   Each teammate responds with a structured critique. This fights LLM anchoring bias -- the first plausible answer does not automatically win.
+
+   **Step 2d -- Verifier selects winner:**
+   Spawn a fresh verifier agent (NOT a team member) to evaluate both implementations and both critiques:
+   ```
+   Agent(
+     subagent_type: "verifier",
+     model: "{verifier_model}",
+     prompt: "
+       You are judging a competitive implementation. Two (or three) agents each implemented the same task independently, then reviewed each other's work adversarially.
+
+       ## Implementations
+       - competitor-a (CONSERVATIVE): {summary or path to worktree-a}
+       - competitor-b (INNOVATIVE): {summary or path to worktree-b}
+
+       ## Critiques
+       - competitor-b's critique of competitor-a: {critique-b-of-a}
+       - competitor-a's critique of competitor-b: {critique-a-of-b}
+
+       ## Selection Criteria (in priority order)
+       1. Correctness -- does it satisfy all success criteria?
+       2. Test coverage -- are edge cases tested?
+       3. Code quality -- readability, maintainability, consistency with codebase
+       4. Simplicity -- prefer fewer abstractions when correctness is equal
+
+       Output exactly: WINNER: competitor-{a|b|c}
+       Followed by a justification paragraph.
+     "
+   )
+   ```
+   Discard the losing implementation's worktree branch. Merge the winner using the standard branch merge flow (step 6.8).
+
+   **Fallback:** If any step in 2a-2d fails (TeamCreate probe fails, teammate spawn errors, SendMessage timeout), immediately fall back to Tier 1 (step 3 below). Log the failure reason for diagnostics.
 
 3. **If Tier 2 is NOT available (env var unset, feature not yet stable, or `competition_strategy` is `none`/`quick`/`standard`):**
    - **Graceful degradation to Tier 1** — inform the user:
