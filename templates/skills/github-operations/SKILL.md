@@ -125,6 +125,31 @@ Backlog  →  To Do  →  In Progress  →  In Review  →  Done
 | `maxsim:auto` | All issues created by MAXSIM automation |
 | `maxsim:user` | Issues created by the user |
 
+## User-Created Issue Triage
+
+Issues created directly on GitHub (without MaxsimCLI) lack the `<!-- maxsim:meta -->` block and MaxsimCLI labels. These must be triaged before they can enter the pipeline.
+
+**Detection:** An issue is user-created and untracked when it has none of the six known labels: `type:phase`, `type:task`, `type:bug`, `type:quick`, `maxsim:auto`, `maxsim:user`.
+
+**Triage steps:**
+1. Apply the `maxsim:user` label to mark origin
+2. Apply the appropriate `type:` label based on issue content:
+   - Feature request or deliverable → `type:phase`
+   - Sub-task of a phase → `type:task`
+   - Bug report → `type:bug`
+   - Small standalone task → `type:quick`
+3. Route to the correct command:
+   - `type:phase` → `/maxsim:plan`
+   - `type:bug` → `/maxsim:debug`
+   - `type:quick` or `type:task` → `/maxsim:quick`
+
+**CLI command:**
+```bash
+gh issue edit {N} --add-label "maxsim:user,type:bug"
+```
+
+`/maxsim:go` auto-detects unlabeled issues and prompts triage before proceeding.
+
 ## Write Order
 
 1. Build full comment content in memory before any write
