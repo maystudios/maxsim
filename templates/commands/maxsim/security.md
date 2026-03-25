@@ -2,7 +2,7 @@
 name: maxsim:security
 description: Security audit — STRIDE + OWASP Top 10 + red-team analysis (read-only)
 argument-hint: "[scope]"
-allowed-tools: [Read, Bash, Grep, Glob, WebSearch, WebFetch]
+allowed-tools: [Read, Bash, Grep, Glob, Agent, WebSearch, WebFetch]
 ---
 
 <objective>
