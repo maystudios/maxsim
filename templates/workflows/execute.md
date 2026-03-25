@@ -225,7 +225,32 @@ When competitive mode is active for a task:
 4. The verifier selects the better implementation based on: correctness, code quality, test coverage, and simplicity
 5. Discard the losing implementation's worktree branch
 
-> **Note:** Competitive implementation with Agent Teams debate pattern (Tier 2) is available when Agent Teams are supported (see §7.2). When Agent Teams are unavailable, graceful degradation to Tier 1 subagents applies — two independent executors compete without inter-agent debate.
+#### Tier Selection
+
+Before spawning competitive agents, evaluate the execution tier:
+
+1. **Check Tier 2 availability:**
+   - Verify `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` env var is set (MaxsimCLI installer enables this by default)
+   - Verify Agent Teams feature is stable and responsive (attempt a lightweight `TeamCreate` probe)
+   - Read `config.execution.parallelism.competition_strategy` from `.claude/maxsim/config.json`
+
+2. **If Tier 2 is available AND `competition_strategy` is `deep`:**
+   - Use Agent Teams debate pattern:
+     - `TeamCreate` to create a competition team
+     - Spawn 2-3 teammates, each solving the same task independently
+     - Teammates use `SendMessage` to actively challenge each other's approaches
+     - The theory/implementation that survives adversarial cross-examination wins
+   - This fights LLM anchoring bias (first plausible answer wins)
+
+3. **If Tier 2 is NOT available (env var unset, feature not yet stable, or `competition_strategy` is `none`/`quick`/`standard`):**
+   - **Graceful degradation to Tier 1** — inform the user:
+     > "Competitive mode: using Tier 1 subagents (Agent Teams not available or not required for this strategy). Each executor works independently; verifier selects the best result."
+   - Spawn 2 executor subagents via the `Agent` tool with `isolation: "worktree"` and `run_in_background: true`
+   - Each agent gets a different approach prompt variation
+   - After both complete, the verifier compares and selects the winner
+   - This is the current default path and is fully functional
+
+> **Graceful degradation guarantee:** Per PROJECT.md §7.2, if Agent Teams are unavailable (env var not set, unsupported plan, or feature not yet stable), MaxsimCLI falls back to Tier 1 subagents for all workflows. The user is informed but not blocked.
 
 ### 6.4 Wait for all wave agents to complete
 
