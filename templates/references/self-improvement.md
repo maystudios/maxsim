@@ -43,6 +43,10 @@ at the end of every session in a MaxsimCLI project. Each entry records:
 - Which tasks were attempted repeatedly without a commit (likely failed).
 - Long-term trends across many sessions.
 
+### MEMORY.md Size Limit
+
+Keep MEMORY.md under 200 lines (the Claude Code context loading limit). The `maxsim-capture-learnings` Stop hook enforces this by pruning at 180 lines, leaving headroom. When the file approaches the limit, the oldest entries are removed first. Each entry should be concise (3-5 lines) to maximize the number of sessions that fit.
+
 ---
 
 ## 3. Results Tracking
