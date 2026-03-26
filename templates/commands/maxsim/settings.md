@@ -11,6 +11,10 @@ Interactively view and modify MaxsimCLI configuration: model profile, pipeline t
 
 <context>
 Configuration is stored in `.claude/maxsim/config.json` (project-level). Present current values as pre-selections in each prompt.
+
+Hook registrations live in `.claude/settings.json`. If hooks are missing or corrupted, users can reset them:
+- **Re-run `npx maxsimcli`** — the installer re-registers all hooks (idempotent).
+- **Manual recovery** — a reference template is available at `.claude/maxsim/templates/settings-reference.json` documenting the expected hook entries. Copy the relevant sections into `.claude/settings.json`.
 </context>
 
 <process>
@@ -34,4 +38,11 @@ Follow @.claude/maxsim/workflows/settings.md end-to-end.
 > **Tip:** Press **Ctrl+G** while reviewing the plan to edit it in your text editor before approving.
 7. Merge answers and write updated config
 8. Display confirmation of saved settings
+
+## Hook Recovery
+
+If the user reports missing hooks or broken session-start behavior:
+1. Run `npx maxsimcli` to re-install (this re-registers all hooks idempotently)
+2. Alternatively, copy entries from `.claude/maxsim/templates/settings-reference.json` into `.claude/settings.json`
+3. Verify `.claude/settings.json` contains the expected `hooks`, `statusLine`, `env`, and `permissions` sections
 </process>

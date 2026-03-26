@@ -337,6 +337,36 @@ describe('session-start hook (integration)', () => {
     vi.resetModules();
     hookCallback = null;
 
+    // Create a fully populated settings.json so the missing-hooks detector
+    // does not fire and produce output on its own.
+    const settingsDir = path.join(tmpDir, '.claude');
+    fs.mkdirSync(settingsDir, { recursive: true });
+    const fullSettings = {
+      hooks: {
+        SessionStart: [
+          { hooks: [{ type: 'command', command: 'node maxsim-check-update.cjs' }] },
+          { hooks: [{ type: 'command', command: 'node maxsim-session-start.cjs' }] },
+        ],
+        Notification: [
+          { hooks: [{ type: 'command', command: 'node maxsim-notification-sound.cjs' }] },
+        ],
+        Stop: [
+          { hooks: [{ type: 'command', command: 'node maxsim-stop-sound.cjs' }] },
+          { hooks: [{ type: 'command', command: 'node maxsim-capture-learnings.cjs' }] },
+        ],
+        TeammateIdle: [
+          { hooks: [{ type: 'command', command: 'node maxsim-teammate-idle.cjs' }] },
+        ],
+        TaskCompleted: [
+          { hooks: [{ type: 'command', command: 'node maxsim-task-completed.cjs' }] },
+        ],
+      },
+    };
+    fs.writeFileSync(
+      path.join(settingsDir, 'settings.json'),
+      JSON.stringify(fullSettings, null, 2),
+    );
+
     vi.doMock('../../src/hooks/shared.js', () => ({
       readStdinJson: vi.fn((cb: (data: Record<string, unknown>) => void) => {
         hookCallback = cb;
@@ -477,5 +507,127 @@ describe('session-start hook (integration)', () => {
     // Verify sections are joined by double newlines
     const sections = parsed.hookSpecificOutput.additionalContext.split('\n\n');
     expect(sections.length).toBeGreaterThanOrEqual(3);
+  });
+
+  it('warns about missing hooks when settings.json has no hooks section', async () => {
+    vi.doUnmock('../../src/hooks/shared.js');
+    vi.resetModules();
+    hookCallback = null;
+
+    // Create a settings.json with no hooks section
+    const settingsDir = path.join(tmpDir, '.claude');
+    fs.mkdirSync(settingsDir, { recursive: true });
+    fs.writeFileSync(
+      path.join(settingsDir, 'settings.json'),
+      JSON.stringify({ env: {} }, null, 2),
+    );
+
+    vi.doMock('../../src/hooks/shared.js', () => ({
+      readStdinJson: vi.fn((cb: (data: Record<string, unknown>) => void) => {
+        hookCallback = cb;
+      }),
+      CLAUDE_DIR: '.claude',
+      isMaxsimProject: vi.fn(() => true),
+      recentCommits: vi.fn(() => []),
+    }));
+
+    await import('../../src/hooks/maxsim-session-start.js');
+    hookCallback!({ cwd: tmpDir });
+
+    const writeCall = stdoutSpy.mock.calls.find((call) => {
+      const arg = String(call[0]);
+      return arg.includes('hookSpecificOutput');
+    });
+
+    expect(writeCall).toBeDefined();
+    const parsed = JSON.parse(String(writeCall![0]).trim());
+    expect(parsed.hookSpecificOutput.additionalContext).toContain('## Warning: Missing MaxsimCLI Hooks');
+    expect(parsed.hookSpecificOutput.additionalContext).toContain('npx maxsimcli');
+  });
+
+  it('warns about missing hooks when settings.json does not exist', async () => {
+    vi.doUnmock('../../src/hooks/shared.js');
+    vi.resetModules();
+    hookCallback = null;
+
+    vi.doMock('../../src/hooks/shared.js', () => ({
+      readStdinJson: vi.fn((cb: (data: Record<string, unknown>) => void) => {
+        hookCallback = cb;
+      }),
+      CLAUDE_DIR: '.claude',
+      isMaxsimProject: vi.fn(() => true),
+      recentCommits: vi.fn(() => []),
+    }));
+
+    await import('../../src/hooks/maxsim-session-start.js');
+    hookCallback!({ cwd: tmpDir });
+
+    const writeCall = stdoutSpy.mock.calls.find((call) => {
+      const arg = String(call[0]);
+      return arg.includes('hookSpecificOutput');
+    });
+
+    expect(writeCall).toBeDefined();
+    const parsed = JSON.parse(String(writeCall![0]).trim());
+    expect(parsed.hookSpecificOutput.additionalContext).toContain('## Warning: Missing MaxsimCLI Hooks');
+    expect(parsed.hookSpecificOutput.additionalContext).toContain('settings.json missing');
+  });
+
+  it('does not warn when all hooks are registered', async () => {
+    vi.doUnmock('../../src/hooks/shared.js');
+    vi.resetModules();
+    hookCallback = null;
+
+    // Create settings.json with all hooks registered
+    const settingsDir = path.join(tmpDir, '.claude');
+    fs.mkdirSync(settingsDir, { recursive: true });
+    const fullSettings = {
+      hooks: {
+        SessionStart: [
+          { hooks: [{ type: 'command', command: 'node maxsim-check-update.cjs' }] },
+          { hooks: [{ type: 'command', command: 'node maxsim-session-start.cjs' }] },
+        ],
+        Notification: [
+          { hooks: [{ type: 'command', command: 'node maxsim-notification-sound.cjs' }] },
+        ],
+        Stop: [
+          { hooks: [{ type: 'command', command: 'node maxsim-stop-sound.cjs' }] },
+          { hooks: [{ type: 'command', command: 'node maxsim-capture-learnings.cjs' }] },
+        ],
+        TeammateIdle: [
+          { hooks: [{ type: 'command', command: 'node maxsim-teammate-idle.cjs' }] },
+        ],
+        TaskCompleted: [
+          { hooks: [{ type: 'command', command: 'node maxsim-task-completed.cjs' }] },
+        ],
+      },
+    };
+    fs.writeFileSync(
+      path.join(settingsDir, 'settings.json'),
+      JSON.stringify(fullSettings, null, 2),
+    );
+
+    vi.doMock('../../src/hooks/shared.js', () => ({
+      readStdinJson: vi.fn((cb: (data: Record<string, unknown>) => void) => {
+        hookCallback = cb;
+      }),
+      CLAUDE_DIR: '.claude',
+      isMaxsimProject: vi.fn(() => true),
+      recentCommits: vi.fn(() => ['abc commit']),
+    }));
+
+    await import('../../src/hooks/maxsim-session-start.js');
+    hookCallback!({ cwd: tmpDir });
+
+    const writeCall = stdoutSpy.mock.calls.find((call) => {
+      const arg = String(call[0]);
+      return arg.includes('hookSpecificOutput');
+    });
+
+    expect(writeCall).toBeDefined();
+    const parsed = JSON.parse(String(writeCall![0]).trim());
+    // Should have git history but NOT missing hooks warning
+    expect(parsed.hookSpecificOutput.additionalContext).toContain('## Recent Git History');
+    expect(parsed.hookSpecificOutput.additionalContext).not.toContain('## Warning: Missing MaxsimCLI Hooks');
   });
 });

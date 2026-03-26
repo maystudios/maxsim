@@ -1,0 +1,88 @@
+{
+  "$comment": "Reference template for Claude Code .claude/settings.json with all MaxsimCLI hooks. This file is NOT used directly — installHooks() generates settings.json dynamically. Use this as documentation or for manual recovery via /maxsim:settings → Reset hooks.",
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \".claude/maxsim/hooks/maxsim-check-update.cjs\""
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \".claude/maxsim/hooks/maxsim-session-start.cjs\""
+          }
+        ]
+      }
+    ],
+    "Notification": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \".claude/maxsim/hooks/maxsim-notification-sound.cjs\""
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \".claude/maxsim/hooks/maxsim-stop-sound.cjs\""
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \".claude/maxsim/hooks/maxsim-capture-learnings.cjs\""
+          }
+        ]
+      }
+    ],
+    "TeammateIdle": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \".claude/maxsim/hooks/maxsim-teammate-idle.cjs\""
+          }
+        ]
+      }
+    ],
+    "TaskCompleted": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \".claude/maxsim/hooks/maxsim-task-completed.cjs\""
+          }
+        ]
+      }
+    ]
+  },
+  "statusLine": {
+    "type": "command",
+    "command": "node \".claude/maxsim/hooks/maxsim-statusline.cjs\""
+  },
+  "env": {
+    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
+  },
+  "permissions": {
+    "allow": [
+      "Bash(npm run build)",
+      "Bash(npm test)",
+      "Bash(npx biome check *)",
+      "Bash(gh *)",
+      "Bash(git *)",
+      "Bash(node *)"
+    ]
+  }
+}

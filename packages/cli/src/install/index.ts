@@ -13,7 +13,7 @@ import * as path from 'node:path';
 import { execFileSync } from 'node:child_process';
 import minimist from 'minimist';
 import { copyDir, getTemplatesDir } from './copy.js';
-import { installHooks } from './hooks.js';
+import { installHooks, restoreSettingsFromTemplate } from './hooks.js';
 import { uninstall } from './uninstall.js';
 import { writeClaudeMd } from './claudemd.js';
 import { writeManifest } from './manifest.js';
@@ -148,8 +148,22 @@ async function runInstall(projectDir: string, quiet: boolean): Promise<void> {
 
   writeManifest(projectDir, installedFiles);
 
-  // 3. Install hooks
-  const hookResult = installHooks(projectDir);
+  // 3. Install hooks (with static template fallback)
+  let hookResult: { installed: string[] };
+  try {
+    hookResult = installHooks(projectDir);
+  } catch {
+    // Dynamic hook installation failed — fall back to static template
+    hookResult = { installed: [] };
+    const restored = restoreSettingsFromTemplate(projectDir);
+    if (!quiet) {
+      if (restored) {
+        console.log('\n  Hooks: installed from reference template (fallback)');
+      } else {
+        console.warn('\n  Warning: Hook installation failed and no reference template available.');
+      }
+    }
+  }
   if (!quiet && hookResult.installed.length > 0) {
     console.log(`\n  Hooks: ${hookResult.installed.length} registered`);
     for (const hook of hookResult.installed) {

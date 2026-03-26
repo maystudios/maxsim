@@ -6,6 +6,7 @@
  *  - Gathers recent git history (20 commits) for instant orientation.
  *  - Reads the first 200 lines of MEMORY.md (learned patterns).
  *  - Reads the last 10 lines of autoresearch-results.tsv (metric trends).
+ *  - Detects whether other MaxsimCLI hooks are registered and warns if not.
  *  - Outputs all collected context to stdout for injection into Claude's context.
  *  - Always exits 0 — never blocks the user's session.
  */
@@ -42,6 +43,50 @@ function readLastLines(filePath: string, maxLines: number): string {
   }
 }
 
+/**
+ * Check whether other expected MaxsimCLI hooks are registered in settings.json.
+ * Returns a list of missing hook event names, or an empty array if all are present.
+ * Never throws — returns empty array on any error.
+ */
+function detectMissingHooks(projectDir: string): string[] {
+  try {
+    const settingsPath = path.join(projectDir, CLAUDE_DIR, 'settings.json');
+    if (!fs.existsSync(settingsPath)) return ['(settings.json missing)'];
+
+    const settings = JSON.parse(fs.readFileSync(settingsPath, 'utf8'));
+    const hooks = settings?.hooks;
+    if (!hooks || typeof hooks !== 'object') return ['(hooks section missing)'];
+
+    // Expected hook events that installHooks() registers
+    const expectedEvents: Array<{ event: string; scriptName: string }> = [
+      { event: 'Notification', scriptName: 'maxsim-notification-sound' },
+      { event: 'Stop', scriptName: 'maxsim-stop-sound' },
+      { event: 'Stop', scriptName: 'maxsim-capture-learnings' },
+      { event: 'TeammateIdle', scriptName: 'maxsim-teammate-idle' },
+      { event: 'TaskCompleted', scriptName: 'maxsim-task-completed' },
+    ];
+
+    const missing: string[] = [];
+    for (const { event, scriptName } of expectedEvents) {
+      const matchers = hooks[event];
+      if (!Array.isArray(matchers)) {
+        missing.push(`${event}/${scriptName}`);
+        continue;
+      }
+      const found = matchers.some((m: { hooks?: Array<{ command?: string }> }) =>
+        m.hooks?.some((h) => h.command?.includes(scriptName)),
+      );
+      if (!found) {
+        missing.push(`${event}/${scriptName}`);
+      }
+    }
+
+    return missing;
+  } catch {
+    return [];
+  }
+}
+
 readStdinJson<SessionStartInput>((input) => {
   try {
     const projectDir = input.cwd ?? process.cwd();
@@ -51,6 +96,16 @@ readStdinJson<SessionStartInput>((input) => {
     }
 
     const sections: string[] = [];
+
+    // Detect missing hooks and warn — this hook works standalone even if
+    // others are not registered, but the user should know about it.
+    const missingHooks = detectMissingHooks(projectDir);
+    if (missingHooks.length > 0) {
+      sections.push(
+        '## Warning: Missing MaxsimCLI Hooks',
+        `The following MaxsimCLI hooks are not registered in .claude/settings.json:\n${missingHooks.map((h) => `  - ${h}`).join('\n')}\n\nRe-run \`npx maxsimcli\` to restore all hooks, or see .claude/maxsim/templates/settings-reference.json for the expected configuration.`,
+      );
+    }
 
     const commits = recentCommits(projectDir, 20);
     if (commits.length > 0) {

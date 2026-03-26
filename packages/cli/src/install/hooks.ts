@@ -4,7 +4,7 @@
 
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import { copyDir, getHooksDir } from './copy.js';
+import { copyDir, getHooksDir, getTemplatesDir } from './copy.js';
 
 interface HookEntry {
   type: 'command';
@@ -170,6 +170,122 @@ function registerHook(
       hooks: [{ type: 'command', command }],
     });
   }
+}
+
+/**
+ * Load the static settings-reference.json template bundled with MaxsimCLI.
+ * Returns the parsed template or null if unavailable.
+ */
+export function getSettingsTemplate(): SettingsJson | null {
+  try {
+    const templatePath = path.join(getTemplatesDir(), 'templates', 'settings-reference.json');
+    if (!fs.existsSync(templatePath)) return null;
+    const raw = fs.readFileSync(templatePath, 'utf8');
+    const parsed = JSON.parse(raw) as SettingsJson;
+    // Strip the documentation-only $comment field
+    delete (parsed as Record<string, unknown>).$comment;
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Restore settings.json from the static reference template.
+ *
+ * Merges MaxsimCLI hook entries from the template into the existing
+ * settings.json (or creates a fresh one). Preserves non-maxsim user entries.
+ *
+ * The hook command paths are rewritten to point at the actual hooks directory
+ * inside the project's .claude/maxsim/hooks/.
+ *
+ * @returns true if the template was applied, false if the template was unavailable.
+ */
+export function restoreSettingsFromTemplate(projectDir: string): boolean {
+  const template = getSettingsTemplate();
+  if (!template) return false;
+
+  const claudeDir = path.join(projectDir, '.claude');
+  const settingsPath = path.join(claudeDir, 'settings.json');
+  const hooksDestDir = path.join(claudeDir, 'maxsim', 'hooks');
+
+  // Read existing settings or start fresh
+  let settings: SettingsJson = {};
+  if (fs.existsSync(settingsPath)) {
+    try {
+      settings = JSON.parse(fs.readFileSync(settingsPath, 'utf8'));
+    } catch {
+      settings = {};
+    }
+  }
+
+  // First remove any existing maxsim hooks to avoid duplicates
+  if (settings.hooks) {
+    for (const event of Object.keys(settings.hooks)) {
+      settings.hooks[event] = settings.hooks[event].filter(
+        (m) => !m.hooks.some((h) => h.command.includes('maxsim')),
+      );
+      if (settings.hooks[event].length === 0) {
+        delete settings.hooks[event];
+      }
+    }
+  }
+
+  // Merge hooks from template, rewriting paths to the project's hooks dir
+  if (!settings.hooks) settings.hooks = {};
+  if (template.hooks) {
+    for (const [event, matchers] of Object.entries(template.hooks)) {
+      if (!settings.hooks[event]) settings.hooks[event] = [];
+      for (const matcher of matchers) {
+        const rewrittenHooks = matcher.hooks.map((h) => {
+          // Rewrite the generic ".claude/maxsim/hooks/..." to the absolute path
+          const rewritten = h.command.replace(
+            /\.claude\/maxsim\/hooks\//g,
+            `${hooksDestDir.replace(/\\/g, '/')}/`,
+          );
+          return { type: h.type, command: rewritten };
+        });
+        settings.hooks[event].push({ hooks: rewrittenHooks });
+      }
+    }
+  }
+
+  // Apply statusLine from template (rewrite path)
+  if (template.statusLine) {
+    const existingStatusLine = settings.statusLine;
+    if (!existingStatusLine || existingStatusLine.command.includes('maxsim-statusline')) {
+      settings.statusLine = {
+        type: 'command',
+        command: template.statusLine.command.replace(
+          /\.claude\/maxsim\/hooks\//g,
+          `${hooksDestDir.replace(/\\/g, '/')}/`,
+        ),
+      };
+    }
+  }
+
+  // Apply env from template
+  if (template.env) {
+    if (!settings.env) settings.env = {};
+    Object.assign(settings.env, template.env);
+  }
+
+  // Apply permissions from template
+  if (template.permissions?.allow) {
+    if (!settings.permissions) settings.permissions = {};
+    if (!settings.permissions.allow) settings.permissions.allow = [];
+    for (const perm of template.permissions.allow) {
+      if (!settings.permissions.allow.includes(perm)) {
+        settings.permissions.allow.push(perm);
+      }
+    }
+  }
+
+  // Write settings.json
+  fs.mkdirSync(path.dirname(settingsPath), { recursive: true });
+  fs.writeFileSync(settingsPath, `${JSON.stringify(settings, null, 2)}\n`, 'utf8');
+
+  return true;
 }
 
 /** Remove all MaxsimCLI hooks from settings.json. */

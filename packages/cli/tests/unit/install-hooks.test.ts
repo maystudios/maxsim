@@ -18,22 +18,24 @@ import * as os from 'node:os';
 // so that the actual file-copy logic runs against our fake source tree.
 // ---------------------------------------------------------------------------
 
-// fakeHooksSrcDir is a module-level variable populated inside beforeEach.
-// Because vi.mock factories are hoisted, we use a getter that reads the
-// variable at call-time, not at module evaluation time.
+// fakeHooksSrcDir / fakeTemplatesDir are module-level variables populated
+// inside beforeEach. Because vi.mock factories are hoisted, we use getters
+// that read the variables at call-time, not at module evaluation time.
 let fakeHooksSrcDir = '';
+let fakeTemplatesDir = '';
 
 vi.mock('../../src/install/copy.js', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../../src/install/copy.js')>();
   return {
     ...actual,
     getHooksDir: () => fakeHooksSrcDir,
+    getTemplatesDir: () => fakeTemplatesDir,
   };
 });
 
 // Import the module-under-test AFTER the mock declaration (Vitest hoists
 // vi.mock() calls so the mock is in place when this import is resolved).
-import { installHooks, removeHooks } from '../../src/install/hooks.js';
+import { installHooks, removeHooks, restoreSettingsFromTemplate, getSettingsTemplate } from '../../src/install/hooks.js';
 
 // ---------------------------------------------------------------------------
 // Hook file names that installHooks looks for
@@ -56,6 +58,42 @@ const HOOK_FILES = [
 
 let tmpDir: string;
 
+/** The reference settings template that getSettingsTemplate() reads. */
+const SETTINGS_REFERENCE = {
+  $comment: 'Reference template for testing.',
+  hooks: {
+    SessionStart: [
+      { hooks: [{ type: 'command', command: 'node ".claude/maxsim/hooks/maxsim-check-update.cjs"' }] },
+      { hooks: [{ type: 'command', command: 'node ".claude/maxsim/hooks/maxsim-session-start.cjs"' }] },
+    ],
+    Notification: [
+      { hooks: [{ type: 'command', command: 'node ".claude/maxsim/hooks/maxsim-notification-sound.cjs"' }] },
+    ],
+    Stop: [
+      { hooks: [{ type: 'command', command: 'node ".claude/maxsim/hooks/maxsim-stop-sound.cjs"' }] },
+      { hooks: [{ type: 'command', command: 'node ".claude/maxsim/hooks/maxsim-capture-learnings.cjs"' }] },
+    ],
+    TeammateIdle: [
+      { hooks: [{ type: 'command', command: 'node ".claude/maxsim/hooks/maxsim-teammate-idle.cjs"' }] },
+    ],
+    TaskCompleted: [
+      { hooks: [{ type: 'command', command: 'node ".claude/maxsim/hooks/maxsim-task-completed.cjs"' }] },
+    ],
+  },
+  statusLine: { type: 'command', command: 'node ".claude/maxsim/hooks/maxsim-statusline.cjs"' },
+  env: { CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS: '1' },
+  permissions: {
+    allow: [
+      'Bash(npm run build)',
+      'Bash(npm test)',
+      'Bash(npx biome check *)',
+      'Bash(gh *)',
+      'Bash(git *)',
+      'Bash(node *)',
+    ],
+  },
+};
+
 /** Create a fresh temp dir, populate fakeHooksSrcDir with dummy .cjs files. */
 function setupTmpDir(): void {
   tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'maxsim-hooks-test-'));
@@ -67,6 +105,15 @@ function setupTmpDir(): void {
   for (const file of HOOK_FILES) {
     fs.writeFileSync(path.join(fakeHooksSrcDir, file), `// dummy ${file}\n`);
   }
+
+  // Set up the fake templates directory with settings-reference.json
+  fakeTemplatesDir = path.join(tmpDir, 'fake-templates');
+  const templatesSubDir = path.join(fakeTemplatesDir, 'templates');
+  fs.mkdirSync(templatesSubDir, { recursive: true });
+  fs.writeFileSync(
+    path.join(templatesSubDir, 'settings-reference.json'),
+    JSON.stringify(SETTINGS_REFERENCE, null, 2),
+  );
 }
 
 /** Read and parse settings.json from the project's .claude directory. */
@@ -86,6 +133,7 @@ beforeEach(() => {
 afterEach(() => {
   fs.rmSync(tmpDir, { recursive: true, force: true });
   fakeHooksSrcDir = '';
+  fakeTemplatesDir = '';
   vi.clearAllMocks();
 });
 
@@ -693,5 +741,210 @@ describe('removeHooks', () => {
     expect(installed).toContain('maxsim-session-start (SessionStart)');
     expect(installed).toContain('maxsim-teammate-idle (TeammateIdle)');
     expect(installed).toContain('maxsim-task-completed (TaskCompleted)');
+  });
+});
+
+// ===========================================================================
+// getSettingsTemplate
+// ===========================================================================
+
+describe('getSettingsTemplate', () => {
+  it('returns a parsed settings object from the reference template', () => {
+    const template = getSettingsTemplate();
+    expect(template).not.toBeNull();
+    expect(template!.hooks).toBeDefined();
+    expect(template!.env).toBeDefined();
+    expect(template!.permissions).toBeDefined();
+    expect(template!.statusLine).toBeDefined();
+  });
+
+  it('strips the $comment field from the template', () => {
+    const template = getSettingsTemplate();
+    expect(template).not.toBeNull();
+    expect((template as Record<string, unknown>).$comment).toBeUndefined();
+  });
+
+  it('returns null when the template file does not exist', () => {
+    // Temporarily point to a non-existent templates dir
+    const saved = fakeTemplatesDir;
+    fakeTemplatesDir = path.join(tmpDir, 'nonexistent');
+    const template = getSettingsTemplate();
+    expect(template).toBeNull();
+    fakeTemplatesDir = saved;
+  });
+
+  it('contains all expected hook events', () => {
+    const template = getSettingsTemplate();
+    expect(template).not.toBeNull();
+    expect(template!.hooks!.SessionStart).toBeDefined();
+    expect(template!.hooks!.Notification).toBeDefined();
+    expect(template!.hooks!.Stop).toBeDefined();
+    expect(template!.hooks!.TeammateIdle).toBeDefined();
+    expect(template!.hooks!.TaskCompleted).toBeDefined();
+  });
+});
+
+// ===========================================================================
+// restoreSettingsFromTemplate
+// ===========================================================================
+
+describe('restoreSettingsFromTemplate', () => {
+  it('creates settings.json from the template when none exists', () => {
+    const projectDir = path.join(tmpDir, 'project');
+    fs.mkdirSync(projectDir);
+
+    const result = restoreSettingsFromTemplate(projectDir);
+    expect(result).toBe(true);
+
+    const settingsPath = path.join(projectDir, '.claude', 'settings.json');
+    expect(fs.existsSync(settingsPath)).toBe(true);
+
+    const settings = JSON.parse(fs.readFileSync(settingsPath, 'utf8'));
+    expect(settings.hooks).toBeDefined();
+    expect(settings.hooks.SessionStart).toBeDefined();
+    expect(settings.hooks.Stop).toBeDefined();
+    expect(settings.env.CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS).toBe('1');
+  });
+
+  it('rewrites hook paths to point at the project hooks directory', () => {
+    const projectDir = path.join(tmpDir, 'project');
+    fs.mkdirSync(projectDir);
+
+    restoreSettingsFromTemplate(projectDir);
+
+    const settings = JSON.parse(
+      fs.readFileSync(path.join(projectDir, '.claude', 'settings.json'), 'utf8'),
+    );
+
+    // All hook commands should reference the project's .claude/maxsim/hooks/ dir
+    const hooksDir = path.join(projectDir, '.claude', 'maxsim', 'hooks').replace(/\\/g, '/');
+    for (const matchers of Object.values(settings.hooks) as Array<
+      Array<{ hooks: Array<{ command: string }> }>
+    >) {
+      for (const matcher of matchers) {
+        for (const h of matcher.hooks) {
+          expect(h.command).toContain(hooksDir);
+        }
+      }
+    }
+  });
+
+  it('preserves existing non-maxsim hooks in settings.json', () => {
+    const projectDir = path.join(tmpDir, 'project');
+    const claudeDir = path.join(projectDir, '.claude');
+    fs.mkdirSync(claudeDir, { recursive: true });
+
+    const existingSettings = {
+      hooks: {
+        PreToolUse: [
+          { hooks: [{ type: 'command', command: 'echo user-hook' }] },
+        ],
+      },
+      customKey: 'keep-me',
+    };
+    fs.writeFileSync(
+      path.join(claudeDir, 'settings.json'),
+      JSON.stringify(existingSettings, null, 2),
+    );
+
+    restoreSettingsFromTemplate(projectDir);
+
+    const settings = JSON.parse(
+      fs.readFileSync(path.join(claudeDir, 'settings.json'), 'utf8'),
+    );
+
+    expect(settings.customKey).toBe('keep-me');
+    expect(settings.hooks.PreToolUse).toBeDefined();
+    const preToolCommands = settings.hooks.PreToolUse.flatMap(
+      (m: { hooks: Array<{ command: string }> }) => m.hooks,
+    ).map((h: { command: string }) => h.command);
+    expect(preToolCommands).toContain('echo user-hook');
+  });
+
+  it('removes existing maxsim hooks before applying template (no duplicates)', () => {
+    const projectDir = path.join(tmpDir, 'project');
+    fs.mkdirSync(projectDir);
+
+    // First install normally
+    installHooks(projectDir);
+
+    // Then restore from template
+    restoreSettingsFromTemplate(projectDir);
+
+    const settings = JSON.parse(
+      fs.readFileSync(path.join(projectDir, '.claude', 'settings.json'), 'utf8'),
+    );
+
+    // Should have exactly one maxsim-check-update entry in SessionStart
+    const sessionStartCommands = settings.hooks.SessionStart.flatMap(
+      (m: { hooks: Array<{ command: string }> }) => m.hooks,
+    ).map((h: { command: string }) => h.command);
+
+    const checkUpdateEntries = sessionStartCommands.filter((c: string) =>
+      c.includes('maxsim-check-update'),
+    );
+    expect(checkUpdateEntries.length).toBe(1);
+  });
+
+  it('recovers from a corrupt settings.json', () => {
+    const projectDir = path.join(tmpDir, 'project');
+    const claudeDir = path.join(projectDir, '.claude');
+    fs.mkdirSync(claudeDir, { recursive: true });
+    fs.writeFileSync(path.join(claudeDir, 'settings.json'), '{ broken json !!!');
+
+    const result = restoreSettingsFromTemplate(projectDir);
+    expect(result).toBe(true);
+
+    const settings = JSON.parse(
+      fs.readFileSync(path.join(claudeDir, 'settings.json'), 'utf8'),
+    );
+    expect(settings.hooks).toBeDefined();
+    expect(settings.hooks.SessionStart).toBeDefined();
+  });
+
+  it('returns false when the template is unavailable', () => {
+    const saved = fakeTemplatesDir;
+    fakeTemplatesDir = path.join(tmpDir, 'nonexistent');
+
+    const projectDir = path.join(tmpDir, 'project');
+    fs.mkdirSync(projectDir);
+
+    const result = restoreSettingsFromTemplate(projectDir);
+    expect(result).toBe(false);
+
+    fakeTemplatesDir = saved;
+  });
+
+  it('sets permissions from the template', () => {
+    const projectDir = path.join(tmpDir, 'project');
+    fs.mkdirSync(projectDir);
+
+    restoreSettingsFromTemplate(projectDir);
+
+    const settings = JSON.parse(
+      fs.readFileSync(path.join(projectDir, '.claude', 'settings.json'), 'utf8'),
+    );
+    expect(settings.permissions).toBeDefined();
+    expect(settings.permissions.allow).toContain('Bash(npm run build)');
+    expect(settings.permissions.allow).toContain('Bash(git *)');
+  });
+
+  it('does not overwrite a user-defined statusLine', () => {
+    const projectDir = path.join(tmpDir, 'project');
+    const claudeDir = path.join(projectDir, '.claude');
+    fs.mkdirSync(claudeDir, { recursive: true });
+
+    const userStatusLine = { type: 'command', command: 'node "/my/custom/statusline.js"' };
+    fs.writeFileSync(
+      path.join(claudeDir, 'settings.json'),
+      JSON.stringify({ statusLine: userStatusLine }, null, 2),
+    );
+
+    restoreSettingsFromTemplate(projectDir);
+
+    const settings = JSON.parse(
+      fs.readFileSync(path.join(claudeDir, 'settings.json'), 'utf8'),
+    );
+    expect(settings.statusLine.command).toBe(userStatusLine.command);
   });
 });
