@@ -6,7 +6,7 @@ allowed-tools: [Read, Write, Edit, Bash, Grep, Glob, Agent, AskUserQuestion, Ent
 ---
 
 <objective>
-Debug issues using a scientific method cycle: Reproduce → Hypothesize → Isolate → Verify → Fix → Confirm. Active debug sessions are tracked as GitHub Issues (label: `debug`).
+Debug issues using a scientific method cycle: Reproduce → Hypothesize → Isolate → Verify → Fix → Confirm. Active debug sessions are tracked as GitHub Issues (label: `type:bug`).
 </objective>
 
 > **Note:** This command is also auto-triggered by `/maxsim:go` when open issues labeled `type:bug` are detected on the GitHub Project Board.
@@ -16,7 +16,7 @@ Arguments: $ARGUMENTS
 
 If $ARGUMENTS is provided, treat it as the issue description and skip straight to symptom confirmation.
 
-GitHub is the sole source of truth. Check for open Issues labeled `debug` to detect active sessions — no .planning/debug/ files.
+GitHub is the sole source of truth. Check for open Issues labeled `type:bug` to detect active sessions — no .planning/debug/ files.
 </context>
 
 <process>
@@ -25,10 +25,10 @@ Plan Mode: Use EnterPlanMode when presenting symptom analysis and proposed diagn
 
 Follow @.claude/maxsim/workflows/debug.md end-to-end. Invoke the `systematic-debugging` skill at step 3 to drive the reproduce-hypothesize-isolate-verify-fix cycle.
 
-1. Check GitHub for open Issues labeled `debug` (active sessions)
+1. Check GitHub for open Issues labeled `type:bug` (active sessions)
    - If active sessions exist and no $ARGUMENTS: list them, let user pick to resume or start new
 2. Gather symptoms via AskUserQuestion: expected behavior, actual behavior, errors, timeline, reproduction steps
-3. Create a GitHub Issue labeled `debug` to track the session
+3. Create a GitHub Issue labeled `type:bug` to track the session
 4. Spawn a verifier Agent with symptoms and the GitHub Issue URL as context
 5. Handle Agent return:
    - Root cause found → display findings, offer Fix / Plan Fix / Manual
