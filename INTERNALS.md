@@ -75,11 +75,15 @@ packages/cli/src/
 │   └── index.ts
 ├── hooks/
 │   ├── shared.ts                        ← readStdinJson helper, CLAUDE_DIR constant
+│   ├── validation.ts                    ← evidence block + forbidden phrase validation
 │   ├── maxsim-statusline.ts             ← statusLine hook
 │   ├── maxsim-check-update.ts           ← SessionStart hook
 │   ├── maxsim-notification-sound.ts     ← Notification hook
 │   ├── maxsim-stop-sound.ts             ← Stop hook (sound)
 │   ├── maxsim-capture-learnings.ts      ← Stop hook (agent memory)
+│   ├── maxsim-session-start.ts          ← SessionStart hook (context injection)
+│   ├── maxsim-teammate-idle.ts          ← TeammateIdle hook (pending task check)
+│   ├── maxsim-task-completed.ts         ← TaskCompleted hook (verification gates)
 │   └── index.ts
 └── install/
     ├── index.ts        ← installer entry point (npx maxsimcli)
@@ -264,7 +268,7 @@ Exported functions:
 
 ## Hook System
 
-**Seven** hook scripts (plus statusLine) compiled by tsdown into `dist/assets/hooks/*.cjs` and
+**Eight** hook scripts (7 registered in the `hooks` object + 1 `statusLine`) compiled by tsdown into `dist/assets/hooks/*.cjs` and
 installed to `.claude/maxsim/hooks/` at `npx maxsimcli` time.
 
 | Hook script                    | Event       | Purpose                                      |
@@ -337,6 +341,8 @@ interface MaxsimConfig {
   version: string;                    // "6.0.0"
   execution: {
     model_profile: 'quality' | 'balanced' | 'budget';
+    competitive_enabled: boolean;      // default: false
+    model_overrides?: Partial<Record<AgentType, Model>>;
     parallelism: {
       max_agents_per_wave: number;     // default: 3
       max_retries: number;             // default: 3
@@ -350,9 +356,10 @@ interface MaxsimConfig {
     };
   };
   worktrees: {
-    basePath: string;                  // default: ".maxsim-worktrees/"
     auto_cleanup: boolean;             // default: true
     branch_prefix: string;             // default: "maxsim/"
+    path_template: string;             // default: ".claude/worktrees/agent-{id}/"
+    branch_template: string;           // default: "maxsim/phase-{N}-task-{id}"
   };
   automation: {
     auto_commit_on_success: boolean;   // default: true
@@ -365,6 +372,15 @@ interface MaxsimConfig {
   };
   hooks: {
     enabled: boolean;                  // default: true
+  };
+  workflow: {
+    research: boolean;                 // default: true
+    plan_checker: boolean;             // default: true
+    verifier: boolean;                 // default: true
+    auto_advance: boolean;             // default: false
+  };
+  git: {
+    branching_strategy: 'none' | 'phase' | 'milestone';  // default: 'phase'
   };
 }
 ```
@@ -400,7 +416,7 @@ directly — it is copied into `dist/assets/templates/` during the build.
 ├── maxsim/
 │   ├── bin/
 │   │   └── maxsim-tools.cjs  ← compiled CLI dispatcher
-│   ├── hooks/             ← 5 compiled hook scripts (*.cjs)
+│   ├── hooks/             ← 8 compiled hook scripts (*.cjs)
 │   ├── workflows/         ← 18 workflow orchestrators
 │   ├── references/        ← reference documents
 │   ├── templates/         ← reusable content templates
@@ -494,7 +510,7 @@ tsdown compiles three separate entry point groups:
 |----------------------|---------------------------|--------------------------------|
 | `install/index.ts`   | `dist/install.cjs`        | `npx maxsimcli` (package bin)  |
 | `cli.ts`             | `dist/cli.cjs`            | Installed as `maxsim-tools.cjs`|
-| `hooks/*.ts` (5 files)| `dist/assets/hooks/*.cjs`| Installed to `.claude/maxsim/hooks/` |
+| `hooks/*.ts` (8 files)| `dist/assets/hooks/*.cjs`| Installed to `.claude/maxsim/hooks/` |
 
 All targets: `format: cjs`, `platform: node`, `target: es2022`, `sourcemap: true`.
 `@octokit/*` packages are inlined into `dist/cli.cjs` (`noExternal: [/^@octokit/]`).
@@ -542,7 +558,7 @@ User: /maxsim:execute 3
 > **Tip:** Users can press **Ctrl+G** while reviewing a plan to edit it in their default text editor before approving.
 
 6. Workflow: spawn executor agents (Agent tool, isolation: worktree)
-   → one worktree per task: .maxsim-worktrees/phase-3-task-{id}/
+   → one worktree per task: .claude/worktrees/agent-{id}/
    → branch per task: maxsim/phase-3-task-{id}
 
 7. Each executor agent:
@@ -584,10 +600,11 @@ a file path reference rather than inline stdout.
 
 **Hook exit codes.** Hooks must exit 0 under all circumstances unless they
 intend to block the triggering event (exit 2 for TeammateIdle/TaskCompleted
-quality gates). All five installed hooks always exit 0 regardless of errors.
+quality gates). All eight installed hooks always exit 0 regardless of errors
+(except the two gate hooks which may exit 2).
 
 **Worktree isolation.** Every executor agent operates in its own git worktree
-under `.maxsim-worktrees/{taskId}/` on a dedicated branch
+under `.claude/worktrees/agent-{id}/` on a dedicated branch
 `maxsim/phase-{N}-task-{id}`. This prevents agents from interfering with
 each other's file writes during parallel execution.
 
