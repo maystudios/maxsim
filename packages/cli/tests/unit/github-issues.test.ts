@@ -24,6 +24,7 @@ const {
   mockIssuesUpdate,
   mockIssuesCreateComment,
   mockGraphql,
+  mockRequest,
   mockOctokit,
   mockGetOctokit,
   mockGetRepoInfo,
@@ -34,10 +35,12 @@ const {
   const mockIssuesUpdate = vi.fn();
   const mockIssuesCreateComment = vi.fn();
   const mockGraphql = vi.fn();
+  const mockRequest = vi.fn();
 
   const mockOctokit = {
     paginate: mockPaginate,
     graphql: mockGraphql,
+    request: mockRequest,
     rest: {
       issues: {
         listForRepo: 'listForRepo-endpoint',
@@ -60,6 +63,7 @@ const {
     mockIssuesUpdate,
     mockIssuesCreateComment,
     mockGraphql,
+    mockRequest,
     mockOctokit,
     mockGetOctokit,
     mockGetRepoInfo,
@@ -98,6 +102,8 @@ import {
   closeIssue,
   listComments,
   addComment,
+  addSubIssue,
+  listSubIssues,
   createEscalationIssue,
   addIssueRelation,
   removeIssueRelation,
@@ -1401,6 +1407,192 @@ describe('createEscalationIssue', () => {
     await createEscalationIssue(PAYLOAD, { owner: 'other-owner', repo: 'other-repo', isOrg: false });
 
     expect(mockIssuesCreate).toHaveBeenCalledWith(
+      expect.objectContaining({ owner: 'other-owner', repo: 'other-repo' }),
+    );
+    expect(mockGetRepoInfo).not.toHaveBeenCalled();
+  });
+});
+
+// ── addSubIssue ──────────────────────────────────────────────────────────────
+
+describe('addSubIssue', () => {
+  it('resolves child internal ID and calls the sub-issues endpoint', async () => {
+    mockIssuesGet.mockResolvedValue({ data: { ...RAW_ISSUE, number: 10, id: 999010 } });
+    mockRequest.mockResolvedValue({ status: 201 });
+
+    const result = await addSubIssue(5, 10);
+
+    expect(result.ok).toBe(true);
+
+    // Should first fetch the child issue to get its internal numeric ID
+    expect(mockIssuesGet).toHaveBeenCalledWith(
+      expect.objectContaining({
+        owner: 'test-owner',
+        repo: 'test-repo',
+        issue_number: 10,
+      }),
+    );
+
+    // Should POST to the sub-issues endpoint with the child's internal ID
+    expect(mockRequest).toHaveBeenCalledWith(
+      'POST /repos/{owner}/{repo}/issues/{issue_number}/sub_issues',
+      expect.objectContaining({
+        owner: 'test-owner',
+        repo: 'test-repo',
+        issue_number: 5,
+        sub_issue_id: 999010,
+      }),
+    );
+  });
+
+  it('uses the child internal id (not the issue number)', async () => {
+    // The child issue has number 10 but internal id 888888
+    mockIssuesGet.mockResolvedValue({ data: { ...RAW_ISSUE, number: 10, id: 888888 } });
+    mockRequest.mockResolvedValue({ status: 201 });
+
+    await addSubIssue(1, 10);
+
+    // sub_issue_id must be the internal numeric id, not the issue number
+    expect(mockRequest).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.objectContaining({ sub_issue_id: 888888 }),
+    );
+  });
+
+  it('returns error result when the child issue lookup fails', async () => {
+    const err = Object.assign(new Error('Not Found'), { status: 404 });
+    mockIssuesGet.mockRejectedValue(err);
+
+    const result = await addSubIssue(5, 999);
+
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.code).toBe('NOT_FOUND');
+  });
+
+  it('returns error result when the sub-issue POST request fails', async () => {
+    mockIssuesGet.mockResolvedValue({ data: { ...RAW_ISSUE, number: 10, id: 999010 } });
+    const err = Object.assign(new Error('Validation Failed'), { status: 422 });
+    mockRequest.mockRejectedValue(err);
+
+    const result = await addSubIssue(5, 10);
+
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.code).toBe('VALIDATION');
+  });
+
+  it('accepts an explicit repo override', async () => {
+    mockIssuesGet.mockResolvedValue({ data: { ...RAW_ISSUE, number: 10, id: 999010 } });
+    mockRequest.mockResolvedValue({ status: 201 });
+
+    await addSubIssue(5, 10, { owner: 'other-owner', repo: 'other-repo', isOrg: false });
+
+    expect(mockIssuesGet).toHaveBeenCalledWith(
+      expect.objectContaining({ owner: 'other-owner', repo: 'other-repo' }),
+    );
+    expect(mockRequest).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.objectContaining({ owner: 'other-owner', repo: 'other-repo' }),
+    );
+    expect(mockGetRepoInfo).not.toHaveBeenCalled();
+  });
+});
+
+// ── listSubIssues ────────────────────────────────────────────────────────────
+
+describe('listSubIssues', () => {
+  it('returns an array of mapped GhIssue objects', async () => {
+    mockPaginate.mockResolvedValue([RAW_ISSUE]);
+
+    const result = await listSubIssues(5);
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+
+    expect(result.data).toHaveLength(1);
+    const issue = result.data[0];
+    expect(issue.number).toBe(42);
+    expect(issue.id).toBe(100042);
+    expect(issue.nodeId).toBe('I_node42');
+    expect(issue.title).toBe('Fix the thing');
+    expect(issue.state).toBe('open');
+  });
+
+  it('calls paginate with the correct sub-issues endpoint', async () => {
+    mockPaginate.mockResolvedValue([]);
+
+    await listSubIssues(5);
+
+    expect(mockPaginate).toHaveBeenCalledWith(
+      'GET /repos/{owner}/{repo}/issues/{issue_number}/sub_issues',
+      expect.objectContaining({
+        owner: 'test-owner',
+        repo: 'test-repo',
+        issue_number: 5,
+        per_page: 100,
+      }),
+    );
+  });
+
+  it('returns empty array when parent has no sub-issues', async () => {
+    mockPaginate.mockResolvedValue([]);
+
+    const result = await listSubIssues(5);
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.data).toHaveLength(0);
+  });
+
+  it('returns multiple sub-issues', async () => {
+    const secondIssue = { ...RAW_ISSUE, number: 43, id: 100043, title: 'Another sub-issue' };
+    mockPaginate.mockResolvedValue([RAW_ISSUE, secondIssue]);
+
+    const result = await listSubIssues(5);
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.data).toHaveLength(2);
+    expect(result.data[0].number).toBe(42);
+    expect(result.data[1].number).toBe(43);
+  });
+
+  it('maps labels, milestones, and assignees correctly', async () => {
+    mockPaginate.mockResolvedValue([RAW_ISSUE_WITH_MILESTONE]);
+
+    const result = await listSubIssues(5);
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+
+    const issue = result.data[0];
+    expect(issue.labels).toHaveLength(1);
+    expect(issue.labels[0].name).toBe('bug');
+    expect(issue.milestone).not.toBeNull();
+    expect(issue.milestone?.title).toBe('v1.0');
+    expect(issue.assignees).toHaveLength(1);
+    expect(issue.assignees[0].login).toBe('alice');
+  });
+
+  it('returns error result when paginate throws', async () => {
+    const err = Object.assign(new Error('Not Found'), { status: 404 });
+    mockPaginate.mockRejectedValue(err);
+
+    const result = await listSubIssues(999);
+
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.code).toBe('NOT_FOUND');
+  });
+
+  it('accepts an explicit repo override', async () => {
+    mockPaginate.mockResolvedValue([]);
+
+    await listSubIssues(5, { owner: 'other-owner', repo: 'other-repo', isOrg: false });
+
+    expect(mockPaginate).toHaveBeenCalledWith(
+      expect.any(String),
       expect.objectContaining({ owner: 'other-owner', repo: 'other-repo' }),
     );
     expect(mockGetRepoInfo).not.toHaveBeenCalled();
