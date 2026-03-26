@@ -10,6 +10,7 @@
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
+import { execFileSync } from 'node:child_process';
 import minimist from 'minimist';
 import { copyDir, getTemplatesDir } from './copy.js';
 import { installHooks } from './hooks.js';
@@ -102,7 +103,10 @@ async function runInstall(projectDir: string, quiet: boolean): Promise<void> {
     process.exit(1);
   }
 
-  // 1. Copy templates to .claude/
+  // 0. Gather template variables for substitution
+  const templateVars = gatherTemplateVars(projectDir);
+
+  // 1. Copy templates to .claude/ (with template variable substitution)
   const copies = [
     { src: path.join(templatesDir, 'commands'), dest: path.join(claudeDir, 'commands') },
     { src: path.join(templatesDir, 'agents'), dest: path.join(claudeDir, 'agents') },
@@ -116,7 +120,7 @@ async function runInstall(projectDir: string, quiet: boolean): Promise<void> {
   const installedFiles: string[] = [];
   let totalFiles = 0;
   for (const { src, dest } of copies) {
-    const copied = copyDir(src, dest);
+    const copied = copyDir(src, dest, templateVars);
     totalFiles += copied;
     if (!quiet && copied > 0) {
       const label = path.relative(claudeDir, dest);
@@ -223,6 +227,46 @@ function detectProjectName(projectDir: string): string {
     } catch { /* ignore */ }
   }
   return path.basename(projectDir);
+}
+
+/** Detect GitHub repo owner and name from the git remote URL. */
+export function detectRepoInfo(projectDir: string): { owner: string; repo: string } | null {
+  try {
+    const remoteUrl = execFileSync('git', ['remote', 'get-url', 'origin'], {
+      cwd: projectDir,
+      encoding: 'utf8',
+      stdio: ['pipe', 'pipe', 'pipe'],
+    }).trim();
+
+    const match = remoteUrl.match(
+      /(?:github\.com)[/:]([^/]+)\/([^/.]+?)(?:\.git)?$/,
+    );
+
+    if (match) {
+      return { owner: match[1], repo: match[2] };
+    }
+  } catch {
+    // Not a git repo or no remote — silently return null
+  }
+  return null;
+}
+
+/** Gather all template variables for substitution during install. */
+export function gatherTemplateVars(projectDir: string): Record<string, string> {
+  const projectName = detectProjectName(projectDir);
+  const repoInfo = detectRepoInfo(projectDir);
+
+  const vars: Record<string, string> = {
+    PROJECT_NAME: projectName,
+    MAXSIM_VERSION: VERSION,
+  };
+
+  if (repoInfo) {
+    vars.REPO_OWNER = repoInfo.owner;
+    vars.REPO_NAME = repoInfo.repo;
+  }
+
+  return vars;
 }
 
 if (require.main === module) {
