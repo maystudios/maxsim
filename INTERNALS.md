@@ -48,7 +48,7 @@ maxsimcli/                        ← repo root
 | Linting    | Biome                                       |
 | CI/CD      | GitHub Actions                              |
 | Releases   | semantic-release on `main`                  |
-| Website    | React + Vite + Tailwind CSS + Framer Motion |
+| Website    | React + Vite + Tailwind CSS + Motion (formerly Framer Motion) |
 
 ---
 

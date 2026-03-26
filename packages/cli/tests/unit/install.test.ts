@@ -110,7 +110,7 @@ describe('generateClaudeMd', () => {
     expect(md).toContain('/maxsim:execute');
   });
 
-  it('includes all 13 commands', () => {
+  it('includes all 14 commands', () => {
     const md = generateClaudeMd('test');
     const commands = [':go', ':init', ':plan', ':execute', ':debug', ':quick', ':improve', ':fix-loop', ':debug-loop', ':security', ':progress', ':settings', ':help'];
     for (const cmd of commands) {

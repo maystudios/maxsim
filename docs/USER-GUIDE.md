@@ -57,7 +57,7 @@ You never need to remember where you were. `/maxsim:go` always knows.
 
 ## Commands
 
-MaxsimCLI provides 13 slash commands. `/maxsim:go` is the primary interface — use the others when you want explicit control over a specific step.
+MaxsimCLI provides 14 slash commands (13 primary + 1 alias). `/maxsim:go` is the primary interface — use the others when you want explicit control over a specific step.
 
 | Command | Description | Example |
 |---------|-------------|---------|
@@ -74,6 +74,7 @@ MaxsimCLI provides 13 slash commands. `/maxsim:go` is the primary interface — 
 | `/maxsim:fix-loop [cmd]` | **Autonomous error repair.** Runs the given command, diagnoses failures, applies fixes, and repeats until zero errors remain. | `/maxsim:fix-loop "npm test"` |
 | `/maxsim:debug-loop [symptom]` | **Autonomous bug hunting.** Applies the scientific method with hypothesis testing — form hypotheses, design experiments, verify, and repeat until the root cause is confirmed and fixed. | `/maxsim:debug-loop "login fails on mobile"` |
 | `/maxsim:security [scope]` | **Security audit.** Runs a read-only STRIDE + OWASP + red-team analysis across the specified scope and produces a prioritised finding report. | `/maxsim:security src/` |
+| `/maxsim:execute-phase [N]` | Alias for `/maxsim:execute`. | `/maxsim:execute-phase 3` |
 
 ### When to use explicit commands vs `/maxsim:go`
 

@@ -293,7 +293,7 @@ describe('Install -> Verify -> Uninstall -> Verify', () => {
       expect(content).toContain('## MaxsimCLI');
     });
 
-    it('CLAUDE.md contains command reference table with all 13 commands', () => {
+    it('CLAUDE.md contains command reference table with all 14 commands', () => {
       const content = fs.readFileSync(path.join(projectDir, 'CLAUDE.md'), 'utf8');
       // Table header
       expect(content).toContain('| Command | Purpose |');

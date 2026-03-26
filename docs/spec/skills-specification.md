@@ -753,7 +753,7 @@ description: >-
 
 ### Disposition
 
-Update to accurately reflect the v6 command surface (13 commands) and the 15-skill target set. The current skill references outdated skill names (`verification-before-completion`, `sdd`, `memory-management`) that do not exist in the target state. The routing table and agent model sections are correct. The skills table needs to be updated.
+Update to accurately reflect the v6 command surface (14 commands) and the 15-skill target set. The current skill references outdated skill names (`verification-before-completion`, `sdd`, `memory-management`) that do not exist in the target state. The routing table and agent model sections are correct. The skills table needs to be updated.
 
 ### Section Outline
 
@@ -764,7 +764,7 @@ Update to accurately reflect the v6 command surface (13 commands) and the 15-ski
    - Check STATE.md for last checkpoint
    - Check current phase in ROADMAP.md
    - Route using the command table
-4. **Command Surface (13 commands)** — updated routing table:
+4. **Command Surface (14 commands)** — updated routing table:
 
    | Situation | Command |
    |-----------|---------|

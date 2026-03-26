@@ -71,7 +71,7 @@ One command. Installs project-locally into `.claude/`. No global installation.
 ```
 .claude/
 ├── settings.json          # Claude Code settings (hooks, permissions, env)
-├── commands/maxsim/       # 13 slash commands
+├── commands/maxsim/       # 14 slash commands (13 primary + 1 alias)
 ├── agents/                # 4 agent definitions + AGENTS.md registry
 ├── skills/                # 15 skill modules
 ├── rules/                 # Conventions + verification protocol
@@ -141,7 +141,7 @@ Each project is completely isolated:
 
 ## 6. Commands
 
-MaxsimCLI provides **13 slash commands**. `/maxsim:go` is the primary interface.
+MaxsimCLI provides **14 slash commands** (13 primary + 1 alias). `/maxsim:go` is the primary interface.
 
 ### 6.1 Command List
 
@@ -160,6 +160,7 @@ MaxsimCLI provides **13 slash commands**. `/maxsim:go` is the primary interface.
 | `/maxsim:fix-loop` | **Autonomous error repair** — Iteratively fix until zero errors remain | Optimization |
 | `/maxsim:debug-loop` | **Autonomous bug hunting** — Scientific method with hypothesis testing | Optimization |
 | `/maxsim:security` | **Security audit** — STRIDE + OWASP + red-team analysis (read-only) | Audit |
+| `/maxsim:execute-phase [N]` | Alias for `/maxsim:execute` | Phase |
 
 ### 6.2 `/maxsim:go` — The Main Command
 
@@ -744,8 +745,8 @@ maxsimcli/
 │   └── website/          # Landing page + documentation (React + Vite)
 ├── templates/            # Source templates (copied to .claude/ during install)
 │   ├── agents/           # 4 agent definitions + AGENTS.md registry
-│   ├── commands/maxsim/  # 13 slash commands
-│   ├── skills/           # 14 skill modules
+│   ├── commands/maxsim/  # 14 slash commands (13 primary + 1 alias)
+│   ├── skills/           # 15 skill modules
 │   ├── workflows/        # Workflow definitions
 │   ├── references/       # Reference documents
 │   ├── rules/            # Conventions + verification
@@ -888,10 +889,10 @@ REMOVED: commands.ts (functionality covered by client.ts + individual modules)
 **Commit:** `feat: install system with complete uninstall`
 
 ### Phase 4: Commands + Workflows
-**Goal:** 13 slash commands with correct tool names and GitHub-first workflows.
+**Goal:** 14 slash commands (13 primary + 1 alias) with correct tool names and GitHub-first workflows.
 **Spec:** PROJECT.md §6, `docs/spec/init-process-design.md`, `docs/spec/wave-execution-design.md`
 ```
-1. templates/commands/maxsim/ — All 13 commands (correct frontmatter)
+1. templates/commands/maxsim/ — All 14 commands (correct frontmatter)
    - Use 'Agent' tool (NOT 'Task')
    - Use correct allowed-tools
    - Correct argument-hint on all commands
@@ -918,7 +919,7 @@ REMOVED: commands.ts (functionality covered by client.ts + individual modules)
 7. No @ imports
 8. Third-person descriptions
 ```
-**Commit:** `feat: 14 skills (Anthropic-compliant)`
+**Commit:** `feat: 15 skills (Anthropic-compliant)`
 
 ### Phase 6: Agents (4 definitions)
 **Goal:** 4 agent definitions with valid YAML frontmatter.
