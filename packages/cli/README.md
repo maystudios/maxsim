@@ -60,7 +60,7 @@ That is the core loop. Init, plan, execute, verify. Each phase is isolated, each
 
 ## What You Get
 
-MAXSIM ships 13 slash commands, 4 agents, 14 skills, and 18 workflows. Here is what that means in practice.
+MAXSIM ships 14 slash commands, 4 agents, 15 skills, and 18 workflows. Here is what that means in practice.
 
 **Spec-driven development.** All work flows through GitHub — phase Issues, sub-issue tasks, Project Board columns, and structured comments. The GitHub Project Board is the single source of truth. Agents read from it and update it as they work.
 
@@ -72,9 +72,7 @@ MAXSIM ships 13 slash commands, 4 agents, 14 skills, and 18 workflows. Here is w
 
 **Parallel execution with git worktrees.** Independent plans run concurrently in separate worktrees. MAXSIM groups them into dependency-ordered waves and runs each wave in parallel.
 
-**Review gates you can toggle.** Three gates (spec review, code review, simplify review) can be turned on or off. Each supports a retry limit before it escalates.
-
-**Drift detection.** MAXSIM compares your codebase against the spec and flags divergence before it snowballs.
+**Verification gates you can toggle.** Five gates (tests, build, lint, spec compliance, code review) check every phase before it closes. Configurable strict mode and retry limits keep quality high.
 
 ---
 
@@ -101,12 +99,12 @@ Run this from your project root. Everything goes into `.claude/`.
 
 The installer copies these files into `.claude/`:
 
-- 13 slash commands (`/maxsim:init`, `/maxsim:plan`, etc.)
+- 14 slash commands (`/maxsim:init`, `/maxsim:plan`, etc.)
 - 4 agent definitions (executor, planner, researcher, verifier)
-- 14 skills (TDD, debugging, code review, and more)
+- 15 skills (TDD, debugging, code review, and more)
 - 18 workflow files
 - 5 reference documents, 2 rules files
-- 5 hooks (statusline, update checker, sounds, capture-learnings)
+- 8 hooks (statusline, update checker, sounds, capture-learnings, session-start, task-completed, teammate-idle)
 - 1 tool binary (`maxsim-tools.cjs`)
 - `CLAUDE.md` in your project root
 
@@ -114,15 +112,15 @@ The installer copies these files into `.claude/`:
 
 ```
 .claude/
-├── commands/maxsim/          # 13 slash commands
+├── commands/maxsim/          # 14 slash commands
 ├── maxsim/
 │   ├── bin/maxsim-tools.cjs  # Tool binary
 │   ├── workflows/            # 18 workflows
 │   ├── templates/            # Planning document templates
 │   ├── references/           # 5 reference docs
-│   └── hooks/                # 5 hook scripts (.cjs)
+│   └── hooks/                # 8 hook scripts (.cjs)
 ├── agents/                   # 4 agents
-├── skills/                   # 14 skill directories
+├── skills/                   # 15 skill directories
 ├── rules/                    # 2 rules files
 ├── settings.json
 └── CLAUDE.md                 # Not here — see note below
@@ -150,6 +148,7 @@ Removes MAXSIM files from `.claude/`. Your own skills, agents, and Claude Code c
 | `/maxsim:init` | Initialize MaxsimCLI in current project with GitHub integration |
 | `/maxsim:plan <phase>` | Plan a specific phase with discussion, research, and task breakdown |
 | `/maxsim:execute <phase>` | Execute all plans in a phase with parallel agents and auto-verification |
+| `/maxsim:execute-phase <phase>` | Alias for `/maxsim:execute` |
 | `/maxsim:go` | Auto-detect project state and execute the right action |
 | `/maxsim:quick <description>` | Quick task — create a GitHub Issue and execute in simplified flow |
 | `/maxsim:progress` | Show project status from GitHub Project Board with next-action recommendation |
@@ -352,7 +351,7 @@ Project config lives in `.claude/maxsim/config.json`, created during `/maxsim:in
 
 Skills are reusable prompt modules that agents load on demand. Each skill is an `index.md` file with YAML frontmatter and a markdown body.
 
-### Built-in Skills (14)
+### Built-in Skills (15)
 
 | Skill | Category | What it does |
 |-------|----------|-------------|
@@ -370,6 +369,7 @@ Skills are reusable prompt modules that agents load on demand. Each skill is an 
 | `github-operations` | Reference | Unified GitHub interaction: artifacts, comments, CLI, issue lifecycle |
 | `handoff-contract` | Protocol | Agent-to-agent handoff protocol |
 | `research` | Methodology | Systematic investigation using parallel agents and source hierarchy |
+| `autoresearch` | Task | Autonomous optimization loop powering improve, fix-loop, debug-loop, and security commands |
 
 ### Skill Types
 
@@ -399,15 +399,18 @@ Before running in parallel, MAXSIM checks that plans do not modify the same file
 
 ## Hooks
 
-MAXSIM installs 5 Claude Code hooks:
+MAXSIM installs 8 Claude Code hooks:
 
 | Hook | Event | What it does |
 |------|-------|-------------|
 | `maxsim-statusline` | `statusLine` | Shows model tier, phase number, board column, and milestone progress |
 | `maxsim-check-update` | `SessionStart` | Checks npm for new MAXSIM versions in the background |
+| `maxsim-session-start` | `SessionStart` | Initializes session context and loads project state |
 | `maxsim-notification-sound` | `Notification` | Plays a sound when Claude asks you a question |
 | `maxsim-stop-sound` | `Stop` | Plays a sound when Claude finishes |
 | `maxsim-capture-learnings` | `Stop` | Appends a dated learning entry to `.claude/agent-memory/` from the last 5 commits |
+| `maxsim-task-completed` | `Stop` | Updates GitHub Issue status when a task execution completes |
+| `maxsim-teammate-idle` | `Stop` | Detects idle teammate agents and reassigns or notifies |
 
 ### Statusline
 

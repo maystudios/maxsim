@@ -10,7 +10,7 @@ const steps = [
   {
     number: "02",
     title: "Initialize",
-    description: "Starts a project with deep context gathering. Creates PROJECT.md, REQUIREMENTS.md, and a phased ROADMAP.md for you.",
+    description: "Starts a project with deep context gathering. Creates a GitHub Project Board, Issues labels, and Milestones to track all state.",
     code: "/maxsim:init",
   },
   {

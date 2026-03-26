@@ -48,13 +48,13 @@ const features = [
     icon: GitBranch,
     title: "Branching Strategies",
     description:
-      "Creates git branches per phase or milestone automatically. Templates like maxsim/phase-{N}-{slug} keep your repo tidy.",
+      "Creates git branches per phase or milestone automatically. Templates like maxsim/phase-{N}-task-{id} keep your repo tidy.",
   },
   {
     icon: Radar,
-    title: "Drift Detection",
+    title: "Verification Gates",
     description:
-      "Compares your codebase against the spec and flags divergence before it snowballs. Realign from spec-to-code or code-to-spec in one command.",
+      "Five gates (tests, build, lint, spec compliance, code review) check every phase before it closes. Configurable strict mode and retry limits.",
   },
 ];
 

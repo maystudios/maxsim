@@ -199,7 +199,7 @@ function GettingStarted() {
         <CodeBlock
           language="text"
           code={`.claude/
-├── commands/maxsim/   # 13 user-facing commands (/maxsim:*)
+├── commands/maxsim/   # 14 user-facing commands (/maxsim:*)
 ├── agents/            # 4 specialized agent prompts
 └── hooks/             # Pre/post hooks for automation`}
         />
@@ -208,9 +208,9 @@ function GettingStarted() {
       <div>
         <DocSubheading>Start a new project</DocSubheading>
         <DocText>
-          Kicks off a project with deep context gathering. Creates PROJECT.md,
-          REQUIREMENTS.md, and ROADMAP.md, then sets up a GitHub Project Board,
-          Issues, and Milestones to track all state.
+          Kicks off a project with deep context gathering. Creates a GitHub
+          Project Board, Issues labels, and Milestones to track all state.
+          No local planning files are created.
         </DocText>
         <CodeBlock
           language="bash"
@@ -282,6 +282,30 @@ const commands: CommandDef[] = [
     example: `/maxsim:quick`,
   },
   {
+    name: "improve",
+    signature: "/maxsim:improve",
+    description: "Autonomous optimization loop against any metric command you provide.",
+    example: `/maxsim:improve "npm run benchmark"`,
+  },
+  {
+    name: "fix-loop",
+    signature: "/maxsim:fix-loop",
+    description: "Autonomous error repair loop that runs until zero errors remain.",
+    example: `/maxsim:fix-loop "npm run build"`,
+  },
+  {
+    name: "debug-loop",
+    signature: "/maxsim:debug-loop",
+    description: "Autonomous bug hunting with hypothesis testing and iterative isolation.",
+    example: `/maxsim:debug-loop "login fails after token refresh"`,
+  },
+  {
+    name: "security",
+    signature: "/maxsim:security",
+    description: "Security audit using STRIDE + OWASP + red-team analysis (read-only).",
+    example: `/maxsim:security "src/auth"`,
+  },
+  {
     name: "settings",
     signature: "/maxsim:settings",
     description: "Opens MaxsimCLI configuration. Change model profile, workflow toggles, and more.",
@@ -349,9 +373,9 @@ agents/*.md                # Specialized subagent prompts (4 agents)`}
         <CodeBlock
           language="text"
           code={`.claude/
-├── commands/maxsim/       # 13 slash commands
+├── commands/maxsim/       # 14 slash commands
 ├── agents/                # 4 agent definitions + AGENTS.md
-├── skills/                # 14 skill modules
+├── skills/                # 15 skill modules
 ├── rules/                 # Conventions + verification
 ├── maxsim/
 │   ├── bin/maxsim-tools.cjs
