@@ -7,6 +7,7 @@ import {
   saveConfig,
   resolveModel,
   resolveMaxAgents,
+  resolveEffectiveWaveSize,
   getConfigPath,
 } from '../../src/core/config.js';
 import { Model, ModelProfile, AgentType, TaskComplexity, DEFAULT_CONFIG, PARALLELISM_LIMITS } from '../../src/core/types.js';
@@ -59,6 +60,33 @@ describe('loadConfig', () => {
 
     const config = loadConfig(tmpDir);
     expect(config.execution.model_profile).toBe(ModelProfile.BALANCED);
+  });
+
+  it('ignores __doc keys and loads config with documentation fields', () => {
+    const configDir = path.join(tmpDir, '.claude', 'maxsim');
+    fs.mkdirSync(configDir, { recursive: true });
+    fs.writeFileSync(
+      path.join(configDir, 'config.json'),
+      JSON.stringify({
+        __doc_model_profiles: { _description: 'Reference table' },
+        execution: {
+          __doc_model_profile: 'Documentation string',
+          model_profile: 'quality',
+          model_overrides: { executor: 'opus' },
+          parallelism: {
+            __doc_parallelism: ['Documentation array'],
+            max_agents_per_wave: 5,
+          },
+        },
+      }),
+    );
+
+    const config = loadConfig(tmpDir);
+    expect(config.execution.model_profile).toBe('quality');
+    expect(config.execution.model_overrides).toEqual({ executor: 'opus' });
+    expect(config.execution.parallelism.max_agents_per_wave).toBe(5);
+    // Defaults still applied for unset fields
+    expect(config.execution.parallelism.max_retries).toBe(3);
   });
 });
 
@@ -190,5 +218,67 @@ describe('resolveMaxAgents', () => {
     const limits = PARALLELISM_LIMITS[ModelProfile.BUDGET];
     const expected = Math.max(1, Math.floor(limits.max_agents / 2));
     expect(resolveMaxAgents(ModelProfile.BUDGET, 50, TaskComplexity.SIMPLE)).toBe(expected);
+  });
+});
+
+describe('resolveEffectiveWaveSize', () => {
+  it('returns max_agents_per_wave when it is below the profile cap', () => {
+    // balanced profile, large project => profile cap = 20
+    // max_agents_per_wave = 3 => effective = 3
+    expect(resolveEffectiveWaveSize(ModelProfile.BALANCED, 3, 50)).toBe(3);
+  });
+
+  it('clamps to profile cap when max_agents_per_wave exceeds it', () => {
+    // balanced profile, large project => profile cap = 20
+    // max_agents_per_wave = 25 => clamped to 20
+    expect(resolveEffectiveWaveSize(ModelProfile.BALANCED, 25, 50)).toBe(20);
+  });
+
+  it('clamps to profile cap for budget profile', () => {
+    // budget profile, large project => profile cap = 10
+    // max_agents_per_wave = 15 => clamped to 10
+    expect(resolveEffectiveWaveSize(ModelProfile.BUDGET, 15, 50)).toBe(10);
+  });
+
+  it('respects small project scaling when clamping', () => {
+    // balanced profile, small project (<10 files) => profile cap = 5
+    // max_agents_per_wave = 8 => clamped to 5
+    expect(resolveEffectiveWaveSize(ModelProfile.BALANCED, 8, 5)).toBe(5);
+  });
+
+  it('respects complexity=simple scaling', () => {
+    // balanced profile, large project, simple => profile cap = floor(20/2) = 10
+    // max_agents_per_wave = 15 => clamped to 10
+    expect(resolveEffectiveWaveSize(ModelProfile.BALANCED, 15, 50, TaskComplexity.SIMPLE)).toBe(10);
+  });
+
+  it('returns at least 1 even with extreme constraints', () => {
+    // budget profile, small project, simple => profile cap = max(1, floor(5/2)) = 2
+    // max_agents_per_wave = 1 => min(1, 2) = 1
+    expect(resolveEffectiveWaveSize(ModelProfile.BUDGET, 1, 3, TaskComplexity.SIMPLE)).toBeGreaterThanOrEqual(1);
+  });
+
+  it('returns max_agents_per_wave when equal to profile cap', () => {
+    // quality profile, large project => profile cap = 40
+    // max_agents_per_wave = 40 => effective = 40
+    expect(resolveEffectiveWaveSize(ModelProfile.QUALITY, 40, 100)).toBe(40);
+  });
+
+  it('defaults complexity to medium when not specified', () => {
+    const withDefault = resolveEffectiveWaveSize(ModelProfile.BALANCED, 5, 50);
+    const withMedium = resolveEffectiveWaveSize(ModelProfile.BALANCED, 5, 50, TaskComplexity.MEDIUM);
+    expect(withDefault).toBe(withMedium);
+  });
+
+  it('medium project with per-wave cap below scaled profile cap', () => {
+    // balanced profile, medium project (10-24 files) => cap = min(floor(20/2), 20) = 10
+    // max_agents_per_wave = 5 => effective = 5
+    expect(resolveEffectiveWaveSize(ModelProfile.BALANCED, 5, 15)).toBe(5);
+  });
+
+  it('medium project with per-wave cap above scaled profile cap', () => {
+    // balanced profile, medium project (10-24 files) => cap = min(floor(20/2), 20) = 10
+    // max_agents_per_wave = 12 => clamped to 10
+    expect(resolveEffectiveWaveSize(ModelProfile.BALANCED, 12, 15)).toBe(10);
   });
 });

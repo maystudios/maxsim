@@ -21,7 +21,7 @@ export {
 } from './types.js';
 
 // Config
-export { loadConfig, saveConfig, resolveModel, resolveMaxAgents, getConfigPath } from './config.js';
+export { loadConfig, saveConfig, resolveModel, resolveMaxAgents, resolveEffectiveWaveSize, getConfigPath } from './config.js';
 
 // Version
 export { VERSION, parseVersion, isVersionAtLeast, getVersion } from './version.js';

@@ -82,7 +82,15 @@ export function saveConfig(projectDir: string, config: MaxsimConfig): void {
   fs.writeFileSync(configPath, `${JSON.stringify(config, null, 2)}\n`, 'utf8');
 }
 
-/** Resolve max agents for a profile, applying the small-project scaling rule from PROJECT.md §7.4. */
+/**
+ * Resolve the profile's total agent cap, applying the small-project scaling
+ * rule from PROJECT.md §7.4.
+ *
+ * This returns the *profile-level ceiling* — the maximum number of agents that
+ * may be active across **all** waves combined for the given profile and project
+ * size.  It does NOT consider the per-wave limit (`max_agents_per_wave`); use
+ * {@link resolveEffectiveWaveSize} for that.
+ */
 export function resolveMaxAgents(
   profile: ModelProfile,
   projectFileCount: number,
@@ -96,6 +104,33 @@ export function resolveMaxAgents(
 
   if (complexity === TaskComplexity.SIMPLE) return Math.max(1, Math.floor(cap / 2));
   return cap;
+}
+
+/**
+ * Resolve the effective number of agents that may run in a single wave.
+ *
+ * Two constraints are combined:
+ *
+ *  1. **Per-wave cap** (`max_agents_per_wave` from config) — limits how many
+ *     agents are spawned in each individual wave.
+ *  2. **Profile total cap** — the ceiling returned by {@link resolveMaxAgents},
+ *     derived from `PARALLELISM_LIMITS[profile].max_agents` and scaled by
+ *     project size and task complexity.
+ *
+ * The effective wave size is:
+ *   `min(max_agents_per_wave, profileTotalCap)`
+ *
+ * This guarantees that a user-configured per-wave limit is honoured while
+ * ensuring it never exceeds the profile's total agent ceiling.
+ */
+export function resolveEffectiveWaveSize(
+  profile: ModelProfile,
+  maxAgentsPerWave: number,
+  projectFileCount: number,
+  complexity: TaskComplexity = TaskComplexity.MEDIUM,
+): number {
+  const profileCap = resolveMaxAgents(profile, projectFileCount, complexity);
+  return Math.max(1, Math.min(maxAgentsPerWave, profileCap));
 }
 
 /** Resolve the model for a given profile and agent type, with optional per-agent overrides. */

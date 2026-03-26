@@ -1,10 +1,62 @@
 {
   "version": "5.18.0",
+
+  "__doc_model_profiles": {
+    "_description": "Reference: model assignments per profile. Actual values are defined in code — this table is for documentation only.",
+    "quality": {
+      "planner": "opus",
+      "executor": "opus",
+      "researcher": "sonnet",
+      "verifier": "opus",
+      "max_agents": 40,
+      "typical_range": [20, 40]
+    },
+    "balanced": {
+      "planner": "opus",
+      "executor": "sonnet",
+      "researcher": "sonnet",
+      "verifier": "sonnet",
+      "max_agents": 20,
+      "typical_range": [10, 20]
+    },
+    "budget": {
+      "planner": "sonnet",
+      "executor": "sonnet",
+      "researcher": "haiku",
+      "verifier": "sonnet",
+      "max_agents": 10,
+      "typical_range": [5, 10]
+    }
+  },
+
   "execution": {
+    "__doc_model_profile": "Selects which model profile to use. One of: quality, balanced, budget. Each profile maps agent types (planner, executor, researcher, verifier) to Claude model tiers (opus, sonnet, haiku). See __doc_model_profiles above for the full mapping table.",
     "model_profile": "balanced",
+
     "competitive_enabled": false,
+
+    "__doc_model_overrides": "Optional per-agent-type model overrides. Keys are agent types (planner, executor, researcher, verifier) and values are model tiers (opus, sonnet, haiku). Overrides take precedence over the profile's default assignment. Example: { \"executor\": \"opus\" } upgrades the executor to opus while keeping other agents at their profile defaults.",
     "model_overrides": {},
+
     "parallelism": {
+      "__doc_parallelism": [
+        "Two limits govern agent parallelism:",
+        "",
+        "  max_agents_per_wave  — Maximum agents spawned in a SINGLE wave.",
+        "                         This is the per-wave concurrency cap.",
+        "",
+        "  Profile max_agents   — Total agent ceiling for the selected profile",
+        "                         (quality=40, balanced=20, budget=10).",
+        "                         Scaled down automatically for small projects.",
+        "",
+        "The effective wave size is: min(max_agents_per_wave, profile_max_agents).",
+        "Set max_agents_per_wave <= profile max_agents. If max_agents_per_wave",
+        "exceeds the profile ceiling, it is silently clamped to the profile limit.",
+        "",
+        "Example with balanced profile (max_agents=20):",
+        "  max_agents_per_wave: 3  -> each wave runs at most 3 agents",
+        "  max_agents_per_wave: 25 -> clamped to 20 (profile ceiling)"
+      ],
       "max_agents_per_wave": 3,
       "max_retries": 3,
       "competition_strategy": "standard"
