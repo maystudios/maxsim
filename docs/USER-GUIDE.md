@@ -235,34 +235,33 @@ Use `/maxsim:settings` to configure interactively, or edit the file directly.
 {
   "version": "6.0.0",
   "execution": {
-    "modelProfile": "balanced",
+    "model_profile": "balanced",
     "parallelism": {
-      "maxAgentsPerWave": 3,
-      "maxRetries": 3,
-      "competitionStrategy": "standard"
+      "max_agents_per_wave": 3,
+      "max_retries": 3,
+      "competition_strategy": "standard"
     },
     "verification": {
-      "strictMode": true,
+      "strict_mode": true,
       "gates": ["tests_pass", "build_succeeds", "lint_clean", "spec_compliance", "code_review"],
-      "requireCodeReview": true,
-      "autoResolveConflicts": true
+      "require_code_review": true,
+      "auto_resolve_conflicts": true
     }
   },
   "worktrees": {
-    "basePath": ".maxsim-worktrees/",
-    "autoCleanup": true,
-    "branchPrefix": "maxsim/"
+    "auto_cleanup": true,
+    "branch_prefix": "maxsim/"
   },
   "automation": {
-    "autoCommitOnSuccess": true,
-    "conventionalCommits": true
+    "auto_commit_on_success": true,
+    "conventional_commits": true
   }
 }
 ```
 
 ### Model Profiles
 
-The `execution.modelProfile` setting controls which Claude model is used for each agent type.
+The `execution.model_profile` setting controls which Claude model is used for each agent type.
 
 | Agent | `quality` | `balanced` (default) | `budget` |
 |-------|-----------|----------------------|----------|
@@ -283,20 +282,20 @@ Switch profiles at any time with `/maxsim:settings`.
 
 | Setting | Default | Description |
 |---------|---------|-------------|
-| `execution.verification.strictMode` | `true` | Require all verification gates to pass before marking a task complete |
-| `execution.verification.requireCodeReview` | `true` | Whether the code review gate runs as part of verification |
+| `execution.verification.strict_mode` | `true` | Require all verification gates to pass before marking a task complete |
+| `execution.verification.require_code_review` | `true` | Whether the code review gate runs as part of verification |
 
-Disable `strictMode` only for rapid prototyping where you plan to verify manually later.
+Disable `strict_mode` only for rapid prototyping where you plan to verify manually later.
 
 ### Parallelism Settings
 
 | Setting | Default | Description |
 |---------|---------|-------------|
-| `execution.parallelism.maxAgentsPerWave` | `3` | Maximum concurrent executor agents per wave |
-| `execution.parallelism.maxRetries` | `3` | How many times a failing task is retried before escalation |
-| `execution.competitionStrategy` | `"standard"` | Competitive implementation strategy: `none`, `quick`, `standard`, or `deep` |
+| `execution.parallelism.max_agents_per_wave` | `3` | Maximum concurrent executor agents per wave |
+| `execution.parallelism.max_retries` | `3` | How many times a failing task is retried before escalation |
+| `execution.parallelism.competition_strategy` | `"standard"` | Competitive implementation strategy: `none`, `quick`, `standard`, or `deep` |
 
-Competitive implementation uses more tokens but produces higher quality output. Set `execution.competitionStrategy` to `"none"` to disable it on straightforward tasks.
+Competitive implementation uses more tokens but produces higher quality output. Set `execution.parallelism.competition_strategy` to `"none"` to disable it on straightforward tasks.
 
 ### GitHub Settings
 
@@ -334,7 +333,7 @@ This means agents never step on each other. Work that fails verification is disc
 
 ### Competitive Implementation
 
-When `execution.competitionStrategy` is set to `"quick"`, `"standard"`, or `"deep"`, the same task is assigned to multiple executor agents simultaneously. Each works independently without knowing about the others. The Verifier scores all implementations across criteria including correctness, test coverage, security, code quality, and spec compliance — and selects the best one.
+When `execution.parallelism.competition_strategy` is set to `"quick"`, `"standard"`, or `"deep"`, the same task is assigned to multiple executor agents simultaneously. Each works independently without knowing about the others. The Verifier scores all implementations across criteria including correctness, test coverage, security, code quality, and spec compliance — and selects the best one.
 
 This is the same principle used in ensemble ML methods: multiple independent attempts at a problem produce better results than a single attempt.
 
@@ -448,7 +447,7 @@ All improvements are project-local. Two projects using MaxsimCLI never interfere
 ### How to Check Installation
 
 ```
-/maxsim:health
+/maxsim:progress
 ```
 
 This checks that all required components are present and working:
@@ -486,7 +485,7 @@ MaxsimCLI created a diagnostic GitHub Issue with the full error context. Check y
 
 **"Executor agents are slow or timing out"**
 
-Reduce parallelism in `/maxsim:settings`: lower `execution.parallelism.maxAgentsPerWave` to 2-3. Also consider switching to the `budget` model profile to use faster models.
+Reduce parallelism in `/maxsim:settings`: lower `execution.parallelism.max_agents_per_wave` to 2-3. Also consider switching to the `budget` model profile to use faster models.
 
 **"Plans do not match what I wanted"**
 
@@ -502,7 +501,7 @@ Move the issue card to the correct column on the GitHub Project Board. MaxsimCLI
 
 **"Commits are not being pushed"**
 
-Check `automation.autoCommitOnSuccess` in `.claude/maxsim/config.json`. If commits are succeeding but pushes are not happening, verify the GitHub remote is configured correctly and run `gh auth status` to confirm authentication.
+Check `automation.auto_commit_on_success` in `.claude/maxsim/config.json`. If commits are succeeding but pushes are not happening, verify the GitHub remote is configured correctly and run `gh auth status` to confirm authentication.
 
 **"I need to start over"**
 
@@ -525,7 +524,7 @@ Use `/maxsim:settings` to configure individual agent overrides. Model profiles s
 - Run `/maxsim:help` for a command reference within Claude Code
 - Run `/maxsim:progress` to see the current project state
 - Check your GitHub Issues — MaxsimCLI creates diagnostic issues when things go wrong
-- Visit [maxsimcli.com](https://maxsimcli.com) for full documentation
+- Visit [maxsimcli.dev](https://maxsimcli.dev) for full documentation
 - Report bugs at [github.com/maystudios/maxsimcli](https://github.com/maystudios/maxsimcli)
 
 ---
