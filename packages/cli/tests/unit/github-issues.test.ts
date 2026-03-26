@@ -98,6 +98,7 @@ import {
   closeIssue,
   listComments,
   addComment,
+  createEscalationIssue,
   addIssueRelation,
   removeIssueRelation,
   listIssueRelations,
@@ -1261,5 +1262,147 @@ describe('listIssueRelations', () => {
     expect(result.ok).toBe(false);
     if (result.ok) return;
     expect(result.code).toBe('NOT_FOUND');
+  });
+});
+
+// ── createEscalationIssue ─────────────────────────────────────────────────────
+
+describe('createEscalationIssue', () => {
+  const PAYLOAD = {
+    taskTitle: 'Fix auth flow',
+    taskSpec: 'Implement OAuth2 token refresh',
+    attempts: [
+      {
+        attemptNumber: 1,
+        summary: 'First try at implementing',
+        failedGate: 'test',
+        errorOutput: 'FAIL: token refresh test',
+      },
+    ],
+    rootCause: 'implementation' as const,
+    proposedNextStep: 'Refactor token refresh logic',
+    phaseNumber: 3,
+    taskNumber: 2,
+  };
+
+  it('creates an issue with [Escalation] prefix in title', async () => {
+    mockIssuesCreate.mockResolvedValue({ data: { ...RAW_ISSUE, number: 55 } });
+
+    const result = await createEscalationIssue(PAYLOAD);
+
+    expect(result.ok).toBe(true);
+    expect(mockIssuesCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: '[Escalation] Fix auth flow',
+      }),
+    );
+  });
+
+  it('includes labels type:bug and maxsim:auto', async () => {
+    mockIssuesCreate.mockResolvedValue({ data: { ...RAW_ISSUE, number: 55 } });
+
+    await createEscalationIssue(PAYLOAD);
+
+    expect(mockIssuesCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        labels: ['type:bug', 'maxsim:auto'],
+      }),
+    );
+  });
+
+  it('includes the original spec in the body', async () => {
+    mockIssuesCreate.mockResolvedValue({ data: { ...RAW_ISSUE, number: 55 } });
+
+    await createEscalationIssue(PAYLOAD);
+
+    const call = mockIssuesCreate.mock.calls[0][0] as Record<string, unknown>;
+    const body = call.body as string;
+    expect(body).toContain('Original Spec');
+    expect(body).toContain('Implement OAuth2 token refresh');
+  });
+
+  it('includes attempt summaries in the body', async () => {
+    mockIssuesCreate.mockResolvedValue({ data: { ...RAW_ISSUE, number: 55 } });
+
+    await createEscalationIssue(PAYLOAD);
+
+    const call = mockIssuesCreate.mock.calls[0][0] as Record<string, unknown>;
+    const body = call.body as string;
+    expect(body).toContain('Attempt 1');
+    expect(body).toContain('First try at implementing');
+    expect(body).toContain('FAIL: token refresh test');
+  });
+
+  it('includes root cause in the body', async () => {
+    mockIssuesCreate.mockResolvedValue({ data: { ...RAW_ISSUE, number: 55 } });
+
+    await createEscalationIssue(PAYLOAD);
+
+    const call = mockIssuesCreate.mock.calls[0][0] as Record<string, unknown>;
+    const body = call.body as string;
+    expect(body).toContain('implementation');
+  });
+
+  it('includes proposed next step in the body', async () => {
+    mockIssuesCreate.mockResolvedValue({ data: { ...RAW_ISSUE, number: 55 } });
+
+    await createEscalationIssue(PAYLOAD);
+
+    const call = mockIssuesCreate.mock.calls[0][0] as Record<string, unknown>;
+    const body = call.body as string;
+    expect(body).toContain('Refactor token refresh logic');
+  });
+
+  it('includes escalation comment header in the body', async () => {
+    mockIssuesCreate.mockResolvedValue({ data: { ...RAW_ISSUE, number: 55 } });
+
+    await createEscalationIssue(PAYLOAD);
+
+    const call = mockIssuesCreate.mock.calls[0][0] as Record<string, unknown>;
+    const body = call.body as string;
+    expect(body).toContain('maxsim:type=escalation');
+  });
+
+  it('adds cross-reference comment when parentIssueNumber is provided', async () => {
+    mockIssuesCreate.mockResolvedValue({ data: { ...RAW_ISSUE, number: 55 } });
+    mockIssuesCreateComment.mockResolvedValue({ data: RAW_COMMENT });
+
+    await createEscalationIssue({ ...PAYLOAD, parentIssueNumber: 10 });
+
+    expect(mockIssuesCreateComment).toHaveBeenCalledWith(
+      expect.objectContaining({
+        issue_number: 10,
+        body: expect.stringContaining('#55'),
+      }),
+    );
+  });
+
+  it('does not add cross-reference comment when parentIssueNumber is absent', async () => {
+    mockIssuesCreate.mockResolvedValue({ data: { ...RAW_ISSUE, number: 55 } });
+
+    await createEscalationIssue(PAYLOAD);
+
+    expect(mockIssuesCreateComment).not.toHaveBeenCalled();
+  });
+
+  it('returns error result when createIssue fails', async () => {
+    const err = Object.assign(new Error('Unauthorized'), { status: 401 });
+    mockIssuesCreate.mockRejectedValue(err);
+
+    const result = await createEscalationIssue(PAYLOAD);
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.code).toBe('UNAUTHORIZED');
+  });
+
+  it('accepts an explicit repo override', async () => {
+    mockIssuesCreate.mockResolvedValue({ data: { ...RAW_ISSUE, number: 55 } });
+
+    await createEscalationIssue(PAYLOAD, { owner: 'other-owner', repo: 'other-repo', isOrg: false });
+
+    expect(mockIssuesCreate).toHaveBeenCalledWith(
+      expect.objectContaining({ owner: 'other-owner', repo: 'other-repo' }),
+    );
+    expect(mockGetRepoInfo).not.toHaveBeenCalled();
   });
 });

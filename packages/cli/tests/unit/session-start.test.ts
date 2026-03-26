@@ -225,7 +225,7 @@ describe('session-start hook (integration)', () => {
     expect(exitSpy).toHaveBeenCalledWith(0);
   });
 
-  it('outputs JSON with additionalContext when git history exists', async () => {
+  it('outputs JSON with hookSpecificOutput envelope when git history exists', async () => {
     vi.doUnmock('../../src/hooks/shared.js');
     vi.resetModules();
     hookCallback = null;
@@ -245,14 +245,14 @@ describe('session-start hook (integration)', () => {
     // Find the stdout.write call with additionalContext
     const writeCall = stdoutSpy.mock.calls.find((call) => {
       const arg = String(call[0]);
-      return arg.includes('additionalContext');
+      return arg.includes('hookSpecificOutput');
     });
 
     expect(writeCall).toBeDefined();
     const parsed = JSON.parse(String(writeCall![0]).trim());
-    expect(parsed.additionalContext).toContain('## Recent Git History');
-    expect(parsed.additionalContext).toContain('abc1234 fix bug');
-    expect(parsed.additionalContext).toContain('def5678 add feature');
+    expect(parsed.hookSpecificOutput.additionalContext).toContain('## Recent Git History');
+    expect(parsed.hookSpecificOutput.additionalContext).toContain('abc1234 fix bug');
+    expect(parsed.hookSpecificOutput.additionalContext).toContain('def5678 add feature');
   });
 
   it('includes MEMORY.md content when the file exists', async () => {
@@ -283,13 +283,13 @@ describe('session-start hook (integration)', () => {
 
     const writeCall = stdoutSpy.mock.calls.find((call) => {
       const arg = String(call[0]);
-      return arg.includes('additionalContext');
+      return arg.includes('hookSpecificOutput');
     });
 
     expect(writeCall).toBeDefined();
     const parsed = JSON.parse(String(writeCall![0]).trim());
-    expect(parsed.additionalContext).toContain('## Learned Patterns (MEMORY.md)');
-    expect(parsed.additionalContext).toContain('Always run tests');
+    expect(parsed.hookSpecificOutput.additionalContext).toContain('## Learned Patterns (MEMORY.md)');
+    expect(parsed.hookSpecificOutput.additionalContext).toContain('Always run tests');
   });
 
   it('includes TSV tail content when autoresearch-results.tsv exists', async () => {
@@ -321,15 +321,15 @@ describe('session-start hook (integration)', () => {
 
     const writeCall = stdoutSpy.mock.calls.find((call) => {
       const arg = String(call[0]);
-      return arg.includes('additionalContext');
+      return arg.includes('hookSpecificOutput');
     });
 
     expect(writeCall).toBeDefined();
     const parsed = JSON.parse(String(writeCall![0]).trim());
-    expect(parsed.additionalContext).toContain('## Metric Trends (autoresearch-results.tsv)');
+    expect(parsed.hookSpecificOutput.additionalContext).toContain('## Metric Trends (autoresearch-results.tsv)');
     // Should contain the last 10 lines (metric_10 through metric_19)
-    expect(parsed.additionalContext).toContain('metric_19');
-    expect(parsed.additionalContext).toContain('metric_10');
+    expect(parsed.hookSpecificOutput.additionalContext).toContain('metric_19');
+    expect(parsed.hookSpecificOutput.additionalContext).toContain('metric_10');
   });
 
   it('outputs nothing and exits 0 when no sections have content', async () => {
@@ -349,10 +349,10 @@ describe('session-start hook (integration)', () => {
     await import('../../src/hooks/maxsim-session-start.js');
     hookCallback!({ cwd: tmpDir });
 
-    // No additionalContext should have been written
+    // No hookSpecificOutput should have been written
     const writeCall = stdoutSpy.mock.calls.find((call) => {
       const arg = String(call[0]);
-      return arg.includes('additionalContext');
+      return arg.includes('hookSpecificOutput');
     });
     expect(writeCall).toBeUndefined();
     expect(exitSpy).toHaveBeenCalledWith(0);
@@ -381,12 +381,12 @@ describe('session-start hook (integration)', () => {
     // Should still output git history
     const writeCall = stdoutSpy.mock.calls.find((call) => {
       const arg = String(call[0]);
-      return arg.includes('additionalContext');
+      return arg.includes('hookSpecificOutput');
     });
     expect(writeCall).toBeDefined();
     const parsed = JSON.parse(String(writeCall![0]).trim());
-    expect(parsed.additionalContext).toContain('## Recent Git History');
-    expect(parsed.additionalContext).not.toContain('MEMORY.md');
+    expect(parsed.hookSpecificOutput.additionalContext).toContain('## Recent Git History');
+    expect(parsed.hookSpecificOutput.additionalContext).not.toContain('MEMORY.md');
   });
 
   it('gracefully handles when TSV file does not exist', async () => {
@@ -409,11 +409,11 @@ describe('session-start hook (integration)', () => {
 
     const writeCall = stdoutSpy.mock.calls.find((call) => {
       const arg = String(call[0]);
-      return arg.includes('additionalContext');
+      return arg.includes('hookSpecificOutput');
     });
     expect(writeCall).toBeDefined();
     const parsed = JSON.parse(String(writeCall![0]).trim());
-    expect(parsed.additionalContext).not.toContain('autoresearch-results.tsv');
+    expect(parsed.hookSpecificOutput.additionalContext).not.toContain('autoresearch-results.tsv');
   });
 
   it('uses process.cwd() when input.cwd is not provided', async () => {
@@ -463,19 +463,19 @@ describe('session-start hook (integration)', () => {
 
     const writeCall = stdoutSpy.mock.calls.find((call) => {
       const arg = String(call[0]);
-      return arg.includes('additionalContext');
+      return arg.includes('hookSpecificOutput');
     });
 
     expect(writeCall).toBeDefined();
     const parsed = JSON.parse(String(writeCall![0]).trim());
 
     // All three sections present, separated by double newlines
-    expect(parsed.additionalContext).toContain('## Recent Git History');
-    expect(parsed.additionalContext).toContain('## Learned Patterns (MEMORY.md)');
-    expect(parsed.additionalContext).toContain('## Metric Trends (autoresearch-results.tsv)');
+    expect(parsed.hookSpecificOutput.additionalContext).toContain('## Recent Git History');
+    expect(parsed.hookSpecificOutput.additionalContext).toContain('## Learned Patterns (MEMORY.md)');
+    expect(parsed.hookSpecificOutput.additionalContext).toContain('## Metric Trends (autoresearch-results.tsv)');
 
     // Verify sections are joined by double newlines
-    const sections = parsed.additionalContext.split('\n\n');
+    const sections = parsed.hookSpecificOutput.additionalContext.split('\n\n');
     expect(sections.length).toBeGreaterThanOrEqual(3);
   });
 });

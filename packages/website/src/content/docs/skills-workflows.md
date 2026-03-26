@@ -4,13 +4,13 @@ title: Skills & Workflows
 group: Advanced
 ---
 
-MaxsimCLI includes 14 skills and 18 workflows that give agents domain-specific knowledge and multi-step orchestration capabilities. Skills are loaded into agents at dispatch time based on the task. Workflows chain multiple agents together to complete structured operations.
+MaxsimCLI includes 15 skills and 18 workflows that give agents domain-specific knowledge and multi-step orchestration capabilities. Skills are loaded into agents at dispatch time based on the task. Workflows chain multiple agents together to complete structured operations.
 
 ### Skills
 
 Skills provide procedures and domain knowledge that agents reference during execution. Each skill is a focused document covering one area of expertise.
 
-{% doctable headers=["Skill", "Purpose"] rows=[["tdd", "Test-Driven Development workflow"], ["systematic-debugging", "Scientific method approach to debugging"], ["brainstorming", "Structured ideation and option exploration"], ["roadmap-writing", "Writing clear, actionable roadmaps"], ["handoff-contract", "Agent-to-agent handoff format and expectations"], ["commit-conventions", "Conventional commit formatting and scope rules"], ["maxsim-batch", "Running batch operations across multiple tasks"], ["code-review", "Code quality, security, and correctness review procedures"], ["verification", "Verification procedures and quality checks"], ["github-operations", "Using GitHub CLI and API tools effectively"], ["research", "Systematic research and analysis procedures"], ["project-memory", "Reading and writing project memory correctly"], ["using-maxsim", "End-user guide for MaxsimCLI commands"], ["maxsim-simplify", "Reducing complexity in code and plans"]] %}
+{% doctable headers=["Skill", "Purpose"] rows=[["tdd", "Test-Driven Development workflow"], ["systematic-debugging", "Scientific method approach to debugging"], ["brainstorming", "Structured ideation and option exploration"], ["roadmap-writing", "Writing clear, actionable roadmaps"], ["handoff-contract", "Agent-to-agent handoff format and expectations"], ["commit-conventions", "Conventional commit formatting and scope rules"], ["maxsim-batch", "Running batch operations across multiple tasks"], ["code-review", "Code quality, security, and correctness review procedures"], ["verification", "Verification procedures and quality checks"], ["github-operations", "Using GitHub CLI and API tools effectively"], ["research", "Systematic research and analysis procedures"], ["project-memory", "Reading and writing project memory correctly"], ["using-maxsim", "End-user guide for MaxsimCLI commands"], ["maxsim-simplify", "Reducing complexity in code and plans"], ["autoresearch", "Autonomous optimization loop powering /maxsim:improve, /maxsim:fix-loop, /maxsim:debug-loop, and /maxsim:security commands"]] %}
 {% /doctable %}
 
 ### Workflows

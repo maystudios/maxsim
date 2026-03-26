@@ -80,7 +80,7 @@ All AI-assisted commits include the co-author line:
 Co-Authored-By: Claude <noreply@anthropic.com>
 ```
 
-Note: The co-author name may be overridden by the project's CLAUDE.md or commit conventions.
+Note: The co-author name is configured via the `automation.co_author` config key (query with `maxsim-tools config-get automation.co_author`). It can also be overridden in the project's CLAUDE.md.
 
 ## Common Mistakes
 

@@ -1,0 +1,123 @@
+import { describe, it, expect } from 'vitest';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
+import { parseFrontmatter } from '../../src/core/utils.js';
+
+const TEMPLATES_DIR = path.resolve(__dirname, '../../dist/assets/templates');
+
+/**
+ * Parse a YAML-style inline array string like "[Read, Write, Edit]" into an
+ * array of trimmed strings.
+ */
+function parseToolList(raw: string | undefined): string[] {
+  if (!raw) return [];
+  const inner = raw.replace(/^\[/, '').replace(/]$/, '');
+  return inner
+    .split(',')
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0);
+}
+
+const PLANNING_WRITE_PATTERNS = [
+  /write\s+.*\.planning/i,
+  /echo\s+.*\.planning/i,
+  /mkdir\s+.*\.planning/i,
+  /create\s+\.planning/i,
+  /write\s+to\s+\.planning/i,
+];
+
+describe('workflow validation', () => {
+  const commandsDir = path.join(TEMPLATES_DIR, 'commands', 'maxsim');
+  const workflowsDir = path.join(TEMPLATES_DIR, 'workflows');
+  const commandFiles = fs.readdirSync(commandsDir).filter((f) => f.endsWith('.md'));
+  const workflowFiles = fs.readdirSync(workflowsDir).filter((f) => f.endsWith('.md'));
+
+  describe('command frontmatter completeness', () => {
+    it('every command file has name, description, argument-hint, and allowed-tools', () => {
+      for (const file of commandFiles) {
+        const content = fs.readFileSync(path.join(commandsDir, file), 'utf-8');
+        const { attributes } = parseFrontmatter(content);
+        expect(attributes.name, `${file}: missing name`).toBeDefined();
+        expect(attributes.description, `${file}: missing description`).toBeDefined();
+        expect(attributes['argument-hint'], `${file}: missing argument-hint`).toBeDefined();
+        expect(attributes['allowed-tools'], `${file}: missing allowed-tools`).toBeDefined();
+      }
+    });
+  });
+
+  describe('no .planning/ writes in workflows', () => {
+    it('no workflow file contains write operations to .planning/', () => {
+      for (const file of workflowFiles) {
+        const content = fs.readFileSync(path.join(workflowsDir, file), 'utf-8');
+        for (const pattern of PLANNING_WRITE_PATTERNS) {
+          expect(
+            pattern.test(content),
+            `${file}: contains a write/create reference to .planning/ — use GitHub Issues instead`,
+          ).toBe(false);
+        }
+      }
+    });
+  });
+
+  describe('Agent tool not Task', () => {
+    it('no command or workflow file contains Task( as a tool invocation', () => {
+      const allFiles = [
+        ...commandFiles.map((f) => ({ dir: commandsDir, file: f })),
+        ...workflowFiles.map((f) => ({ dir: workflowsDir, file: f })),
+      ];
+      for (const { dir, file } of allFiles) {
+        const content = fs.readFileSync(path.join(dir, file), 'utf-8');
+        expect(
+          content,
+          `${file}: should not use Task( — use Agent instead`,
+        ).not.toContain('Task(');
+      }
+    });
+  });
+
+  describe('EnterPlanMode in modifying commands', () => {
+    const exemptCommands = ['help.md', 'progress.md', 'security.md'];
+
+    it('all commands except help, progress, security include EnterPlanMode', () => {
+      for (const file of commandFiles) {
+        if (exemptCommands.includes(file)) continue;
+        const content = fs.readFileSync(path.join(commandsDir, file), 'utf-8');
+        const { attributes } = parseFrontmatter(content);
+        const tools = parseToolList(attributes['allowed-tools']);
+        expect(
+          tools,
+          `${file}: should include EnterPlanMode in allowed-tools`,
+        ).toContain('EnterPlanMode');
+      }
+    });
+  });
+
+  describe('LS, TodoRead, TodoWrite in Plan Mode commands', () => {
+    const planModeCommands = [
+      'go.md',
+      'init.md',
+      'plan.md',
+      'execute.md',
+      'execute-phase.md',
+      'quick.md',
+      'improve.md',
+      'fix-loop.md',
+      'debug-loop.md',
+      'debug.md',
+      'settings.md',
+    ];
+
+    const requiredTools = ['LS', 'TodoRead', 'TodoWrite'];
+
+    for (const tool of requiredTools) {
+      it(`all 11 Plan Mode commands include ${tool}`, () => {
+        for (const file of planModeCommands) {
+          const content = fs.readFileSync(path.join(commandsDir, file), 'utf-8');
+          const { attributes } = parseFrontmatter(content);
+          const tools = parseToolList(attributes['allowed-tools']);
+          expect(tools, `${file}: should include ${tool} in allowed-tools`).toContain(tool);
+        }
+      });
+    }
+  });
+});

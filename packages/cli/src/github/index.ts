@@ -4,6 +4,7 @@ export type {
   GhDiscussion,
   GhProject, GhProjectField, GhFieldOption, GhProjectItem,
   MaxsimIssueMeta, MaxsimIssueState, MaxsimCommentMeta,
+  EscalationPayload,
   LabelDef, RepoInfo, GhResult, GhResultCode,
   GhIssueRelation,
   GhWikiPage,
@@ -24,6 +25,7 @@ export {
   listIssues, createIssue, getIssue, updateIssue,
   listComments, addComment, addSubIssue, listSubIssues, closeIssue,
   addIssueRelation, removeIssueRelation, listIssueRelations,
+  createEscalationIssue,
 } from './issues.js';
 
 // Projects

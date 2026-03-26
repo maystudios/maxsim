@@ -24,11 +24,13 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { readStdinJson } from './shared.js';
+import { validateEvidenceBlocks, detectForbiddenPhrases } from './validation.js';
 
 interface TaskCompletedInput {
   task_id?: string;
   task_subject?: string;
   task_description?: string;
+  task_context?: string;
   teammate_name?: string;
   team_name?: string;
   cwd?: string;
@@ -107,6 +109,21 @@ readStdinJson<TaskCompletedInput>((input) => {
     if (scripts?.lint) {
       const result = runGate('lint', 'npm', ['run', 'lint'], projectDir);
       if (!result.passed) failures.push(result);
+    }
+
+    // Gate 4: spec compliance (evidence blocks + forbidden phrases)
+    const complianceText = input.task_description ?? input.task_context ?? '';
+    if (complianceText.trim()) {
+      const evidenceResult = validateEvidenceBlocks(complianceText);
+      const phraseResult = detectForbiddenPhrases(complianceText);
+      const complianceIssues = [...evidenceResult.issues, ...phraseResult.issues];
+      if (complianceIssues.length > 0) {
+        failures.push({
+          name: 'spec_compliance',
+          passed: false,
+          output: complianceIssues.join('\n'),
+        });
+      }
     }
 
     if (failures.length > 0) {

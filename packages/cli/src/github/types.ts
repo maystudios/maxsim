@@ -131,6 +131,23 @@ export interface MaxsimIssueState {
   retryCount: number;
 }
 
+/** Structured payload for escalation issues created when tasks exceed retry limits. */
+export interface EscalationPayload {
+  taskTitle: string;
+  taskSpec: string;
+  attempts: Array<{
+    attemptNumber: number;
+    summary: string;
+    failedGate: string;
+    errorOutput: string;
+  }>;
+  rootCause: 'spec' | 'environment' | 'implementation' | 'unknown';
+  proposedNextStep: string;
+  phaseNumber?: number;
+  taskNumber?: number;
+  parentIssueNumber?: number;
+}
+
 /** Structured comment metadata from HTML comment markers. */
 export interface MaxsimCommentMeta {
   type: 'plan' | 'research' | 'context' | 'progress' | 'verification' | 'summary' | 'error' | 'escalation' | 'handoff' | 'user-intent' | 'phase-complete' | 'checkpoint';

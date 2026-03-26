@@ -9,6 +9,7 @@ import {
   Hammer,
   Box,
   FolderGit2,
+  BookOpen,
 } from "lucide-react";
 import type { ElementType, ReactNode } from "react";
 
@@ -23,6 +24,7 @@ const commandLayer = [
 const toolchainStack = [
   { name: "Node.js", Icon: Hexagon },
   { name: "TypeScript", Icon: Code },
+  { name: "Markdoc", Icon: BookOpen },
   { name: "tsdown", Icon: Hammer },
   { name: "CJS Modules", Icon: Box },
   { name: "npm workspaces", Icon: FolderGit2 },

@@ -2,7 +2,7 @@
 name: maxsim:improve
 description: Autonomous optimization loop — modify→verify→keep/discard cycle against any metric
 argument-hint: "[metric-command]"
-allowed-tools: [Read, Write, Edit, Bash, Grep, Glob, Agent, AskUserQuestion, EnterPlanMode, ExitPlanMode]
+allowed-tools: [Read, Write, Edit, Bash, Grep, Glob, Agent, AskUserQuestion, EnterPlanMode, ExitPlanMode, LS, TodoRead, TodoWrite]
 ---
 
 <objective>

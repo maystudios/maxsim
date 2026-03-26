@@ -2,7 +2,7 @@
 name: maxsim:debug-loop
 description: Autonomous bug hunting — scientific method with hypothesis testing
 argument-hint: "[symptom]"
-allowed-tools: [Read, Write, Edit, Bash, Grep, Glob, Agent, AskUserQuestion, EnterPlanMode, ExitPlanMode]
+allowed-tools: [Read, Write, Edit, Bash, Grep, Glob, Agent, AskUserQuestion, EnterPlanMode, ExitPlanMode, LS, TodoRead, TodoWrite]
 ---
 
 <objective>

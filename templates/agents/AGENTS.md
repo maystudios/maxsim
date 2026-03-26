@@ -86,6 +86,10 @@ Agents can invoke these skills when their trigger condition is met:
 | tdd | When implementing features with a test-first approach (executor) |
 | brainstorming | When exploring multiple implementation approaches (planner) |
 | systematic-debugging | When investigating test failures or unexpected behavior (verifier) |
+| project-memory       | When persisting or reading learned patterns and decisions            |
+| using-maxsim         | When providing MaxsimCLI command guidance to the user               |
+| maxsim-simplify      | When reducing complexity or removing dead code                       |
+| autoresearch         | When running autonomous optimization, error repair, or debug loops   |
 
 All skills use `user-invocable: false` -- agents auto-invoke them based on description matching, not explicit user commands.
 

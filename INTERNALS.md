@@ -30,8 +30,8 @@ maxsimcli/                        ← repo root
 │   └── website/                  ← maxsimcli.dev (React + Vite + Tailwind)
 ├── templates/                    ← source templates (copied to dist/ at build time)
 │   ├── agents/                   ← 4 agent definitions
-│   ├── commands/maxsim/          ← 13 slash commands
-│   ├── skills/                   ← 14 skill modules
+│   ├── commands/maxsim/          ← 14 slash commands
+│   ├── skills/                   ← 15 skill modules
 │   ├── workflows/                ← 18 workflow orchestrators
 │   ├── references/               ← reference documents
 │   └── rules/                    ← conventions + verification protocol
@@ -118,7 +118,7 @@ Layer 3 — AGENT
 Commands are the only user-facing surface. Workflows are never invoked
 directly. Agents are spawned by workflows, not by commands.
 
-### Commands (13)
+### Commands (14)
 
 Located at `templates/commands/maxsim/`:
 
@@ -137,6 +137,7 @@ Located at `templates/commands/maxsim/`:
 | `progress`   | `progress.md`          | Show board status + next recommendation  |
 | `settings`   | `settings.md`          | Configure model profile + options        |
 | `help`       | `help.md`              | Command reference                        |
+| `execute-phase` | `execute.md`        | Execute phase (alias for /maxsim:execute) |
 
 ### Workflows (18)
 
@@ -392,9 +393,9 @@ directly — it is copied into `dist/assets/templates/` during the build.
 
 ```
 .claude/
-├── commands/maxsim/       ← 13 slash commands (from templates/commands/maxsim/)
+├── commands/maxsim/       ← 14 slash commands (from templates/commands/maxsim/)
 ├── agents/                ← 4 agent definitions + AGENTS.md
-├── skills/                ← 14 skill modules (one subdirectory each)
+├── skills/                ← 15 skill modules (one subdirectory each)
 ├── rules/                 ← conventions + verification protocol
 ├── maxsim/
 │   ├── bin/
@@ -409,7 +410,7 @@ directly — it is copied into `dist/assets/templates/` during the build.
         └── MEMORY.md
 ```
 
-### Skills (14)
+### Skills (15)
 
 Located at `templates/skills/`, one subdirectory per skill with an `index.md`.
 All follow Anthropic's skill convention: YAML frontmatter with `name` and
@@ -431,6 +432,7 @@ All follow Anthropic's skill convention: YAML frontmatter with `name` and
 | `project-memory`     | Infrastructure | GitHub-native persistence for decisions/learnings|
 | `using-maxsim`       | User-facing    | Command reference and routing table              |
 | `maxsim-simplify`    | Technique      | Dead code removal, reuse improvement             |
+| `autoresearch`       | Technique      | Autonomous optimization loop (powers improve/fix-loop/debug-loop/security) |
 
 ### Agents (4)
 

@@ -2,7 +2,7 @@
 name: maxsim:fix-loop
 description: Autonomous error repair — iteratively fix until zero errors remain
 argument-hint: "[error-command]"
-allowed-tools: [Read, Write, Edit, Bash, Grep, Glob, Agent, AskUserQuestion, EnterPlanMode, ExitPlanMode]
+allowed-tools: [Read, Write, Edit, Bash, Grep, Glob, Agent, AskUserQuestion, EnterPlanMode, ExitPlanMode, LS, TodoRead, TodoWrite]
 ---
 
 <objective>

@@ -450,3 +450,85 @@ describe('error handling', () => {
     expect(() => hookCallback!({})).not.toThrow();
   });
 });
+
+// ---------------------------------------------------------------------------
+// Gate 4: spec compliance (evidence blocks + forbidden phrases)
+// ---------------------------------------------------------------------------
+
+describe('Gate 4: spec compliance', () => {
+  it('exits 2 with stderr containing "spec_compliance FAILED" when task_description contains forbidden phrases', async () => {
+    await loadHookWithMocks({
+      packageJson: { scripts: {} },
+    });
+
+    hookCallback!({
+      task_id: 'test',
+      task_description: 'This should work fine',
+      cwd: tmpDir,
+    });
+
+    expect(exitSpy).toHaveBeenCalledWith(2);
+    const stderrOutput = stderrSpy.mock.calls.map((c) => String(c[0])).join('');
+    expect(stderrOutput).toContain('spec_compliance');
+  });
+
+  it('exits 2 when task_description is missing evidence blocks', async () => {
+    await loadHookWithMocks({
+      packageJson: { scripts: {} },
+    });
+
+    hookCallback!({
+      task_id: 'test',
+      task_description: 'I did the work but no evidence blocks',
+      cwd: tmpDir,
+    });
+
+    expect(exitSpy).toHaveBeenCalledWith(2);
+    const stderrOutput = stderrSpy.mock.calls.map((c) => String(c[0])).join('');
+    expect(stderrOutput).toContain('spec_compliance');
+  });
+
+  it('exits 0 when task_description has valid evidence blocks and no forbidden phrases', async () => {
+    await loadHookWithMocks({
+      packageJson: { scripts: {} },
+    });
+
+    hookCallback!({
+      task_id: 'test',
+      task_description:
+        '**CLAIM**: Tests pass\n**EVIDENCE**: npm test\n**OUTPUT**: All tests passed\n**VERDICT**: PASS',
+      cwd: tmpDir,
+    });
+
+    expect(exitSpy).toHaveBeenCalledWith(0);
+  });
+
+  it('exits 0 when task_description is empty/undefined (Gate 4 skipped, no false positive)', async () => {
+    await loadHookWithMocks({
+      packageJson: { scripts: {} },
+    });
+
+    hookCallback!({
+      task_id: 'test',
+      cwd: tmpDir,
+    });
+
+    expect(exitSpy).toHaveBeenCalledWith(0);
+  });
+
+  it('uses task_context as fallback when task_description is absent', async () => {
+    await loadHookWithMocks({
+      packageJson: { scripts: {} },
+    });
+
+    hookCallback!({
+      task_id: 'test',
+      task_context: 'This should work',
+      cwd: tmpDir,
+    });
+
+    expect(exitSpy).toHaveBeenCalledWith(2);
+    const stderrOutput = stderrSpy.mock.calls.map((c) => String(c[0])).join('');
+    expect(stderrOutput).toContain('spec_compliance');
+  });
+});

@@ -1,12 +1,12 @@
 ---
 name: maxsim:debug
-description: Systematic debugging with reproduce-hypothesize-isolate-verify-fix cycle
+description: Systematic debugging with reproduce-hypothesize-isolate-verify-fix-confirm cycle
 argument-hint: "[issue description]"
-allowed-tools: [Read, Write, Edit, Bash, Grep, Glob, Agent, AskUserQuestion, EnterPlanMode, ExitPlanMode]
+allowed-tools: [Read, Write, Edit, Bash, Grep, Glob, Agent, AskUserQuestion, EnterPlanMode, ExitPlanMode, LS, TodoRead, TodoWrite]
 ---
 
 <objective>
-Debug issues using a scientific method cycle: Reproduce → Hypothesize → Isolate → Verify → Fix. Active debug sessions are tracked as GitHub Issues (label: `debug`).
+Debug issues using a scientific method cycle: Reproduce → Hypothesize → Isolate → Verify → Fix → Confirm. Active debug sessions are tracked as GitHub Issues (label: `debug`).
 </objective>
 
 > **Note:** This command is also auto-triggered by `/maxsim:go` when open issues labeled `type:bug` are detected on the GitHub Project Board.

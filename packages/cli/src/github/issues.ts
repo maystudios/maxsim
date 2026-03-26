@@ -4,7 +4,8 @@
  */
 
 import { getOctokit, getRepoInfo, withGhResult } from './client.js';
-import type { GhIssue, GhComment, GhIssueRelation, GhResult, RepoInfo } from './types.js';
+import type { GhIssue, GhComment, GhIssueRelation, GhResult, RepoInfo, EscalationPayload } from './types.js';
+import { formatCommentHeader } from './comments.js';
 
 /** Map Octokit issue response to our GhIssue type. */
 function mapIssue(raw: Record<string, unknown>): GhIssue {
@@ -426,4 +427,63 @@ export async function listIssueRelations(
       ...toRelations(issue.related?.nodes ?? [], 'related'),
     ];
   });
+}
+
+/** Create a structured escalation issue from a payload. */
+export async function createEscalationIssue(
+  payload: EscalationPayload,
+  repo?: RepoInfo,
+): Promise<GhResult<GhIssue>> {
+  const header = formatCommentHeader({
+    type: 'escalation',
+    phase: payload.phaseNumber,
+    task: payload.taskNumber,
+  });
+
+  const attemptsSummary = payload.attempts
+    .map(
+      (a) =>
+        `### Attempt ${a.attemptNumber}\n- **Summary:** ${a.summary}\n- **Failed gate:** ${a.failedGate}\n- **Error output:**\n\`\`\`\n${a.errorOutput}\n\`\`\``,
+    )
+    .join('\n\n');
+
+  const body = [
+    header,
+    '',
+    '## Original Spec',
+    '',
+    `> ${payload.taskSpec.split('\n').join('\n> ')}`,
+    '',
+    '## Attempt Summaries',
+    '',
+    attemptsSummary,
+    '',
+    '## Root Cause',
+    '',
+    `**${payload.rootCause}**`,
+    '',
+    '## Proposed Next Step',
+    '',
+    payload.proposedNextStep,
+  ].join('\n');
+
+  const result = await createIssue(
+    {
+      title: `[Escalation] ${payload.taskTitle}`,
+      body,
+      labels: ['type:bug', 'maxsim:auto'],
+    },
+    repo,
+  );
+
+  // Add cross-reference comment on the parent issue if provided
+  if (result.ok && payload.parentIssueNumber) {
+    await addComment(
+      payload.parentIssueNumber,
+      `Escalation issue created: #${result.data.number}`,
+      repo,
+    );
+  }
+
+  return result;
 }

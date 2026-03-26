@@ -2,7 +2,7 @@
 name: maxsim:init
 description: Initialize MaxsimCLI in current project with GitHub integration
 argument-hint: "[--auto]"
-allowed-tools: [Read, Write, Edit, Bash, Grep, Glob, Agent, AskUserQuestion, WebFetch, WebSearch, EnterPlanMode, ExitPlanMode]
+allowed-tools: [Read, Write, Edit, Bash, Grep, Glob, Agent, AskUserQuestion, WebFetch, WebSearch, EnterPlanMode, ExitPlanMode, LS, TodoRead, TodoWrite]
 ---
 
 <objective>

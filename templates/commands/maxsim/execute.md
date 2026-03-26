@@ -2,7 +2,7 @@
 name: maxsim:execute
 description: Execute all plans in a phase with parallel agents and auto-verification
 argument-hint: "[phase-number]"
-allowed-tools: [Read, Write, Edit, Bash, Grep, Glob, Agent, EnterPlanMode, ExitPlanMode]
+allowed-tools: [Read, Write, Edit, Bash, Grep, Glob, Agent, EnterPlanMode, ExitPlanMode, LS, TodoRead, TodoWrite]
 ---
 
 <objective>

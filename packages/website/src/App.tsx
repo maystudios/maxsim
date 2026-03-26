@@ -3,6 +3,7 @@ import { Helmet } from "react-helmet-async";
 import Navbar from "./components/sections/Navbar";
 import Hero from "./components/sections/Hero";
 import { Features } from "./components/sections/Features";
+import { Benefits } from "./components/sections/Benefits";
 import { HowItWorks } from "./components/sections/HowItWorks";
 import { TechStack } from "./components/sections/TechStack";
 import { Docs } from "./components/sections/Docs";
@@ -51,6 +52,7 @@ export default function App() {
         <Navbar />
         <Hero />
         <Features />
+        <Benefits />
         <HowItWorks />
         <TechStack />
         <Docs />

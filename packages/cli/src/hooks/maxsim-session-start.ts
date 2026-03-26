@@ -93,7 +93,10 @@ readStdinJson<SessionStartInput>((input) => {
     if (sections.length > 0) {
       process.stdout.write(
         `${JSON.stringify({
-          additionalContext: sections.join('\n\n'),
+          hookSpecificOutput: {
+            hookEventName: 'SessionStart',
+            additionalContext: sections.join('\n\n'),
+          },
         })}\n`,
       );
     }

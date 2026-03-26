@@ -29,3 +29,15 @@ export { VERSION, parseVersion, isVersionAtLeast, getVersion } from './version.j
 // Utils
 export { claudeDir, maxsimDir, agentMemoryDir, configPath, parseFrontmatter } from './utils.js';
 export type { FrontmatterResult } from './utils.js';
+
+// Errors
+export {
+  RecoveryTier,
+  MaxsimError,
+  VerificationError,
+  GitError,
+  GithubError,
+  EscalationError,
+  classifyError,
+} from './errors.js';
+export type { ErrorRecovery } from './errors.js';

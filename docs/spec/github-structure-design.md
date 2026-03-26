@@ -635,13 +635,11 @@ This is a targeted string replacement, not a full body rewrite, to avoid overwri
 
 ## 8. Label Taxonomy
 
-Labels serve two purposes: human categorization and machine filtering. MaxsimCLI creates a complete label set during `/maxsim:init` using `gh label create`.
+Labels serve two purposes: human categorization and machine filtering. MaxsimCLI creates its label set during `/maxsim:init` using `ensureLabels()`.
 
-### 8.1 Label Categories
+### 8.1 Label Taxonomy
 
-Labels are organized by **color-coded category prefix**. Each category has a distinct hue.
-
-#### Category: Type (Blue family — #0075ca)
+MaxsimCLI enforces a minimal 6-label taxonomy in 2 namespaces. Board columns (Status field), priority, and phase tracking are handled by GitHub Projects V2 custom fields — not labels.
 
 | Label | Color | Description |
 |-------|-------|-------------|
@@ -649,81 +647,15 @@ Labels are organized by **color-coded category prefix**. Each category has a dis
 | `type:task` | `#1d76db` | A Task sub-issue within a phase |
 | `type:bug` | `#d73a4a` | Something is broken |
 | `type:quick` | `#5319e7` | A quick, self-contained task |
-| `type:user-issue` | `#0e8a16` | Created by the user, not by MaxsimCLI |
-
-#### Category: Priority (Red/Orange family)
-
-| Label | Color | Description |
-|-------|-------|-------------|
-| `priority:p0-critical` | `#b60205` | Blocks all other work; must fix immediately |
-| `priority:p1-high` | `#e4e669` | Important; schedule for next execution window |
-| `priority:p2-medium` | `#fbca04` | Standard priority |
-| `priority:p3-low` | `#c5def5` | Nice to have; deferred if needed |
-
-#### Category: Status (Green family — lifecycle tracking)
-
-| Label | Color | Description |
-|-------|-------|-------------|
-| `status:planning` | `#bfd4f2` | In the planning stage |
-| `status:planned` | `#0e8a16` | Plan approved, ready to execute |
-| `status:in-progress` | `#e4e669` | Execution underway |
-| `status:in-review` | `#d4c5f9` | Undergoing verification |
-| `status:blocked` | `#ee0701` | Cannot proceed; dependency not met |
-| `status:escalated` | `#b60205` | Failed 3 retries; needs human intervention |
-
-#### Category: Phase (Purple family — cross-reference)
-
-| Label | Color | Description |
-|-------|-------|-------------|
-| `phase:1` through `phase:N` | `#7057ff` | Which phase this issue belongs to |
-
-These are created dynamically as phases are defined. A maximum of 20 phase labels are pre-created; additional ones are created on demand.
-
-#### Category: Domain (Teal family — component area)
-
-Created per-project during init based on codebase analysis. Common examples:
-
-| Label | Color | Description |
-|-------|-------|-------------|
-| `area:auth` | `#006b75` | Authentication and authorization |
-| `area:api` | `#006b75` | API layer |
-| `area:database` | `#006b75` | Database schema and queries |
-| `area:frontend` | `#006b75` | UI components |
-| `area:infrastructure` | `#006b75` | CI/CD, deployment, configuration |
-| `area:testing` | `#006b75` | Test infrastructure and coverage |
-
-#### Category: Meta (Gray family)
-
-| Label | Color | Description |
-|-------|-------|-------------|
-| `maxsim:auto-created` | `#ededed` | Created by MaxsimCLI automation |
-| `maxsim:needs-triage` | `#ededed` | User issue awaiting integration into plan |
-| `maxsim:wont-fix` | `#ededed` | Closed as won't fix |
-| `maxsim:duplicate` | `#ededed` | Duplicate of another issue |
-| `good-first-issue` | `#7057ff` | Good for new contributors (open-source projects) |
-| `help-wanted` | `#008672` | Community help welcome |
+| `maxsim:auto` | `#ededed` | Created by MaxsimCLI automation |
+| `maxsim:user` | `#0e8a16` | Created by the user, not by MaxsimCLI |
 
 ### 8.2 Label Application Rules
 
-1. Every MaxsimCLI-created issue has **exactly one** `type:*` label.
-2. Every issue has **exactly one** `priority:*` label (default: `priority:p2-medium`).
-3. Every issue has **at most one** `status:*` label (updated as the issue progresses).
-4. Phase Issues also have the corresponding `phase:N` label.
-5. Task sub-issues also have the same `phase:N` label as their parent.
-6. User issues start with `type:user-issue` and `maxsim:needs-triage`.
-7. The `area:*` labels are optional but encouraged; apply the most specific applicable label.
-8. `maxsim:auto-created` is applied to every MaxsimCLI-created issue for auditing.
-
-### 8.3 Label Creation Command
-
-```bash
-gh label create "type:phase" \
-  --color "0075ca" \
-  --description "A Phase Issue representing a major deliverable" \
-  --repo {owner}/{repo}
-```
-
-MaxsimCLI's `github/labels.ts` module contains the full label manifest and creates all labels idempotently (skips existing ones).
+1. Every MaxsimCLI-created issue gets **exactly one** `type:*` label.
+2. Every MaxsimCLI-created issue also gets `maxsim:auto`.
+3. User-created issues get `maxsim:user` and a `type:*` label during triage.
+4. Labels are enforced by `ensureLabels()` in the GitHub module — missing labels are created idempotently.
 
 ---
 
@@ -845,7 +777,7 @@ For multi-repo projects, use the `owner/repo#number` syntax in textual reference
 
 ### 10.4 Dependency Detection in `/maxsim:go`
 
-When `/maxsim:go` reads the project board, it checks each `In Progress` and `To Do` item for `blocked-by` relationships. If any dependency issue is still open, the blocked item is skipped in the execution queue and its status label is set to `status:blocked`.
+When `/maxsim:go` reads the project board, it checks each `In Progress` and `To Do` item for `blocked-by` relationships. If any dependency issue is still open, the blocked item is skipped in the execution queue and it is skipped in the execution queue (the Project Board's Status field is moved to `Backlog` until the dependency resolves).
 
 ---
 
@@ -857,7 +789,7 @@ Users may create GitHub Issues directly, bypassing MaxsimCLI. This is intentiona
 
 A user issue is any issue that:
 1. Lacks a `[Phase N]`, `[Task N.M]`, `[Bug]`, or `[Quick]` prefix in the title.
-2. Lacks the `maxsim:auto-created` label.
+2. Lacks the `maxsim:auto` label.
 3. Is open (closed issues are ignored).
 
 Detection query:
@@ -867,7 +799,7 @@ gh issue list \
   --state open \
   --json number,title,labels \
   | jq '[.[] | select(
-      (.labels | map(.name) | contains(["maxsim:auto-created"]) | not) and
+      (.labels | map(.name) | contains(["maxsim:auto"]) | not) and
       (.title | test("^\\[(Phase|Task|Bug|Quick)") | not)
     )]'
 ```
@@ -876,19 +808,19 @@ gh issue list \
 
 When `/maxsim:go` or `/maxsim:plan` detects unintegrated user issues:
 
-1. **Triage** — Add `maxsim:needs-triage` label to the user issue.
+1. **Triage** — Add `maxsim:user` label to the user issue.
 2. **Surface** — Report detected user issues to the user in the plan proposal.
 3. **Propose Integration** — Suggest options:
    - Create a `[Quick]` task for immediate execution
    - Integrate into the current Phase as a new sub-issue `[Task N.M]`
-   - Defer to a future phase (add `status:planned` label and assign to future milestone)
-   - Close as won't fix (add `maxsim:wont-fix` label)
+   - Defer to a future phase (assign to future milestone)
+   - Close as won't fix
 4. **User Approval** — Present options in Plan Mode. User approves before any action.
 5. **Execute Integration** — Based on user choice:
    - Add `maxsim:meta` frontmatter to the issue body
-   - Apply appropriate type, priority, and phase labels
+   - Apply appropriate `type:*` label
    - Optionally convert to sub-issue under a Phase Issue
-   - Add issue to the project board with correct status
+   - Add issue to the project board with correct Status field
 
 ### 11.3 Intent Comment
 
@@ -1314,7 +1246,7 @@ jobs:
         if: steps.check.outputs.is_user_issue == 'true'
         run: |
           gh issue edit ${{ github.event.issue.number }} \
-            --add-label "type:user-issue,maxsim:needs-triage" \
+            --add-label "maxsim:user" \
             --repo ${{ github.repository }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -1628,7 +1560,7 @@ For existing projects (`/maxsim:init` on a codebase with existing code):
    - To Do items → extract phase, task, estimate, wave
    - Blocked items → extract blocked-by relationships
 4. Query open user issues (REST /issues?state=open, 1 point)
-   - Filter to those missing maxsim:auto-created label
+   - Filter to those missing maxsim:auto label
 5. Determine state:
    - If In Progress items exist → continue execution monitoring
    - If In Review items exist → check verification status
@@ -1774,12 +1706,8 @@ Verification is done within the GitHub Actions workflow using the GitHub API to 
 During `/maxsim:init`, MaxsimCLI creates the following GitHub artifacts in order:
 
 **Phase 1 — Labels (idempotent)**
-- [ ] 5 `type:*` labels
-- [ ] 4 `priority:*` labels
-- [ ] 6 `status:*` labels
-- [ ] 20 `phase:N` labels (1–20)
-- [ ] 5 `area:*` labels (project-specific)
-- [ ] 5 `maxsim:*` meta labels
+- [ ] 4 `type:*` labels (phase, task, bug, quick)
+- [ ] 2 `maxsim:*` labels (auto, user)
 
 **Phase 2 — Project Board**
 - [ ] Create ProjectV2 named `{Project Name} — MaxsimCLI`

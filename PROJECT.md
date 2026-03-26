@@ -721,7 +721,7 @@ MaxsimCLI decides the branching strategy:
 
 Fully automatic:
 - Conventional commit format: `type(scope): description`
-- Co-author attribution: configurable via `co_author` config key (default: `Co-Authored-By: Claude <noreply@anthropic.com>`)
+- Co-author attribution: configurable via `automation.co_author` config key (default: `Co-Authored-By: Claude <noreply@anthropic.com>`)
 - Atomic commits (one logical change per commit)
 - Automatic push after successful verification
 
