@@ -11,6 +11,7 @@
 - [Workflow](#workflow)
 - [GitHub Integration](#github-integration)
 - [Configuration](#configuration)
+- [Global Configuration](#global-configuration)
 - [Agent System](#agent-system)
 - [Skills](#skills)
 - [Self-Improvement](#self-improvement)
@@ -301,6 +302,41 @@ Competitive implementation uses more tokens but produces higher quality output. 
 ### GitHub Settings
 
 GitHub connection details (repo, project name, push behavior) are configured during `/maxsim:init` and stored in the project's `CLAUDE.md`. They are not part of `config.json`.
+
+---
+
+## Global Configuration
+
+MaxsimCLI automatically generates a project-level `CLAUDE.md` during installation. This file lives in the project root and gives Claude Code context about the project and available commands every time it opens that project.
+
+Optionally, you can also set up a **global** `CLAUDE.md` at `~/.claude/CLAUDE.md`. This file is loaded by Claude Code for every session, regardless of which project you open. It is useful for making MaxsimCLI commands available globally, even before running the installer in a specific project.
+
+### Setting up a global CLAUDE.md
+
+MaxsimCLI ships a ready-made template. Copy it to the global location:
+
+```bash
+# The template is included in the installed templates directory
+cp .claude/maxsim/templates/global-claude-md.md ~/.claude/CLAUDE.md
+```
+
+Or copy it directly from the npm package before installing into a project:
+
+```bash
+npx maxsimcli@latest
+# The installer will print a hint about global setup if ~/.claude/CLAUDE.md does not exist
+```
+
+The template contains a command reference table and a quick-start pointer to `/maxsim:go`. You can customize it with your own global instructions (e.g., preferred coding style, personal conventions) — MaxsimCLI will not overwrite it.
+
+### When to use global vs. project-level CLAUDE.md
+
+| Scope | File | Created by |
+|-------|------|-----------|
+| Per-project | `<project>/CLAUDE.md` | `npx maxsimcli` (automatic) |
+| Global (all projects) | `~/.claude/CLAUDE.md` | You (manual, optional) |
+
+If both exist, Claude Code loads both. The global file provides the command list everywhere; the project file provides project-specific context (GitHub integration, project name, conventions).
 
 ---
 

@@ -8,6 +8,7 @@
  */
 
 import * as fs from 'node:fs';
+import * as os from 'node:os';
 import * as path from 'node:path';
 import minimist from 'minimist';
 import { copyDir, getTemplatesDir } from './copy.js';
@@ -156,6 +157,15 @@ async function runInstall(projectDir: string, quiet: boolean): Promise<void> {
   const projectName = detectProjectName(projectDir);
   writeClaudeMd(projectDir, projectName);
   if (!quiet) console.log('\n  CLAUDE.md: generated in project root');
+
+  // 4b. Hint about global CLAUDE.md if it doesn't exist
+  if (!quiet) {
+    const globalClaudeMd = path.join(os.homedir(), '.claude', 'CLAUDE.md');
+    if (!fs.existsSync(globalClaudeMd)) {
+      console.log('\n  Tip: You can set up a global CLAUDE.md for all projects:');
+      console.log(`    cp .claude/maxsim/templates/global-claude-md.md ${globalClaudeMd.replace(/\\/g, '/')}`);
+    }
+  }
 
   // 5. Summary
   if (!quiet) {

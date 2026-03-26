@@ -258,6 +258,18 @@ Show this command reference.
 
 ---
 
+## Global CLAUDE.md
+
+MaxsimCLI generates a project-level `CLAUDE.md` automatically during install. You can also set up a global one at `~/.claude/CLAUDE.md` to make commands available in every Claude Code session:
+
+```bash
+cp .claude/maxsim/templates/global-claude-md.md ~/.claude/CLAUDE.md
+```
+
+See the User Guide for details.
+
+---
+
 ## Documentation
 
 Full docs: https://maxsimcli.dev
