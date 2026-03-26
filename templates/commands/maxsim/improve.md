@@ -55,6 +55,20 @@ Run the 8-phase autoresearch loop, one iteration at a time:
 7. **Decide** — metric improved AND guard passed → keep; otherwise → `git revert HEAD --no-edit`
 8. **Log** — append iteration result to the TSV file (iteration, commit, metric, delta, guard, status, description)
 
+<HARD-GATE name="improve-loop-invariants">
+
+These rules are non-negotiable during the optimization loop:
+
+- **Never modify guard or test files.** The guard command and its associated test files are the regression safety net. Changing them to make a metric pass invalidates the entire loop.
+- **Never use `--no-verify` on any git command.** Pre-commit hooks exist for a reason. Bypassing them defeats safety checks.
+- **Always `git revert HEAD --no-edit` on failure.** If the metric did not improve OR the guard failed, the commit MUST be reverted. Do not carry forward a failed experiment.
+- **One atomic change per iteration.** Multiple changes in a single iteration make it impossible to attribute metric movement. Make one change, measure, decide.
+- **Commit before verification.** The commit happens at step 4, before the metric and guard runs. This ensures every experiment is captured in git history and can be cleanly reverted.
+
+If you find yourself rationalizing an exception to any of these rules, STOP. The rule applies without exception.
+
+</HARD-GATE>
+
 **Stuck Detection:**
 After 5 consecutive discards or crashes:
 1. Re-read ALL in-scope files (full context reload)

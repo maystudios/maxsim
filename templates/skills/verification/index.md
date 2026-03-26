@@ -5,9 +5,13 @@ description: Evidence-based verification with quality gates, anti-rationalizatio
 
 # Verification
 
+<HARD-GATE name="verification-iron-law">
+
 ## The Iron Law
 
 No completion claim is valid without fresh verification evidence produced in THIS session. Evidence from a prior session, a prior attempt, or reasoning about what "should" be true does not count. If the evidence was not collected by running a tool call in the current session, it does not exist.
+
+</HARD-GATE>
 
 ---
 
@@ -110,6 +114,8 @@ Run after VERIFY passes. Executes the full test suite and any smoke checks that 
 
 ---
 
+<HARD-GATE name="anti-rationalization">
+
 ## Anti-Rationalization Table
 
 These phrases indicate a verification failure. They are never acceptable as evidence.
@@ -126,6 +132,10 @@ These phrases indicate a verification failure. They are never acceptable as evid
 | "it worked in my local run" | Local run is not this session's evidence unless tool output is shown |
 | "we can verify later" | Verification deferred is verification skipped |
 | "this is low risk" | Risk level does not substitute for evidence |
+
+If you catch yourself using any phrase from this table, STOP immediately and gather real evidence via a tool call.
+
+</HARD-GATE>
 
 ---
 
