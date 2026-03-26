@@ -2,13 +2,17 @@
 'use strict';
 
 /**
- * Pre-build version injection for @maxsim/cli
+ * Version injection for @maxsim/cli
  *
  * Reads the version from packages/cli/package.json and writes it into
- * src/core/version.ts so the built bundle always matches the npm version.
+ * src/core/version.ts and templates/templates/config.json so the built
+ * bundle always matches the npm version.
  *
- * This runs automatically as part of `npm run build` and ensures
- * semantic-release version bumps propagate to the compiled output.
+ * This runs in two contexts:
+ *   1. During `npm run build` — injects the current package.json version.
+ *   2. During semantic-release prepare — runs AFTER the version bump so
+ *      the published artifact contains the NEW version, not the old one.
+ *      Configured via @semantic-release/exec in .releaserc.json.
  */
 
 const fs = require('node:fs');
