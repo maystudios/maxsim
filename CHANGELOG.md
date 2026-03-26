@@ -1,3 +1,18 @@
+## [5.18.1](https://github.com/maystudios/maxsimcli/compare/v5.18.0...v5.18.1) (2026-03-26)
+
+
+### Bug Fixes
+
+* add HARD-GATE tags and user-invocable:false per spec ([5059260](https://github.com/maystudios/maxsimcli/commit/5059260f4b4605811af3a2244ef03f992d007932))
+* correct config key casing in USER-GUIDE.md to snake_case ([5982f1b](https://github.com/maystudios/maxsimcli/commit/5982f1b616b0ceef9ef5f8df2a5d2d87af23d7ea))
+* correct config-reference schema and v5 frontmatter artifacts ([b0c802d](https://github.com/maystudios/maxsimcli/commit/b0c802d50466435ab8decb047f5d6e68e315bedf))
+* correct debug.md label from 'debug' to 'type:bug' ([7e7a2ad](https://github.com/maystudios/maxsimcli/commit/7e7a2ade2b01bb39e6bed472c8b77fe0a32a4298))
+* correct website content, README counts, and config docs ([a4cf7a4](https://github.com/maystudios/maxsimcli/commit/a4cf7a4a326591c0806b0ceb3ab932dafd67b46f))
+* correct worktree path and hook count in INTERNALS.md ([539297d](https://github.com/maystudios/maxsimcli/commit/539297da28858e4f20642ce3587c2bc6ef6dba9e))
+* misc template fixes — duplicate tag, conventions, manifest status ([3dc173a](https://github.com/maystudios/maxsimcli/commit/3dc173a0862533b326c64154bab48e552ca42a4e))
+* resolve version injection sequencing in release pipeline ([93c7123](https://github.com/maystudios/maxsimcli/commit/93c712389c32d0d7dc751334df9b116d713fb371))
+* update lockfile for @semantic-release/exec dependency ([c77afbc](https://github.com/maystudios/maxsimcli/commit/c77afbcb4ca337abd60ad04a09be897cb2ed16e3))
+
 # [5.18.0](https://github.com/maystudios/maxsimcli/compare/v5.17.0...v5.18.0) (2026-03-26)
 
 
