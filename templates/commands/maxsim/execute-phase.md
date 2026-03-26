@@ -36,4 +36,3 @@ Follow @.claude/maxsim/workflows/execute.md end-to-end.
 8. On verification failure, auto-retry with gap-closure context (max 3 retries, 4 total attempts)
 9. On final failure, report what failed and surface options to user
 </process>
-</output>

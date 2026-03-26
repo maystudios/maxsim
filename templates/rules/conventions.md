@@ -65,7 +65,7 @@ GitHub is the single source of truth. No local `.planning/` directory. All state
 
 ## Plan Mode
 
-Every MaxsimCLI command starts in Plan Mode (`EnterPlanMode`). The user approves the plan via `ExitPlanMode` before any execution begins.
+Every MaxsimCLI command starts in Plan Mode (`EnterPlanMode`). The user approves the plan via `ExitPlanMode` before any execution begins. Exempt commands that skip Plan Mode: `security`, `progress`, `help`.
 
 ## Deferred Items
 

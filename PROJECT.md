@@ -881,7 +881,7 @@ REMOVED: commands.ts (functionality covered by client.ts + individual modules)
 3. src/install/hooks.ts — Hook registration in settings.json ✅
 4. src/install/uninstall.ts — Clean uninstall (complete!) ✅
 5. src/install/claudemd.ts — CLAUDE.md generation ✅ (added, not in original spec)
-6. src/install/manifest.ts — Track all installed files ⬚ not yet implemented (useful for clean uninstall)
+6. src/install/manifest.ts — Track all installed files ✅
 7. scripts/copy-assets.cjs — Build step: copy templates to dist ✅
 8. Tests: E2E install/uninstall cycle
 ```
