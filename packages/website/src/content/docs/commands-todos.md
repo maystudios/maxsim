@@ -1,5 +1,5 @@
 ---
-id: commands-todos
+id: commands-quick
 title: Quick Tasks
 group: Commands Reference
 ---
