@@ -14,6 +14,7 @@
   "scripts": {
     "build": "node scripts/inject-version.cjs && npx tsdown && node scripts/copy-assets.cjs",
     "test": "npx vitest run",
+    "test:e2e": "npx vitest run --config vitest.e2e.config.ts",
     "lint": "npx biome check ."
   },
   "engines": {

@@ -932,7 +932,7 @@ Not preloaded. User-invocable on-demand. Activates when any of the 4 autonomous 
 
 ### Estimated Line Count
 
-~169 lines (SKILL.md body, excluding reference files)
+~169 lines (index.md body, excluding reference files)
 
 ---
 
@@ -1010,20 +1010,20 @@ No circular references exist in the target state.
 New skills require new directories under `templates/skills/`:
 
 ```
-templates/skills/verification/SKILL.md       (new — merge)
-templates/skills/github-operations/SKILL.md  (new — merge)
-templates/skills/research/SKILL.md           (new — merge)
-templates/skills/project-memory/SKILL.md     (new)
+templates/skills/verification/index.md       (new — merge)
+templates/skills/github-operations/index.md  (new — merge)
+templates/skills/research/index.md           (new — merge)
+templates/skills/project-memory/index.md     (new)
 ```
 
 ### Files to Update
 
 ```
-templates/skills/tdd/SKILL.md                       (update See also)
-templates/skills/systematic-debugging/SKILL.md      (fix "5-Step" → "6-Step", update See also)
-templates/skills/roadmap-writing/SKILL.md           (remove MAXSIM Integration section)
-templates/skills/code-review/SKILL.md               (add SPEC COMPLIANCE dimension)
-templates/skills/using-maxsim/SKILL.md              (update skills table)
+templates/skills/tdd/index.md                       (update See also)
+templates/skills/systematic-debugging/index.md      (fix "5-Step" → "6-Step", update See also)
+templates/skills/roadmap-writing/index.md           (remove MAXSIM Integration section)
+templates/skills/code-review/index.md               (add SPEC COMPLIANCE dimension)
+templates/skills/using-maxsim/index.md              (update skills table)
 templates/agents/AGENTS.md                          (update preloaded skills references)
 templates/agents/executor.md                        (update: evidence-collection → verification)
 templates/agents/researcher.md                      (update: research-methodology → research)

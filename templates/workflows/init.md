@@ -1,6 +1,8 @@
 <purpose>
 Unified initialization router. Detects current project and repo state, then delegates to the appropriate sub-workflow. This file is a thin router — all heavy logic lives in the sub-workflows.
 
+> **GitHub-only:** All state lives on GitHub. No local `.planning/` directory.
+
 Routes:
 - Already initialized -> show status, offer reinit
 - GitHub repo exists with code -> .claude/maxsim/workflows/init-existing.md
@@ -105,7 +107,6 @@ Project initialized. Run /maxsim:go to start working.
 - Tool name is Agent (NOT Task)
 - No SlashCommand tool
 - GitHub Issues is the SOLE source of truth
-- No local .planning/ directory references
 - Use `node .claude/maxsim/bin/maxsim-tools.cjs` for CLI operations
 - Do not inline or duplicate logic from new-project.md or init-existing.md
 </constraints>

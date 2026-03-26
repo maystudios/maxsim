@@ -15,8 +15,8 @@ describe('command templates', () => {
   const commandsDir = path.join(TEMPLATES_DIR, 'commands', 'maxsim');
   const commandFiles = fs.readdirSync(commandsDir).filter((f) => f.endsWith('.md'));
 
-  it('exactly 13 .md files exist', () => {
-    expect(commandFiles).toHaveLength(13);
+  it('exactly 14 .md files exist', () => {
+    expect(commandFiles).toHaveLength(14);
   });
 
   it('each file has frontmatter with name, description, and argument-hint', () => {
@@ -73,19 +73,19 @@ describe('skill templates', () => {
     expect(skillDirs).toHaveLength(15);
   });
 
-  it('each subdirectory contains a SKILL.md file', () => {
+  it('each subdirectory contains an index.md file', () => {
     for (const dir of skillDirs) {
-      const skillMd = path.join(skillsDir, dir.name, 'SKILL.md');
-      expect(fs.existsSync(skillMd), `${dir.name}: missing SKILL.md`).toBe(true);
+      const skillMd = path.join(skillsDir, dir.name, 'index.md');
+      expect(fs.existsSync(skillMd), `${dir.name}: missing index.md`).toBe(true);
     }
   });
 
-  it('each SKILL.md has frontmatter with name and description', () => {
+  it('each index.md has frontmatter with name and description', () => {
     for (const dir of skillDirs) {
-      const content = fs.readFileSync(path.join(skillsDir, dir.name, 'SKILL.md'), 'utf-8');
+      const content = fs.readFileSync(path.join(skillsDir, dir.name, 'index.md'), 'utf-8');
       const { attributes } = parseFrontmatter(content);
-      expect(attributes.name, `${dir.name}/SKILL.md: missing name`).toBeDefined();
-      expect(attributes.description, `${dir.name}/SKILL.md: missing description`).toBeDefined();
+      expect(attributes.name, `${dir.name}/index.md: missing name`).toBeDefined();
+      expect(attributes.description, `${dir.name}/index.md: missing description`).toBeDefined();
     }
   });
 });

@@ -286,7 +286,7 @@ Replace the current `[NEEDS RESEARCH]` section with the architecture described i
 | Source | URL/Path |
 |--------|----------|
 | autoresearch repo | `github.com/uditgoenka/autoresearch` (cloned to `/tmp/autoresearch/`) |
-| autoresearch SKILL.md | `claude-plugin/skills/autoresearch/SKILL.md` |
+| autoresearch index.md | `claude-plugin/skills/autoresearch/index.md` |
 | autoresearch loop protocol | `claude-plugin/skills/autoresearch/references/autonomous-loop-protocol.md` |
 | autoresearch results logging | `claude-plugin/skills/autoresearch/references/results-logging.md` |
 | autoresearch core principles | `claude-plugin/skills/autoresearch/references/core-principles.md` |
@@ -294,8 +294,8 @@ Replace the current `[NEEDS RESEARCH]` section with the architecture described i
 | Superpowers research | `docs/superpowers-research.md` |
 | MaxsimCLI self-improvement guide | `docs/spec/self-improvement-guide.md` |
 | MaxsimCLI memory system guide | `docs/spec/memory-system-guide.md` |
-| MaxsimCLI verification skill | `templates/skills/verification/SKILL.md` |
-| MaxsimCLI project-memory skill | `templates/skills/project-memory/SKILL.md` |
+| MaxsimCLI verification skill | `templates/skills/verification/index.md` |
+| MaxsimCLI project-memory skill | `templates/skills/project-memory/index.md` |
 | MaxsimCLI capture-learnings hook | `packages/cli/src/hooks/maxsim-capture-learnings.ts` |
 | MaxsimCLI self-improvement ref | `templates/references/self-improvement.md` |
 | MaxsimCLI verification patterns | `templates/references/verification-patterns.md` |

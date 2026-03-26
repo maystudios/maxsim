@@ -13,10 +13,10 @@ skills:
   - code-review
 available_skills:
   - name: systematic-debugging
-    path: .claude/skills/systematic-debugging/SKILL.md
+    path: .claude/skills/systematic-debugging/index.md
     trigger: When investigating test failures or unexpected behavior
   - name: github-operations
-    path: .claude/skills/github-operations/SKILL.md
+    path: .claude/skills/github-operations/index.md
     trigger: When posting verification results to GitHub
 ---
 

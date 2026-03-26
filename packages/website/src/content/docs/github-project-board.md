@@ -1,5 +1,5 @@
 ---
-id: planning-directory
+id: github-project-board
 title: GitHub Project Board
 group: Core Concepts
 ---

@@ -365,6 +365,20 @@ Spot-check passes when:
 
 If any spot-check fails: report which plan failed. Ask user: "Retry plan or continue with remaining waves?"
 
+#### 6.5.1 Per-Task Verification (within each wave)
+
+For each plan in the completed wave, iterate over its task sub-issues:
+
+```bash
+gh issue list --repo {owner}/{repo} --label "type:task" --json number,title,state,body -q '.[] | select(.number == TASK_ID)'
+```
+
+For each task sub-issue:
+1. Verify the task sub-issue is **closed** (not just assigned)
+2. Verify at least one commit references the task (grep git log for task ID or title keywords)
+3. If a task has a `must_have` field in its body, verify the deliverable exists (file created, function added, etc.)
+4. Mark failed tasks for retry in the next wave iteration
+
 ### 6.6 Report wave completion
 
 ```
@@ -443,8 +457,22 @@ Initialize `attempt_count = 1` before invoking the verifier.
 
 ### 7.1 Log execution metrics
 
-After verification completes (section 8), append a TSV row to `.claude/agent-memory/maxsim-learner/autoresearch-results.tsv`:
+After verification completes (section 8), append per-task TSV rows to `.claude/agent-memory/maxsim-learner/autoresearch-results.tsv`.
 
+For each completed task in this phase, append a TSV row:
+```
+{task_number}	{commit_hash}	{metric_value}	{delta}	{guard_result}	{status}	Task #{task_number}: {task_title}
+```
+
+Where:
+- `task_number` = the GitHub issue number of the task sub-issue
+- `commit_hash` = the commit that implemented this task (or `-` if reverted)
+- `metric_value` = 1 if task verified successfully, 0 if failed
+- `delta` = change from baseline (always +1 or 0 for tasks)
+- `guard_result` = `pass` if regression tests pass after this task, `fail` otherwise
+- `status` = `keep` if verified, `discard` if reverted
+
+After all task rows, append a phase-level summary row:
 ```
 {wave_count}	{last_commit_hash}	{tasks_completed}	{delta_from_plan}	{guard_result}	{status}	Phase {N} execution complete
 ```

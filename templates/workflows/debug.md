@@ -1,5 +1,7 @@
 <purpose>
-Systematic debugging workflow using a reproduce-hypothesize-isolate-verify-fix-confirm cycle. GitHub Issues are the sole source of truth for active debug sessions. No .planning/debug/ files. Invokes the `systematic-debugging` skill to drive the diagnostic cycle.
+Systematic debugging workflow using a reproduce-hypothesize-isolate-verify-fix-confirm cycle. Invokes the `systematic-debugging` skill to drive the diagnostic cycle.
+
+> **GitHub-only:** All state lives on GitHub. No local `.planning/` directory.
 </purpose>
 
 <process>

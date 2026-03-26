@@ -105,7 +105,7 @@ The unified `verification` skill consolidates all three into a single coherent d
 ### 3.2 Unified Skill Structure
 
 ```
-/skills/verification/SKILL.md
+/skills/verification/index.md
   Section 1: The Iron Law
   Section 2: The 5-Step Process (from verification-before-completion)
   Section 3: Evidence Block Format (from verification-before-completion, evidence-collection)
@@ -1244,7 +1244,7 @@ This integrates MaxsimCLI verification directly into the GitHub review lifecycle
 **Goal:** Merge the three verification skills and implement the four gate types.
 
 Tasks:
-1. Create `/templates/skills/verification/SKILL.md` consolidating verification-before-completion, verification-gates, evidence-collection
+1. Create `/templates/skills/verification/index.md` consolidating verification-before-completion, verification-gates, evidence-collection
 2. Update cross-references in tdd, systematic-debugging, code-review, sdd, input-validation skills
 3. Implement gate framework in MaxsimCLI core: `gate(type, evidenceFn)` function
 4. Implement evidence block serialization

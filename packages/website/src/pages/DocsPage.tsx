@@ -15,7 +15,7 @@ import whatIsMaxsimMd from "../content/docs/what-is-maxsim.md?raw";
 import installationMd from "../content/docs/installation.md?raw";
 import quickStartMd from "../content/docs/quick-start.md?raw";
 import contextRotMd from "../content/docs/context-rot.md?raw";
-import planningDirectoryMd from "../content/docs/planning-directory.md?raw";
+import planningDirectoryMd from "../content/docs/github-project-board.md?raw";
 import phasesMd from "../content/docs/phases.md?raw";
 import projectStateMd from "../content/docs/project-state.md?raw";
 import newProjectMd from "../content/docs/new-project.md?raw";

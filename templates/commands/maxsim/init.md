@@ -20,10 +20,12 @@ GitHub is the sole source of truth. Init creates GitHub Milestones and Issues �
 
 <process>
 Plan Mode: Call EnterPlanMode before presenting setup proposals to the user. Call ExitPlanMode after user approves.
+> **Tip:** Press **Ctrl+G** while reviewing the plan to edit it in your text editor before approving.
 
 Follow @.claude/maxsim/workflows/init.md end-to-end.
 
 1. Scan repo in parallel — spawn Research agents to analyze architecture, frameworks, CI/CD, tests, dependencies, and documentation
+   For **brownfield projects** (existing code): spawn parallel Research agents to scan the codebase, map architecture, identify patterns, and confirm findings with the user before creating the GitHub structure.
 2. Interview user: project name, description, goals, tech stack, conventions, testing strategy, deployment, acceptance criteria, no-gos, risks
 3. GitHub Setup — ensure standard labels (6 labels in 2 namespaces: type: and maxsim:), create Project Board (Kanban), create Milestone, offer repo creation if needed
 4. Write CLAUDE.md with project context and MaxsimCLI config

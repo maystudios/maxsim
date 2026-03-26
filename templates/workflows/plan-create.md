@@ -8,7 +8,7 @@ This file is loaded by the plan.md orchestrator. It does NOT handle gate confirm
 stage routing -- the orchestrator handles that. This sub-workflow focuses ONLY on creating,
 verifying, and publishing plans to GitHub.
 
-GitHub Issues is the sole source of truth. No local PLAN.md files are written.
+> **GitHub-only:** All state lives on GitHub. No local `.planning/` directory.
 </purpose>
 
 > **Plan Mode Context:** This sub-workflow runs within Plan Mode established by the parent `/maxsim:plan` orchestrator (`workflows/plan.md`). Do not call `EnterPlanMode` or `ExitPlanMode` — the parent handles the Plan Mode lifecycle.
@@ -18,7 +18,6 @@ GitHub Issues is the sole source of truth. No local PLAN.md files are written.
 - Agent spawning: Agent(prompt, subagent_type, model, isolation, run_in_background)
 - Plans are posted to GitHub with <!-- maxsim:type=plan -->
 - Use `node .claude/maxsim/bin/maxsim-tools.cjs` for all CLI operations
-- No local PLAN.md files are written -- GitHub is the sole source of truth
 - Do NOT show gate confirmation or next steps -- the orchestrator handles those
 </critical_rules>
 
@@ -110,7 +109,7 @@ in its response (not write local files):
 **Phase requirement IDs (every ID MUST appear in a plan's `requirements` field):** {phase_req_ids}
 
 **Project instructions:** Read ./CLAUDE.md if exists -- follow project-specific guidelines
-**Project skills:** Check .claude/skills/ directory (if exists) -- read SKILL.md files, plans should account for project skill rules
+**Project skills:** Check .claude/skills/ directory (if exists) -- read index.md files, plans should account for project skill rules
 </planning_context>
 
 <task_format>

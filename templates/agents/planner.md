@@ -14,10 +14,10 @@ skills:
   - roadmap-writing
 available_skills:
   - name: github-operations
-    path: .claude/skills/github-operations/SKILL.md
+    path: .claude/skills/github-operations/index.md
     trigger: When reading phase context from GitHub Issues
   - name: brainstorming
-    path: .claude/skills/brainstorming/SKILL.md
+    path: .claude/skills/brainstorming/index.md
     trigger: When exploring multiple implementation approaches
 ---
 

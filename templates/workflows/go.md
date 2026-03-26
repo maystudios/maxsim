@@ -1,5 +1,7 @@
 <purpose>
-Auto-detect project state through live GitHub queries, surface problems proactively, and dispatch to the appropriate MAXSIM command. Uses the Show + Act pattern: display detection reasoning first, then act immediately. GitHub Issues are the sole source of truth — no local .planning/ directory is consulted.
+Auto-detect project state through live GitHub queries, surface problems proactively, and dispatch to the appropriate MAXSIM command. Uses the Show + Act pattern: display detection reasoning first, then act immediately.
+
+> **GitHub-only:** All state lives on GitHub. No local `.planning/` directory.
 </purpose>
 
 <process>
@@ -270,7 +272,6 @@ Wait for user selection, then invoke the Skill tool for the chosen command.
 - Tool name is Agent (NOT Task)
 - No SlashCommand tool — use the Skill tool to invoke commands
 - GitHub Issues is the SOLE source of truth for phase state
-- No local .planning/ directory references anywhere
 - Use `node .claude/maxsim/bin/maxsim-tools.cjs` for all CLI operations
 - EnterPlanMode must be called before presenting the proposed action; ExitPlanMode must be called after user approves
 - Always surface problems BEFORE suggesting actions

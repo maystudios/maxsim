@@ -451,6 +451,18 @@ fi
 
 Record: PASS / FAIL + failing test names if failure.
 
+### Per-Task Deliverable Verification
+
+Before declaring phase verification complete, verify each individual task sub-issue:
+
+1. List all task sub-issues: `gh issue list --repo {owner}/{repo} --search "parent:{phase_issue_number}" --json number,title,state`
+2. For each task:
+   a. Confirm the sub-issue is **closed**
+   b. Confirm at least one commit references the task number
+   c. If the task body contains `### Deliverables`, verify each listed deliverable exists in the codebase
+3. Report any tasks that are still open or whose deliverables are missing
+4. A phase cannot pass verification if any task sub-issue remains open
+
 ---
 
 ## Step 9 — Update Board and Return

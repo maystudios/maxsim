@@ -19,7 +19,7 @@ vi.mock('node:child_process', () => ({
 // IMPORTANT: vi.fn() wraps implementations as arrow functions, which are not
 // constructable. We must use a named function expression so `new` works.
 vi.mock('@octokit/rest', () => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // biome-ignore lint/suspicious/noExplicitAny: mock needs dynamic shape for plugin() and constructor
   const OctokitMock: any = vi.fn(function OctokitStub() { return {}; });
   // plugin() is called as Octokit.plugin(retry, throttling) and must return
   // something that can be used with `new`.

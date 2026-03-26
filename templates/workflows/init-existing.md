@@ -1,5 +1,7 @@
 <purpose>
-Initialize MAXSIM in an existing project with code. Performs a deep parallel codebase scan first, synthesizes findings, confirms with the user, then proceeds with GitHub setup and config. GitHub Issues are the sole source of truth — no local .planning/ directory is created or referenced.
+Initialize MAXSIM in an existing project with code. Performs a deep parallel codebase scan first, synthesizes findings, confirms with the user, then proceeds with GitHub setup and config.
+
+> **GitHub-only:** All state lives on GitHub. No local `.planning/` directory.
 </purpose>
 
 <process>
@@ -301,7 +303,6 @@ Next step: /maxsim:go
 <constraints>
 - Tool name is Agent (NOT Task)
 - No SlashCommand tool
-- GitHub Issues is the SOLE source of truth — no local .planning/ directory
 - Use `node .claude/maxsim/bin/maxsim-tools.cjs` for CLI operations
 - EnterPlanMode must be called immediately after Phase 1 prerequisites pass; ExitPlanMode must be called after the user approves the complete initialization plan (after the Phase 5 commit)
 - Agent spawning uses: Agent tool with isolation:"worktree", run_in_background:true (for parallel scan) or run_in_background:false (for sequential roadmap work)

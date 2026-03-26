@@ -26,6 +26,7 @@ Follow @.claude/maxsim/workflows/quick.md end-to-end.
 4. Create a GitHub Issue labeled `type:quick` for the task
 5. Spawn a planner Agent (quick mode) to produce a concise implementation plan
 6. Present the plan to user — Exit Plan Mode via `ExitPlanMode`
+> **Tip:** Press **Ctrl+G** while reviewing the plan to edit it in your text editor before approving.
 7. Spawn executor Agent(s) to implement the plan
 8. Spawn a verifier Agent to check the result (tests pass, build succeeds, lint clean)
 9. If verification fails, spawn a fix agent (max 2 retries)

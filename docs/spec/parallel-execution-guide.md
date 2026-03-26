@@ -1031,8 +1031,8 @@ Do workers need to share findings mid-task?
 
 **Local MaxsimCLI Reference:**
 - `/c/Development/cli/maxsim/docs/claude-own-skills-ref/batch.md` — Batch parallel orchestration skill
-- `/c/Development/cli/maxsim/docs/superpowers-reference/skills/dispatching-parallel-agents/SKILL.md` — Parallel agent dispatch patterns
-- `/c/Development/cli/maxsim/docs/superpowers-reference/skills/subagent-driven-development/SKILL.md` — Sequential subagent development with review gates
+- `/c/Development/cli/maxsim/docs/superpowers-reference/skills/dispatching-parallel-agents/index.md` — Parallel agent dispatch patterns
+- `/c/Development/cli/maxsim/docs/superpowers-reference/skills/subagent-driven-development/index.md` — Sequential subagent development with review gates
 
 **Community:**
 - [Claude Code Sub-Agents: Parallel vs Sequential Patterns](https://claudefa.st/blog/guide/agents/sub-agent-best-practices)

@@ -25,6 +25,7 @@ Re-entry: If phase is already planned, show status and offer options (view, re-p
 
 <process>
 Plan Mode: This command uses EnterPlanMode during the Discussion and Planning stages. Call ExitPlanMode before executing the approved plan.
+> **Tip:** Press **Ctrl+G** while reviewing the plan to edit it in your text editor before approving.
 
 Follow @.claude/maxsim/workflows/plan.md end-to-end.
 

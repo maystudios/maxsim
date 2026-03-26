@@ -14,7 +14,7 @@ skills:
   - research
 available_skills:
   - name: github-operations
-    path: .claude/skills/github-operations/SKILL.md
+    path: .claude/skills/github-operations/index.md
     trigger: When reading context from GitHub Issues
 ---
 

@@ -31,6 +31,7 @@ Follow @.claude/maxsim/workflows/settings.md end-to-end.
    - Per-agent model overrides (override individual agent models beyond profile defaults)
 5. Present proposed configuration changes for review
 6. Exit Plan Mode via `ExitPlanMode` — user reviews and approves changes
+> **Tip:** Press **Ctrl+G** while reviewing the plan to edit it in your text editor before approving.
 7. Merge answers and write updated config
 8. Display confirmation of saved settings
 </process>

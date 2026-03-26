@@ -86,6 +86,98 @@ function getCategoryId(
   return { ok: true, data: category.id };
 }
 
+// ── Category Management ───────────────────────────────────────────────
+
+/**
+ * Ensure a discussion category exists — returns its ID.
+ * First attempts lookup via getCategoryId. If not found, tries to create
+ * the category via GraphQL mutation. GitHub's API may not support category
+ * creation; in that case we return an error suggesting manual creation.
+ */
+export function ensureDiscussionCategory(
+  params: {
+    name: string;
+    slug: string;
+    description?: string;
+  },
+  repo?: RepoInfo,
+): GhResult<string> {
+  const { owner, repo: repoName } = repo ?? getRepoInfo();
+
+  // 1. Try to find existing category
+  const existing = getCategoryId(owner, repoName, params.slug);
+  if (existing.ok) return existing;
+
+  // 2. Get the repository node ID for the mutation
+  const nodeIdResult = ghExec(['api', `repos/${owner}/${repoName}`, '-q', '.node_id']);
+  if (!nodeIdResult.ok) return nodeIdResult;
+
+  // 3. Attempt to create via GraphQL mutation
+  const mutation = `
+    mutation($repositoryId: ID!, $name: String!, $description: String!, $emoji: String!, $isAnswerable: Boolean!) {
+      createDiscussionCategory(input: {
+        repositoryId: $repositoryId
+        name: $name
+        description: $description
+        emoji: $emoji
+        isAnswerable: $isAnswerable
+      }) {
+        discussionCategory {
+          id
+          name
+        }
+      }
+    }
+  `.trim();
+
+  const description = params.description ?? `${params.name} discussions`;
+
+  const result = ghJson<{
+    data: {
+      createDiscussionCategory: {
+        discussionCategory: { id: string; name: string } | null;
+      };
+    };
+    errors?: Array<{ message: string }>;
+  }>([
+    'api', 'graphql',
+    '-f', `query=${mutation}`,
+    '-f', `repositoryId=${nodeIdResult.data}`,
+    '-f', `name=${params.name}`,
+    '-f', `description=${description}`,
+    '-f', `emoji=:speech_balloon:`,
+    '-F', 'isAnswerable=false',
+  ]);
+
+  if (!result.ok) {
+    // GraphQL category creation may not be supported — suggest manual creation
+    return {
+      ok: false,
+      error:
+        `Discussion category "${params.name}" not found and could not be created automatically. ` +
+        `Please create it manually: go to Settings → Discussions → Categories → New Category ` +
+        `and create a category named "${params.name}" with slug "${params.slug}". ` +
+        `(Original error: ${result.error})`,
+      code: 'VALIDATION',
+    };
+  }
+
+  const category = result.data?.data?.createDiscussionCategory?.discussionCategory;
+  if (!category) {
+    return {
+      ok: false,
+      error:
+        `Discussion category "${params.name}" could not be created via the API. ` +
+        `GitHub may not support creating discussion categories programmatically. ` +
+        `Please create it manually: go to Settings → Discussions → Categories → New Category ` +
+        `and create a category named "${params.name}" with slug "${params.slug}".`,
+      code: 'VALIDATION',
+    };
+  }
+
+  return { ok: true, data: category.id };
+}
+
 // ── Public API ─────────────────────────────────────────────────────────
 
 export function createDiscussion(

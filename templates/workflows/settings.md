@@ -29,6 +29,8 @@ Parse current values (use defaults if field is absent):
   Actual count is dynamically scaled by project size (small projects <10 files use fewer agents).
   Resolve current limit: `node .claude/maxsim/bin/maxsim-tools.cjs resolve-max-agents`
 - `git.branching_strategy` — "none" | "phase" | "milestone" (default: "none")
+- `worktrees.path_template` — Template for worktree paths (default: `.claude/worktrees/agent-{id}/`)
+- `worktrees.branch_template` — Template for worktree branches (default: `maxsim/phase-{N}-task-{id}`)
 
 Call `EnterPlanMode` before presenting current settings to the user. After the user confirms all changes, call `ExitPlanMode` before writing to config.json.
 
@@ -48,6 +50,8 @@ Display current settings before prompting for changes:
 | Auto-Advance      | [On/Off] |
 | Parallelism       | [profile-derived: quality 20-40 / balanced 10-20 / budget 5-10] |
 | Git Branching     | [none/phase/milestone] |
+| Worktree Path     | [.claude/worktrees/agent-{id}/] |
+| Worktree Branch   | [maxsim/phase-{N}-task-{id}] |
 ```
 
 ---
@@ -134,6 +138,24 @@ AskUserQuestion([
     ]
   },
   {
+    question: "Template for worktree paths? Use {id} as placeholder for agent ID.",
+    header: "Worktree Path Template",
+    multiSelect: false,
+    options: [
+      { label: ".claude/worktrees/agent-{id}/ (Recommended)", description: "Default path template. Maps to config key: worktrees.path_template" },
+      { label: "Custom", description: "Enter a custom path template with {id} placeholder." }
+    ]
+  },
+  {
+    question: "Template for worktree branches? Use {N} for phase number and {id} for task ID.",
+    header: "Worktree Branch Template",
+    multiSelect: false,
+    options: [
+      { label: "maxsim/phase-{N}-task-{id} (Recommended)", description: "Default branch template. Maps to config key: worktrees.branch_template" },
+      { label: "Custom", description: "Enter a custom branch template with {N} and {id} placeholders." }
+    ]
+  },
+  {
     question: "Override models for individual agent types?",
     header: "Model Overrides",
     multiSelect: false,
@@ -169,6 +191,8 @@ node .claude/maxsim/bin/maxsim-tools.cjs config-set execution.verification.requi
 node .claude/maxsim/bin/maxsim-tools.cjs config-set execution.verification.auto_resolve_conflicts [true/false]
 node .claude/maxsim/bin/maxsim-tools.cjs config-set worktrees.auto_cleanup [true/false]
 node .claude/maxsim/bin/maxsim-tools.cjs config-set worktrees.branch_prefix "[value]"
+node .claude/maxsim/bin/maxsim-tools.cjs config-set worktrees.path_template "[value]"
+node .claude/maxsim/bin/maxsim-tools.cjs config-set worktrees.branch_template "[value]"
 node .claude/maxsim/bin/maxsim-tools.cjs config-set automation.auto_commit_on_success [true/false]
 node .claude/maxsim/bin/maxsim-tools.cjs config-set automation.conventional_commits [true/false]
 node .claude/maxsim/bin/maxsim-tools.cjs config-set workflow.auto_advance [true/false]
@@ -225,7 +249,7 @@ Re-run /maxsim:settings anytime to change these.
 
 <success_criteria>
 - [ ] Current config loaded and displayed
-- [ ] User presented with all 9 settings
+- [ ] User presented with all 11 settings
 - [ ] Config updated via maxsim-tools config-set commands
 - [ ] User offered to save as global defaults
 - [ ] Confirmation displayed after save

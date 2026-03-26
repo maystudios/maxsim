@@ -21,5 +21,6 @@ Follow @.claude/maxsim/workflows/progress.md end-to-end.
 3. List open Issues by label (bug, quick, debug, blocked)
 4. Render a status table: phases with planned/executed/verified state
 5. Detect gaps (planned but not executed, executed but not verified)
-6. Recommend next action with the exact command to run
+6. Detect **overdue** milestones and phases (past due date with open issues)
+7. Recommend next action with the exact command to run
 </process>

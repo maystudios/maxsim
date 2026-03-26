@@ -622,7 +622,7 @@ When MaxsimCLI spawns a subagent (Executor, Planner, Researcher, Verifier), the 
 Skills do not explicitly import CLAUDE.md — it is already in context when a skill runs. A skill can reference instructions from CLAUDE.md without repeating them:
 
 ```markdown
-# SKILL.md for deployment skill
+# index.md for deployment skill
 
 Deploy following the project commit conventions (see CLAUDE.md) and the
 verification protocol (see .claude/rules/verification-protocol.md).

@@ -1,5 +1,7 @@
 <purpose>
-Create a new GitHub Milestone with a structured phase breakdown. All state lives in GitHub Issues — no local planning files are created by this workflow.
+Create a new GitHub Milestone with a structured phase breakdown.
+
+> **GitHub-only:** All state lives on GitHub. No local `.planning/` directory.
 </purpose>
 
 <process>
@@ -166,7 +168,7 @@ Start planning the first phase:
 
 <constraints>
 - Tool name is Agent (NOT Task)
-- GitHub Issues is the SOLE source of truth — no local planning files are created
+- GitHub Issues is the SOLE source of truth
 - EnterPlanMode must be used before creating any GitHub resources
 - ExitPlanMode must be called after all GitHub resources are created
 - Use `node .claude/maxsim/bin/maxsim-tools.cjs` for CLI operations

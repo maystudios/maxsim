@@ -3,8 +3,9 @@ Thin orchestrator for the /maxsim:plan state machine. Detects the current stage 
 (Discussion, Research, Planning) from GitHub Issue comments using HTML markers, delegates to
 stage sub-workflows, shows gate confirmations between stages, and handles re-entry on already-planned phases.
 
-GitHub Issues is the sole source of truth. No local PLAN.md, CONTEXT.md, or RESEARCH.md files
-are read or written by this orchestrator. All state is stored as GitHub Issue comments identified
+> **GitHub-only:** All state lives on GitHub. No local `.planning/` directory.
+
+All state is stored as GitHub Issue comments identified
 by HTML markers: <!-- maxsim:type=context -->, <!-- maxsim:type=research -->, <!-- maxsim:type=plan -->.
 
 This file is the ORCHESTRATOR ONLY. Stage-specific logic lives in:
@@ -16,7 +17,6 @@ This file is the ORCHESTRATOR ONLY. Stage-specific logic lives in:
 <critical_rules>
 - Tool name is `Agent` (NOT `Task`)
 - Agent spawning uses: Agent(prompt, model, isolation, run_in_background)
-- GitHub Issues is the SOLE source of truth -- no local plan/context/research files
 - Plans are posted as GitHub Issue comments with <!-- maxsim:type=plan -->
 - Context is posted as: <!-- maxsim:type=context -->
 - Research is posted as: <!-- maxsim:type=research -->

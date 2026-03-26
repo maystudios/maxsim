@@ -153,7 +153,7 @@ describe('writeClaudeMd', () => {
 describe('checkGhAuth', () => {
   it('returns ok:false with install message when gh is not found', () => {
     mockExecFileSync.mockImplementation(() => {
-      const err: any = new Error('spawn gh ENOENT');
+      const err = new Error('spawn gh ENOENT') as NodeJS.ErrnoException;
       err.code = 'ENOENT';
       throw err;
     });
@@ -164,7 +164,7 @@ describe('checkGhAuth', () => {
 
   it('returns ok:false with auth message when gh auth fails', () => {
     mockExecFileSync.mockImplementation(() => {
-      const err: any = new Error('Command failed');
+      const err = new Error('Command failed') as Error & { status: number };
       err.status = 1;
       throw err;
     });

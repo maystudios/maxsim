@@ -9,6 +9,8 @@ allowed-tools: [Read, Write, Edit, Bash, Grep, Glob, Agent, AskUserQuestion, Ent
 Debug issues using a scientific method cycle: Reproduce → Hypothesize → Isolate → Verify → Fix. Active debug sessions are tracked as GitHub Issues (label: `debug`).
 </objective>
 
+> **Note:** This command is also auto-triggered by `/maxsim:go` when open issues labeled `type:bug` are detected on the GitHub Project Board.
+
 <context>
 Arguments: $ARGUMENTS
 
@@ -19,6 +21,7 @@ GitHub is the sole source of truth. Check for open Issues labeled `debug` to det
 
 <process>
 Plan Mode: Use EnterPlanMode when presenting symptom analysis and proposed diagnosis. Call ExitPlanMode before spawning the executor Agent for the fix.
+> **Tip:** Press **Ctrl+G** while reviewing the plan to edit it in your text editor before approving.
 
 Follow @.claude/maxsim/workflows/debug.md end-to-end. Invoke the `systematic-debugging` skill at step 3 to drive the reproduce-hypothesize-isolate-verify-fix cycle.
 

@@ -38,7 +38,7 @@ Skills are powerful when you have repeatable workflows: generating documentation
 
 ```
 your-skill-name/
-├── SKILL.md           # Required - main instructions + YAML frontmatter
+├── index.md           # Required - main instructions + YAML frontmatter
 ├── reference.md       # Optional - detailed API docs or reference material
 ├── examples.md        # Optional - usage examples and expected output
 ├── scripts/           # Optional - executable code
@@ -50,9 +50,9 @@ your-skill-name/
 
 ### Critical Naming Rules
 
-- The main file MUST be named exactly `SKILL.md` (case-sensitive). `SKILL.MD`, `skill.md`, and `Skill.md` are all rejected.
+- The main file MUST be named exactly `index.md` (case-sensitive). `SKILL.MD`, `skill.md`, and `Skill.md` are all rejected.
 - The skill folder MUST use `kebab-case`: `my-skill-name`. No spaces, no underscores, no capitals.
-- Do NOT include a `README.md` inside the skill folder. All documentation goes in `SKILL.md` or `references/`.
+- Do NOT include a `README.md` inside the skill folder. All documentation goes in `index.md` or `references/`.
 - The folder name should match the `name` field in frontmatter.
 
 ### Where Skills Live
@@ -60,9 +60,9 @@ your-skill-name/
 | Scope      | Path                                              | Applies To                     |
 | ---------- | ------------------------------------------------- | ------------------------------ |
 | Enterprise | Managed settings (see org admin docs)             | All users in the organization  |
-| Personal   | `~/.claude/skills/<skill-name>/SKILL.md`          | All your projects              |
-| Project    | `.claude/skills/<skill-name>/SKILL.md`            | This project only              |
-| Plugin     | `<plugin>/skills/<skill-name>/SKILL.md`           | Where the plugin is enabled    |
+| Personal   | `~/.claude/skills/<skill-name>/index.md`          | All your projects              |
+| Project    | `.claude/skills/<skill-name>/index.md`            | This project only              |
+| Plugin     | `<plugin>/skills/<skill-name>/index.md`           | Where the plugin is enabled    |
 
 **Priority order when names conflict:** Enterprise > Personal > Project. Plugin skills use `plugin-name:skill-name` namespacing and cannot conflict with other levels.
 
@@ -97,13 +97,13 @@ This fragment is what appears in Claude's system prompt for every skill at all t
 
 ### Level 2: Instructions (Loaded When Triggered)
 
-**What:** The full body of `SKILL.md` after the frontmatter.
+**What:** The full body of `index.md` after the frontmatter.
 
 **When:** When Claude determines the skill is relevant to the current task and invokes it via the `Skill` tool.
 
 **Token cost:** Under 5,000 tokens (target: under 500 lines).
 
-**Mechanism:** Claude calls `Skill(skill-name)`. The tool result delivers the `SKILL.md` body content and the skill's base directory path, enabling relative path references to scripts.
+**Mechanism:** Claude calls `Skill(skill-name)`. The tool result delivers the `index.md` body content and the skill's base directory path, enabling relative path references to scripts.
 
 ### Level 3: Resources and Code (Loaded As Needed)
 
@@ -120,7 +120,7 @@ This fragment is what appears in Claude's system prompt for every skill at all t
 | Level | Content | Loaded When | Token Cost |
 | ----- | ------- | ----------- | ---------- |
 | 1: Metadata | YAML frontmatter (`name`, `description`) | Always, at startup | ~100 per skill |
-| 2: Instructions | `SKILL.md` body | When skill is triggered | < 5k tokens |
+| 2: Instructions | `index.md` body | When skill is triggered | < 5k tokens |
 | 3: Resources | Bundled files and scripts | As needed during execution | Zero until accessed |
 
 ---
@@ -163,7 +163,7 @@ When a user sends a message:
 2. For each skill, it reads the `name` and `description`.
 3. It reasons about whether the current request matches any skill's description.
 4. If matched, it invokes the `Skill` tool with the skill name.
-5. The tool response delivers the full `SKILL.md` body and base path.
+5. The tool response delivers the full `index.md` body and base path.
 6. Claude proceeds using the skill's instructions.
 
 The description field is the **sole input** to this selection process for auto-triggering. Getting it right is the most important authoring decision.
@@ -201,7 +201,7 @@ Commands are **user-initiated shortcuts** that inject a predefined prompt into t
 
 **Built-in examples:** `/simplify`, `/batch`, `/debug`, `/loop`, `/claude-api`
 
-**Custom commands** (legacy): A file at `.claude/commands/deploy.md` creates a `/deploy` command. Custom commands have been merged into the skills system — a skill at `.claude/skills/deploy/SKILL.md` also creates `/deploy` and works identically, but adds frontmatter control and supporting file support. Skills take precedence when names conflict.
+**Custom commands** (legacy): A file at `.claude/commands/deploy.md` creates a `/deploy` command. Custom commands have been merged into the skills system — a skill at `.claude/skills/deploy/index.md` also creates `/deploy` and works identically, but adds frontmatter control and supporting file support. Skills take precedence when names conflict.
 
 **Use commands for:** Workflows you always want to trigger manually, where auto-triggering would be inappropriate (deploys, commits, sends).
 
@@ -231,7 +231,7 @@ Agents are **specialized AI instances** with their own context windows, system p
 
 ## 5. Complete YAML Frontmatter Specification
 
-The frontmatter MUST be the first thing in `SKILL.md`, delimited by `---` markers.
+The frontmatter MUST be the first thing in `index.md`, delimited by `---` markers.
 
 ### Claude Code Frontmatter Fields
 
@@ -364,7 +364,7 @@ Claude Search Optimization (CSO) is the practice of writing skill metadata so th
 
 This is the most important and most commonly violated rule in skill writing.
 
-**Why it matters:** Testing has revealed a critical failure mode. When a description summarizes the skill's workflow, Claude may follow the description as a shortcut instead of reading the full `SKILL.md` body. The description becomes the skill — Claude skips loading the actual instructions.
+**Why it matters:** Testing has revealed a critical failure mode. When a description summarizes the skill's workflow, Claude may follow the description as a shortcut instead of reading the full `index.md` body. The description becomes the skill — Claude skips loading the actual instructions.
 
 **Observed failure:** A description saying "executes tasks with code review between tasks" caused Claude to perform one review, even though the skill's flowchart clearly showed two distinct review stages. When the description was changed to "Use when executing implementation plans with independent tasks" (no workflow detail), Claude correctly read the full skill and followed the two-stage process.
 
@@ -449,7 +449,7 @@ Keep descriptions focused. If you have many skills, shorter descriptions preserv
 
 ## 7. Body Structure Best Practices
 
-### Recommended SKILL.md Structure
+### Recommended index.md Structure
 
 ```markdown
 ---
@@ -487,7 +487,7 @@ What goes wrong + fixes
 
 ### Conciseness
 
-The context window is a shared resource. Every token in `SKILL.md` competes with conversation history, other skill metadata, and your actual request once the skill is loaded.
+The context window is a shared resource. Every token in `index.md` competes with conversation history, other skill metadata, and your actual request once the skill is loaded.
 
 **Default assumption:** Claude is already very smart. Only add context Claude does not already have.
 
@@ -633,9 +633,9 @@ This endpoint is no longer supported.
 Put content in separate reference files when:
 - The content is over 100 lines
 - It is domain-specific and only needed for some tasks
-- It would bloat `SKILL.md` beyond 500 lines
+- It would bloat `index.md` beyond 500 lines
 
-Keep content inline in `SKILL.md` when:
+Keep content inline in `index.md` when:
 - It is always needed regardless of the task
 - It is under 50 lines
 - It is the core pattern or principle
@@ -645,13 +645,13 @@ Keep content inline in `SKILL.md` when:
 **Self-contained skill (small):**
 ```
 defense-in-depth/
-  SKILL.md    # Everything inline
+  index.md    # Everything inline
 ```
 
 **Skill with heavy reference:**
 ```
 pdf/
-├── SKILL.md              # Overview + navigation (main instructions)
+├── index.md              # Overview + navigation (main instructions)
 ├── FORMS.md              # Form-filling guide
 ├── reference.md          # API reference
 ├── examples.md           # Usage examples
@@ -663,7 +663,7 @@ pdf/
 **Domain-organized skill:**
 ```
 bigquery-skill/
-├── SKILL.md              # Overview and navigation
+├── index.md              # Overview and navigation
 └── reference/
     ├── finance.md        # Revenue, billing metrics
     ├── sales.md          # Opportunities, pipeline
@@ -671,9 +671,9 @@ bigquery-skill/
     └── marketing.md      # Campaigns, attribution
 ```
 
-### Referencing Files from SKILL.md
+### Referencing Files from index.md
 
-Always reference supporting files explicitly from `SKILL.md` so Claude knows what each file contains and when to load it:
+Always reference supporting files explicitly from `index.md` so Claude knows what each file contains and when to load it:
 
 ```markdown
 ## Additional Resources
@@ -687,11 +687,11 @@ Claude loads referenced files only when the current task requires them.
 
 ### The One-Level-Deep Rule
 
-Keep references one level deep from `SKILL.md`. Never chain references.
+Keep references one level deep from `index.md`. Never chain references.
 
 **Bad — too deep:**
 ```markdown
-# SKILL.md
+# index.md
 See [advanced.md](advanced.md)...
 
 # advanced.md
@@ -703,7 +703,7 @@ Here's the actual information...
 
 **Good — one level deep:**
 ```markdown
-# SKILL.md
+# index.md
 
 **Basic usage**: [instructions inline]
 **Advanced features**: See [advanced.md](advanced.md)
@@ -785,7 +785,7 @@ This is preprocessing — Claude only sees the final rendered result, not the sh
 | `$ARGUMENTS[N]` | Specific argument by 0-based index (`$ARGUMENTS[0]`, `$ARGUMENTS[1]`) |
 | `$N` | Shorthand: `$0` = first arg, `$1` = second arg |
 | `${CLAUDE_SESSION_ID}` | Current session ID — useful for logging or creating session-specific files |
-| `${CLAUDE_SKILL_DIR}` | Directory containing the skill's `SKILL.md` — use for referencing bundled scripts portably |
+| `${CLAUDE_SKILL_DIR}` | Directory containing the skill's `index.md` — use for referencing bundled scripts portably |
 
 **Example using `${CLAUDE_SKILL_DIR}` for portable script references:**
 
@@ -860,7 +860,7 @@ Reference other skills by name with explicit requirement markers:
 See skills/testing/test-driven-development
 
 # Bad — @ syntax force-loads immediately, burning context
-@skills/testing/test-driven-development/SKILL.md
+@skills/testing/test-driven-development/index.md
 ```
 
 **Why no `@` links:** The `@` syntax in CLAUDE.md force-loads the entire referenced file immediately, consuming context before it is needed. Skill cross-references should be by name only.
@@ -900,7 +900,7 @@ Skills and subagents compose in two directions:
 
 | Approach | System Prompt | Task |
 | -------- | ------------- | ---- |
-| Skill with `context: fork` | From agent type (Explore, Plan, etc.) | SKILL.md content |
+| Skill with `context: fork` | From agent type (Explore, Plan, etc.) | index.md content |
 | Subagent with `skills` field | Subagent's markdown body | Claude's delegation message |
 
 ### Enabling Extended Thinking
@@ -985,7 +985,7 @@ Note: `user-invocable: false` only hides from the menu. Use `disable-model-invoc
 
 ### The 500-Line Target
 
-Keep `SKILL.md` body under 500 lines for optimal performance. This is a soft target, not a hard limit, but exceeding it degrades response quality as the skill competes for context.
+Keep `index.md` body under 500 lines for optimal performance. This is a soft target, not a hard limit, but exceeding it degrades response quality as the skill competes for context.
 
 If your skill is growing beyond 500 lines:
 - Move detailed documentation to reference files
@@ -1013,7 +1013,7 @@ Check `/context` for budget warnings.
 | Content | Token Cost | Notes |
 | ------- | ---------- | ----- |
 | Skill metadata (name + description) | ~100 tokens | Always loaded |
-| SKILL.md body (average skill) | ~2,000–4,000 tokens | Loaded when triggered |
+| index.md body (average skill) | ~2,000–4,000 tokens | Loaded when triggered |
 | Reference file (100 lines) | ~800 tokens | Only when read |
 | Script execution | 0 tokens (code) + output tokens | Code never enters context |
 
@@ -1183,7 +1183,7 @@ The four document-processing skills demonstrate the reference file organization 
 
 ```
 pdf/
-├── SKILL.md              # Overview, quick start, links to supporting files
+├── index.md              # Overview, quick start, links to supporting files
 ├── FORMS.md              # Form-filling guide (loaded only for form tasks)
 ├── reference.md          # Complete API reference (loaded only when needed)
 ├── examples.md           # Usage examples (loaded only when needed)
@@ -1194,7 +1194,7 @@ pdf/
 ```
 
 **Lessons from these implementations:**
-- `SKILL.md` provides a quick start + navigation to deeper material
+- `index.md` provides a quick start + navigation to deeper material
 - Heavy reference is in separate files, linked explicitly
 - Scripts handle deterministic operations — no code generation in context
 - The main file stays under 500 lines because detailed content is elsewhere
@@ -1237,7 +1237,7 @@ description: Creates multi-page documentation systems. Use when user asks to "wr
 
 **Bad:**
 ```markdown
-See @skills/testing/test-driven-development/SKILL.md for background.
+See @skills/testing/test-driven-development/index.md for background.
 ```
 
 **Good:**
@@ -1247,9 +1247,9 @@ See @skills/testing/test-driven-development/SKILL.md for background.
 
 ### Anti-Pattern 4: Deeply Nested References
 
-**Problem:** `SKILL.md` → `advanced.md` → `details.md`. Claude may use `head -100` to preview instead of reading full files.
+**Problem:** `index.md` → `advanced.md` → `details.md`. Claude may use `head -100` to preview instead of reading full files.
 
-**Rule:** All reference files must link directly from `SKILL.md`. Maximum one level of indirection.
+**Rule:** All reference files must link directly from `index.md`. Maximum one level of indirection.
 
 ### Anti-Pattern 5: Narrative Storytelling
 
@@ -1309,9 +1309,9 @@ Provide a default with a single escape hatch for the known exception case.
 
 ### Anti-Pattern 12: `README.md` Inside Skill Folder
 
-**Problem:** Including a `README.md` in the skill directory. The system expects `SKILL.md`. A `README.md` is ignored by the skills system and confuses the directory structure.
+**Problem:** Including a `README.md` in the skill directory. The system expects `index.md`. A `README.md` is ignored by the skills system and confuses the directory structure.
 
-**Fix:** All documentation goes in `SKILL.md` or reference files. Repo-level `README.md` lives outside the skill folder.
+**Fix:** All documentation goes in `index.md` or reference files. Repo-level `README.md` lives outside the skill folder.
 
 ---
 
@@ -1319,7 +1319,7 @@ Provide a default with a single escape hatch for the known exception case.
 
 ### The Open Standard
 
-Anthropic published Agent Skills as an open standard ([agentskills.io](https://agentskills.io)). The same `SKILL.md` format works across Claude.ai, Claude Code, the Claude API, and other AI tools that have adopted the standard (including Codex CLI and ChatGPT as of December 2025).
+Anthropic published Agent Skills as an open standard ([agentskills.io](https://agentskills.io)). The same `index.md` format works across Claude.ai, Claude Code, the Claude API, and other AI tools that have adopted the standard (including Codex CLI and ChatGPT as of December 2025).
 
 The compatibility field in frontmatter documents surface-specific requirements.
 
@@ -1404,7 +1404,7 @@ These features work in Claude Code but NOT in Claude.ai or the raw API:
 
 **File structure:**
 - [ ] Folder named in kebab-case
-- [ ] Main file named exactly `SKILL.md` (case-sensitive)
+- [ ] Main file named exactly `index.md` (case-sensitive)
 - [ ] No `README.md` inside skill folder
 
 **Frontmatter:**
@@ -1434,7 +1434,7 @@ These features work in Claude Code but NOT in Claude.ai or the raw API:
 - [ ] Forward slashes in all file paths
 
 **Reference files:**
-- [ ] All reference files linked from `SKILL.md` (one level deep only)
+- [ ] All reference files linked from `index.md` (one level deep only)
 - [ ] Long reference files (100+ lines) have a table of contents
 - [ ] Scripts documented with usage examples and expected output
 
@@ -1473,7 +1473,7 @@ These features work in Claude Code but NOT in Claude.ai or the raw API:
 - [Claude Code Skills Structure and Usage Guide — GitHub Gist (mellanon)](https://gist.github.com/mellanon/50816550ecb5f3b239aa77eef7b8ed8d)
 - [claude-code-skill-budget-research — GitHub Gist (alexey-pelykh)](https://gist.github.com/alexey-pelykh/faa3c304f731d6a962efc5fa2a43abe1)
 - Local reference: `/c/Development/cli/maxsim/docs/anthropic-skills-guide-summary.md`
-- Local reference: `/c/Development/cli/maxsim/docs/superpowers-reference/skills/writing-skills/SKILL.md`
+- Local reference: `/c/Development/cli/maxsim/docs/superpowers-reference/skills/writing-skills/index.md`
 - Local reference: `/c/Development/cli/maxsim/docs/superpowers-reference/skills/writing-skills/anthropic-best-practices.md`
 - Local reference: `/c/Development/cli/maxsim/docs/claude-own-skills-ref/commands-internals.md`
 - Local reference: `/c/Development/cli/maxsim/docs/claude-own-skills-ref/simplify.md`

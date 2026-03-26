@@ -37,6 +37,7 @@ Invoke the `autoresearch` skill (fix workflow) to drive the repair loop. Invoke 
    - **If user requests changes:** return to step 2 to re-gather the modified parameters (stay in Plan Mode). If the error command changed, re-run it for a new baseline (step 3). Re-show the revised configuration and confirm again.
    - **If user cancels:** Exit Plan Mode via ExitPlanMode and stop — do not start the fix loop.
 6. Exit Plan Mode via ExitPlanMode
+> **Tip:** Press **Ctrl+G** while reviewing the plan to edit it in your text editor before approving.
 
 **Phase 2 — Fix Loop**
 

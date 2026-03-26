@@ -263,7 +263,7 @@ Exported functions:
 
 ## Hook System
 
-Five hook scripts compiled by tsdown into `dist/assets/hooks/*.cjs` and
+**Seven** hook scripts (plus statusLine) compiled by tsdown into `dist/assets/hooks/*.cjs` and
 installed to `.claude/maxsim/hooks/` at `npx maxsimcli` time.
 
 | Hook script                    | Event       | Purpose                                      |
@@ -273,6 +273,9 @@ installed to `.claude/maxsim/hooks/` at `npx maxsimcli` time.
 | `maxsim-notification-sound.cjs`| Notification| Play sound when Claude asks a question       |
 | `maxsim-stop-sound.cjs`        | Stop        | Play sound when Claude finishes              |
 | `maxsim-capture-learnings.cjs` | Stop        | Append session commits to MEMORY.md          |
+| `maxsim-session-start.cjs`     | SessionStart | Inject MEMORY.md + TSV + git log context at session start |
+| `maxsim-teammate-idle.cjs`     | TeammateIdle | Check pending tasks before teammate goes idle (exit 2 blocks) |
+| `maxsim-task-completed.cjs`    | TaskCompleted| Run test/build/lint gates before task completion (exit 2 blocks) |
 
 All hooks share `hooks/shared.ts`:
 - `CLAUDE_DIR = '.claude'` constant.
@@ -290,12 +293,17 @@ All hooks share `hooks/shared.ts`:
 ```json
 {
   "hooks": {
-    "SessionStart": [{ "hooks": [{ "type": "command", "command": "node \"...maxsim-check-update.cjs\"" }] }],
+    "SessionStart": [
+      { "hooks": [{ "type": "command", "command": "node \"...maxsim-check-update.cjs\"" }] },
+      { "hooks": [{ "type": "command", "command": "node \"...maxsim-session-start.cjs\"" }] }
+    ],
     "Notification":  [{ "hooks": [{ "type": "command", "command": "node \"...maxsim-notification-sound.cjs\"" }] }],
     "Stop": [
       { "hooks": [{ "type": "command", "command": "node \"...maxsim-stop-sound.cjs\"" }] },
       { "hooks": [{ "type": "command", "command": "node \"...maxsim-capture-learnings.cjs\"" }] }
-    ]
+    ],
+    "TeammateIdle": [{ "hooks": [{ "type": "command", "command": "node \"...maxsim-teammate-idle.cjs\"" }] }],
+    "TaskCompleted": [{ "hooks": [{ "type": "command", "command": "node \"...maxsim-task-completed.cjs\"" }] }]
   },
   "statusLine": { "command": "node \"...maxsim-statusline.cjs\"" },
   "env": { "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1" }
@@ -403,7 +411,7 @@ directly — it is copied into `dist/assets/templates/` during the build.
 
 ### Skills (14)
 
-Located at `templates/skills/`, one subdirectory per skill with a `SKILL.md`.
+Located at `templates/skills/`, one subdirectory per skill with an `index.md`.
 All follow Anthropic's skill convention: YAML frontmatter with `name` and
 `description`, body under 500 lines, no `@` imports.
 
@@ -528,6 +536,8 @@ User: /maxsim:execute 3
    → present task breakdown to user for approval
 
 5. User approves (ExitPlanMode)
+
+> **Tip:** Users can press **Ctrl+G** while reviewing a plan to edit it in their default text editor before approving.
 
 6. Workflow: spawn executor agents (Agent tool, isolation: worktree)
    → one worktree per task: .maxsim-worktrees/phase-3-task-{id}/

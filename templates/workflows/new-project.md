@@ -1,5 +1,7 @@
 <purpose>
 Full initialization for a new project. Takes a repo from zero to a GitHub-tracked MAXSIM project with a config, labels, project board, and optional initial roadmap. Proceeds in five phases: scan (if code exists), interview, GitHub setup, local setup, roadmap.
+
+> **GitHub-only:** All state lives on GitHub. No local `.planning/` directory.
 </purpose>
 
 <process>
@@ -281,7 +283,6 @@ Next step: /maxsim:go
 <constraints>
 - Tool name is Agent (NOT Task)
 - No SlashCommand tool
-- GitHub Issues is the SOLE source of truth — no local .planning/ directory
 - Use `node .claude/maxsim/bin/maxsim-tools.cjs` for CLI operations
 - EnterPlanMode must be called immediately after Phase 1 prerequisites pass; ExitPlanMode must be called after the user approves the complete initialization plan (after the Phase 5 commit)
 - Agent spawning uses: Agent tool with isolation:"worktree", run_in_background:true (for parallel research) or run_in_background:false (for sequential work)

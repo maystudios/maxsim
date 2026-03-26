@@ -16,7 +16,7 @@
 
 ### Features
 
-* add executable Tier 2 Agent Teams patterns to execute.md and maxsim-batch SKILL.md ([8460d8a](https://github.com/maystudios/maxsimcli/commit/8460d8a6d4e95522b6e90a9e10cda6a34ae14320))
+* add executable Tier 2 Agent Teams patterns to execute.md and maxsim-batch index.md ([8460d8a](https://github.com/maystudios/maxsimcli/commit/8460d8a6d4e95522b6e90a9e10cda6a34ae14320))
 * add Tier selection logic to debug.md and plan-research.md workflows ([ef9590e](https://github.com/maystudios/maxsimcli/commit/ef9590e8ee9aa976607e875c5601e5c80a48ef2f))
 * **cli:** add resolve-max-agents command with task complexity scaling ([cd16494](https://github.com/maystudios/maxsimcli/commit/cd16494e3d23678ec3c4ae2e51d43fcfc0945a4d))
 

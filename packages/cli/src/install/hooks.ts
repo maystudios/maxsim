@@ -19,6 +19,7 @@ interface SettingsJson {
   hooks?: Record<string, HookMatcher[]>;
   statusLine?: { type: 'command'; command: string };
   env?: Record<string, string>;
+  permissions?: { allow?: string[]; deny?: string[] };
   [key: string]: unknown;
 }
 
@@ -120,6 +121,30 @@ export function installHooks(projectDir: string): { installed: string[] } {
   if (!settings.env) settings.env = {};
   settings.env.CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS = '1';
 
+  // Add permissions for MaxsimCLI tools (§5.3)
+  if (!settings.permissions) {
+    settings.permissions = {};
+  }
+  if (!settings.permissions.allow) {
+    settings.permissions.allow = [];
+  }
+
+  // Add default MaxsimCLI permissions
+  const maxsimPermissions = [
+    'Bash(npm run build)',
+    'Bash(npm test)',
+    'Bash(npx biome check *)',
+    'Bash(gh *)',
+    'Bash(git *)',
+    'Bash(node *)',
+  ];
+
+  for (const perm of maxsimPermissions) {
+    if (!settings.permissions.allow.includes(perm)) {
+      settings.permissions.allow.push(perm);
+    }
+  }
+
   // Write settings
   fs.writeFileSync(settingsPath, `${JSON.stringify(settings, null, 2)}\n`, 'utf8');
 
@@ -175,6 +200,27 @@ export function removeHooks(projectDir: string): void {
     // Remove our env var
     if (settings.env?.CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS) {
       delete settings.env.CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS;
+    }
+
+    // Remove MaxsimCLI permissions
+    if (settings.permissions?.allow) {
+      const maxsimPermissions = [
+        'Bash(npm run build)',
+        'Bash(npm test)',
+        'Bash(npx biome check *)',
+        'Bash(gh *)',
+        'Bash(git *)',
+        'Bash(node *)',
+      ];
+      settings.permissions.allow = settings.permissions.allow.filter(
+        (p) => !maxsimPermissions.includes(p),
+      );
+      if (settings.permissions.allow.length === 0) {
+        delete settings.permissions.allow;
+      }
+      if (Object.keys(settings.permissions).length === 0) {
+        delete settings.permissions;
+      }
     }
 
     fs.writeFileSync(settingsPath, `${JSON.stringify(settings, null, 2)}\n`, 'utf8');

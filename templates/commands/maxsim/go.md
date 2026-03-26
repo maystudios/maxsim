@@ -27,6 +27,7 @@ Follow @.claude/maxsim/workflows/go.md end-to-end.
 2. Detect what's next using the priority list above
 3. Enter Plan Mode via EnterPlanMode — show detection reasoning and proposed action
 4. Wait for user approval (Ctrl+C cancels)
+> **Tip:** Press **Ctrl+G** while reviewing the plan to edit it in your text editor before approving.
 5. Execute approved action by spawning the appropriate Agent
 6. Report the result — print a completion summary or surface the error with a recovery suggestion
 </process>

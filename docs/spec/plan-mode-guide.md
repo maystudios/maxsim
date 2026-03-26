@@ -1086,5 +1086,5 @@ claude --permission-mode plan -p "Create a migration plan for the auth system"
 - [plannotator — Visual Plan Review for Claude Code](https://plannotator.ai/)
 - [plannotator GitHub Repository](https://github.com/backnotprop/plannotator)
 - [Short Notes — Claude Code Settings: Default to Plan Mode and Plans Directory](https://notes.ghinda.com/post/claude-code-settings-default-to-plan-mode-and-plans-directory)
-- [MAXSIM writing-plans skill](/c/Development/cli/maxsim/docs/superpowers-reference/skills/writing-plans/SKILL.md)
-- [MAXSIM executing-plans skill](/c/Development/cli/maxsim/docs/superpowers-reference/skills/executing-plans/SKILL.md)
+- [MAXSIM writing-plans skill](/c/Development/cli/maxsim/docs/superpowers-reference/skills/writing-plans/index.md)
+- [MAXSIM executing-plans skill](/c/Development/cli/maxsim/docs/superpowers-reference/skills/executing-plans/index.md)

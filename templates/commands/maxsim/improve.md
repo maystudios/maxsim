@@ -39,6 +39,7 @@ Invoke the `autoresearch` skill to drive the optimization loop. Invoke the `veri
 3. Dry-run: Execute the metric command once to establish baseline. Execute the guard command to confirm it passes. If either fails, ask the user to fix before proceeding.
 4. Show the proposed loop configuration and confirm with user
 5. Exit Plan Mode via ExitPlanMode
+> **Tip:** Press **Ctrl+G** while reviewing the plan to edit it in your text editor before approving.
 
 **Phase 2 — Optimization Loop**
 

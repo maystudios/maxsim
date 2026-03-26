@@ -584,7 +584,7 @@ The metric is the most critical decision in setting up an autoresearch loop. A b
 
 | What to Improve | Metric Command | Direction |
 |-----------------|---------------|---------|
-| Skill token usage | `wc -w < .claude/skills/target-skill/SKILL.md` | Lower |
+| Skill token usage | `wc -w < .claude/skills/target-skill/index.md` | Lower |
 | Command response time | Custom timing harness | Lower |
 | Verification pass rate | Count of pass/fail over N runs | Higher |
 | Agent retry count | Parse stop hook logs for retry events | Lower |
@@ -737,7 +737,7 @@ The autoresearch pattern was designed for code optimization. MaxsimCLI uses it a
 ### What Changes in Project Management Context
 
 **The target is process, not code.** Instead of modifying implementation files, the loop modifies:
-- Skill instructions (`.claude/skills/*/SKILL.md`)
+- Skill instructions (`.claude/skills/*/index.md`)
 - Command definitions (`.claude/commands/maxsim/*.md`)
 - Agent prompts (`.claude/agents/*.md`)
 - Workflow definitions (`.claude/workflows/*.md`)
@@ -772,7 +772,7 @@ Goal: Reduce the number of agent retries required during phase execution
 Verify:  node maxsim-tools.cjs stats --retries --last-phase
 Guard:   npx vitest run
 Direction: lower_is_better
-Scope:   .claude/skills/verification/SKILL.md
+Scope:   .claude/skills/verification/index.md
          .claude/agents/executor.md
 ```
 
@@ -994,7 +994,7 @@ Mode:       Bounded (30 iterations)
 **Setup:**
 ```
 Goal:       Reduce executor agent retry rate for verification tasks
-Scope:      .claude/skills/verification/SKILL.md
+Scope:      .claude/skills/verification/index.md
             .claude/agents/executor.md
 Verify:     node maxsim-tools.cjs stats --retries --last-20-sessions
 Guard:      npx vitest run
@@ -1035,7 +1035,7 @@ Mode:       Bounded (20 iterations)
 ```
 Goal:       Reduce the average number of tasks added/removed after planning
 Scope:      .claude/commands/maxsim/plan.md
-            .claude/skills/roadmap-writing/SKILL.md
+            .claude/skills/roadmap-writing/index.md
 Verify:     gh api repos/owner/repo/issues --jq '[.[] | select(.labels[].name == "task") | .number] | length'
 Guard:      (none — this metric has no binary pass/fail guard)
 Direction:  lower_is_better (fewer post-plan task changes = better upfront planning)

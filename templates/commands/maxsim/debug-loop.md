@@ -39,6 +39,7 @@ Invoke the `autoresearch` skill (debug workflow) to drive the investigation loop
    - **If user requests changes:** revise the relevant parameters (scope, reproduction command, investigation approach). If the reproduction command changed, re-attempt reproduction (step 3). Update the GitHub Issue body with the revised plan. Return to step 5 (stay in Plan Mode).
    - **If user cancels:** close the GitHub Issue created in step 4 (`gh issue close {ISSUE_NUM} --comment "Debug session cancelled by user before investigation began"`), Exit Plan Mode via ExitPlanMode, and stop.
 7. Exit Plan Mode via ExitPlanMode
+> **Tip:** Press **Ctrl+G** while reviewing the plan to edit it in your text editor before approving.
 
 **Phase 2 — Debug Loop**
 

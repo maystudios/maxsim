@@ -45,6 +45,9 @@ const HOOK_FILES = [
   'maxsim-stop-sound.cjs',
   'maxsim-capture-learnings.cjs',
   'maxsim-statusline.cjs',
+  'maxsim-session-start.cjs',
+  'maxsim-teammate-idle.cjs',
+  'maxsim-task-completed.cjs',
 ] as const;
 
 // ---------------------------------------------------------------------------
@@ -112,6 +115,60 @@ describe('installHooks', () => {
     expect(installed).toContain('maxsim-stop-sound (Stop)');
     expect(installed).toContain('maxsim-capture-learnings (Stop)');
     expect(installed).toContain('maxsim-statusline (statusLine)');
+    expect(installed).toContain('maxsim-session-start (SessionStart)');
+    expect(installed).toContain('maxsim-teammate-idle (TeammateIdle)');
+    expect(installed).toContain('maxsim-task-completed (TaskCompleted)');
+  });
+
+  it('registers the SessionStart hook for maxsim-session-start', () => {
+    const projectDir = path.join(tmpDir, 'project');
+    fs.mkdirSync(projectDir);
+
+    installHooks(projectDir);
+
+    const settings = readSettings(projectDir) as {
+      hooks: Record<string, Array<{ hooks: Array<{ command: string }> }>>;
+    };
+
+    const sessionStartCommands = settings.hooks.SessionStart
+      .flatMap((m) => m.hooks)
+      .map((h) => h.command);
+
+    expect(sessionStartCommands.some((c) => c.includes('maxsim-session-start'))).toBe(true);
+  });
+
+  it('registers the TeammateIdle hook for maxsim-teammate-idle', () => {
+    const projectDir = path.join(tmpDir, 'project');
+    fs.mkdirSync(projectDir);
+
+    installHooks(projectDir);
+
+    const settings = readSettings(projectDir) as {
+      hooks: Record<string, Array<{ hooks: Array<{ command: string }> }>>;
+    };
+
+    const teammateIdleCommands = settings.hooks.TeammateIdle
+      .flatMap((m) => m.hooks)
+      .map((h) => h.command);
+
+    expect(teammateIdleCommands.some((c) => c.includes('maxsim-teammate-idle'))).toBe(true);
+  });
+
+  it('registers the TaskCompleted hook for maxsim-task-completed', () => {
+    const projectDir = path.join(tmpDir, 'project');
+    fs.mkdirSync(projectDir);
+
+    installHooks(projectDir);
+
+    const settings = readSettings(projectDir) as {
+      hooks: Record<string, Array<{ hooks: Array<{ command: string }> }>>;
+    };
+
+    const taskCompletedCommands = settings.hooks.TaskCompleted
+      .flatMap((m) => m.hooks)
+      .map((h) => h.command);
+
+    expect(taskCompletedCommands.some((c) => c.includes('maxsim-task-completed'))).toBe(true);
   });
 
   it('registers the SessionStart hook for maxsim-check-update', () => {
@@ -124,7 +181,7 @@ describe('installHooks', () => {
       hooks: Record<string, Array<{ hooks: Array<{ command: string }> }>>;
     };
 
-    const sessionStartCommands = settings.hooks['SessionStart']
+    const sessionStartCommands = settings.hooks.SessionStart
       .flatMap((m) => m.hooks)
       .map((h) => h.command);
 
@@ -141,7 +198,7 @@ describe('installHooks', () => {
       hooks: Record<string, Array<{ hooks: Array<{ command: string }> }>>;
     };
 
-    const notificationCommands = settings.hooks['Notification']
+    const notificationCommands = settings.hooks.Notification
       .flatMap((m) => m.hooks)
       .map((h) => h.command);
 
@@ -158,7 +215,7 @@ describe('installHooks', () => {
       hooks: Record<string, Array<{ hooks: Array<{ command: string }> }>>;
     };
 
-    const stopCommands = settings.hooks['Stop']
+    const stopCommands = settings.hooks.Stop
       .flatMap((m) => m.hooks)
       .map((h) => h.command);
 
@@ -193,7 +250,7 @@ describe('installHooks', () => {
     };
 
     expect(settings.env).toBeDefined();
-    expect(settings.env['CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS']).toBe('1');
+    expect(settings.env.CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS).toBe('1');
   });
 
   it('all registered hook entries use type: "command"', () => {
@@ -230,7 +287,7 @@ describe('installHooks', () => {
       hooks: Record<string, Array<{ hooks: Array<{ command: string }> }>>;
     };
 
-    const sessionStartCommands = settings.hooks['SessionStart']
+    const sessionStartCommands = settings.hooks.SessionStart
       .flatMap((m) => m.hooks)
       .map((h) => h.command);
 
@@ -251,7 +308,7 @@ describe('installHooks', () => {
       hooks: Record<string, Array<{ hooks: Array<{ command: string }> }>>;
     };
 
-    const notificationCommands = settings.hooks['Notification']
+    const notificationCommands = settings.hooks.Notification
       .flatMap((m) => m.hooks)
       .map((h) => h.command);
 
@@ -272,7 +329,7 @@ describe('installHooks', () => {
       hooks: Record<string, Array<{ hooks: Array<{ command: string }> }>>;
     };
 
-    const stopCommands = settings.hooks['Stop']
+    const stopCommands = settings.hooks.Stop
       .flatMap((m) => m.hooks)
       .map((h) => h.command);
 
@@ -296,7 +353,7 @@ describe('installHooks', () => {
       env: Record<string, string>;
     };
 
-    expect(settings.env['CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS']).toBe('1');
+    expect(settings.env.CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS).toBe('1');
   });
 
   // -------------------------------------------------------------------------
@@ -309,14 +366,14 @@ describe('installHooks', () => {
     fs.mkdirSync(claudeDir, { recursive: true });
     fs.writeFileSync(
       path.join(claudeDir, 'settings.json'),
-      JSON.stringify({ customKey: 'preserve-me', anotherKey: 42 }, null, 2) + '\n',
+      `${JSON.stringify({ customKey: 'preserve-me', anotherKey: 42 }, null, 2)}\n`,
     );
 
     installHooks(projectDir);
 
     const settings = readSettings(projectDir) as Record<string, unknown>;
-    expect(settings['customKey']).toBe('preserve-me');
-    expect(settings['anotherKey']).toBe(42);
+    expect(settings.customKey).toBe('preserve-me');
+    expect(settings.anotherKey).toBe(42);
   });
 
   it('merges into an existing hooks section without overwriting non-maxsim hooks', () => {
@@ -333,7 +390,7 @@ describe('installHooks', () => {
     };
     fs.writeFileSync(
       path.join(claudeDir, 'settings.json'),
-      JSON.stringify(existingSettings, null, 2) + '\n',
+      `${JSON.stringify(existingSettings, null, 2)}\n`,
     );
 
     installHooks(projectDir);
@@ -343,13 +400,13 @@ describe('installHooks', () => {
     };
 
     // Original PreToolUse hook must still be present
-    const preToolCommands = settings.hooks['PreToolUse']
+    const preToolCommands = settings.hooks.PreToolUse
       .flatMap((m) => m.hooks)
       .map((h) => h.command);
     expect(preToolCommands).toContain('echo pre-tool-use-hook');
 
     // Maxsim hooks must also be present
-    const stopCommands = settings.hooks['Stop']
+    const stopCommands = settings.hooks.Stop
       .flatMap((m) => m.hooks)
       .map((h) => h.command);
     expect(stopCommands.some((c) => c.includes('maxsim-stop-sound'))).toBe(true);
@@ -382,7 +439,7 @@ describe('installHooks', () => {
     const userStatusLine = { type: 'command', command: 'node "/my/custom/statusline.js"' };
     fs.writeFileSync(
       path.join(claudeDir, 'settings.json'),
-      JSON.stringify({ statusLine: userStatusLine }, null, 2) + '\n',
+      `${JSON.stringify({ statusLine: userStatusLine }, null, 2)}\n`,
     );
 
     installHooks(projectDir);
@@ -408,7 +465,7 @@ describe('installHooks', () => {
     };
     fs.writeFileSync(
       path.join(claudeDir, 'settings.json'),
-      JSON.stringify({ statusLine: oldStatusLine }, null, 2) + '\n',
+      `${JSON.stringify({ statusLine: oldStatusLine }, null, 2)}\n`,
     );
 
     installHooks(projectDir);
@@ -478,7 +535,7 @@ describe('removeHooks', () => {
     removeHooks(projectDir);
 
     const settings = readSettings(projectDir) as { env?: Record<string, string> };
-    expect(settings.env?.['CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS']).toBeUndefined();
+    expect(settings.env?.CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS).toBeUndefined();
   });
 
   it('preserves non-maxsim hooks when removing maxsim hooks', () => {
@@ -496,7 +553,7 @@ describe('removeHooks', () => {
     };
     fs.writeFileSync(
       path.join(claudeDir, 'settings.json'),
-      JSON.stringify(existingSettings, null, 2) + '\n',
+      `${JSON.stringify(existingSettings, null, 2)}\n`,
     );
 
     installHooks(projectDir);
@@ -507,8 +564,8 @@ describe('removeHooks', () => {
     };
 
     // User's hook must survive
-    expect(settings.hooks['PreToolUse']).toBeDefined();
-    const preToolCommands = settings.hooks['PreToolUse']
+    expect(settings.hooks.PreToolUse).toBeDefined();
+    const preToolCommands = settings.hooks.PreToolUse
       .flatMap((m) => m.hooks)
       .map((h) => h.command);
     expect(preToolCommands).toContain('echo my-own-lint-hook');
@@ -522,7 +579,7 @@ describe('removeHooks', () => {
     const userStatusLine = { type: 'command', command: 'node "/custom/status.js"' };
     fs.writeFileSync(
       path.join(claudeDir, 'settings.json'),
-      JSON.stringify({ statusLine: userStatusLine }, null, 2) + '\n',
+      `${JSON.stringify({ statusLine: userStatusLine }, null, 2)}\n`,
     );
 
     removeHooks(projectDir);
@@ -541,18 +598,18 @@ describe('removeHooks', () => {
 
     fs.writeFileSync(
       path.join(claudeDir, 'settings.json'),
-      JSON.stringify(
+      `${JSON.stringify(
         { env: { MY_CUSTOM_VAR: 'keep-me', CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS: '1' } },
         null,
         2,
-      ) + '\n',
+      )}\n`,
     );
 
     removeHooks(projectDir);
 
     const settings = readSettings(projectDir) as { env: Record<string, string> };
-    expect(settings.env['MY_CUSTOM_VAR']).toBe('keep-me');
-    expect(settings.env['CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS']).toBeUndefined();
+    expect(settings.env.MY_CUSTOM_VAR).toBe('keep-me');
+    expect(settings.env.CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS).toBeUndefined();
   });
 
   it('removes maxsim hooks from Stop but leaves non-maxsim Stop hooks intact', () => {
@@ -568,7 +625,7 @@ describe('removeHooks', () => {
     };
     fs.writeFileSync(
       path.join(claudeDir, 'settings.json'),
-      JSON.stringify(existingSettings, null, 2) + '\n',
+      `${JSON.stringify(existingSettings, null, 2)}\n`,
     );
 
     installHooks(projectDir);
@@ -578,7 +635,7 @@ describe('removeHooks', () => {
       hooks: Record<string, Array<{ hooks: Array<{ command: string }> }>>;
     };
 
-    const stopCommands = settings.hooks['Stop']
+    const stopCommands = settings.hooks.Stop
       .flatMap((m) => m.hooks)
       .map((h) => h.command);
 
@@ -598,7 +655,7 @@ describe('removeHooks', () => {
     const beforeSettings = readSettings(projectDir) as {
       hooks: Record<string, unknown>;
     };
-    expect(beforeSettings.hooks['Stop']).toBeDefined();
+    expect(beforeSettings.hooks.Stop).toBeDefined();
 
     expect(() => removeHooks(projectDir)).not.toThrow();
 
@@ -606,7 +663,7 @@ describe('removeHooks', () => {
       hooks: Record<string, unknown>;
     };
     // Empty event arrays are deleted; Stop should be gone entirely
-    expect(afterSettings.hooks?.['Stop']).toBeUndefined();
+    expect(afterSettings.hooks?.Stop).toBeUndefined();
   });
 
   it('leaves settings.json as valid JSON after removal', () => {
@@ -633,5 +690,8 @@ describe('removeHooks', () => {
     expect(installed).toContain('maxsim-notification-sound (Notification)');
     expect(installed).toContain('maxsim-stop-sound (Stop)');
     expect(installed).toContain('maxsim-capture-learnings (Stop)');
+    expect(installed).toContain('maxsim-session-start (SessionStart)');
+    expect(installed).toContain('maxsim-teammate-idle (TeammateIdle)');
+    expect(installed).toContain('maxsim-task-completed (TaskCompleted)');
   });
 });

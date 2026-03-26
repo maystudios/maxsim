@@ -234,7 +234,7 @@ export async function addSubIssue(
     });
     const childInternalId = childResult.data.id;
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // biome-ignore lint/suspicious/noExplicitAny: Octokit types do not yet include sub-issues endpoints
     await octokit.request('POST /repos/{owner}/{repo}/issues/{issue_number}/sub_issues' as any, {
       owner,
       repo: repoName,
@@ -253,7 +253,7 @@ export async function listSubIssues(
   const octokit = getOctokit();
 
   return withGhResult(async () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // biome-ignore lint/suspicious/noExplicitAny: Octokit types do not yet include sub-issues endpoints
     const subIssues = await octokit.paginate('GET /repos/{owner}/{repo}/issues/{issue_number}/sub_issues' as any, {
       owner,
       repo: repoName,
@@ -323,7 +323,7 @@ export async function addIssueRelation(
       }
     `;
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // biome-ignore lint/suspicious/noExplicitAny: Octokit REST type lacks .graphql(); cast required
     await (octokit as any).graphql(mutation, {
       issueId: issueNodeId,
       relatedId: relatedNodeId,
@@ -355,7 +355,7 @@ export async function removeIssueRelation(
       }
     `;
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // biome-ignore lint/suspicious/noExplicitAny: Octokit REST type lacks .graphql(); cast required
     await (octokit as any).graphql(mutation, {
       issueId: issueNodeId,
       relatedId: relatedNodeId,
@@ -404,7 +404,7 @@ export async function listIssueRelations(
       };
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // biome-ignore lint/suspicious/noExplicitAny: Octokit REST type lacks .graphql(); cast required
     const data = await (octokit as any).graphql<GraphQLResponse>(query, {
       owner,
       repo: repoName,
