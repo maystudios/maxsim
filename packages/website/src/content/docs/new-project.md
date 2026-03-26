@@ -10,13 +10,42 @@ group: Workflow
 /maxsim:init
 {% /codeblock %}
 
+### Auto-detection
+
 When you run `/maxsim:init`, MaxsimCLI inspects the project to determine what to do:
 
-- **No existing project structure**: starts the new-project workflow. Runs an interactive session that asks about your project vision, constraints, non-goals, and target users. Spawns a project researcher and roadmapper. Creates GitHub repository, Project Board, Milestones, and Phase Issues.
-- **Existing codebase without MaxsimCLI structure**: starts the init-existing workflow. Analyzes the existing code, infers architecture and conventions, then creates GitHub-native artifacts that reflect the project's current state.
-- **Project already initialized**: starts the new-milestone workflow. Lets you add a new milestone and its phases to an existing Project Board without recreating the project from scratch.
+{% doctable headers=["Detected State", "Workflow", "What Happens"] rows=[["No existing project structure", "new-project", "Interactive session: gathers project vision, constraints, non-goals, and target users. Spawns project researcher and roadmapper. Creates GitHub repository, Project Board, Milestones, and Phase Issues."], ["Existing codebase without MaxsimCLI", "init-existing", "Parallel codebase mapping: analyzes data models, APIs, frontend, infrastructure, and testing. Creates GitHub artifacts that reflect the project's current state."], ["Project already initialized", "new-milestone", "Milestone management: add a new milestone with phases to an existing Project Board."]] %}
+{% /doctable %}
+
+### New project workflow
+
+For projects starting from scratch, the init workflow runs five stages:
+
+{% codeblock language="text" %}
+1. Prerequisites gate — verify GitHub CLI auth and git remote
+2. Interview — gather project vision, tech stack preferences, constraints
+3. Research — project researcher uses web search to evaluate the ecosystem
+4. GitHub setup — create repo, labels, Project Board, config.json
+5. Roadmap — roadmapper creates Milestones and Phase Issues
+{% /codeblock %}
 
 The project researcher agent uses web search (if available) to analyze the technology ecosystem, including frameworks, libraries, and known pitfalls, before the roadmapper creates the phase breakdown. This prevents phases that are sized wrong or ordered incorrectly.
+
+### Existing project onboarding
+
+For projects that already have code, the init-existing workflow runs parallel codebase-mapper agents that analyze different areas of the codebase (data models, API routes, frontend components, infrastructure, testing). The analysis is synthesized and stored in the GitHub Wiki and agent memory. Subsequent planning agents use this analysis as context.
+
+### After initialization
+
+Once init completes, your project has:
+
+- A GitHub Project Board with Kanban columns (Backlog, To Do, In Progress, In Review, Done)
+- GitHub Milestones grouping related phase Issues
+- Phase Issues with descriptions, deliverables, and success criteria
+- Labels for issue classification (type:phase, type:task, type:bug, type:quick)
+- A `.claude/maxsim/config.json` with project settings
+
+You are ready to plan your first phase with `/maxsim:plan 1`.
 
 {% callout type="tip" %}
 Be specific when the researcher asks questions. Vague answers produce vague phases. If you already have a stack decision, say so. If you have deadline constraints, mention them. The more context you provide during init, the better every subsequent plan will be.

@@ -29,8 +29,8 @@ import worktreeModeMd from "../content/docs/worktree-mode.md?raw";
 import reviewGatesMd from "../content/docs/review-gates.md?raw";
 import commandsCoreMd from "../content/docs/commands-core.md?raw";
 import commandsPhasesMd from "../content/docs/commands-phases.md?raw";
-import commandsMilestoneMd from "../content/docs/commands-milestone.md?raw";
-import commandsTodosMd from "../content/docs/commands-todos.md?raw";
+import commandsProgressMd from "../content/docs/commands-progress.md?raw";
+import commandsQuickMd from "../content/docs/commands-quick.md?raw";
 import commandsUtilsMd from "../content/docs/commands-utils.md?raw";
 import configReferenceMd from "../content/docs/config-reference.md?raw";
 import modelProfilesMd from "../content/docs/model-profiles.md?raw";
@@ -44,6 +44,8 @@ import gapClosureMd from "../content/docs/gap-closure.md?raw";
 import codebaseMappingMd from "../content/docs/codebase-mapping.md?raw";
 import hookSystemMd from "../content/docs/hook-system.md?raw";
 import modelOverridesMd from "../content/docs/model-overrides.md?raw";
+import workflowsReferenceMd from "../content/docs/workflows-reference.md?raw";
+import skillsReferenceMd from "../content/docs/skills-reference.md?raw";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -78,8 +80,8 @@ const PARSED_DOCS: ParsedDoc[] = [
   reviewGatesMd,
   commandsCoreMd,
   commandsPhasesMd,
-  commandsMilestoneMd,
-  commandsTodosMd,
+  commandsProgressMd,
+  commandsQuickMd,
   commandsUtilsMd,
   configReferenceMd,
   modelProfilesMd,
@@ -93,6 +95,8 @@ const PARSED_DOCS: ParsedDoc[] = [
   codebaseMappingMd,
   hookSystemMd,
   modelOverridesMd,
+  workflowsReferenceMd,
+  skillsReferenceMd,
 ].map(parseDoc);
 
 // ── Build sidebar from frontmatter ─────────────────────────────────────────
