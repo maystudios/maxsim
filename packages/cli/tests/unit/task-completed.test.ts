@@ -532,3 +532,158 @@ describe('Gate 4: spec compliance', () => {
     expect(stderrOutput).toContain('spec_compliance');
   });
 });
+
+// ---------------------------------------------------------------------------
+// Gate 4: multi-field scanning
+// ---------------------------------------------------------------------------
+
+describe('Gate 4: multi-field evidence scanning', () => {
+  it('detects evidence markers in task_subject field', async () => {
+    await loadHookWithMocks({
+      packageJson: { scripts: {} },
+    });
+
+    hookCallback!({
+      task_id: 'test',
+      task_subject: 'CLAIM: x\nEVIDENCE: y\nOUTPUT: z\nVERDICT: w',
+      cwd: tmpDir,
+    });
+
+    expect(exitSpy).toHaveBeenCalledWith(0);
+  });
+
+  it('detects evidence spread across task_description and task_context', async () => {
+    await loadHookWithMocks({
+      packageJson: { scripts: {} },
+    });
+
+    hookCallback!({
+      task_id: 'test',
+      task_description: 'CLAIM: Tests pass\nEVIDENCE: ran npm test',
+      task_context: 'OUTPUT: 42 tests passed\nVERDICT: PASS',
+      cwd: tmpDir,
+    });
+
+    expect(exitSpy).toHaveBeenCalledWith(0);
+  });
+
+  it('scans unknown string fields in the payload', async () => {
+    await loadHookWithMocks({
+      packageJson: { scripts: {} },
+    });
+
+    hookCallback!({
+      task_id: 'test',
+      completion_notes: 'CLAIM: x\nEVIDENCE: y\nOUTPUT: z\nVERDICT: w',
+      cwd: tmpDir,
+    });
+
+    expect(exitSpy).toHaveBeenCalledWith(0);
+  });
+
+  it('detects forbidden phrase in any text field', async () => {
+    await loadHookWithMocks({
+      packageJson: { scripts: {} },
+    });
+
+    hookCallback!({
+      task_id: 'test',
+      task_description: 'CLAIM: x\nEVIDENCE: y\nOUTPUT: z\nVERDICT: w',
+      task_context: 'We can verify later',
+      cwd: tmpDir,
+    });
+
+    expect(exitSpy).toHaveBeenCalledWith(2);
+    const stderrOutput = stderrSpy.mock.calls.map((c) => String(c[0])).join('');
+    expect(stderrOutput).toContain('spec_compliance');
+  });
+
+  it('excludes task_id and cwd from text scanning', async () => {
+    await loadHookWithMocks({
+      packageJson: { scripts: {} },
+    });
+
+    // task_id and cwd are strings but should NOT be scanned for evidence/phrases
+    // With no other text fields, Gate 4 should be skipped (no false positive)
+    hookCallback!({
+      task_id: 'This should work',
+      cwd: tmpDir,
+    });
+
+    expect(exitSpy).toHaveBeenCalledWith(0);
+  });
+
+  it('does not scan non-string values in payload', async () => {
+    await loadHookWithMocks({
+      packageJson: { scripts: {} },
+    });
+
+    hookCallback!({
+      task_id: 'test',
+      numeric_field: 42,
+      boolean_field: true,
+      object_field: { nested: 'This should work' },
+      cwd: tmpDir,
+    });
+
+    // Non-string fields should be ignored; no text sources means Gate 4 is skipped
+    expect(exitSpy).toHaveBeenCalledWith(0);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Gate 4: actionable feedback
+// ---------------------------------------------------------------------------
+
+describe('Gate 4: actionable feedback in stderr', () => {
+  it('includes actionable hint with required markers when blocking', async () => {
+    await loadHookWithMocks({
+      packageJson: { scripts: {} },
+    });
+
+    hookCallback!({
+      task_id: 'test',
+      task_description: 'Done with the task.',
+      cwd: tmpDir,
+    });
+
+    expect(exitSpy).toHaveBeenCalledWith(2);
+    const stderrOutput = stderrSpy.mock.calls.map((c) => String(c[0])).join('');
+    expect(stderrOutput).toContain('Task completion blocked');
+    expect(stderrOutput).toContain('Required markers: CLAIM, EVIDENCE, OUTPUT, VERDICT');
+    expect(stderrOutput).toContain('Include these in your task completion notes');
+  });
+
+  it('lists the fields that were checked in the feedback', async () => {
+    await loadHookWithMocks({
+      packageJson: { scripts: {} },
+    });
+
+    hookCallback!({
+      task_id: 'test',
+      task_description: 'Some text',
+      task_context: 'More text',
+      cwd: tmpDir,
+    });
+
+    expect(exitSpy).toHaveBeenCalledWith(2);
+    const stderrOutput = stderrSpy.mock.calls.map((c) => String(c[0])).join('');
+    expect(stderrOutput).toContain('Fields checked: task_description, task_context');
+  });
+
+  it('includes forbidden phrase details when detected', async () => {
+    await loadHookWithMocks({
+      packageJson: { scripts: {} },
+    });
+
+    hookCallback!({
+      task_id: 'test',
+      task_description: 'CLAIM: x\nEVIDENCE: y\nOUTPUT: z\nVERDICT: w\nThis should work',
+      cwd: tmpDir,
+    });
+
+    expect(exitSpy).toHaveBeenCalledWith(2);
+    const stderrOutput = stderrSpy.mock.calls.map((c) => String(c[0])).join('');
+    expect(stderrOutput).toContain('Forbidden phrase detected: "should work"');
+  });
+});

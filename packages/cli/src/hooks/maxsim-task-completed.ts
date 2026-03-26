@@ -24,7 +24,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { readStdinJson } from './shared.js';
-import { validateEvidenceBlocks, detectForbiddenPhrases } from './validation.js';
+import { REQUIRED_EVIDENCE_MARKERS, validateCompletionClaim } from './validation.js';
 
 interface TaskCompletedInput {
   task_id?: string;
@@ -112,18 +112,34 @@ readStdinJson<TaskCompletedInput>((input) => {
     }
 
     // Gate 4: spec compliance (evidence blocks + forbidden phrases)
-    const complianceText = input.task_description ?? input.task_context ?? '';
-    if (complianceText.trim()) {
-      const evidenceResult = validateEvidenceBlocks(complianceText);
-      const phraseResult = detectForbiddenPhrases(complianceText);
-      const complianceIssues = [...evidenceResult.issues, ...phraseResult.issues];
-      if (complianceIssues.length > 0) {
-        failures.push({
-          name: 'spec_compliance',
-          passed: false,
-          output: complianceIssues.join('\n'),
-        });
+    // Collect ALL available text fields from the payload — not just task_description.
+    // An agent could route its output through any field, so we check them all.
+    const textSources: Record<string, string | undefined | null> = {
+      task_description: input.task_description as string | undefined,
+      task_context: input.task_context as string | undefined,
+      task_subject: input.task_subject as string | undefined,
+    };
+    // Also scan any unknown string fields in the payload (future-proofing).
+    for (const [key, value] of Object.entries(input)) {
+      if (typeof value === 'string' && !(key in textSources) && key !== 'task_id' && key !== 'cwd') {
+        textSources[key] = value;
       }
+    }
+    const complianceResult = validateCompletionClaim(textSources);
+
+    // If at least one source had content but evidence is missing, block completion.
+    if (!complianceResult.passed && complianceResult.sourcesChecked.length > 0) {
+      const markerList = REQUIRED_EVIDENCE_MARKERS.map((m) => m.replace(':', '')).join(', ');
+      const actionableHint =
+        `Task completion blocked: No valid evidence block found.\n` +
+        `Required markers: ${markerList}.\n` +
+        `Include these in your task completion notes.\n` +
+        `Fields checked: ${complianceResult.sourcesChecked.join(', ')}`;
+      failures.push({
+        name: 'spec_compliance',
+        passed: false,
+        output: [actionableHint, ...complianceResult.issues].join('\n'),
+      });
     }
 
     if (failures.length > 0) {
