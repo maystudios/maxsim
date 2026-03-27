@@ -1,3 +1,10 @@
+# [5.20.0](https://github.com/maystudios/maxsimcli/compare/v5.19.1...v5.20.0) (2026-03-27)
+
+
+### Features
+
+* configurable sound style with bundled chime WAV files ([fd3799b](https://github.com/maystudios/maxsimcli/commit/fd3799b5f40c94298c3e5891ffac04a12401ffce))
+
 ## [5.19.1](https://github.com/maystudios/maxsimcli/compare/v5.19.0...v5.19.1) (2026-03-27)
 
 
