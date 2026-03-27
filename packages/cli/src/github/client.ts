@@ -23,7 +23,7 @@ export function getOctokit(): Octokit {
   _octokit = new OctokitWithPlugins({
     auth: token,
     throttle: {
-      onRateLimit: (_retryAfter: number, _options: Record<string, unknown>, _oct: Octokit, retryCount: number) => {
+      onRateLimit: (_retryAfter: number, _options: Record<string, unknown>, _oct: unknown, retryCount: number) => {
         return retryCount < 2;
       },
       onSecondaryRateLimit: () => {

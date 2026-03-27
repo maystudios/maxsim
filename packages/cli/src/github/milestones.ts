@@ -130,7 +130,7 @@ export async function updateMilestone(
       title: params.title,
       description: params.description,
       state: params.state,
-      due_on: params.dueOn,
+      due_on: params.dueOn as string | undefined,
     });
 
     return {

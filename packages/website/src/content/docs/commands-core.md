@@ -4,7 +4,7 @@ title: Core Commands
 group: Commands Reference
 ---
 
-MaxsimCLI provides 13 commands, each mapped to a slash command inside Claude Code. Every command dispatches one or more subagents with fresh context windows, reads state from GitHub, and writes results back to GitHub.
+MaxsimCLI provides 14 commands (13 primary + 1 alias), each mapped to a slash command inside Claude Code. Every command dispatches one or more subagents with fresh context windows, reads state from GitHub, and writes results back to GitHub.
 
 ### Command overview
 

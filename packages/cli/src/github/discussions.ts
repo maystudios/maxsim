@@ -261,9 +261,9 @@ export function listDiscussions(
 
   while (hasNextPage) {
     const afterClause = endCursor ? `, after: $after` : '';
-    const afterVar = endCursor ? ', $after: String!' : '';
+    const afterVar: string = endCursor ? ', $after: String!' : '';
 
-    const query = `
+    const query: string = `
     query($owner: String!, $repo: String!, $first: Int!${hasCategory ? ', $categoryId: ID!' : ''}${afterVar}) {
       repository(owner: $owner, name: $repo) {
         discussions(first: $first${hasCategory ? ', categoryId: $categoryId' : ''}${afterClause}) {
@@ -286,7 +286,7 @@ export function listDiscussions(
     }
   `.trim();
 
-    const args = [
+    const args: string[] = [
       'api', 'graphql',
       '-f', `query=${query}`,
       '-f', `owner=${owner}`,
@@ -302,7 +302,7 @@ export function listDiscussions(
       args.push('-f', `after=${endCursor}`);
     }
 
-    const result = ghJson<{
+    interface DiscussionsResponse {
       data: {
         repository: {
           discussions: {
@@ -311,15 +311,17 @@ export function listDiscussions(
           };
         };
       };
-    }>(args);
+    }
+
+    const result: GhResult<DiscussionsResponse> = ghJson<DiscussionsResponse>(args);
 
     if (!result.ok) return result;
 
     const discussions = result.data?.data?.repository?.discussions;
-    const nodes = discussions?.nodes ?? [];
+    const nodes: RawDiscussion[] = discussions?.nodes ?? [];
     allNodes.push(...nodes);
 
-    const pageInfo = discussions?.pageInfo;
+    const pageInfo: { hasNextPage: boolean; endCursor: string | null } | undefined = discussions?.pageInfo;
     hasNextPage = pageInfo?.hasNextPage ?? false;
     endCursor = pageInfo?.endCursor ?? null;
   }
