@@ -1,3 +1,10 @@
+## [5.19.1](https://github.com/maystudios/maxsimcli/compare/v5.19.0...v5.19.1) (2026-03-27)
+
+
+### Bug Fixes
+
+* type annotations, lint fixes, and docs command count update ([0f79b6b](https://github.com/maystudios/maxsimcli/commit/0f79b6b6527d386a070ffb3eee927346581f1280))
+
 # [5.19.0](https://github.com/maystudios/maxsimcli/compare/v5.18.1...v5.19.0) (2026-03-27)
 
 
