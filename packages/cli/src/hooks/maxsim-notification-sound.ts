@@ -27,11 +27,11 @@ function playSystemNotification(): void {
 }
 
 /** Play the best available notification sound for the current platform. */
-function playNotification(preference: 'bundled' | 'system'): void {
+function playNotification(preference: 'bundled' | 'system', volume: number): void {
   if (preference === 'bundled') {
     const wav = bundledSound('notification.wav');
     if (wav) {
-      playSound(wav);
+      playSound(wav, volume);
       return;
     }
     // Fall back to system sound if bundled WAV not found
@@ -41,7 +41,7 @@ function playNotification(preference: 'bundled' | 'system'): void {
 }
 
 readStdinJson<NotificationInput>((input) => {
-  const pref = getSoundPreference(input.cwd ?? process.cwd());
-  playNotification(pref);
+  const { style, volume } = getSoundPreference(input.cwd ?? process.cwd());
+  playNotification(style, volume);
   process.exit(0);
 });

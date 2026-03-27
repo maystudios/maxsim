@@ -28,11 +28,11 @@ function playSystemCompletion(): void {
 }
 
 /** Play the best available completion sound for the current platform. */
-function playCompletion(preference: 'bundled' | 'system'): void {
+function playCompletion(preference: 'bundled' | 'system', volume: number): void {
   if (preference === 'bundled') {
     const wav = bundledSound('complete.wav');
     if (wav) {
-      playSound(wav);
+      playSound(wav, volume);
       return;
     }
     // Fall back to system sound if bundled WAV not found
@@ -45,7 +45,7 @@ readStdinJson<StopInput>((input) => {
   if (input.stop_hook_active === true) {
     process.exit(0);
   }
-  const pref = getSoundPreference(input.cwd ?? process.cwd());
-  playCompletion(pref);
+  const { style, volume } = getSoundPreference(input.cwd ?? process.cwd());
+  playCompletion(style, volume);
   process.exit(0);
 });

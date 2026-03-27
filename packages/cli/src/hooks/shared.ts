@@ -32,19 +32,29 @@ export function isMaxsimProject(projectDir: string): boolean {
   }
 }
 
+/** Parsed sound config from .claude/maxsim/config.json. */
+export interface SoundConfig {
+  style: 'bundled' | 'system';
+  /** Volume 0–100. Only applies to bundled WAV sounds. */
+  volume: number;
+}
+
 /**
- * Read the sound preference from .claude/maxsim/config.json.
- * Returns 'bundled' (use WAV files) or 'system' (use OS system sounds).
- * Defaults to 'system' if config is missing or unreadable.
+ * Read sound preferences from .claude/maxsim/config.json.
+ * Returns style ('bundled' | 'system') and volume (0–100).
+ * Defaults to style='system', volume=50.
  */
-export function getSoundPreference(projectDir: string): 'bundled' | 'system' {
+export function getSoundPreference(projectDir: string): SoundConfig {
   try {
     const configPath = path.join(projectDir, CLAUDE_DIR, 'maxsim', 'config.json');
     const raw = fs.readFileSync(configPath, 'utf8');
     const config = JSON.parse(raw);
-    return config?.hooks?.sound_style === 'bundled' ? 'bundled' : 'system';
+    const style = config?.hooks?.sound_style === 'bundled' ? 'bundled' as const : 'system' as const;
+    const rawVol = Number(config?.hooks?.sound_volume);
+    const volume = Number.isFinite(rawVol) ? Math.max(0, Math.min(100, rawVol)) : 50;
+    return { style, volume };
   } catch {
-    return 'system';
+    return { style: 'system', volume: 50 };
   }
 }
 
@@ -111,15 +121,18 @@ export function bundledSound(name: string): string | null {
  * @param soundFile Absolute path to a WAV/MP3/etc. file, or a named system
  *                  sound token recognised by the platform helper (e.g. the
  *                  Windows-only SystemAsterisk token).
+ * @param volume    Volume 0–100. Only effective for file-based sounds (WAV/AIFF/OGA),
+ *                  not for named system sound tokens. Default: 50.
  */
-export function playSound(soundFile: string): void {
+export function playSound(soundFile: string, volume = 50): void {
   try {
+    const vol = Math.max(0, Math.min(100, volume));
+
     if (isWindows()) {
-      // PowerShell's SoundPlayer works with WAV files synchronously.
-      // For named system sounds (no extension) fall back to rundll32.
       const isWav = soundFile.toLowerCase().endsWith('.wav');
       if (isWav) {
-        // Use double-quoted string which handles spaces and most special chars
+        // Use WPF MediaPlayer for volume control on WAV files.
+        const volFraction = (vol / 100).toFixed(2);
         const escaped = soundFile.replace(/"/g, '\\"');
         spawnSync(
           'powershell',
@@ -127,13 +140,20 @@ export function playSound(soundFile: string): void {
             '-NoProfile',
             '-NonInteractive',
             '-Command',
-            `$p="${escaped}"; (New-Object System.Media.SoundPlayer $p).PlaySync()`,
+            [
+              'Add-Type -AssemblyName PresentationCore;',
+              `$m = New-Object System.Windows.Media.MediaPlayer;`,
+              `$m.Open([uri]"${escaped}");`,
+              `$m.Volume = ${volFraction};`,
+              '$m.Play();',
+              'Start-Sleep -Milliseconds 1500;',
+              '$m.Close()',
+            ].join(' '),
           ],
-          { stdio: 'ignore' },
+          { stdio: 'ignore', timeout: 5000 },
         );
       } else {
-        // Named system sound token (e.g. "SystemAsterisk") or unsupported format —
-        // use the rundll32 winsound bridge.
+        // Named system sound token — no volume control available.
         spawnSync(
           'rundll32',
           ['user32.dll,MessageBeep'],
@@ -141,10 +161,13 @@ export function playSound(soundFile: string): void {
         );
       }
     } else if (isMac()) {
-      spawnSync('afplay', [soundFile], { stdio: 'ignore' });
+      // afplay -v accepts a float: 0.0 = silent, 1.0 = full volume
+      const afVol = (vol / 100).toFixed(2);
+      spawnSync('afplay', ['-v', afVol, soundFile], { stdio: 'ignore' });
     } else {
-      // Linux: try paplay (PulseAudio) then aplay (ALSA)
-      const paplay = spawnSync('paplay', [soundFile], { stdio: 'ignore' });
+      // Linux: paplay --volume accepts 0–65536 (0=silent, 65536=100%)
+      const paVol = String(Math.round(vol * 655.36));
+      const paplay = spawnSync('paplay', [`--volume=${paVol}`, soundFile], { stdio: 'ignore' });
       if (paplay.status !== 0) {
         spawnSync('aplay', [soundFile], { stdio: 'ignore' });
       }

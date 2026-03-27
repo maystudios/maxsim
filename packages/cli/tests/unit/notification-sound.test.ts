@@ -50,7 +50,7 @@ async function loadHook(opts: {
   isWindowsMock = vi.fn(() => opts.isWindows ?? false);
   isMacMock = vi.fn(() => opts.isMac ?? false);
   bundledSoundMock = vi.fn(() => opts.bundledSound ?? null);
-  getSoundPreferenceMock = vi.fn(() => opts.soundPreference ?? 'system');
+  getSoundPreferenceMock = vi.fn(() => ({ style: opts.soundPreference ?? 'system', volume: 50 }));
 
   vi.doMock('../../src/hooks/shared.js', () => ({
     readStdinJson: vi.fn((cb: (data: Record<string, unknown>) => void) => {
@@ -84,7 +84,7 @@ describe('sound playback on Notification event', () => {
 
     hookCallback!({ message: 'Question' });
 
-    expect(playSoundMock).toHaveBeenCalledWith('/path/to/notification.wav');
+    expect(playSoundMock).toHaveBeenCalledWith('/path/to/notification.wav', 50);
   });
 
   it('checks for bundled notification.wav when preference is bundled', async () => {
@@ -132,7 +132,7 @@ describe('platform-specific sound selection', () => {
 
     hookCallback!({});
 
-    expect(playSoundMock).toHaveBeenCalledWith('/bundled/notification.wav');
+    expect(playSoundMock).toHaveBeenCalledWith('/bundled/notification.wav', 50);
     // Should not have been called with the Windows system sound
     expect(playSoundMock).not.toHaveBeenCalledWith('SystemAsterisk');
   });

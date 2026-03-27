@@ -71,7 +71,7 @@ async function loadHook(opts: {
   isWindowsMock = vi.fn(() => opts.isWindows ?? false);
   isMacMock = vi.fn(() => opts.isMac ?? false);
   bundledSoundMock = vi.fn(() => opts.bundledSound ?? null);
-  getSoundPreferenceMock = vi.fn(() => opts.soundPreference ?? 'system');
+  getSoundPreferenceMock = vi.fn(() => ({ style: opts.soundPreference ?? 'system', volume: 50 }));
 
   vi.doMock('../../src/hooks/shared.js', () => ({
     readStdinJson: vi.fn((cb: (data: Record<string, unknown>) => void) => {
@@ -144,7 +144,7 @@ describe('sound playback when stop_hook_active is false', () => {
 
     invokeHook({ stop_hook_active: false });
 
-    expect(playSoundMock).toHaveBeenCalledWith('/path/to/complete.wav');
+    expect(playSoundMock).toHaveBeenCalledWith('/path/to/complete.wav', 50);
   });
 
   it('checks for bundled complete.wav when preference is bundled', async () => {
@@ -186,7 +186,7 @@ describe('sound playback when stop_hook_active is false', () => {
 
     invokeHook({});
 
-    expect(playSoundMock).toHaveBeenCalledWith('/bundled/complete.wav');
+    expect(playSoundMock).toHaveBeenCalledWith('/bundled/complete.wav', 50);
     expect(playSoundMock).not.toHaveBeenCalledWith('SystemNotification');
   });
 });
