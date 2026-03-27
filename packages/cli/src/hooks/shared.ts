@@ -32,6 +32,22 @@ export function isMaxsimProject(projectDir: string): boolean {
   }
 }
 
+/**
+ * Read the sound preference from .claude/maxsim/config.json.
+ * Returns 'bundled' (use WAV files) or 'system' (use OS system sounds).
+ * Defaults to 'system' if config is missing or unreadable.
+ */
+export function getSoundPreference(projectDir: string): 'bundled' | 'system' {
+  try {
+    const configPath = path.join(projectDir, CLAUDE_DIR, 'maxsim', 'config.json');
+    const raw = fs.readFileSync(configPath, 'utf8');
+    const config = JSON.parse(raw);
+    return config?.hooks?.sound_style === 'bundled' ? 'bundled' : 'system';
+  } catch {
+    return 'system';
+  }
+}
+
 /** Reads the last N git commits as oneline strings. Returns empty array on failure. */
 export function recentCommits(projectDir: string, n = 5): string[] {
   try {

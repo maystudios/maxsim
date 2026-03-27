@@ -6,41 +6,46 @@
  * Falls through silently if playback fails.
  */
 
-import { readStdinJson, playSound, isWindows, isMac, bundledSound } from './shared.js';
+import { readStdinJson, playSound, isWindows, isMac, bundledSound, getSoundPreference } from './shared.js';
 
 interface StopInput {
   session_id?: string;
   stop_reason?: string;
   stop_hook_active?: boolean;
+  cwd?: string;
   [key: string]: unknown;
 }
 
-/** Play the best available completion sound for the current platform. */
-function playCompletion(): void {
-  // 1. Prefer a bundled WAV if present
-  const wav = bundledSound('complete.wav');
-  if (wav) {
-    playSound(wav);
-    return;
-  }
-
-  // 2. Fall back to a built-in system sound
+/** Play a system completion sound (no bundled WAV). */
+function playSystemCompletion(): void {
   if (isWindows()) {
-    // SystemNotification maps to the Windows notification toast sound
     playSound('SystemNotification');
   } else if (isMac()) {
-    // Glass — a clean, pleasant completion chime
     playSound('/System/Library/Sounds/Glass.aiff');
   } else {
-    // Linux: use the freedesktop complete sound
     playSound('/usr/share/sounds/freedesktop/stereo/complete.oga');
   }
+}
+
+/** Play the best available completion sound for the current platform. */
+function playCompletion(preference: 'bundled' | 'system'): void {
+  if (preference === 'bundled') {
+    const wav = bundledSound('complete.wav');
+    if (wav) {
+      playSound(wav);
+      return;
+    }
+    // Fall back to system sound if bundled WAV not found
+  }
+
+  playSystemCompletion();
 }
 
 readStdinJson<StopInput>((input) => {
   if (input.stop_hook_active === true) {
     process.exit(0);
   }
-  playCompletion();
+  const pref = getSoundPreference(input.cwd ?? process.cwd());
+  playCompletion(pref);
   process.exit(0);
 });

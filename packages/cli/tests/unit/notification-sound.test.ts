@@ -21,6 +21,7 @@ let playSoundMock: ReturnType<typeof vi.fn>;
 let isWindowsMock: ReturnType<typeof vi.fn>;
 let isMacMock: ReturnType<typeof vi.fn>;
 let bundledSoundMock: ReturnType<typeof vi.fn>;
+let getSoundPreferenceMock: ReturnType<typeof vi.fn>;
 
 beforeEach(() => {
   hookCallback = null;
@@ -43,11 +44,13 @@ async function loadHook(opts: {
   isWindows?: boolean;
   isMac?: boolean;
   bundledSound?: string | null;
+  soundPreference?: 'bundled' | 'system';
 }) {
   playSoundMock = vi.fn();
   isWindowsMock = vi.fn(() => opts.isWindows ?? false);
   isMacMock = vi.fn(() => opts.isMac ?? false);
   bundledSoundMock = vi.fn(() => opts.bundledSound ?? null);
+  getSoundPreferenceMock = vi.fn(() => opts.soundPreference ?? 'system');
 
   vi.doMock('../../src/hooks/shared.js', () => ({
     readStdinJson: vi.fn((cb: (data: Record<string, unknown>) => void) => {
@@ -57,6 +60,7 @@ async function loadHook(opts: {
     isWindows: isWindowsMock,
     isMac: isMacMock,
     bundledSound: bundledSoundMock,
+    getSoundPreference: getSoundPreferenceMock,
   }));
 
   await import('../../src/hooks/maxsim-notification-sound.js');
@@ -76,15 +80,15 @@ describe('sound playback on Notification event', () => {
   });
 
   it('plays the bundled WAV when available', async () => {
-    await loadHook({ bundledSound: '/path/to/notification.wav' });
+    await loadHook({ bundledSound: '/path/to/notification.wav', soundPreference: 'bundled' });
 
     hookCallback!({ message: 'Question' });
 
     expect(playSoundMock).toHaveBeenCalledWith('/path/to/notification.wav');
   });
 
-  it('checks for bundled notification.wav first', async () => {
-    await loadHook({ bundledSound: null, isMac: true });
+  it('checks for bundled notification.wav when preference is bundled', async () => {
+    await loadHook({ bundledSound: null, isMac: true, soundPreference: 'bundled' });
 
     hookCallback!({});
 
@@ -123,8 +127,8 @@ describe('platform-specific sound selection', () => {
     );
   });
 
-  it('prefers bundled WAV over platform sound', async () => {
-    await loadHook({ isWindows: true, bundledSound: '/bundled/notification.wav' });
+  it('prefers bundled WAV over platform sound when preference is bundled', async () => {
+    await loadHook({ isWindows: true, bundledSound: '/bundled/notification.wav', soundPreference: 'bundled' });
 
     hookCallback!({});
 

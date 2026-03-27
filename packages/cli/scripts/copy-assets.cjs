@@ -56,6 +56,22 @@ if (fs.existsSync(hooksDest)) {
   }
 }
 
+// Copy bundled sounds
+const soundsSrc = path.join(pkgCliRoot, 'sounds');
+const soundsDest = path.join(distAssetsDir, 'hooks', 'sounds');
+if (fs.existsSync(soundsSrc)) {
+  fs.mkdirSync(soundsDest, { recursive: true });
+  const soundFiles = fs.readdirSync(soundsSrc);
+  let soundCount = 0;
+  for (const file of soundFiles) {
+    if (file.endsWith('.wav')) {
+      fs.copyFileSync(path.join(soundsSrc, file), path.join(soundsDest, file));
+      soundCount++;
+    }
+  }
+  console.log(`  [assets] Copied ${soundCount} sound files -> dist/assets/hooks/sounds/`);
+}
+
 // 3. Copy CHANGELOG.md from monorepo root (optional)
 const changelogSrc = path.join(monorepoRoot, 'CHANGELOG.md');
 if (fs.existsSync(changelogSrc)) {

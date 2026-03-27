@@ -31,6 +31,7 @@ Parse current values (use defaults if field is absent):
 - `git.branching_strategy` — "none" | "phase" | "milestone" (default: "none")
 - `worktrees.path_template` — Template for worktree paths (default: `.claude/worktrees/agent-{id}/`)
 - `worktrees.branch_template` — Template for worktree branches (default: `maxsim/phase-{N}-task-{id}`)
+- `hooks.sound_style` — "system" | "bundled" (default: "system")
 
 Call `EnterPlanMode` before presenting current settings to the user. After the user confirms all changes, call `ExitPlanMode` before writing to config.json.
 
@@ -52,6 +53,7 @@ Display current settings before prompting for changes:
 | Git Branching     | [none/phase/milestone] |
 | Worktree Path     | [.claude/worktrees/agent-{id}/] |
 | Worktree Branch   | [maxsim/phase-{N}-task-{id}] |
+| Sound Style       | [system/bundled] |
 ```
 
 ---
@@ -163,6 +165,15 @@ AskUserQuestion([
       { label: "No overrides (use profile defaults)", description: "All agents use models from the selected profile." },
       { label: "Custom overrides", description: "Set individual models per agent type (planner/executor/researcher/verifier)." }
     ]
+  },
+  {
+    question: "Choose between OS-native system sounds (default) or MaxsimCLI's built-in chime sounds for notification and completion events.",
+    header: "Sound Style",
+    multiSelect: false,
+    options: [
+      { label: "System (Recommended)", description: "OS-native system sounds. Maps to config key: hooks.sound_style" },
+      { label: "Bundled", description: "MaxsimCLI custom chime sounds. Maps to config key: hooks.sound_style" }
+    ]
   }
 ])
 ```
@@ -198,6 +209,7 @@ node .claude/maxsim/bin/maxsim-tools.cjs config-set automation.conventional_comm
 node .claude/maxsim/bin/maxsim-tools.cjs config-set workflow.auto_advance [true/false]
 node .claude/maxsim/bin/maxsim-tools.cjs config-set automation.co_author "[value]"
 node .claude/maxsim/bin/maxsim-tools.cjs config-set hooks.enabled [true/false]
+node .claude/maxsim/bin/maxsim-tools.cjs config-set hooks.sound_style "[system/bundled]"
 # Per-agent model overrides (only if custom overrides selected)
 node .claude/maxsim/bin/maxsim-tools.cjs config-set execution.model_overrides.planner "[haiku/sonnet/opus]"
 node .claude/maxsim/bin/maxsim-tools.cjs config-set execution.model_overrides.executor "[haiku/sonnet/opus]"
@@ -249,7 +261,7 @@ Re-run /maxsim:settings anytime to change these.
 
 <success_criteria>
 - [ ] Current config loaded and displayed
-- [ ] User presented with all 11 settings
+- [ ] User presented with all 12 settings
 - [ ] Config updated via maxsim-tools config-set commands
 - [ ] User offered to save as global defaults
 - [ ] Confirmation displayed after save

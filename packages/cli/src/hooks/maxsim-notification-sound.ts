@@ -6,37 +6,42 @@
  * required.  Falls through silently if playback fails for any reason.
  */
 
-import { readStdinJson, playSound, isWindows, isMac, bundledSound } from './shared.js';
+import { readStdinJson, playSound, isWindows, isMac, bundledSound, getSoundPreference } from './shared.js';
 
 interface NotificationInput {
   session_id?: string;
   message?: string;
+  cwd?: string;
   [key: string]: unknown;
 }
 
-/** Play the best available notification sound for the current platform. */
-function playNotification(): void {
-  // 1. Prefer a bundled WAV if present
-  const wav = bundledSound('notification.wav');
-  if (wav) {
-    playSound(wav);
-    return;
-  }
-
-  // 2. Fall back to a built-in system sound
+/** Play a system notification sound (no bundled WAV). */
+function playSystemNotification(): void {
   if (isWindows()) {
-    // SystemAsterisk maps to the Windows "Asterisk" event sound
     playSound('SystemAsterisk');
   } else if (isMac()) {
-    // /System/Library/Sounds/Funk.aiff — short, non-intrusive
     playSound('/System/Library/Sounds/Funk.aiff');
   } else {
-    // Linux: /usr/share/sounds/freedesktop/stereo/message-new-instant.oga
     playSound('/usr/share/sounds/freedesktop/stereo/message-new-instant.oga');
   }
 }
 
-readStdinJson<NotificationInput>((_input) => {
-  playNotification();
+/** Play the best available notification sound for the current platform. */
+function playNotification(preference: 'bundled' | 'system'): void {
+  if (preference === 'bundled') {
+    const wav = bundledSound('notification.wav');
+    if (wav) {
+      playSound(wav);
+      return;
+    }
+    // Fall back to system sound if bundled WAV not found
+  }
+
+  playSystemNotification();
+}
+
+readStdinJson<NotificationInput>((input) => {
+  const pref = getSoundPreference(input.cwd ?? process.cwd());
+  playNotification(pref);
   process.exit(0);
 });

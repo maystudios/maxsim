@@ -94,7 +94,9 @@
     "auto_push": true
   },
   "hooks": {
-    "enabled": true
+    "enabled": true,
+    "__doc_sound_style": "Sound style for notification and completion hooks. 'system' uses OS-native system sounds (default). 'bundled' uses MaxsimCLI's custom chime sounds (pleasant ascending tones).",
+    "sound_style": "system"
   },
   "workflow": {
     "research": true,
