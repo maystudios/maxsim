@@ -1,3 +1,20 @@
+# [5.19.0](https://github.com/maystudios/maxsimcli/compare/v5.18.1...v5.19.0) (2026-03-27)
+
+
+### Bug Fixes
+
+* correct command and skill counts across docs (14 commands, 15 skills) ([f66ce61](https://github.com/maystudios/maxsimcli/commit/f66ce615170c6120f23d87705d67787f7e31e8ee))
+* widen evidence block enforcement to scan all payload text fields ([32bf90e](https://github.com/maystudios/maxsimcli/commit/32bf90e0e04bd8aa53834e1fe4ce602969c437d0))
+
+
+### Features
+
+* add global CLAUDE.md template, docs, and installer hint ([ed785f6](https://github.com/maystudios/maxsimcli/commit/ed785f6d3217e95c76b571fc57f9b13a9172e316))
+* add static settings.json fallback and missing-hooks detection ([90003d7](https://github.com/maystudios/maxsimcli/commit/90003d7528f9003475d25fbdb9cd87c31291dd78))
+* add template variable substitution to copy pipeline ([c9a9b67](https://github.com/maystudios/maxsimcli/commit/c9a9b67026f15961ce6418e21302ec0efe86c3c1))
+* make model profiles and parallelism limits transparent in config ([6816fbf](https://github.com/maystudios/maxsimcli/commit/6816fbf644dfbeabd0104e36100106eb980cdd97))
+* spec audit updates — 16 skills, HARD-GATEs, workflow extraction, GitHub comment CRUD ([787b99e](https://github.com/maystudios/maxsimcli/commit/787b99e78143178510fe71cb6fbd934cb684b0ce))
+
 ## [5.18.1](https://github.com/maystudios/maxsimcli/compare/v5.18.0...v5.18.1) (2026-03-26)
 
 

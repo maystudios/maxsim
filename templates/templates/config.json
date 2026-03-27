@@ -1,6 +1,5 @@
 {
-  "version": "5.18.0",
-
+  "version": "5.18.1",
   "__doc_model_profiles": {
     "_description": "Reference: model assignments per profile. Actual values are defined in code — this table is for documentation only.",
     "quality": {
@@ -9,7 +8,10 @@
       "researcher": "sonnet",
       "verifier": "opus",
       "max_agents": 40,
-      "typical_range": [20, 40]
+      "typical_range": [
+        20,
+        40
+      ]
     },
     "balanced": {
       "planner": "opus",
@@ -17,7 +19,10 @@
       "researcher": "sonnet",
       "verifier": "sonnet",
       "max_agents": 20,
-      "typical_range": [10, 20]
+      "typical_range": [
+        10,
+        20
+      ]
     },
     "budget": {
       "planner": "sonnet",
@@ -25,19 +30,18 @@
       "researcher": "haiku",
       "verifier": "sonnet",
       "max_agents": 10,
-      "typical_range": [5, 10]
+      "typical_range": [
+        5,
+        10
+      ]
     }
   },
-
   "execution": {
     "__doc_model_profile": "Selects which model profile to use. One of: quality, balanced, budget. Each profile maps agent types (planner, executor, researcher, verifier) to Claude model tiers (opus, sonnet, haiku). See __doc_model_profiles above for the full mapping table.",
     "model_profile": "balanced",
-
     "competitive_enabled": false,
-
     "__doc_model_overrides": "Optional per-agent-type model overrides. Keys are agent types (planner, executor, researcher, verifier) and values are model tiers (opus, sonnet, haiku). Overrides take precedence over the profile's default assignment. Example: { \"executor\": \"opus\" } upgrades the executor to opus while keeping other agents at their profile defaults.",
     "model_overrides": {},
-
     "parallelism": {
       "__doc_parallelism": [
         "Two limits govern agent parallelism:",
