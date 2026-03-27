@@ -4,6 +4,7 @@ description: >-
   Enforces conventional commit format with atomic changes and co-author
   attribution. Used when committing code changes to maintain consistent git
   history.
+user-invocable: false
 ---
 
 # Commit Conventions

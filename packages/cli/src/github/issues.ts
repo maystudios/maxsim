@@ -217,6 +217,54 @@ export async function addComment(
   });
 }
 
+/** Update an existing comment on an issue. */
+export async function updateComment(
+  commentId: number,
+  body: string,
+  repo?: RepoInfo,
+): Promise<GhResult<GhComment>> {
+  return withGhResult(async () => {
+    const octokit = getOctokit();
+    const { owner, repo: repoName } = repo ?? getRepoInfo();
+    const { data } = await octokit.rest.issues.updateComment({
+      owner,
+      repo: repoName,
+      comment_id: commentId,
+      body,
+    });
+    return {
+      id: data.id,
+      nodeId: data.node_id,
+      body: data.body ?? '',
+      user: {
+        login: data.user?.login ?? '',
+        id: data.user?.id ?? 0,
+        nodeId: data.user?.node_id ?? '',
+        type: (data.user?.type ?? 'User') as 'User' | 'Organization',
+      },
+      createdAt: data.created_at,
+      updatedAt: data.updated_at,
+      htmlUrl: data.html_url,
+    };
+  });
+}
+
+/** Delete a comment on an issue. */
+export async function deleteComment(
+  commentId: number,
+  repo?: RepoInfo,
+): Promise<GhResult<void>> {
+  return withGhResult(async () => {
+    const octokit = getOctokit();
+    const { owner, repo: repoName } = repo ?? getRepoInfo();
+    await octokit.rest.issues.deleteComment({
+      owner,
+      repo: repoName,
+      comment_id: commentId,
+    });
+  });
+}
+
 /** Add a sub-issue to a parent issue. Uses internal numeric IDs. */
 export async function addSubIssue(
   parentNumber: number,
@@ -406,7 +454,7 @@ export async function listIssueRelations(
     }
 
     // biome-ignore lint/suspicious/noExplicitAny: Octokit REST type lacks .graphql(); cast required
-    const data = await (octokit as any).graphql<GraphQLResponse>(query, {
+    const data: GraphQLResponse = await (octokit as any).graphql(query, {
       owner,
       repo: repoName,
       number: issueNumber,

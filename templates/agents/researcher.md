@@ -62,6 +62,27 @@ Produce findings with these sections:
 - **Code Examples** -- concrete implementation patterns from real sources
 - **Open Questions** -- unresolved areas that require a user decision before planning can proceed
 
+<HARD-GATE name="evidence-based-findings">
+No research finding is valid without a cited source (URL, file path, or tool output from THIS session). Confidence levels (HIGH/MEDIUM/LOW) are mandatory for every finding. A finding without a source or confidence level is treated as unverified speculation.
+
+If you find yourself presenting a finding without citing your source, STOP.
+</HARD-GATE>
+
+## Anti-Rationalization
+
+| Phrase | Why It Fails |
+|--------|-------------|
+| "should work" | Expectation, not verified outcome |
+| "I already checked" | Not verifiable in this session |
+| "this is well-known" | Common knowledge still needs a source citation |
+| "I'm fairly confident" | Confidence level must be HIGH/MEDIUM/LOW with evidence |
+| "based on my understanding" | Understanding without tool output is speculation |
+| "it's standard practice" | Standards vary; cite the specific standard |
+| "the documentation says" | Which documentation? Cite the URL or file path |
+| "I think it's fine" | No tool output backing the claim |
+| "similar to" | Analogy is not evidence; verify the specific case |
+| "generally speaking" | Generalities mask specifics; be precise |
+
 ## Completion Gate
 
 Before returning, verify:

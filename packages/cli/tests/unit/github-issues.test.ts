@@ -23,6 +23,8 @@ const {
   mockIssuesGet,
   mockIssuesUpdate,
   mockIssuesCreateComment,
+  mockIssuesUpdateComment,
+  mockIssuesDeleteComment,
   mockGraphql,
   mockRequest,
   mockOctokit,
@@ -34,6 +36,8 @@ const {
   const mockIssuesGet = vi.fn();
   const mockIssuesUpdate = vi.fn();
   const mockIssuesCreateComment = vi.fn();
+  const mockIssuesUpdateComment = vi.fn();
+  const mockIssuesDeleteComment = vi.fn();
   const mockGraphql = vi.fn();
   const mockRequest = vi.fn();
 
@@ -49,6 +53,8 @@ const {
         update: mockIssuesUpdate,
         listComments: 'listComments-endpoint',
         createComment: mockIssuesCreateComment,
+        updateComment: mockIssuesUpdateComment,
+        deleteComment: mockIssuesDeleteComment,
       },
     },
   };
@@ -62,6 +68,8 @@ const {
     mockIssuesGet,
     mockIssuesUpdate,
     mockIssuesCreateComment,
+    mockIssuesUpdateComment,
+    mockIssuesDeleteComment,
     mockGraphql,
     mockRequest,
     mockOctokit,
@@ -102,6 +110,8 @@ import {
   closeIssue,
   listComments,
   addComment,
+  updateComment,
+  deleteComment,
   addSubIssue,
   listSubIssues,
   createEscalationIssue,
@@ -1596,5 +1606,169 @@ describe('listSubIssues', () => {
       expect.objectContaining({ owner: 'other-owner', repo: 'other-repo' }),
     );
     expect(mockGetRepoInfo).not.toHaveBeenCalled();
+  });
+});
+
+// ── updateComment ─────────────────────────────────────────────────────────────
+
+describe('updateComment', () => {
+  it('returns the updated GhComment', async () => {
+    const updatedComment = { ...RAW_COMMENT, body: 'Updated body' };
+    mockIssuesUpdateComment.mockResolvedValue({ data: updatedComment });
+
+    const result = await updateComment(500001, 'Updated body');
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.data.id).toBe(500001);
+    expect(result.data.body).toBe('Updated body');
+    expect(result.data.nodeId).toBe('C_node1');
+  });
+
+  it('passes comment_id and body to octokit', async () => {
+    mockIssuesUpdateComment.mockResolvedValue({ data: RAW_COMMENT });
+
+    await updateComment(500001, 'New body');
+
+    expect(mockIssuesUpdateComment).toHaveBeenCalledWith(
+      expect.objectContaining({ comment_id: 500001, body: 'New body' }),
+    );
+  });
+
+  it('passes owner and repo from getRepoInfo', async () => {
+    mockIssuesUpdateComment.mockResolvedValue({ data: RAW_COMMENT });
+
+    await updateComment(500001, 'Comment body');
+
+    expect(mockIssuesUpdateComment).toHaveBeenCalledWith(
+      expect.objectContaining({ owner: 'test-owner', repo: 'test-repo' }),
+    );
+  });
+
+  it('accepts an explicit repo override', async () => {
+    mockIssuesUpdateComment.mockResolvedValue({ data: RAW_COMMENT });
+
+    await updateComment(500001, 'Comment body', { owner: 'other-owner', repo: 'other-repo', isOrg: false });
+
+    expect(mockIssuesUpdateComment).toHaveBeenCalledWith(
+      expect.objectContaining({ owner: 'other-owner', repo: 'other-repo' }),
+    );
+    expect(mockGetRepoInfo).not.toHaveBeenCalled();
+  });
+
+  it('maps user on returned comment', async () => {
+    mockIssuesUpdateComment.mockResolvedValue({ data: RAW_COMMENT });
+
+    const result = await updateComment(500001, 'Hey!');
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.data.user.login).toBe('bob');
+    expect(result.data.user.type).toBe('User');
+  });
+
+  it('handles null body in API response gracefully', async () => {
+    const nullBodyComment = { ...RAW_COMMENT, body: null };
+    mockIssuesUpdateComment.mockResolvedValue({ data: nullBodyComment });
+
+    const result = await updateComment(500001, '');
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.data.body).toBe('');
+  });
+
+  it('handles null user in API response gracefully', async () => {
+    const nullUserComment = { ...RAW_COMMENT, user: null };
+    mockIssuesUpdateComment.mockResolvedValue({ data: nullUserComment });
+
+    const result = await updateComment(500001, 'Hey!');
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    const user = result.data.user;
+    expect(user.login).toBe('');
+    expect(user.id).toBe(0);
+    expect(user.type).toBe('User');
+  });
+
+  it('returns error result on API failure', async () => {
+    const err = Object.assign(new Error('Not Found'), { status: 404 });
+    mockIssuesUpdateComment.mockRejectedValue(err);
+
+    const result = await updateComment(9999, 'Hello');
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.code).toBe('NOT_FOUND');
+  });
+
+  it('returns RATE_LIMITED error when rate-limited', async () => {
+    const err = Object.assign(new Error('rate limit exceeded'), { status: 403 });
+    mockIssuesUpdateComment.mockRejectedValue(err);
+
+    const result = await updateComment(500001, 'Hello');
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.code).toBe('RATE_LIMITED');
+  });
+});
+
+// ── deleteComment ─────────────────────────────────────────────────────────────
+
+describe('deleteComment', () => {
+  it('returns success with void data on successful delete', async () => {
+    mockIssuesDeleteComment.mockResolvedValue({});
+
+    const result = await deleteComment(500001);
+
+    expect(result.ok).toBe(true);
+  });
+
+  it('passes comment_id to octokit', async () => {
+    mockIssuesDeleteComment.mockResolvedValue({});
+
+    await deleteComment(500001);
+
+    expect(mockIssuesDeleteComment).toHaveBeenCalledWith(
+      expect.objectContaining({ comment_id: 500001 }),
+    );
+  });
+
+  it('passes owner and repo from getRepoInfo', async () => {
+    mockIssuesDeleteComment.mockResolvedValue({});
+
+    await deleteComment(500001);
+
+    expect(mockIssuesDeleteComment).toHaveBeenCalledWith(
+      expect.objectContaining({ owner: 'test-owner', repo: 'test-repo' }),
+    );
+  });
+
+  it('accepts an explicit repo override', async () => {
+    mockIssuesDeleteComment.mockResolvedValue({});
+
+    await deleteComment(500001, { owner: 'other-owner', repo: 'other-repo', isOrg: false });
+
+    expect(mockIssuesDeleteComment).toHaveBeenCalledWith(
+      expect.objectContaining({ owner: 'other-owner', repo: 'other-repo' }),
+    );
+    expect(mockGetRepoInfo).not.toHaveBeenCalled();
+  });
+
+  it('returns error result on API failure', async () => {
+    const err = Object.assign(new Error('Not Found'), { status: 404 });
+    mockIssuesDeleteComment.mockRejectedValue(err);
+
+    const result = await deleteComment(9999);
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.code).toBe('NOT_FOUND');
+  });
+
+  it('returns RATE_LIMITED error when rate-limited', async () => {
+    const err = Object.assign(new Error('rate limit exceeded'), { status: 403 });
+    mockIssuesDeleteComment.mockRejectedValue(err);
+
+    const result = await deleteComment(500001);
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.code).toBe('RATE_LIMITED');
   });
 });

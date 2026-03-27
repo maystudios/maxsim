@@ -23,7 +23,7 @@ export {
 // Issues
 export {
   listIssues, createIssue, getIssue, updateIssue,
-  listComments, addComment, addSubIssue, listSubIssues, closeIssue,
+  listComments, addComment, updateComment, deleteComment, addSubIssue, listSubIssues, closeIssue,
   addIssueRelation, removeIssueRelation, listIssueRelations,
   createEscalationIssue,
 } from './issues.js';

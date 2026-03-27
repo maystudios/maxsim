@@ -69,8 +69,8 @@ describe('skill templates', () => {
   const skillsDir = path.join(TEMPLATES_DIR, 'skills');
   const skillDirs = fs.readdirSync(skillsDir, { withFileTypes: true }).filter((e) => e.isDirectory());
 
-  it('exactly 15 subdirectories exist', () => {
-    expect(skillDirs).toHaveLength(15);
+  it('exactly 16 subdirectories exist', () => {
+    expect(skillDirs).toHaveLength(16);
   });
 
   it('each subdirectory contains an index.md file', () => {

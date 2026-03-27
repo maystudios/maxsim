@@ -92,6 +92,12 @@ After writing the plan, verify backward from the phase goal:
 
 If gaps exist, add tasks to close them before finalizing.
 
+<HARD-GATE name="plan-verification">
+Before finalizing any plan, verify: completing all tasks achieves the phase goal; every requirement has at least one task; no gaps between task outputs and success criteria. If goal-backward verification has not been performed in THIS turn, the plan cannot be submitted.
+
+If you find yourself rationalizing an exception to this rule, STOP.
+</HARD-GATE>
+
 ## Anti-Rationalization Table
 
 These phrases are NEVER acceptable as evidence. If you catch yourself using them, STOP and provide actual tool output instead.

@@ -20,70 +20,17 @@ This command uses Plan Mode to configure the loop parameters before execution be
 </context>
 
 <process>
-Invoke the `autoresearch` skill to drive the optimization loop. Invoke the `verification` skill for evidence-based confirmation at each iteration.
+Follow @.claude/maxsim/workflows/improve.md end-to-end.
 
-**Phase 1 — Setup (Plan Mode)**
-
-1. Enter Plan Mode via EnterPlanMode
-2. Gather loop parameters via two AskUserQuestion calls:
-   **Batch 1** (required — 4 questions):
-   - Metric command (the command to run and extract a number from)
-   - Guard command (regression check, e.g., `npm test`)
-   - Metric direction (`lower_is_better` or `higher_is_better`)
-   - Iteration budget (default: 20)
-
-   **Batch 2** (scope and constraints — 3 questions):
-   - Scope (files/directories to modify)
-   - Files to NEVER modify (test files, guard files, config)
-   - Starting approach (optional — first idea to try)
-3. Dry-run: Execute the metric command once to establish baseline. Execute the guard command to confirm it passes. If either fails, ask the user to fix before proceeding.
-4. Show the proposed loop configuration and confirm with user
-5. Exit Plan Mode via ExitPlanMode
+1. **Plan Mode:** Call `EnterPlanMode` before any execution
+2. Gather loop parameters via two AskUserQuestion batches (metric command, guard command, direction, budget, scope, protected files, starting approach)
+3. Dry-run: execute metric command and guard command to establish baseline
+4. Show proposed loop configuration and confirm with user
+5. Exit Plan Mode via `ExitPlanMode` — user reviews and approves the configuration
 > **Tip:** Press **Ctrl+G** while reviewing the plan to edit it in your text editor before approving.
-
-**Phase 2 — Optimization Loop**
-
-Run the 8-phase autoresearch loop, one iteration at a time:
-
-1. **Review** — read `git log --oneline -10`, the TSV results file, and recent diffs to understand current state
-2. **Ideate** — exploit successful past approaches, avoid repeated failures, try untried angles
-3. **Modify** — make ONE atomic change to in-scope files (never modify guard/test files)
-4. **Commit** — commit before verification with prefix `experiment(<scope>):`
-5. **Verify** — run the metric command, extract the numeric result, compare to previous best
-6. **Guard** — run the guard command to check for regressions
-   - Guard failure + verify pass → rework (max 2 attempts), then discard
-7. **Decide** — metric improved AND guard passed → keep; otherwise → `git revert HEAD --no-edit`
-8. **Log** — append iteration result to the TSV file (iteration, commit, metric, delta, guard, status, description)
-
-<HARD-GATE name="improve-loop-invariants">
-
-These rules are non-negotiable during the optimization loop:
-
-- **Never modify guard or test files.** The guard command and its associated test files are the regression safety net. Changing them to make a metric pass invalidates the entire loop.
-- **Never use `--no-verify` on any git command.** Pre-commit hooks exist for a reason. Bypassing them defeats safety checks.
-- **Always `git revert HEAD --no-edit` on failure.** If the metric did not improve OR the guard failed, the commit MUST be reverted. Do not carry forward a failed experiment.
-- **One atomic change per iteration.** Multiple changes in a single iteration make it impossible to attribute metric movement. Make one change, measure, decide.
-- **Commit before verification.** The commit happens at step 4, before the metric and guard runs. This ensures every experiment is captured in git history and can be cleanly reverted.
-
-If you find yourself rationalizing an exception to any of these rules, STOP. The rule applies without exception.
-
-</HARD-GATE>
-
-**Stuck Detection:**
-After 5 consecutive discards or crashes:
-1. Re-read ALL in-scope files (full context reload)
-2. Re-read original goal and review entire TSV log for patterns
-3. Try combining 2-3 successful past changes
-4. Try the OPPOSITE approach
-5. Try a radical architectural change
-6. If still stuck → create a diagnostic GitHub Issue and escalate to user
-
-**Noise Handling:**
-For volatile metrics: 3-run median for 1-5% variance, 5-run median for >5% variance. Apply a minimum-delta threshold to filter noise.
-
-**Termination:**
-Stop when iteration budget is exhausted, target metric is reached, or user interrupts (Ctrl+C).
-
-**Final Report:**
-Display a summary: iterations run, best metric achieved, total improvements kept, approaches that worked vs. failed.
+6. Run the 8-phase loop: Review → Ideate → Modify → Commit → Verify → Guard → Decide → Log
+   - Keep if metric improved AND guard passed; otherwise `git revert HEAD --no-edit`
+   - Never modify guard/test files; never use `--no-verify`; one atomic change per iteration
+7. Stuck detection after 5 consecutive discards — context reload, combination strategy, escalation
+8. On termination: display summary with iterations, best metric, approaches that worked vs. failed
 </process>

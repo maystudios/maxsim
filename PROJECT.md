@@ -73,7 +73,7 @@ One command. Installs project-locally into `.claude/`. No global installation.
 ├── settings.json          # Claude Code settings (hooks, permissions, env)
 ├── commands/maxsim/       # 14 slash commands (13 primary + 1 alias)
 ├── agents/                # 4 agent definitions + AGENTS.md registry
-├── skills/                # 15 skill modules
+├── skills/                # 16 skill modules
 ├── rules/                 # Conventions + verification protocol
 ├── maxsim/
 │   ├── bin/maxsim-tools.cjs  # Internal CLI helper
@@ -103,7 +103,7 @@ GitHub is not optional. MaxsimCLI requires:
 | **Labels** | Categorize issues — 6 labels in 2 namespaces: `type:` (phase, task, bug, quick) and `maxsim:` (auto, user) |
 | **Issue Relations** | Native GitHub "blocked by" / "blocking" for dependency tracking |
 | **Issue Comments** | Store plans, research, context, summaries as structured comments |
-| **GitHub Wiki** | Project conventions, requirements, decisions |
+| **GitHub Wiki** | Project specifications, requirements, architectural decisions, conventions — long-lived reference documents (vs. Issues for active tasks) |
 | **GitHub Discussions** | Architecture decisions, design proposals |
 
 **User-created Issues:** Users can write GitHub Issues directly. MaxsimCLI recognizes them and integrates them into the planning/execution pipeline.
@@ -237,12 +237,14 @@ When a user opens Claude Code and describes a task without using `/maxsim:`, Cla
 
 ### 7.1 Agent Types
 
-| Agent | Role | Tools | Preloaded Skills |
-|-------|------|-------|------------------|
-| **Executor** | Implements code changes | Read, Write, Edit, Bash, Grep, Glob | handoff-contract, commit-conventions |
-| **Planner** | Creates plans and task breakdowns | Read, Write, Bash, Grep, Glob (permissionMode: plan) | handoff-contract, roadmap-writing |
-| **Researcher** | Investigates codebase and external sources | Read, Bash, Grep, Glob, WebFetch, WebSearch | handoff-contract, research |
-| **Verifier** | Reviews and verifies completed work | Read, Bash, Grep, Glob | handoff-contract, verification, code-review |
+| Agent | Role | Tools | Preloaded Skills | Available Skills |
+|-------|------|-------|------------------|------------------|
+| **Executor** | Implements code changes | Read, Write, Edit, Bash, Grep, Glob | handoff-contract, commit-conventions | github-operations (trigger: GitHub Issues), tdd (trigger: test-first) |
+| **Planner** | Creates plans and task breakdowns | Read, Write, Bash, Grep, Glob (permissionMode: plan) | handoff-contract, roadmap-writing | github-operations (trigger: GitHub Issues), brainstorming (trigger: exploring approaches) |
+| **Researcher** | Investigates codebase and external sources | Read, Bash, Grep, Glob, WebFetch, WebSearch | handoff-contract, research | github-operations (trigger: GitHub Issues) |
+| **Verifier** | Reviews and verifies completed work | Read, Bash, Grep, Glob | handoff-contract, verification, code-review | systematic-debugging (trigger: test failures), github-operations (trigger: posting results) |
+
+**Available Skills + Trigger Pattern:** Each agent has a set of `available_skills` that Claude Code loads on-demand via semantic matching when trigger conditions are met. Unlike preloaded skills (always present in context), available skills are only injected when the agent's task context matches the trigger — keeping the context window lean while ensuring specialized capabilities are accessible when needed.
 
 ### 7.2 Parallelism Strategy
 
@@ -442,7 +444,7 @@ Plan Mode is **prompt-based, not tool-enforcement-based**. A `<system-reminder>`
 
 ## 9. Skills
 
-MaxsimCLI ships with **15 skills**, following Anthropic's skill conventions exactly.
+MaxsimCLI ships with **16 skills**, following Anthropic's skill conventions exactly.
 
 ### 9.1 Skill Format
 
@@ -483,6 +485,7 @@ description: What it does. Use when [trigger conditions].
 | 13 | `using-maxsim` | User-facing | Command reference and routing table. Updated for v6 commands. |
 | 14 | `maxsim-simplify` | Technique | Code simplification, dead code removal, reuse improvement. |
 | 15 | `autoresearch` | Technique | Autonomous optimization loop with reference workflows (loop-protocol, debug, fix, security, results-logging, core-principles). Powers `/maxsim:improve`, `/maxsim:fix-loop`, `/maxsim:debug-loop`, `/maxsim:security`. |
+| 16 | `agent-teams` | Infrastructure | Tier 2 Agent Teams coordination: TeamCreate, SendMessage, competitive implementation, multi-reviewer, collaborative debugging patterns. |
 
 ### 9.3 Skill Loading
 
@@ -549,6 +552,8 @@ MaxsimCLI improves locally per project with every session through three layers: 
 5. **External enforcement** — the system guarantees termination, not the agent's self-awareness
 6. **Evidence before claims** — no completion without fresh verification (Superpowers Iron Law)
 
+> **Pending: Deep Research.** The autoresearch (github.com/uditgoenka/autoresearch) and superpowers (github.com/obra/superpowers) repositories will be cloned into `docs/` for comprehensive analysis. Their Memory/Learning systems will be adopted as closely as possible. The autoresearch skill will be rewritten from scratch based on these findings. The TSV metric format in the execute workflow will be unified with autoresearch's real metrics (replacing the current binary 1/0).
+
 ### 11.2 Three-Layer Architecture
 
 | Layer | Mechanism | Frequency | What It Does |
@@ -559,15 +564,14 @@ MaxsimCLI improves locally per project with every session through three layers: 
 
 ### 11.3 Layer 1 — Session Memory
 
-**Stop hook** (`maxsim-capture-learnings`): Fires at session end. Must be improved to:
-- Track only THIS session's commits (diff `session_start_commit..HEAD`, not last 5 all-time)
-- Extract patterns from `last_assistant_message` (available in Stop payload)
-- Prune MEMORY.md to stay under 180 lines (hard 200-line limit in Claude Code)
-- Use `stop_reason` to differentiate clean exits from crashes
-- Check `stop_hook_active` to prevent infinite blocking loops
-- Write structured entries: date, session_id, commit_count, patterns, stop_reason
+**Stop hook** (`maxsim-capture-learnings`): Fires at session end. Implementation:
+- Tracks per-session commits via `session_start_commit..HEAD` with fallback to `git log -5` when the start commit is unavailable
+- Extracts patterns from `last_assistant_message` using keyword prefix matching (e.g., lines starting with "learned:", "pattern:", "convention:")
+- Prunes MEMORY.md to 180 lines (hard 200-line limit in Claude Code)
+- Writes structured entries: date, session_id, commit_count, patterns, stop_reason
+- Checks `stop_hook_active` to prevent infinite loops (skips processing if already active)
 
-**SessionStart hook** (`maxsim-session-start`, NEW): Fires at session start/resume/compact. Injects context:
+**SessionStart hook** (`maxsim-session-start`): Fires at session start/resume/compact. Additionally detects missing hooks and warns the user if hook registration is incomplete. Injects context:
 - Read `git log --oneline -20` (instant orientation)
 - Read first 200 lines of MEMORY.md (learned patterns)
 - Read last 10 TSV entries (metric trends, if file exists)
@@ -670,14 +674,18 @@ All improvements are project-local. Two projects using MaxsimCLI never interfere
 | Hook | Event | Purpose |
 |------|-------|---------|
 | `maxsim-statusline` | statusLine | Show current MaxsimCLI status in terminal |
-| `maxsim-check-update` | SessionStart | Check for new MaxsimCLI version |
+| `maxsim-check-update` | SessionStart | Check for new MaxsimCLI version (1h cache) |
+| `maxsim-session-start` | SessionStart | Inject MEMORY.md + TSV + git log context |
 | `maxsim-notification-sound` | Notification | Play sound when Claude asks a question |
 | `maxsim-stop-sound` | Stop | Play sound when Claude finishes |
 | `maxsim-capture-learnings` | Stop | Capture session learnings to agent memory |
+| `maxsim-teammate-idle` | TeammateIdle | Keep teammates working if pending tasks exist |
+| `maxsim-task-completed` | TaskCompleted | Run verification gates before task completion |
 
-### 12.2 Agent Team Hooks
+### 12.2 Agent Team Hook Details
 
 > Research completed 2026-03-24. Official docs: https://code.claude.com/docs/en/hooks
+> See §12.1 for the consolidated hook list including these hooks.
 
 These hooks fire only when Agent Teams are active (Tier 2 workflows). Neither hook supports matchers — they fire for every occurrence.
 
@@ -746,7 +754,7 @@ maxsimcli/
 ├── templates/            # Source templates (copied to .claude/ during install)
 │   ├── agents/           # 4 agent definitions + AGENTS.md registry
 │   ├── commands/maxsim/  # 14 slash commands (13 primary + 1 alias)
-│   ├── skills/           # 15 skill modules
+│   ├── skills/           # 16 skill modules
 │   ├── workflows/        # Workflow definitions
 │   ├── references/       # Reference documents
 │   ├── rules/            # Conventions + verification
@@ -866,7 +874,9 @@ MaxsimCLI is successful when:
 5. src/github/labels.ts — Label taxonomy (6 labels in 2 namespaces: type + maxsim) ✅ [UPDATE CODE: reduce from 19 to 6]
 6. src/github/comments.ts — Structured comments (HTML markers) ✅
 7. src/github/types.ts — GitHub-specific types ✅
-8. Tests: unit tests with mocked Octokit, E2E with real API
+8. src/github/discussions.ts — Discussions CRUD (GraphQL, pagination)
+9. src/github/wiki.ts — Wiki page management (git clone strategy)
+10. Tests: unit tests with mocked Octokit, E2E with real API
 REMOVED: mapping.ts (local cache contradicts GitHub-only principle)
 REMOVED: sync.ts (no sync needed — GitHub is always authoritative)
 REMOVED: commands.ts (functionality covered by client.ts + individual modules)
@@ -903,10 +913,12 @@ REMOVED: commands.ts (functionality covered by client.ts + individual modules)
    - Correct Agent tool spawn syntax
 3. Tests: frontmatter parsing, workflow references
 ```
+Loop commands (improve, fix-loop, debug-loop, security) will be extracted into separate workflow files for consistency with other commands. execute.md will be split into sub-workflows (wave execution, competitive mode, retry loop).
+
 **Commit:** `feat: commands and workflows (GitHub-first, correct tool names)`
 
-### Phase 5: Skills (15 total)
-**Goal:** 15 skills following Anthropic conventions exactly.
+### Phase 5: Skills (16 total)
+**Goal:** 16 skills following Anthropic conventions exactly.
 **Spec:** `docs/spec/skills-specification.md`, `docs/spec/skills-writing-guide.md`
 ```
 1. Keep 8: tdd, systematic-debugging, brainstorming, roadmap-writing,
@@ -915,11 +927,12 @@ REMOVED: commands.ts (functionality covered by client.ts + individual modules)
 3. New 2: project-memory, using-maxsim (updated)
 4. Keep 1: maxsim-simplify
 5. All with correct YAML frontmatter (name, description)
-6. All under 500 lines
-7. No @ imports
-8. Third-person descriptions
+6. New: agent-teams (Tier 2 coordination patterns, extracted from maxsim-batch)
+7. All under 500 lines
+8. No @ imports
+9. Third-person descriptions
 ```
-**Commit:** `feat: 15 skills (Anthropic-compliant)`
+**Commit:** `feat: 16 skills (Anthropic-compliant)`
 
 ### Phase 6: Agents (4 definitions)
 **Goal:** 4 agent definitions with valid YAML frontmatter.

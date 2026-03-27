@@ -94,3 +94,7 @@ If any of these occur: stop, check the routing table, and follow the workflow.
 - Project memory now uses GitHub Issues instead of local STATE.md comments
 - `research` skill merges former `research-methodology` and `tool-priority-guide`
 - `project-memory` skill replaces `memory-management`
+
+## See also
+
+- `verification` — Evidence-based verification with quality gates
