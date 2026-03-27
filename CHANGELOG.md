@@ -1,3 +1,10 @@
+# [5.21.0](https://github.com/maystudios/maxsimcli/compare/v5.20.0...v5.21.0) (2026-03-27)
+
+
+### Features
+
+* add volume control for bundled sounds (0-100) ([942deca](https://github.com/maystudios/maxsimcli/commit/942deca868c2ffc090d6799f262f82db286bc8c0))
+
 # [5.20.0](https://github.com/maystudios/maxsimcli/compare/v5.19.1...v5.20.0) (2026-03-27)
 
 
