@@ -5,16 +5,14 @@
  */
 
 import { MaxsimError, classifyError } from './core/errors.js';
-import { ALL_COMMANDS } from './commands/index.js';
+import { ALL_COMMANDS, GITHUB_COMMANDS } from './commands/index.js';
 import type { CommandRegistry } from './commands/index.js';
 
 /**
  * Namespace command registries for two-level routing (e.g. `github push`).
- * Wave 2 and 3 can add entries here without touching this file.
  */
 export const NAMESPACE_COMMANDS: Record<string, CommandRegistry> = {
-  // github: GITHUB_COMMANDS  — added by Wave 2
-  // init:   INIT_COMMANDS    — added by Wave 3
+  github: GITHUB_COMMANDS,
 };
 
 const args = process.argv.slice(2);

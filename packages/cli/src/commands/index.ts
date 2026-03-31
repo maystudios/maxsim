@@ -15,3 +15,4 @@ export const ALL_COMMANDS: CommandRegistry = {
 export * from './types.js';
 export { RESOLVE_COMMANDS } from './resolve.js';
 export { CONFIG_COMMANDS } from './config.js';
+export { GITHUB_COMMANDS } from './github.js';
