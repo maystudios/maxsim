@@ -428,7 +428,7 @@ directly — it is copied into `dist/assets/templates/` during the build.
 
 ### Skills (15)
 
-Located at `templates/skills/`, one subdirectory per skill with an `index.md`.
+Located at `templates/skills/`, one subdirectory per skill with a `SKILL.md`.
 All follow Anthropic's skill convention: YAML frontmatter with `name` and
 `description`, body under 500 lines, no `@` imports.
 

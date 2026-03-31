@@ -15,10 +15,10 @@ skills:
   - commit-conventions
 available_skills:
   - name: github-operations
-    path: .claude/skills/github-operations/index.md
+    path: .claude/skills/github-operations/SKILL.md
     trigger: When reading from or writing to GitHub Issues
   - name: tdd
-    path: .claude/skills/tdd/index.md
+    path: .claude/skills/tdd/SKILL.md
     trigger: When implementing features with test-first approach
 ---
 

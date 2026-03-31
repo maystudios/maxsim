@@ -29,7 +29,7 @@ Co-author line when AI-assisted: value comes from the `co_author` key in `.claud
 
 | Type | Path Pattern |
 |------|-------------|
-| Skills | `.claude/skills/<kebab-case>/index.md` |
+| Skills | `.claude/skills/<kebab-case>/SKILL.md` |
 | Agents | `.claude/agents/<simple-name>.md` |
 | Rules | `.claude/rules/<topic>.md` |
 | Plans | GitHub Sub-Issues on the phase Issue |

@@ -73,19 +73,19 @@ describe('skill templates', () => {
     expect(skillDirs).toHaveLength(16);
   });
 
-  it('each subdirectory contains an index.md file', () => {
+  it('each subdirectory contains a SKILL.md file', () => {
     for (const dir of skillDirs) {
-      const skillMd = path.join(skillsDir, dir.name, 'index.md');
-      expect(fs.existsSync(skillMd), `${dir.name}: missing index.md`).toBe(true);
+      const skillMd = path.join(skillsDir, dir.name, 'SKILL.md');
+      expect(fs.existsSync(skillMd), `${dir.name}: missing SKILL.md`).toBe(true);
     }
   });
 
-  it('each index.md has frontmatter with name and description', () => {
+  it('each SKILL.md has frontmatter with name and description', () => {
     for (const dir of skillDirs) {
-      const content = fs.readFileSync(path.join(skillsDir, dir.name, 'index.md'), 'utf-8');
+      const content = fs.readFileSync(path.join(skillsDir, dir.name, 'SKILL.md'), 'utf-8');
       const { attributes } = parseFrontmatter(content);
-      expect(attributes.name, `${dir.name}/index.md: missing name`).toBeDefined();
-      expect(attributes.description, `${dir.name}/index.md: missing description`).toBeDefined();
+      expect(attributes.name, `${dir.name}/SKILL.md: missing name`).toBeDefined();
+      expect(attributes.description, `${dir.name}/SKILL.md: missing description`).toBeDefined();
     }
   });
 });

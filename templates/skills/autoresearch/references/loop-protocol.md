@@ -1,6 +1,6 @@
 # Autonomous Loop Protocol
 
-Detailed protocol for the optimization iteration loop. The index.md has the summary; this file has the full rules.
+Detailed protocol for the optimization iteration loop. The SKILL.md has the summary; this file has the full rules.
 
 ## Loop Modes
 

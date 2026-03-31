@@ -109,7 +109,7 @@ in its response (not write local files):
 **Phase requirement IDs (every ID MUST appear in a plan's `requirements` field):** {phase_req_ids}
 
 **Project instructions:** Read ./CLAUDE.md if exists -- follow project-specific guidelines
-**Project skills:** Check .claude/skills/ directory (if exists) -- read index.md files, plans should account for project skill rules
+**Project skills:** Check .claude/skills/ directory (if exists) -- read SKILL.md files, plans should account for project skill rules
 </planning_context>
 
 <task_format>

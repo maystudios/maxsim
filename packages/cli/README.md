@@ -349,7 +349,7 @@ Project config lives in `.claude/maxsim/config.json`, created during `/maxsim:in
 
 ## Skills
 
-Skills are reusable prompt modules that agents load on demand. Each skill is an `index.md` file with YAML frontmatter and a markdown body.
+Skills are reusable prompt modules that agents load on demand. Each skill is a `SKILL.md` file with YAML frontmatter and a markdown body.
 
 ### Built-in Skills (15)
 
