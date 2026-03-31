@@ -20,6 +20,7 @@ import {
   createIssue,
   closeIssue,
   deleteComment,
+  addSubIssue,
 } from '../github/issues.js';
 import {
   addItemToProject,
@@ -27,8 +28,10 @@ import {
   findProject,
 } from '../github/projects.js';
 import { ensureLabels } from '../github/labels.js';
-import { parseCommentMeta, formatCommentHeader } from '../github/comments.js';
+import { parseCommentMeta, formatCommentHeader, buildIssueBody } from '../github/comments.js';
 import { getRepoInfo } from '../github/client.js';
+import { ensureMilestone } from '../github/milestones.js';
+import { MAXSIM_LABELS } from '../github/types.js';
 import {
   getFlag,
   hasFlag,
@@ -409,6 +412,401 @@ export const GITHUB_COMMANDS: CommandRegistry = {
     async handler(args) {
       // Delegate to move-issue handler
       return GITHUB_COMMANDS['move-issue'].handler(args);
+    },
+  },
+
+  // ── Task 3.1: GitHub status diagnostic ──────────────────────────────
+
+  'status': {
+    name: 'status',
+    description: 'Check GitHub connectivity and show project state. Usage: status',
+    async handler(_args) {
+      const lines: string[] = [];
+
+      // Step 1: Repo info
+      let repoInfo: { owner: string; repo: string } | null = null;
+      try {
+        repoInfo = getRepoInfo();
+        lines.push(`Repository: ${repoInfo.owner}/${repoInfo.repo}`);
+        lines.push('Auth: OK (via gh CLI)');
+      } catch (e) {
+        lines.push(`Repository: ERROR — ${(e as Error).message}`);
+        lines.push('Auth: UNKNOWN');
+      }
+
+      // Step 2: Load config for project settings
+      const config = loadConfig(process.cwd());
+      const projectName = config.github.projectName || '(not configured)';
+
+      // Step 3: Find project (best-effort)
+      let projectDisplay = `${projectName} (not found)`;
+      try {
+        const findResult = findProject(config.github.projectName);
+        if (findResult.ok && findResult.data) {
+          projectDisplay = `${projectName} (#${findResult.data.number})`;
+        } else if (!config.github.projectName) {
+          projectDisplay = '(not configured)';
+        }
+      } catch {
+        // Network issue — report gracefully
+        projectDisplay = `${projectName} (check failed)`;
+      }
+      lines.push(`Project: ${projectDisplay}`);
+
+      // Step 4: Check labels (best-effort)
+      let labelDisplay = `${MAXSIM_LABELS.length} configured`;
+      try {
+        const labelResult = await ensureLabels();
+        if (labelResult.ok) {
+          const { created, existing } = labelResult.data;
+          labelDisplay = `${MAXSIM_LABELS.length} configured (${existing.length} exist, ${created.length} created)`;
+        }
+      } catch {
+        labelDisplay = `${MAXSIM_LABELS.length} configured (check failed)`;
+      }
+      lines.push(`Labels: ${labelDisplay}`);
+
+      return cmdOk(lines.join('\n'));
+    },
+  },
+
+  // ── Task 3.2: Create phase issue ──────────────────────────────────────
+
+  'create-phase': {
+    name: 'create-phase',
+    description: 'Create a phase issue. Usage: create-phase --phase-number 1 --title "Title" [--body "..."] [--body-file /path] [--milestone 1]',
+    async handler(args) {
+      let phaseNumber: number;
+      try {
+        const raw = getRequiredFlag(args, '--phase-number');
+        phaseNumber = parseInt(raw, 10);
+        if (Number.isNaN(phaseNumber)) return cmdErr('--phase-number must be an integer');
+      } catch (e) {
+        return cmdErr((e as Error).message);
+      }
+
+      let title: string;
+      try {
+        title = getRequiredFlag(args, '--title');
+      } catch (e) {
+        return cmdErr((e as Error).message);
+      }
+
+      const bodyFile = getFlag(args, '--body-file');
+      let content = getFlag(args, '--body') ?? '';
+      if (bodyFile) {
+        try {
+          content = fs.readFileSync(path.resolve(bodyFile), 'utf8');
+        } catch (e) {
+          return cmdErr(`Cannot read body file: ${(e as Error).message}`);
+        }
+      }
+
+      const milestoneRaw = getIntFlag(args, '--milestone');
+      const milestone = milestoneRaw !== undefined && !Number.isNaN(milestoneRaw) ? milestoneRaw : undefined;
+
+      // Build issue body with metadata
+      const now = new Date().toISOString();
+      const meta = {
+        type: 'phase' as const,
+        phase: phaseNumber,
+        task: null,
+        parentIssue: null,
+        status: 'planned',
+        estimate: null,
+        wave: null,
+        createdAt: now,
+        createdBy: 'maxsim',
+      };
+      const state = {
+        taskIds: [],
+        plannedAt: now,
+        executedAt: null,
+        verifiedAt: null,
+        executorBranches: [],
+        worktreeBranch: null,
+        verificationPassed: null,
+        retryCount: 0,
+      };
+      const body = buildIssueBody(meta, content, state);
+      const issueTitle = `Phase ${phaseNumber}: ${title}`;
+
+      const result = await createIssue({ title: issueTitle, body, labels: ['type:phase', 'maxsim:auto'], milestone });
+      if (!result.ok) return cmdErr(result.error);
+
+      const issue = result.data;
+
+      // Add to project board if configured
+      const config = loadConfig(process.cwd());
+      const configAny = config as unknown as Record<string, unknown>;
+      const ghConfig = configAny.github as Record<string, unknown> | undefined;
+      const projectNumber = typeof ghConfig?.project_number === 'number' ? ghConfig.project_number : undefined;
+      if (projectNumber) {
+        const repoInfo = getRepoInfo();
+        const issueUrl = `https://github.com/${repoInfo.owner}/${repoInfo.repo}/issues/${issue.number}`;
+        const addResult = addItemToProject(projectNumber, issueUrl);
+        if (!addResult.ok) {
+          // Non-fatal: report but don't fail
+          return cmdOk(`Created Phase #${issue.number}: ${issueTitle}\nWarning: could not add to project board — ${addResult.error}`);
+        }
+      }
+
+      return cmdOk(`Created Phase #${issue.number}: ${issueTitle}`);
+    },
+  },
+
+  // ── Task 3.3: Create milestone ────────────────────────────────────────
+
+  'create-milestone': {
+    name: 'create-milestone',
+    description: 'Find or create a milestone. Usage: create-milestone --title "Milestone 1" [--description "..."] [--due-date 2026-04-15]',
+    async handler(args) {
+      let title: string;
+      try {
+        title = getRequiredFlag(args, '--title');
+      } catch (e) {
+        return cmdErr((e as Error).message);
+      }
+
+      const description = getFlag(args, '--description');
+      const dueDate = getFlag(args, '--due-date');
+
+      const result = await ensureMilestone({ title, description, dueOn: dueDate });
+      if (!result.ok) return cmdErr(result.error);
+
+      const milestone = result.data;
+      return cmdOk(`Milestone #${milestone.number}: ${milestone.title}`);
+    },
+  },
+
+  // ── Task 3.4: Post plan comment ───────────────────────────────────────
+
+  'post-plan-comment': {
+    name: 'post-plan-comment',
+    description: 'Post a structured plan comment. Usage: post-plan-comment --issue-number 216 --plan-number 1 --body "..." [--body-file /path]',
+    async handler(args) {
+      let issueNumber: number;
+      try {
+        const raw = getRequiredFlag(args, '--issue-number');
+        issueNumber = parseInt(raw, 10);
+        if (Number.isNaN(issueNumber)) return cmdErr('--issue-number must be an integer');
+      } catch (e) {
+        return cmdErr((e as Error).message);
+      }
+
+      let planNumber: number;
+      try {
+        const raw = getRequiredFlag(args, '--plan-number');
+        planNumber = parseInt(raw, 10);
+        if (Number.isNaN(planNumber)) return cmdErr('--plan-number must be an integer');
+      } catch (e) {
+        return cmdErr((e as Error).message);
+      }
+
+      const bodyFile = getFlag(args, '--body-file');
+      let content = getFlag(args, '--body') ?? '';
+      if (bodyFile) {
+        try {
+          content = fs.readFileSync(path.resolve(bodyFile), 'utf8');
+        } catch (e) {
+          return cmdErr(`Cannot read body file: ${(e as Error).message}`);
+        }
+      }
+
+      if (!content) {
+        return cmdErr('--body or --body-file is required');
+      }
+
+      // Prepend the maxsim type marker
+      const header = `<!-- maxsim:type=plan plan=${planNumber} -->`;
+      const body = `${header}\n${content}`;
+
+      const result = await addComment(issueNumber, body);
+      if (!result.ok) return cmdErr(result.error);
+
+      return cmdOk(`Plan ${planNumber} posted on #${issueNumber}`);
+    },
+  },
+
+  // ── Task 3.5: Batch create tasks ──────────────────────────────────────
+
+  'batch-create-tasks': {
+    name: 'batch-create-tasks',
+    description: 'Batch create task sub-issues from a JSON file. Usage: batch-create-tasks --phase-issue-number 216 --tasks-file /path/to/tasks.json',
+    async handler(args) {
+      let phaseIssueNumber: number;
+      try {
+        const raw = getRequiredFlag(args, '--phase-issue-number');
+        phaseIssueNumber = parseInt(raw, 10);
+        if (Number.isNaN(phaseIssueNumber)) return cmdErr('--phase-issue-number must be an integer');
+      } catch (e) {
+        return cmdErr((e as Error).message);
+      }
+
+      let tasksFile: string;
+      try {
+        tasksFile = getRequiredFlag(args, '--tasks-file');
+      } catch (e) {
+        return cmdErr((e as Error).message);
+      }
+
+      // Read and parse tasks file
+      let tasks: Array<{ title: string; body: string; labels?: string[] }>;
+      try {
+        const raw = fs.readFileSync(path.resolve(tasksFile), 'utf8');
+        tasks = JSON.parse(raw);
+        if (!Array.isArray(tasks)) return cmdErr('--tasks-file must contain a JSON array');
+      } catch (e) {
+        return cmdErr(`Cannot read tasks file: ${(e as Error).message}`);
+      }
+
+      // Resolve project number for board additions (best-effort)
+      const config = loadConfig(process.cwd());
+      const configAny = config as unknown as Record<string, unknown>;
+      const ghConfig = configAny.github as Record<string, unknown> | undefined;
+      const projectNumber = typeof ghConfig?.project_number === 'number' ? ghConfig.project_number : undefined;
+      const repoInfo = getRepoInfo();
+
+      let created = 0;
+      const errors: string[] = [];
+
+      for (const task of tasks) {
+        if (!task.title) {
+          errors.push('Skipped task with missing title');
+          continue;
+        }
+
+        const issueResult = await createIssue({
+          title: task.title,
+          body: task.body ?? '',
+          labels: task.labels ?? [],
+        });
+
+        if (!issueResult.ok) {
+          errors.push(`Failed to create "${task.title}": ${issueResult.error}`);
+          continue;
+        }
+
+        const issue = issueResult.data;
+
+        // Link as sub-issue
+        const subResult = await addSubIssue(phaseIssueNumber, issue.number);
+        if (!subResult.ok) {
+          errors.push(`Created #${issue.number} but failed to link as sub-issue: ${subResult.error}`);
+        }
+
+        // Add to project board if configured
+        if (projectNumber) {
+          const issueUrl = `https://github.com/${repoInfo.owner}/${repoInfo.repo}/issues/${issue.number}`;
+          addItemToProject(projectNumber, issueUrl); // best-effort, ignore errors
+        }
+
+        created++;
+      }
+
+      const summary = [`Created ${created} tasks as sub-issues of #${phaseIssueNumber}`];
+      if (errors.length > 0) {
+        summary.push(`Errors (${errors.length}):`);
+        for (const err of errors) summary.push(`  - ${err}`);
+      }
+
+      return cmdOk(summary.join('\n'));
+    },
+  },
+
+  // ── Task 3.6: All-progress and detect-external-edits ─────────────────
+
+  'all-progress': {
+    name: 'all-progress',
+    description: 'Show progress for all phase issues. Usage: all-progress',
+    async handler(_args) {
+      const result = await listIssues({ labels: 'type:phase', state: 'all' });
+      if (!result.ok) return cmdErr(result.error);
+
+      const phases = result.data;
+      if (phases.length === 0) {
+        return cmdOk('No phase issues found (label: type:phase)');
+      }
+
+      const header = `${'Phase'.padEnd(8)} ${'Title'.padEnd(40)} ${'Tasks'.padEnd(10)} Status`;
+      const separator = '-'.repeat(header.length);
+
+      const rows: string[] = [];
+      for (const phase of phases) {
+        const subResult = await listSubIssues(phase.number);
+        let taskDisplay = '?/?';
+        if (subResult.ok) {
+          const total = subResult.data.length;
+          const closed = subResult.data.filter((i) => i.state === 'closed').length;
+          taskDisplay = `${closed}/${total}`;
+        }
+        const phaseCol = `#${phase.number}`.padEnd(8);
+        const titleCol = phase.title.slice(0, 38).padEnd(40);
+        const taskCol = taskDisplay.padEnd(10);
+        rows.push(`${phaseCol} ${titleCol} ${taskCol} ${phase.state}`);
+      }
+
+      return cmdOk([header, separator, ...rows].join('\n'));
+    },
+  },
+
+  'detect-external-edits': {
+    name: 'detect-external-edits',
+    description: 'Detect external edits to comments on a phase issue. Usage: detect-external-edits --phase-number 1',
+    async handler(args) {
+      let phaseNumber: number;
+      try {
+        const raw = getRequiredFlag(args, '--phase-number');
+        phaseNumber = parseInt(raw, 10);
+        if (Number.isNaN(phaseNumber)) return cmdErr('--phase-number must be an integer');
+      } catch (e) {
+        return cmdErr((e as Error).message);
+      }
+
+      // Find the phase issue
+      const listResult = await listIssues({ labels: 'type:phase', state: 'all' });
+      if (!listResult.ok) return cmdErr(listResult.error);
+
+      const phaseIssue = listResult.data.find(
+        (i) => i.title.startsWith(`Phase ${phaseNumber}:`),
+      );
+      if (!phaseIssue) {
+        return cmdErr(`Phase issue not found for phase ${phaseNumber}`);
+      }
+
+      // List comments on the phase issue
+      const commentsResult = await listComments(phaseIssue.number);
+      if (!commentsResult.ok) return cmdErr(commentsResult.error);
+
+      const comments = commentsResult.data;
+      if (comments.length === 0) {
+        return cmdOk('No external edits detected (no comments found)');
+      }
+
+      // Check for externally edited maxsim comments
+      const edited: Array<{ id: number; type: string; createdAt: string; updatedAt: string }> = [];
+      for (const comment of comments) {
+        const meta = parseCommentMeta(comment.body);
+        if (!meta) continue; // Only check maxsim-typed comments
+        if (comment.updatedAt > comment.createdAt) {
+          edited.push({
+            id: comment.id,
+            type: meta.type,
+            createdAt: comment.createdAt,
+            updatedAt: comment.updatedAt,
+          });
+        }
+      }
+
+      if (edited.length === 0) {
+        return cmdOk('No external edits detected');
+      }
+
+      const lines = [`Warning: ${edited.length} comment(s) modified externally on #${phaseIssue.number}:`];
+      for (const e of edited) {
+        lines.push(`  Comment #${e.id} [type:${e.type}] — created: ${e.createdAt}, updated: ${e.updatedAt}`);
+      }
+      return cmdOk(lines.join('\n'));
     },
   },
 };
