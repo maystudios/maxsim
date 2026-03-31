@@ -5,7 +5,7 @@
  */
 
 import { MaxsimError, classifyError } from './core/errors.js';
-import { ALL_COMMANDS, GITHUB_COMMANDS } from './commands/index.js';
+import { ALL_COMMANDS, GITHUB_COMMANDS, INIT_COMMANDS } from './commands/index.js';
 import type { CommandRegistry } from './commands/index.js';
 
 /**
@@ -13,6 +13,7 @@ import type { CommandRegistry } from './commands/index.js';
  */
 export const NAMESPACE_COMMANDS: Record<string, CommandRegistry> = {
   github: GITHUB_COMMANDS,
+  init: INIT_COMMANDS,
 };
 
 const args = process.argv.slice(2);

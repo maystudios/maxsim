@@ -16,3 +16,4 @@ export * from './types.js';
 export { RESOLVE_COMMANDS } from './resolve.js';
 export { CONFIG_COMMANDS } from './config.js';
 export { GITHUB_COMMANDS } from './github.js';
+export { INIT_COMMANDS } from './init.js';
