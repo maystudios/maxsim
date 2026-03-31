@@ -1,3 +1,10 @@
+## [5.21.1](https://github.com/maystudios/maxsimcli/compare/v5.21.0...v5.21.1) (2026-03-31)
+
+
+### Bug Fixes
+
+* **skills:** rename index.md to SKILL.md for Claude Code skill discovery ([b7a664c](https://github.com/maystudios/maxsimcli/commit/b7a664ced10b608ee5ae4f5005e36c8ae8658989))
+
 # [5.21.0](https://github.com/maystudios/maxsimcli/compare/v5.20.0...v5.21.0) (2026-03-27)
 
 
