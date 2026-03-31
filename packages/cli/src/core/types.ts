@@ -218,6 +218,8 @@ export interface MaxsimConfig {
   };
   github: {
     projectName: string;
+    project_number?: number;
+    milestone_number?: number;
     auto_push: boolean;
   };
   hooks: {

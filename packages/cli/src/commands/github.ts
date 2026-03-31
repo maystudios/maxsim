@@ -351,10 +351,8 @@ export const GITHUB_COMMANDS: CommandRegistry = {
 
       // Resolve project number
       let projectNumber: number | undefined;
-      const configAny = config as unknown as Record<string, unknown>;
-      const ghConfig = configAny.github as Record<string, unknown> | undefined;
-      if (ghConfig?.project_number && typeof ghConfig.project_number === 'number') {
-        projectNumber = ghConfig.project_number;
+      if (config.github.project_number) {
+        projectNumber = config.github.project_number;
       } else if (config.github.projectName) {
         const findResult = findProject(config.github.projectName);
         if (!findResult.ok) return cmdErr(findResult.error);
@@ -396,10 +394,7 @@ export const GITHUB_COMMANDS: CommandRegistry = {
 
       const projectDir = process.cwd();
       const config = loadConfig(projectDir);
-      const configAny = config as unknown as Record<string, unknown>;
-      const ghConfig = (configAny.github as Record<string, unknown>) ?? {};
-      ghConfig.project_number = projectNumber;
-      configAny.github = ghConfig;
+      config.github.project_number = projectNumber;
       saveConfig(projectDir, config);
 
       return cmdOk(`Project number set to ${projectNumber}`);
@@ -538,9 +533,7 @@ export const GITHUB_COMMANDS: CommandRegistry = {
 
       // Add to project board if configured
       const config = loadConfig(process.cwd());
-      const configAny = config as unknown as Record<string, unknown>;
-      const ghConfig = configAny.github as Record<string, unknown> | undefined;
-      const projectNumber = typeof ghConfig?.project_number === 'number' ? ghConfig.project_number : undefined;
+      const projectNumber = config.github.project_number;
       if (projectNumber) {
         const repoInfo = getRepoInfo();
         const issueUrl = `https://github.com/${repoInfo.owner}/${repoInfo.repo}/issues/${issue.number}`;
@@ -662,9 +655,7 @@ export const GITHUB_COMMANDS: CommandRegistry = {
 
       // Resolve project number for board additions (best-effort)
       const config = loadConfig(process.cwd());
-      const configAny = config as unknown as Record<string, unknown>;
-      const ghConfig = configAny.github as Record<string, unknown> | undefined;
-      const projectNumber = typeof ghConfig?.project_number === 'number' ? ghConfig.project_number : undefined;
+      const projectNumber = config.github.project_number;
       const repoInfo = getRepoInfo();
 
       let created = 0;
