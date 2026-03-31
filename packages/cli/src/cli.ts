@@ -1,164 +1,88 @@
 /**
- * MAXSIM Tools — CLI dispatcher.
+ * MAXSIM Tools — CLI async dispatcher.
  * Usage: node cli.cjs <command> [args]
+ *        node cli.cjs <namespace> <subcommand> [args]
  */
 
-import { loadConfig, saveConfig, resolveModel, resolveMaxAgents, resolveEffectiveWaveSize, AgentType, TaskComplexity, type ModelProfile } from './core/index.js';
+import { MaxsimError, classifyError } from './core/errors.js';
+import { ALL_COMMANDS } from './commands/index.js';
+import type { CommandRegistry } from './commands/index.js';
+
+/**
+ * Namespace command registries for two-level routing (e.g. `github push`).
+ * Wave 2 and 3 can add entries here without touching this file.
+ */
+export const NAMESPACE_COMMANDS: Record<string, CommandRegistry> = {
+  // github: GITHUB_COMMANDS  — added by Wave 2
+  // init:   INIT_COMMANDS    — added by Wave 3
+};
 
 const args = process.argv.slice(2);
 const command = args[0];
 
-const COMMANDS: Record<string, () => void> = {
-  'resolve-model': () => {
-    const agentType = args[1]?.toLowerCase() as AgentType;
-    if (!agentType || !Object.values(AgentType).includes(agentType)) {
-      console.error(`Invalid agent type: ${args[1]}`);
-      process.exit(1);
-    }
-    const projectDir = process.cwd();
-    const config = loadConfig(projectDir);
-    const model = resolveModel(config.execution.model_profile as ModelProfile, agentType, config.execution.model_overrides);
-    if (args.includes('--raw')) {
-      process.stdout.write(model.toLowerCase());
-    } else {
-      console.log(model);
-    }
-  },
-  'resolve-max-agents': () => {
-    const projectDir = process.cwd();
-    const config = loadConfig(projectDir);
-    const profile = (args[1] as ModelProfile) || config.execution.model_profile as ModelProfile;
-
-    const fileCountIdx = args.indexOf('--file-count');
-    const fileCount = fileCountIdx >= 0 ? parseInt(args[fileCountIdx + 1], 10) : 0;
-    if (fileCountIdx >= 0 && (Number.isNaN(fileCount) || fileCount < 0)) {
-      console.error('--file-count must be a non-negative integer');
-      process.exit(1);
-    }
-
-    const complexityIdx = args.indexOf('--complexity');
-    const complexityArg = complexityIdx >= 0 ? args[complexityIdx + 1] : TaskComplexity.MEDIUM;
-    if (!Object.values(TaskComplexity).includes(complexityArg as TaskComplexity)) {
-      console.error(`Invalid complexity: ${complexityArg}. Must be: simple, medium, complex`);
-      process.exit(1);
-    }
-
-    const result = resolveMaxAgents(profile, fileCount, complexityArg as TaskComplexity);
-    if (args.includes('--raw')) {
-      process.stdout.write(String(result));
-    } else {
-      console.log(result);
-    }
-  },
-  'resolve-wave-size': () => {
-    const projectDir = process.cwd();
-    const config = loadConfig(projectDir);
-    const profile = (args[1] as ModelProfile) || config.execution.model_profile as ModelProfile;
-
-    const fileCountIdx = args.indexOf('--file-count');
-    const fileCount = fileCountIdx >= 0 ? parseInt(args[fileCountIdx + 1], 10) : 0;
-    if (fileCountIdx >= 0 && (Number.isNaN(fileCount) || fileCount < 0)) {
-      console.error('--file-count must be a non-negative integer');
-      process.exit(1);
-    }
-
-    const complexityIdx = args.indexOf('--complexity');
-    const complexityArg = complexityIdx >= 0 ? args[complexityIdx + 1] : TaskComplexity.MEDIUM;
-    if (!Object.values(TaskComplexity).includes(complexityArg as TaskComplexity)) {
-      console.error(`Invalid complexity: ${complexityArg}. Must be: simple, medium, complex`);
-      process.exit(1);
-    }
-
-    const waveSize = resolveEffectiveWaveSize(
-      profile,
-      config.execution.parallelism.max_agents_per_wave,
-      fileCount,
-      complexityArg as TaskComplexity,
-    );
-    if (args.includes('--raw')) {
-      process.stdout.write(String(waveSize));
-    } else {
-      console.log(waveSize);
-    }
-  },
-  'config-get': () => {
-    const key = args[1];
-    if (!key) { console.error('Usage: config-get <key>'); process.exit(1); }
-    const config = loadConfig(process.cwd());
-    const parts = key.split('.');
-    let value: unknown = config;
-    for (const part of parts) {
-      if (value && typeof value === 'object') {
-        value = (value as Record<string, unknown>)[part];
-      } else {
-        value = undefined;
-        break;
-      }
-    }
-    if (value === undefined) {
-      console.error(`Key not found: ${key}`);
-      process.exit(1);
-    }
-    console.log(typeof value === 'object' ? JSON.stringify(value, null, 2) : String(value));
-  },
-  'config-set': () => {
-    const key = args[1];
-    const val = args[2];
-    if (!key || val === undefined) { console.error('Usage: config-set <key> <value>'); process.exit(1); }
-    const projectDir = process.cwd();
-    const config = loadConfig(projectDir);
-    const parts = key.split('.');
-    let obj: Record<string, unknown> = config as unknown as Record<string, unknown>;
-    for (let i = 0; i < parts.length - 1; i++) {
-      if (!obj[parts[i]] || typeof obj[parts[i]] !== 'object') {
-        obj[parts[i]] = {};
-      }
-      obj = obj[parts[i]] as Record<string, unknown>;
-    }
-    // Try to parse as JSON, fall back to string
-    try { obj[parts[parts.length - 1]] = JSON.parse(val); } catch { obj[parts[parts.length - 1]] = val; }
-    saveConfig(projectDir, config);
-    console.log(`Set ${key} = ${val}`);
-  },
-  'config-ensure-section': () => {
-    const section = args[1];
-    if (!section) { console.error('Usage: config-ensure-section <section>'); process.exit(1); }
-    const projectDir = process.cwd();
-    const config = loadConfig(projectDir);
-    const obj = config as unknown as Record<string, unknown>;
-    if (!obj[section]) {
-      obj[section] = {};
-      saveConfig(projectDir, config);
-      console.log(`Created section: ${section}`);
-    } else {
-      console.log(`Section exists: ${section}`);
-    }
-  },
-};
-
-function main(): void {
+async function main(): Promise<void> {
   if (!command) {
-    const available = Object.keys(COMMANDS).join(', ') || '(none yet)';
-    process.stderr.write(
-      `Usage: maxsim-tools <command> [args]\nCommands: ${available}\n`,
-    );
+    const flatNames = Object.keys(ALL_COMMANDS).join(', ') || '(none yet)';
+    const nsNames = Object.keys(NAMESPACE_COMMANDS).join(', ');
+    const nsInfo = nsNames ? `\nNamespaces: ${nsNames}` : '';
+    process.stderr.write(`Usage: maxsim-tools <command> [args]\nCommands: ${flatNames}${nsInfo}\n`);
     process.exit(1);
   }
 
-  const handler = COMMANDS[command];
-  if (!handler) {
-    process.stderr.write(`Unknown command: ${command}\n`);
-    process.exit(1);
+  // ── Namespace routing ───────────────────────────────────────────────
+  if (NAMESPACE_COMMANDS[command]) {
+    const subcommand = args[1];
+    const registry = NAMESPACE_COMMANDS[command];
+    if (!subcommand || !registry[subcommand]) {
+      const available = Object.keys(registry).join(', ') || '(none)';
+      process.stderr.write(`Usage: maxsim-tools ${command} <subcommand> [args]\nSubcommands: ${available}\n`);
+      process.exit(1);
+    }
+    const result = await registry[subcommand].handler(args.slice(2));
+    if (!result.ok) {
+      process.stderr.write(`${result.error}\n`);
+      process.exit(1);
+    }
+    if (result.ok && typeof result.result === 'string') {
+      console.log(result.result);
+    }
+    return;
   }
 
-  handler();
-}
+  // ── Flat command routing ─────────────────────────────────────────────
+  if (ALL_COMMANDS[command]) {
+    const result = await ALL_COMMANDS[command].handler(args.slice(1));
+    if (!result.ok) {
+      process.stderr.write(`${result.error}\n`);
+      process.exit(1);
+    }
+    if (result.ok && typeof result.result === 'string') {
+      console.log(result.result);
+    } else if (result.ok && typeof result.result === 'number') {
+      console.log(result.result);
+    }
+    return;
+  }
 
-try {
-  main();
-} catch (err: unknown) {
-  process.stderr.write(
-    `Fatal: ${err instanceof Error ? err.message : String(err)}\n`,
-  );
+  process.stderr.write(`Unknown command: ${command}\n`);
   process.exit(1);
 }
+
+main().catch((err: unknown) => {
+  if (err instanceof MaxsimError) {
+    const tier = err.recovery.tier.toUpperCase();
+    process.stderr.write(`[ERROR:${tier}] ${err.message}\n`);
+    if (err.recovery.suggestedAction) {
+      process.stderr.write(`Suggestion: ${err.recovery.suggestedAction}\n`);
+    }
+  } else {
+    const recovery = classifyError(err);
+    const tier = recovery.tier.toUpperCase();
+    const message = err instanceof Error ? err.message : String(err);
+    process.stderr.write(`[ERROR:${tier}] ${message}\n`);
+    if (recovery.suggestedAction) {
+      process.stderr.write(`Suggestion: ${recovery.suggestedAction}\n`);
+    }
+  }
+  process.exit(1);
+});
