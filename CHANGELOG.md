@@ -1,3 +1,24 @@
+# [5.22.0](https://github.com/maystudios/maxsimcli/compare/v5.21.1...v5.22.0) (2026-04-01)
+
+
+### Bug Fixes
+
+* **phase-1:** resolve lint warnings in new command modules ([5588630](https://github.com/maystudios/maxsimcli/commit/55886306f65b1cce12b43c3504f12c46ef2c3679))
+
+
+### Features
+
+* **phase-1-plan-01:** add central command registry index ([a6bd3a9](https://github.com/maystudios/maxsimcli/commit/a6bd3a92f68fbcb24e6e1a132aa6be177d5826a8))
+* **phase-1-plan-01:** add command handler types and argument parsing utilities ([def8a12](https://github.com/maystudios/maxsimcli/commit/def8a129598882d52b932562f7a61c6207c7dce0))
+* **phase-1-plan-01:** migrate config commands to async handler module ([0ab9d97](https://github.com/maystudios/maxsimcli/commit/0ab9d979c59921602c6d8accee4a526d05aaf6b4))
+* **phase-1-plan-01:** migrate resolve commands to async handler module ([9b5f843](https://github.com/maystudios/maxsimcli/commit/9b5f84369dccc163ff27875031f9cb2dd0b50e3f))
+* **phase-1-plan-01:** rewrite cli.ts as async router with error integration ([342e963](https://github.com/maystudios/maxsimcli/commit/342e9633496d6a5b56a97dc86351a3727ca839e0))
+* **phase-1-plan-02:** add GitHub CLI command namespace with 11 subcommands ([8e9ec38](https://github.com/maystudios/maxsimcli/commit/8e9ec38e8825ce3576f232e8f4fe535a986296fb))
+* **phase-1-plan-03:** add 7 GitHub orchestration commands to GITHUB_COMMANDS ([08fa4c3](https://github.com/maystudios/maxsimcli/commit/08fa4c3ca1670ffac3819c7c00120e8f2c854f24))
+* **phase-1-plan-04:** add init plan-phase command handler ([0386229](https://github.com/maystudios/maxsimcli/commit/0386229d17dec871673b017c3425f4a415d175f6))
+* **phase-1-plan-04:** wire INIT_COMMANDS into command registry and dispatcher ([81e24b4](https://github.com/maystudios/maxsimcli/commit/81e24b47100e23fd1fcef432d55150532163f7d9))
+* **phase-1-plan-05:** extend MaxsimConfig with project_number and milestone_number ([702fed2](https://github.com/maystudios/maxsimcli/commit/702fed2f61eb9f429152e7b54774b36887c91436))
+
 ## [5.21.1](https://github.com/maystudios/maxsimcli/compare/v5.21.0...v5.21.1) (2026-03-31)
 
 
