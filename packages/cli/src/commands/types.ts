@@ -3,7 +3,7 @@
  * Used by all command modules in packages/cli/src/commands/.
  */
 
-import { CmdResult, cmdErr } from '../core/types.js';
+import { type CmdResult, cmdErr } from '../core/types.js';
 
 export type { CmdResult };
 export { cmdErr };

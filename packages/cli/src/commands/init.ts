@@ -9,7 +9,6 @@
 
 import { cmdOk, cmdErr, AgentType } from '../core/types.js';
 import { loadConfig, resolveModel } from '../core/config.js';
-import { getRepoInfo } from '../github/client.js';
 import { listIssues, listSubIssues, listComments } from '../github/issues.js';
 import { parseCommentMeta } from '../github/comments.js';
 import { getPositionalArg, type CommandRegistry } from './types.js';
