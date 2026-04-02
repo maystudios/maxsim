@@ -164,7 +164,7 @@ export interface LabelDef {
   color: string;
 }
 
-/** Complete label taxonomy for MaxsimCLI projects — 6 labels in 2 namespaces (§5.3). */
+/** Complete label taxonomy for MaxsimCLI projects — 7 labels in 3 namespaces (§5.3). */
 export const MAXSIM_LABELS: LabelDef[] = [
   // Type labels (4)
   { name: 'type:phase', description: 'A Phase Issue representing a major deliverable', color: '0075ca' },
@@ -174,6 +174,8 @@ export const MAXSIM_LABELS: LabelDef[] = [
   // MaxsimCLI meta labels (2)
   { name: 'maxsim:auto', description: 'Created by MaxsimCLI automation', color: 'ededed' },
   { name: 'maxsim:user', description: 'Created by the user, not by MaxsimCLI', color: '0e8a16' },
+  // Verification labels (1)
+  { name: 'verification:failed', description: 'Verification failed — needs investigation', color: 'e11d48' },
 ];
 
 // ── Board Configuration ───────────────────────────────────────────────
