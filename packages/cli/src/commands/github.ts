@@ -60,6 +60,214 @@ function getAllFlagValues(args: string[], flag: string): string[] {
   return values;
 }
 
+// ── Status helpers ────────────────────────────────────────────────────
+
+/** Extract phase number from an issue title like "Phase 2: ..." */
+function extractPhaseNumber(title: string): number {
+  const match = title.match(/Phase\s+(\d+)/i);
+  return match ? parseInt(match[1], 10) : 999;
+}
+
+/**
+ * Parse acceptance criteria checkboxes from an issue body.
+ * Looks for lines matching `- [ ] ...` (unchecked) or `- [x] ...` (checked).
+ */
+function parseAcceptanceCriteria(body: string): Array<{ checked: boolean; text: string }> {
+  const criteria: Array<{ checked: boolean; text: string }> = [];
+  const lines = body.split('\n');
+  let inAcceptanceSection = false;
+
+  for (const line of lines) {
+    const trimmed = line.trim();
+
+    // Detect acceptance criteria section header
+    if (/^#+\s*acceptance\s+criteria/i.test(trimmed)) {
+      inAcceptanceSection = true;
+      continue;
+    }
+
+    // Stop when hitting the next header section
+    if (inAcceptanceSection && /^#+\s/.test(trimmed) && !/^#+\s*acceptance/i.test(trimmed)) {
+      inAcceptanceSection = false;
+      continue;
+    }
+
+    // Parse checkbox lines within the acceptance criteria section
+    if (inAcceptanceSection) {
+      const checkboxMatch = trimmed.match(/^-\s+\[([ xX])\]\s+(.+)$/);
+      if (checkboxMatch) {
+        const checked = checkboxMatch[1].toLowerCase() === 'x';
+        const text = checkboxMatch[2].trim();
+        criteria.push({ checked, text });
+      }
+    }
+  }
+
+  return criteria;
+}
+
+/** Single-phase detail mode: phase header, task list, acceptance criteria, drift warning. */
+async function statusSinglePhase(phaseNumber: number) {
+  // Find the phase issue by label and title pattern
+  const listResult = await listIssues({ labels: 'type:phase', state: 'all' });
+  if (!listResult.ok) return cmdErr(listResult.error);
+
+  const phaseIssue = listResult.data.find(
+    (i) => extractPhaseNumber(i.title) === phaseNumber,
+  );
+  if (!phaseIssue) {
+    return cmdErr(`Phase issue not found for phase ${phaseNumber}`);
+  }
+
+  // Fetch full issue data for body content
+  const issueResult = await getIssue(phaseIssue.number);
+  if (!issueResult.ok) return cmdErr(issueResult.error);
+  const issue = issueResult.data;
+
+  // Fetch sub-issues (tasks)
+  const subResult = await listSubIssues(phaseIssue.number);
+  if (!subResult.ok) return cmdErr(subResult.error);
+  const tasks = subResult.data;
+
+  const lines: string[] = [];
+
+  // ── Phase header ────────────────────────────────────────────────────
+  const stateDisplay = issue.state === 'closed' ? 'CLOSED' : 'OPEN';
+  lines.push(`# Phase ${phaseNumber}: ${issue.title.replace(/^Phase\s+\d+:\s*/i, '').trim()}`);
+  lines.push(`State: ${stateDisplay}  |  Issue: #${issue.number}`);
+  lines.push('');
+
+  // ── Task list ───────────────────────────────────────────────────────
+  const closedCount = tasks.filter((t) => t.state === 'closed').length;
+  lines.push(`## Tasks (${closedCount}/${tasks.length})`);
+
+  if (tasks.length === 0) {
+    lines.push('  (no tasks)');
+  } else {
+    // Sort: closed first, then open, by issue number within each group
+    const sorted = [...tasks].sort((a, b) => {
+      if (a.state === 'closed' && b.state !== 'closed') return -1;
+      if (a.state !== 'closed' && b.state === 'closed') return 1;
+      return a.number - b.number;
+    });
+
+    for (const task of sorted) {
+      const marker = task.state === 'closed' ? '\u2713' : '\u25CB';
+      const taskTitle = task.title.replace(/^Task\s+[\d.]+:\s*/i, '').trim();
+      lines.push(`  ${marker} #${task.number}: ${taskTitle}`);
+    }
+  }
+  lines.push('');
+
+  // ── Acceptance criteria ─────────────────────────────────────────────
+  const criteria = parseAcceptanceCriteria(issue.body);
+  if (criteria.length > 0) {
+    const checkedCount = criteria.filter((c) => c.checked).length;
+    lines.push(`## Acceptance Criteria (${checkedCount}/${criteria.length})`);
+    for (const c of criteria) {
+      const marker = c.checked ? '[x]' : '[ ]';
+      lines.push(`  ${marker} ${c.text}`);
+    }
+    lines.push('');
+
+    // ── Drift warning ───────────────────────────────────────────────
+    const allTasksClosed = tasks.length > 0 && closedCount === tasks.length;
+    const allCriteriaChecked = checkedCount === criteria.length;
+    if (allTasksClosed && !allCriteriaChecked) {
+      const unchecked = criteria.length - checkedCount;
+      lines.push(`WARNING: All ${tasks.length} tasks are closed but ${unchecked} acceptance criteria remain unchecked — potential drift`);
+      lines.push('');
+    }
+  }
+
+  return cmdOk(lines.join('\n'));
+}
+
+/** All-phases summary mode: connectivity checks + compact phase list. */
+async function statusAllPhases() {
+  const lines: string[] = [];
+
+  // Step 1: Repo info
+  try {
+    const repoInfo = getRepoInfo();
+    lines.push(`Repository: ${repoInfo.owner}/${repoInfo.repo}`);
+    lines.push('Auth: OK (via gh CLI)');
+  } catch (e) {
+    lines.push(`Repository: ERROR — ${(e as Error).message}`);
+    lines.push('Auth: UNKNOWN');
+  }
+
+  // Step 2: Load config for project settings
+  const config = loadConfig(process.cwd());
+  const projectName = config.github.projectName || '(not configured)';
+
+  // Step 3: Find project (best-effort)
+  let projectDisplay = `${projectName} (not found)`;
+  try {
+    const findResult = findProject(config.github.projectName);
+    if (findResult.ok && findResult.data) {
+      projectDisplay = `${projectName} (#${findResult.data.number})`;
+    } else if (!config.github.projectName) {
+      projectDisplay = '(not configured)';
+    }
+  } catch {
+    projectDisplay = `${projectName} (check failed)`;
+  }
+  lines.push(`Project: ${projectDisplay}`);
+
+  // Step 4: Check labels (best-effort)
+  let labelDisplay = `${MAXSIM_LABELS.length} configured`;
+  try {
+    const labelResult = await ensureLabels();
+    if (labelResult.ok) {
+      const { created, existing } = labelResult.data;
+      labelDisplay = `${MAXSIM_LABELS.length} configured (${existing.length} exist, ${created.length} created)`;
+    }
+  } catch {
+    labelDisplay = `${MAXSIM_LABELS.length} configured (check failed)`;
+  }
+  lines.push(`Labels: ${labelDisplay}`);
+  lines.push('');
+
+  // Step 5: Compact phase list with open/closed counts
+  const phaseResult = await listIssues({ labels: 'type:phase', state: 'all' });
+  if (!phaseResult.ok) {
+    lines.push('Phases: could not fetch phase issues');
+    return cmdOk(lines.join('\n'));
+  }
+
+  const phases = phaseResult.data;
+  if (phases.length === 0) {
+    lines.push('Phases: none found');
+    return cmdOk(lines.join('\n'));
+  }
+
+  // Sort by phase number
+  phases.sort((a, b) => extractPhaseNumber(a.title) - extractPhaseNumber(b.title));
+
+  // Fetch sub-issues in parallel
+  const subResults = await Promise.all(phases.map((p) => listSubIssues(p.number)));
+
+  lines.push('## Phases');
+  for (let i = 0; i < phases.length; i++) {
+    const phase = phases[i];
+    const phaseNum = extractPhaseNumber(phase.title);
+    const shortTitle = phase.title.replace(/^Phase\s+\d+:\s*/i, '').trim();
+    const stateTag = phase.state === 'closed' ? 'DONE' : 'OPEN';
+
+    let taskInfo = '';
+    const sub = subResults[i];
+    if (sub.ok) {
+      const closed = sub.data.filter((t) => t.state === 'closed').length;
+      taskInfo = ` (${closed}/${sub.data.length} tasks)`;
+    }
+
+    lines.push(`  Phase ${phaseNum}: ${shortTitle} [${stateTag}]${taskInfo}`);
+  }
+
+  return cmdOk(lines.join('\n'));
+}
+
 // ── GITHUB_COMMANDS ────────────────────────────────────────────────────
 
 export const GITHUB_COMMANDS: CommandRegistry = {
@@ -489,54 +697,18 @@ export const GITHUB_COMMANDS: CommandRegistry = {
 
   'status': {
     name: 'status',
-    description: 'Check GitHub connectivity and show project state. Usage: status',
-    async handler(_args) {
-      const lines: string[] = [];
+    description: 'Show project status. Usage: status [--phase-number N]  Without --phase-number: connectivity + all-phases summary. With --phase-number: detailed single-phase view.',
+    async handler(args) {
+      const phaseNumberRaw = getIntFlag(args, '--phase-number');
 
-      // Step 1: Repo info
-      let repoInfo: { owner: string; repo: string } | null = null;
-      try {
-        repoInfo = getRepoInfo();
-        lines.push(`Repository: ${repoInfo.owner}/${repoInfo.repo}`);
-        lines.push('Auth: OK (via gh CLI)');
-      } catch (e) {
-        lines.push(`Repository: ERROR — ${(e as Error).message}`);
-        lines.push('Auth: UNKNOWN');
+      // ── Single-phase detail mode ────────────────────────────────────
+      if (phaseNumberRaw !== undefined) {
+        if (Number.isNaN(phaseNumberRaw)) return cmdErr('--phase-number must be an integer');
+        return statusSinglePhase(phaseNumberRaw);
       }
 
-      // Step 2: Load config for project settings
-      const config = loadConfig(process.cwd());
-      const projectName = config.github.projectName || '(not configured)';
-
-      // Step 3: Find project (best-effort)
-      let projectDisplay = `${projectName} (not found)`;
-      try {
-        const findResult = findProject(config.github.projectName);
-        if (findResult.ok && findResult.data) {
-          projectDisplay = `${projectName} (#${findResult.data.number})`;
-        } else if (!config.github.projectName) {
-          projectDisplay = '(not configured)';
-        }
-      } catch {
-        // Network issue — report gracefully
-        projectDisplay = `${projectName} (check failed)`;
-      }
-      lines.push(`Project: ${projectDisplay}`);
-
-      // Step 4: Check labels (best-effort)
-      let labelDisplay = `${MAXSIM_LABELS.length} configured`;
-      try {
-        const labelResult = await ensureLabels();
-        if (labelResult.ok) {
-          const { created, existing } = labelResult.data;
-          labelDisplay = `${MAXSIM_LABELS.length} configured (${existing.length} exist, ${created.length} created)`;
-        }
-      } catch {
-        labelDisplay = `${MAXSIM_LABELS.length} configured (check failed)`;
-      }
-      lines.push(`Labels: ${labelDisplay}`);
-
-      return cmdOk(lines.join('\n'));
+      // ── All-phases summary mode ─────────────────────────────────────
+      return statusAllPhases();
     },
   },
 
