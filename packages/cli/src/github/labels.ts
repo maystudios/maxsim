@@ -95,3 +95,41 @@ export async function createLabel(
     };
   });
 }
+
+/** Add a label to an issue. */
+export async function addLabelToIssue(
+  issueNumber: number,
+  labelName: string,
+  repo?: RepoInfo,
+): Promise<GhResult<void>> {
+  const { owner, repo: repoName } = repo ?? getRepoInfo();
+  const octokit = getOctokit();
+
+  return withGhResult(async () => {
+    await octokit.rest.issues.addLabels({
+      owner,
+      repo: repoName,
+      issue_number: issueNumber,
+      labels: [labelName],
+    });
+  });
+}
+
+/** Remove a label from an issue. */
+export async function removeLabelFromIssue(
+  issueNumber: number,
+  labelName: string,
+  repo?: RepoInfo,
+): Promise<GhResult<void>> {
+  const { owner, repo: repoName } = repo ?? getRepoInfo();
+  const octokit = getOctokit();
+
+  return withGhResult(async () => {
+    await octokit.rest.issues.removeLabel({
+      owner,
+      repo: repoName,
+      issue_number: issueNumber,
+      name: labelName,
+    });
+  });
+}
