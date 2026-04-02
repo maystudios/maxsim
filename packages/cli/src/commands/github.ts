@@ -784,35 +784,106 @@ export const GITHUB_COMMANDS: CommandRegistry = {
 
   'all-progress': {
     name: 'all-progress',
-    description: 'Show progress for all phase issues. Usage: all-progress',
+    description: 'Show adaptive progress for all phase issues with detail levels and progress bar. Usage: all-progress',
     async handler(_args) {
-      const result = await listIssues({ labels: 'type:phase', state: 'all' });
+      // Fetch all phase issues (label is 'maxsim:phase' per actual GitHub data)
+      const result = await listIssues({ labels: 'maxsim:phase', state: 'all' });
       if (!result.ok) return cmdErr(result.error);
 
       const phases = result.data;
       if (phases.length === 0) {
-        return cmdOk('No phase issues found (label: type:phase)');
+        return cmdOk('No phase issues found (label: maxsim:phase)');
       }
 
-      const header = `${'Phase'.padEnd(8)} ${'Title'.padEnd(40)} ${'Tasks'.padEnd(10)} Status`;
-      const separator = '-'.repeat(header.length);
+      // Extract phase number from title (e.g., "Phase 2: ..." → 2) for sorting
+      function extractPhaseNumber(title: string): number {
+        const match = title.match(/Phase\s+(\d+)/i);
+        return match ? parseInt(match[1], 10) : 999;
+      }
 
-      const rows: string[] = [];
-      for (const phase of phases) {
-        const subResult = await listSubIssues(phase.number);
-        let taskDisplay = '?/?';
-        if (subResult.ok) {
-          const total = subResult.data.length;
-          const closed = subResult.data.filter((i) => i.state === 'closed').length;
-          taskDisplay = `${closed}/${total}`;
+      // Sort phases by extracted phase number
+      phases.sort((a, b) => extractPhaseNumber(a.title) - extractPhaseNumber(b.title));
+
+      // Fetch sub-issues for all phases in parallel
+      const subIssueResults = await Promise.all(
+        phases.map((phase) => listSubIssues(phase.number)),
+      );
+
+      // Classify phases and accumulate totals
+      let totalTasks = 0;
+      let totalClosed = 0;
+      const lines: string[] = [];
+
+      lines.push('# Milestone Progress');
+      lines.push('');
+
+      for (let i = 0; i < phases.length; i++) {
+        const phase = phases[i];
+        const subResult = subIssueResults[i];
+        const phaseNum = extractPhaseNumber(phase.title);
+        const phaseLabel = `Phase ${phaseNum}`;
+
+        // Strip "Phase N: " prefix from title for cleaner display
+        const shortTitle = phase.title.replace(/^Phase\s+\d+:\s*/i, '').trim();
+
+        if (!subResult.ok) {
+          // Could not fetch sub-issues — show warning
+          lines.push(`${phaseLabel}: ${shortTitle} — [could not fetch tasks]`);
+          lines.push('');
+          continue;
         }
-        const phaseCol = `#${phase.number}`.padEnd(8);
-        const titleCol = phase.title.slice(0, 38).padEnd(40);
-        const taskCol = taskDisplay.padEnd(10);
-        rows.push(`${phaseCol} ${titleCol} ${taskCol} ${phase.state}`);
+
+        const tasks = subResult.data;
+        const closed = tasks.filter((t) => t.state === 'closed').length;
+        const total = tasks.length;
+        totalTasks += total;
+        totalClosed += closed;
+
+        // Determine phase status category
+        const allClosed = phase.state === 'closed' || (total > 0 && closed === total);
+        const hasProgress = closed > 0 && closed < total;
+        const isInProgress = phase.state === 'open' && (hasProgress || total === 0);
+
+        if (allClosed) {
+          // DONE — compact one-liner
+          lines.push(`${phaseLabel}: ${shortTitle} — Complete (${total} tasks)`);
+        } else if (isInProgress && total > 0) {
+          // IN-PROGRESS — expanded with task list
+          lines.push(`${phaseLabel}: ${shortTitle} — In Progress (${closed}/${total})`);
+
+          // Sort tasks: closed first, then open
+          const sortedTasks = [...tasks].sort((a, b) => {
+            if (a.state === 'closed' && b.state !== 'closed') return -1;
+            if (a.state !== 'closed' && b.state === 'closed') return 1;
+            return a.number - b.number;
+          });
+
+          for (const task of sortedTasks) {
+            const marker = task.state === 'closed' ? '[x]' : '[ ]';
+            const taskTitle = task.title.replace(/^Task\s+[\d.]+:\s*/i, '').trim();
+            lines.push(`  ${marker} #${task.number}: ${taskTitle}`);
+          }
+        } else {
+          // NOT STARTED — compact one-liner
+          const taskNote = total > 0 ? `${total} tasks` : 'no tasks';
+          lines.push(`${phaseLabel}: ${shortTitle} — Not started (${taskNote})`);
+        }
+
+        lines.push('');
       }
 
-      return cmdOk([header, separator, ...rows].join('\n'));
+      // Overall progress bar
+      const barWidth = 20;
+      const pct = totalTasks > 0 ? totalClosed / totalTasks : 0;
+      const filled = Math.round(pct * barWidth);
+      const empty = barWidth - filled;
+      const bar = '\u2588'.repeat(filled) + '\u2591'.repeat(empty);
+      const pctDisplay = Math.round(pct * 100);
+
+      lines.push('---');
+      lines.push(`Overall: ${bar} ${totalClosed}/${totalTasks} (${pctDisplay}%)`);
+
+      return cmdOk(lines.join('\n'));
     },
   },
 
