@@ -71,8 +71,8 @@ function makeRawLabel(overrides: Partial<{
 // ── MAXSIM_LABELS constant ────────────────────────────────────────────────────
 
 describe('MAXSIM_LABELS constant', () => {
-  it('has exactly 6 entries', () => {
-    expect(MAXSIM_LABELS).toHaveLength(6);
+  it('has exactly 7 entries', () => {
+    expect(MAXSIM_LABELS).toHaveLength(7);
   });
 
   it('contains all type: namespace labels (4 entries)', () => {
@@ -329,7 +329,7 @@ describe('ensureLabels', () => {
     vi.clearAllMocks();
   });
 
-  it('creates all 6 labels when the repo has none', async () => {
+  it('creates all 7 labels when the repo has none', async () => {
     mockPaginate.mockResolvedValue([]); // No existing labels
     mockCreateLabel.mockResolvedValue({ data: makeRawLabel() });
 
@@ -338,9 +338,9 @@ describe('ensureLabels', () => {
     expect(result.ok).toBe(true);
     if (!result.ok) throw new Error('Expected ok:true');
 
-    expect(result.data.created).toHaveLength(6);
+    expect(result.data.created).toHaveLength(7);
     expect(result.data.existing).toHaveLength(0);
-    expect(mockCreateLabel).toHaveBeenCalledTimes(6);
+    expect(mockCreateLabel).toHaveBeenCalledTimes(7);
   });
 
   it('skips existing labels and only creates missing ones', async () => {
@@ -357,11 +357,11 @@ describe('ensureLabels', () => {
     expect(result.data.existing).toHaveLength(2);
     expect(result.data.existing).toEqual(expect.arrayContaining(alreadyPresent));
 
-    expect(result.data.created).toHaveLength(4); // 6 - 2
-    expect(mockCreateLabel).toHaveBeenCalledTimes(4);
+    expect(result.data.created).toHaveLength(5); // 7 - 2
+    expect(mockCreateLabel).toHaveBeenCalledTimes(5);
   });
 
-  it('skips all labels when all 6 already exist on the repo', async () => {
+  it('skips all labels when all 7 already exist on the repo', async () => {
     mockPaginate.mockResolvedValue(MAXSIM_LABELS.map((l) => makeRawLabel({ name: l.name })));
 
     const result = await ensureLabels();
@@ -369,7 +369,7 @@ describe('ensureLabels', () => {
     expect(result.ok).toBe(true);
     if (!result.ok) throw new Error('Expected ok:true');
 
-    expect(result.data.existing).toHaveLength(6);
+    expect(result.data.existing).toHaveLength(7);
     expect(result.data.created).toHaveLength(0);
     expect(mockCreateLabel).not.toHaveBeenCalled();
   });
