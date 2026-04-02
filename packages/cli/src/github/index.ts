@@ -32,7 +32,7 @@ export {
 export {
   createProject, listProjects, findProject,
   listProjectFields, getStatusField, getFieldOptionId,
-  addItemToProject, moveItemToStatus,
+  listProjectItems, addItemToProject, moveItemToStatus,
   ensureProjectBoard,
 } from './projects.js';
 
@@ -43,7 +43,7 @@ export {
 } from './milestones.js';
 
 // Labels
-export { ensureLabels, getLabel, createLabel } from './labels.js';
+export { ensureLabels, getLabel, createLabel, addLabelToIssue, removeLabelFromIssue } from './labels.js';
 
 // Discussions
 export {
