@@ -1340,4 +1340,113 @@ export const GITHUB_COMMANDS: CommandRegistry = {
       return cmdOk(lines.join('\n'));
     },
   },
+
+  // ── Task 7.1: Verification failure lifecycle ─────────────────────────
+
+  'handle-verification-failure': {
+    name: 'handle-verification-failure',
+    description: 'Composite: reopen phase, move to In Progress, label verification:failed, reopen failed tasks, post error comment. Usage: handle-verification-failure --phase-issue-number 216 --reason "tests failed" [--task-numbers "253,254"]',
+    async handler(args) {
+      let phaseIssueNumber: number;
+      try {
+        const raw = getRequiredFlag(args, '--phase-issue-number');
+        phaseIssueNumber = parseInt(raw, 10);
+        if (Number.isNaN(phaseIssueNumber)) return cmdErr('--phase-issue-number must be an integer');
+      } catch (e) {
+        return cmdErr((e as Error).message);
+      }
+
+      let reason: string;
+      try {
+        reason = getRequiredFlag(args, '--reason');
+      } catch (e) {
+        return cmdErr((e as Error).message);
+      }
+
+      const taskNumbersRaw = getFlag(args, '--task-numbers');
+      const taskNumbers: number[] = taskNumbersRaw
+        ? taskNumbersRaw.split(',').map((s) => parseInt(s.trim(), 10)).filter((n) => !Number.isNaN(n))
+        : [];
+
+      const actions: string[] = [];
+
+      // Resolve project number from config
+      const config = loadConfig(process.cwd());
+      const projectNumber = config.github.project_number;
+      const repoInfo = getRepoInfo();
+
+      // 1. Reopen the phase issue
+      const reopenResult = await updateIssue(phaseIssueNumber, { state: 'open' });
+      if (!reopenResult.ok) return cmdErr(`Failed to reopen phase issue: ${reopenResult.error}`);
+      actions.push(`Reopened phase issue #${phaseIssueNumber}`);
+
+      // 2. Move phase issue to "In Progress" on project board
+      if (projectNumber) {
+        const issueUrl = `https://github.com/${repoInfo.owner}/${repoInfo.repo}/issues/${phaseIssueNumber}`;
+        const addResult = addItemToProject(projectNumber, issueUrl);
+        if (addResult.ok) {
+          const moveResult = moveItemToStatus(projectNumber, addResult.data.itemId, 'In Progress');
+          if (moveResult.ok) {
+            actions.push('Moved phase issue to "In Progress" on project board');
+          } else {
+            actions.push(`Warning: could not move phase issue on board — ${moveResult.error}`);
+          }
+        } else {
+          actions.push(`Warning: could not add phase issue to board — ${addResult.error}`);
+        }
+      }
+
+      // 3. Add verification:failed label
+      const labelResult = await addLabelToIssue(phaseIssueNumber, 'verification:failed');
+      if (labelResult.ok) {
+        actions.push('Added label "verification:failed"');
+      } else {
+        actions.push(`Warning: could not add label — ${labelResult.error}`);
+      }
+
+      // 4. Reopen failed task sub-issues and move to "To Do"
+      for (const taskNumber of taskNumbers) {
+        const taskReopenResult = await updateIssue(taskNumber, { state: 'open' });
+        if (taskReopenResult.ok) {
+          actions.push(`Reopened task issue #${taskNumber}`);
+        } else {
+          actions.push(`Warning: could not reopen task #${taskNumber} — ${taskReopenResult.error}`);
+        }
+
+        if (projectNumber) {
+          const taskUrl = `https://github.com/${repoInfo.owner}/${repoInfo.repo}/issues/${taskNumber}`;
+          const taskAddResult = addItemToProject(projectNumber, taskUrl);
+          if (taskAddResult.ok) {
+            const taskMoveResult = moveItemToStatus(projectNumber, taskAddResult.data.itemId, 'To Do');
+            if (taskMoveResult.ok) {
+              actions.push(`Moved task #${taskNumber} to "To Do"`);
+            } else {
+              actions.push(`Warning: could not move task #${taskNumber} on board — ${taskMoveResult.error}`);
+            }
+          }
+        }
+      }
+
+      // 5. Post structured error comment on phase issue
+      const taskList = taskNumbers.length > 0
+        ? taskNumbers.map((n) => `#${n}`).join(', ')
+        : '(none specified)';
+      const commentBody = [
+        '<!-- maxsim:type=error -->',
+        '## Verification Failed',
+        `Reason: ${reason}`,
+        `Failed tasks: ${taskList}`,
+        'Action: Tasks reopened and moved to "To Do"',
+      ].join('\n');
+
+      const commentResult = await addComment(phaseIssueNumber, commentBody);
+      if (commentResult.ok) {
+        actions.push('Posted error comment on phase issue');
+      } else {
+        actions.push(`Warning: could not post error comment — ${commentResult.error}`);
+      }
+
+      return cmdOk(actions.join('\n'));
+    },
+  },
 };

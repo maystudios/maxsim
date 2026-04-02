@@ -133,3 +133,47 @@ export async function createLabel(
     };
   });
 }
+
+/** Add a label to an issue. */
+export async function addLabelToIssue(
+  issueNumber: number,
+  labelName: string,
+  repo?: RepoInfo,
+): Promise<GhResult<void>> {
+  const { owner, repo: repoName } = repo ?? getRepoInfo();
+  const octokit = getOctokit();
+
+  return withGhResult(async () => {
+    await octokit.rest.issues.addLabels({
+      owner,
+      repo: repoName,
+      issue_number: issueNumber,
+      labels: [labelName],
+    });
+  });
+}
+
+/** Remove a label from an issue. Ignores 404 if label is not present. */
+export async function removeLabelFromIssue(
+  issueNumber: number,
+  labelName: string,
+  repo?: RepoInfo,
+): Promise<GhResult<void>> {
+  const { owner, repo: repoName } = repo ?? getRepoInfo();
+  const octokit = getOctokit();
+
+  return withGhResult(async () => {
+    try {
+      await octokit.rest.issues.removeLabel({
+        owner,
+        repo: repoName,
+        issue_number: issueNumber,
+        name: labelName,
+      });
+    } catch (err) {
+      // 404 means the label wasn't on the issue — treat as success
+      if ((err as { status?: number }).status === 404) return;
+      throw err;
+    }
+  });
+}
