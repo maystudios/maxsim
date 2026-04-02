@@ -7,6 +7,7 @@ import { getRepoInfo, ghJson, ghExec } from './client.js';
 import type {
   GhProject,
   GhProjectField,
+  GhProjectItem,
   GhResult,
 } from './types.js';
 import { BOARD_COLUMNS } from './types.js';
@@ -121,6 +122,37 @@ export function getFieldOptionId(
 }
 
 // ── Item Management ───────────────────────────────────────────────────
+
+/** List all items on a project board via gh CLI. */
+export function listProjectItems(
+  projectNumber: number,
+  owner?: string,
+): GhResult<GhProjectItem[]> {
+  const { owner: repoOwner } = getRepoInfo();
+  const projectOwner = owner ?? repoOwner;
+
+  const result = ghJson<{ items: Array<{
+    id: string;
+    content: { number?: number; title: string; type: string } | null;
+    isArchived: boolean;
+  }> }>(
+    ['project', 'item-list', String(projectNumber), '--owner', projectOwner, '--format', 'json', '--limit', '1000'],
+  );
+
+  if (!result.ok) return result;
+
+  return {
+    ok: true,
+    data: (result.data.items ?? []).map((item) => ({
+      id: item.id,
+      contentNodeId: item.id,
+      contentType: (item.content?.type as GhProjectItem['contentType']) ?? 'DraftIssue',
+      issueNumber: item.content?.number,
+      title: item.content?.title ?? '',
+      isArchived: item.isArchived ?? false,
+    })),
+  };
+}
 
 /** Add an issue to the project board via gh CLI. */
 export function addItemToProject(
