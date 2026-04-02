@@ -30,7 +30,7 @@ import {
 } from '../github/projects.js';
 import { ensureLabels, addLabelToIssue, removeLabelFromIssue } from '../github/labels.js';
 import { parseCommentMeta, formatCommentHeader, buildIssueBody } from '../github/comments.js';
-import { getRepoInfo } from '../github/client.js';
+import { getRepoInfo, ghJson } from '../github/client.js';
 import { ensureMilestone } from '../github/milestones.js';
 import { MAXSIM_LABELS } from '../github/types.js';
 import {
@@ -818,7 +818,7 @@ export const GITHUB_COMMANDS: CommandRegistry = {
 
   'detect-external-edits': {
     name: 'detect-external-edits',
-    description: 'Detect external edits to comments on a phase issue. Usage: detect-external-edits --phase-number 1',
+    description: 'Detect ALL external modifications on a phase issue: body edits, label/status changes, edited comments, and unmarked comments. Usage: detect-external-edits --phase-number 1',
     async handler(args) {
       let phaseNumber: number;
       try {
@@ -840,22 +840,59 @@ export const GITHUB_COMMANDS: CommandRegistry = {
         return cmdErr(`Phase issue not found for phase ${phaseNumber}`);
       }
 
+      const issueNumber = phaseIssue.number;
+
+      // Fetch full issue data (includes updatedAt)
+      const issueResult = await getIssue(issueNumber);
+      if (!issueResult.ok) return cmdErr(issueResult.error);
+      const issue = issueResult.data;
+
       // List comments on the phase issue
-      const commentsResult = await listComments(phaseIssue.number);
+      const commentsResult = await listComments(issueNumber);
       if (!commentsResult.ok) return cmdErr(commentsResult.error);
-
       const comments = commentsResult.data;
-      if (comments.length === 0) {
-        return cmdOk('No external edits detected (no comments found)');
-      }
 
-      // Check for externally edited maxsim comments
-      const edited: Array<{ id: number; type: string; createdAt: string; updatedAt: string }> = [];
+      // ── Detection categories ───────────────────────────────────────────
+
+      const report: {
+        bodyEdits: Array<{ issueUpdatedAt: string; lastMaxsimCommentAt: string }>;
+        editedComments: Array<{ id: number; type: string; createdAt: string; updatedAt: string }>;
+        unmarkedComments: Array<{ id: number; user: string; createdAt: string; excerpt: string }>;
+        labelEvents: Array<{ event: string; label: string; actor: string; createdAt: string }>;
+        statusEvents: Array<{ event: string; actor: string; createdAt: string }>;
+      } = {
+        bodyEdits: [],
+        editedComments: [],
+        unmarkedComments: [],
+        labelEvents: [],
+        statusEvents: [],
+      };
+
+      // ── 1. Body edits: compare issue updatedAt vs last MAXSIM comment ─
+      const maxsimCommentTimestamps: string[] = [];
       for (const comment of comments) {
         const meta = parseCommentMeta(comment.body);
-        if (!meta) continue; // Only check maxsim-typed comments
+        if (meta) {
+          maxsimCommentTimestamps.push(comment.createdAt);
+        }
+      }
+
+      if (maxsimCommentTimestamps.length > 0) {
+        const lastMaxsimComment = maxsimCommentTimestamps.sort().pop()!;
+        if (issue.updatedAt > lastMaxsimComment) {
+          report.bodyEdits.push({
+            issueUpdatedAt: issue.updatedAt,
+            lastMaxsimCommentAt: lastMaxsimComment,
+          });
+        }
+      }
+
+      // ── 2. Edited MAXSIM comments ─────────────────────────────────────
+      for (const comment of comments) {
+        const meta = parseCommentMeta(comment.body);
+        if (!meta) continue;
         if (comment.updatedAt > comment.createdAt) {
-          edited.push({
+          report.editedComments.push({
             id: comment.id,
             type: meta.type,
             createdAt: comment.createdAt,
@@ -864,14 +901,116 @@ export const GITHUB_COMMANDS: CommandRegistry = {
         }
       }
 
-      if (edited.length === 0) {
-        return cmdOk('No external edits detected');
+      // ── 3. Unmarked comments (no maxsim marker) ───────────────────────
+      for (const comment of comments) {
+        const meta = parseCommentMeta(comment.body);
+        if (!meta) {
+          report.unmarkedComments.push({
+            id: comment.id,
+            user: comment.user.login,
+            createdAt: comment.createdAt,
+            excerpt: truncate(comment.body.replace(/\n/g, ' '), 80),
+          });
+        }
       }
 
-      const lines = [`Warning: ${edited.length} comment(s) modified externally on #${phaseIssue.number}:`];
-      for (const e of edited) {
-        lines.push(`  Comment #${e.id} [type:${e.type}] — created: ${e.createdAt}, updated: ${e.updatedAt}`);
+      // ── 4. Label and status events from external actors ────────────────
+      const { owner, repo } = getRepoInfo();
+      const eventsResult = ghJson<Array<{
+        event: string;
+        created_at: string;
+        actor?: { login: string };
+        label?: { name: string };
+      }>>(['api', `repos/${owner}/${repo}/issues/${issueNumber}/events`, '--paginate']);
+
+      if (eventsResult.ok) {
+        const automationActors = new Set(['github-actions[bot]', 'github-project-automation[bot]']);
+        for (const ev of eventsResult.data) {
+          const actor = ev.actor?.login ?? 'unknown';
+          const isAutomation = automationActors.has(actor);
+
+          if ((ev.event === 'labeled' || ev.event === 'unlabeled') && !isAutomation) {
+            report.labelEvents.push({
+              event: ev.event,
+              label: ev.label?.name ?? 'unknown',
+              actor,
+              createdAt: ev.created_at,
+            });
+          }
+
+          if (
+            (ev.event === 'moved_columns_in_project' ||
+              ev.event === 'reopened' ||
+              ev.event === 'closed') &&
+            !isAutomation
+          ) {
+            report.statusEvents.push({
+              event: ev.event,
+              actor,
+              createdAt: ev.created_at,
+            });
+          }
+        }
       }
+
+      // ── Build structured report ────────────────────────────────────────
+      const totalFindings =
+        report.bodyEdits.length +
+        report.editedComments.length +
+        report.unmarkedComments.length +
+        report.labelEvents.length +
+        report.statusEvents.length;
+
+      if (totalFindings === 0) {
+        return cmdOk('No external edits detected.');
+      }
+
+      const lines: string[] = [
+        `External edit report for Phase ${phaseNumber} (#${issueNumber}):`,
+        `Total findings: ${totalFindings}`,
+        '',
+      ];
+
+      if (report.bodyEdits.length > 0) {
+        lines.push('## Body Edits');
+        for (const b of report.bodyEdits) {
+          lines.push(`  Issue updated at ${b.issueUpdatedAt} (after last MAXSIM comment at ${b.lastMaxsimCommentAt})`);
+        }
+        lines.push('');
+      }
+
+      if (report.editedComments.length > 0) {
+        lines.push(`## Edited MAXSIM Comments (${report.editedComments.length})`);
+        for (const e of report.editedComments) {
+          lines.push(`  Comment #${e.id} [type:${e.type}] — created: ${e.createdAt}, updated: ${e.updatedAt}`);
+        }
+        lines.push('');
+      }
+
+      if (report.unmarkedComments.length > 0) {
+        lines.push(`## Unmarked Comments (${report.unmarkedComments.length})`);
+        for (const u of report.unmarkedComments) {
+          lines.push(`  Comment #${u.id} by @${u.user} at ${u.createdAt}: "${u.excerpt}"`);
+        }
+        lines.push('');
+      }
+
+      if (report.labelEvents.length > 0) {
+        lines.push(`## Label Changes (${report.labelEvents.length})`);
+        for (const l of report.labelEvents) {
+          lines.push(`  ${l.event}: "${l.label}" by @${l.actor} at ${l.createdAt}`);
+        }
+        lines.push('');
+      }
+
+      if (report.statusEvents.length > 0) {
+        lines.push(`## Status Changes (${report.statusEvents.length})`);
+        for (const s of report.statusEvents) {
+          lines.push(`  ${s.event} by @${s.actor} at ${s.createdAt}`);
+        }
+        lines.push('');
+      }
+
       return cmdOk(lines.join('\n'));
     },
   },
