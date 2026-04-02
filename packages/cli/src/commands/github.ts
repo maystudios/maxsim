@@ -19,6 +19,7 @@ import {
   addComment,
   createIssue,
   closeIssue,
+  updateIssue,
   deleteComment,
   addSubIssue,
 } from '../github/issues.js';
@@ -235,6 +236,26 @@ export const GITHUB_COMMANDS: CommandRegistry = {
       if (!result.ok) return cmdErr(result.error);
 
       return cmdOk(`Issue #${issueNumber} closed`);
+    },
+  },
+
+  'reopen-issue': {
+    name: 'reopen-issue',
+    description: 'Reopen a closed issue. Usage: reopen-issue --issue-number 216',
+    async handler(args) {
+      let issueNumber: number;
+      try {
+        const raw = getRequiredFlag(args, '--issue-number');
+        issueNumber = parseInt(raw, 10);
+        if (Number.isNaN(issueNumber)) return cmdErr('--issue-number must be an integer');
+      } catch (e) {
+        return cmdErr((e as Error).message);
+      }
+
+      const result = await updateIssue(issueNumber, { state: 'open' });
+      if (!result.ok) return cmdErr(result.error);
+
+      return cmdOk(`Issue #${issueNumber} reopened`);
     },
   },
 
