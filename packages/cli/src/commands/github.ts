@@ -1449,4 +1449,79 @@ export const GITHUB_COMMANDS: CommandRegistry = {
       return cmdOk(actions.join('\n'));
     },
   },
+
+  // ── Task 7.2: Verification success lifecycle ─────────────────────────
+
+  'handle-verification-success': {
+    name: 'handle-verification-success',
+    description: 'Composite: remove verification:failed label, move to Done, close phase issue, post success comment. Usage: handle-verification-success --phase-issue-number 216 [--summary "all criteria met"]',
+    async handler(args) {
+      let phaseIssueNumber: number;
+      try {
+        const raw = getRequiredFlag(args, '--phase-issue-number');
+        phaseIssueNumber = parseInt(raw, 10);
+        if (Number.isNaN(phaseIssueNumber)) return cmdErr('--phase-issue-number must be an integer');
+      } catch (e) {
+        return cmdErr((e as Error).message);
+      }
+
+      const summary = getFlag(args, '--summary') ?? 'Verification passed.';
+
+      const actions: string[] = [];
+
+      // Resolve project number from config
+      const config = loadConfig(process.cwd());
+      const projectNumber = config.github.project_number;
+      const repoInfo = getRepoInfo();
+
+      // 1. Remove verification:failed label if present (ignore error if not present)
+      const removeLabelResult = await removeLabelFromIssue(phaseIssueNumber, 'verification:failed');
+      if (removeLabelResult.ok) {
+        actions.push('Removed label "verification:failed"');
+      } else {
+        // Label may not be present — that is fine
+        actions.push('Label "verification:failed" was not present (no action needed)');
+      }
+
+      // 2. Move phase issue to "Done" on project board
+      if (projectNumber) {
+        const issueUrl = `https://github.com/${repoInfo.owner}/${repoInfo.repo}/issues/${phaseIssueNumber}`;
+        const addResult = addItemToProject(projectNumber, issueUrl);
+        if (addResult.ok) {
+          const moveResult = moveItemToStatus(projectNumber, addResult.data.itemId, 'Done');
+          if (moveResult.ok) {
+            actions.push('Moved phase issue to "Done" on project board');
+          } else {
+            actions.push(`Warning: could not move phase issue on board — ${moveResult.error}`);
+          }
+        } else {
+          actions.push(`Warning: could not add phase issue to board — ${addResult.error}`);
+        }
+      }
+
+      // 3. Close phase issue
+      const closeResult = await closeIssue(phaseIssueNumber);
+      if (closeResult.ok) {
+        actions.push(`Closed phase issue #${phaseIssueNumber}`);
+      } else {
+        return cmdErr(`Failed to close phase issue: ${closeResult.error}`);
+      }
+
+      // 4. Post success comment with verification summary
+      const commentBody = [
+        '<!-- maxsim:type=phase-complete -->',
+        '## Phase Complete',
+        summary,
+      ].join('\n');
+
+      const commentResult = await addComment(phaseIssueNumber, commentBody);
+      if (commentResult.ok) {
+        actions.push('Posted phase-complete comment on phase issue');
+      } else {
+        actions.push(`Warning: could not post success comment — ${commentResult.error}`);
+      }
+
+      return cmdOk(actions.join('\n'));
+    },
+  },
 };
