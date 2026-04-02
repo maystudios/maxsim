@@ -901,7 +901,7 @@ export const GITHUB_COMMANDS: CommandRegistry = {
 
   'batch-create-tasks': {
     name: 'batch-create-tasks',
-    description: 'Batch create task sub-issues from a JSON file. Usage: batch-create-tasks --phase-issue-number 216 --tasks-file /path/to/tasks.json',
+    description: 'Batch create task sub-issues with dedup, auto-labels, and board placement. Usage: batch-create-tasks --phase-issue-number 216 --tasks-file /path/to/tasks.json',
     async handler(args) {
       let phaseIssueNumber: number;
       try {
@@ -920,7 +920,7 @@ export const GITHUB_COMMANDS: CommandRegistry = {
       }
 
       // Read and parse tasks file
-      let tasks: Array<{ title: string; body: string; labels?: string[] }>;
+      let tasks: Array<{ title: string; body: string; labels?: string[]; wave?: number }>;
       try {
         const raw = fs.readFileSync(path.resolve(tasksFile), 'utf8');
         tasks = JSON.parse(raw);
@@ -934,7 +934,20 @@ export const GITHUB_COMMANDS: CommandRegistry = {
       const projectNumber = config.github.project_number;
       const repoInfo = getRepoInfo();
 
-      let created = 0;
+      // Ensure labels exist before creating tasks
+      await ensureLabels();
+
+      // Fetch existing sub-issues for duplicate detection
+      const existingResult = await listSubIssues(phaseIssueNumber);
+      const existingTitles = new Set<string>();
+      if (existingResult.ok) {
+        for (const sub of existingResult.data) {
+          existingTitles.add(sub.title.toLowerCase());
+        }
+      }
+
+      const createdNumbers: number[] = [];
+      let skippedDuplicates = 0;
       const errors: string[] = [];
 
       for (const task of tasks) {
@@ -943,10 +956,23 @@ export const GITHUB_COMMANDS: CommandRegistry = {
           continue;
         }
 
+        // Duplicate detection: compare by title (case-insensitive)
+        if (existingTitles.has(task.title.toLowerCase())) {
+          skippedDuplicates++;
+          continue;
+        }
+
+        // Auto-labels: type:task + maxsim:auto, plus any user-specified labels
+        const autoLabels = ['type:task', 'maxsim:auto'];
+        if (task.wave !== undefined && task.wave !== null) {
+          autoLabels.push(`wave:${task.wave}`);
+        }
+        const allLabels = [...new Set([...autoLabels, ...(task.labels ?? [])])];
+
         const issueResult = await createIssue({
           title: task.title,
           body: task.body ?? '',
-          labels: task.labels ?? [],
+          labels: allLabels,
         });
 
         if (!issueResult.ok) {
@@ -962,18 +988,46 @@ export const GITHUB_COMMANDS: CommandRegistry = {
           errors.push(`Created #${issue.number} but failed to link as sub-issue: ${subResult.error}`);
         }
 
-        // Add to project board if configured
+        // Add to project board and move to "To Do" if configured
         if (projectNumber) {
           const issueUrl = `https://github.com/${repoInfo.owner}/${repoInfo.repo}/issues/${issue.number}`;
-          addItemToProject(projectNumber, issueUrl); // best-effort, ignore errors
+          const addResult = addItemToProject(projectNumber, issueUrl);
+          if (addResult.ok) {
+            moveItemToStatus(projectNumber, addResult.data.itemId, 'To Do');
+          }
         }
 
-        created++;
+        // Track for dedup on subsequent iterations and for output
+        existingTitles.add(task.title.toLowerCase());
+        createdNumbers.push(issue.number);
       }
 
-      const summary = [`Created ${created} tasks as sub-issues of #${phaseIssueNumber}`];
+      // Build summary with created issue numbers
+      const parts: string[] = [];
+      if (createdNumbers.length > 0) {
+        const numberList = createdNumbers.length <= 5
+          ? createdNumbers.map((n) => `#${n}`).join(', ')
+          : `#${createdNumbers[0]}–#${createdNumbers[createdNumbers.length - 1]}`;
+        parts.push(`Created ${createdNumbers.length} tasks: ${numberList}`);
+      } else {
+        parts.push('Created 0 tasks');
+      }
+      parts.push(`as sub-issues of #${phaseIssueNumber}`);
+
+      const notes: string[] = [];
+      if (skippedDuplicates > 0) {
+        notes.push(`${skippedDuplicates} skipped: duplicate`);
+      }
       if (errors.length > 0) {
-        summary.push(`Errors (${errors.length}):`);
+        notes.push(`${errors.length} errors`);
+      }
+      if (notes.length > 0) {
+        parts.push(`(${notes.join(', ')})`);
+      }
+
+      const summary = [parts.join(' ')];
+      if (errors.length > 0) {
+        summary.push(`Errors:`);
         for (const err of errors) summary.push(`  - ${err}`);
       }
 
