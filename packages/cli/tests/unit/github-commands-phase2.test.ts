@@ -474,7 +474,7 @@ describe('handle-verification-success handler', () => {
 
 describe('status handler argument validation', () => {
   it('returns error when --phase-number is not a valid integer', async () => {
-    const result = await GITHUB_COMMANDS['status'].handler(['--phase-number', 'abc']);
+    const result = await GITHUB_COMMANDS.status.handler(['--phase-number', 'abc']);
 
     expect(result.ok).toBe(false);
     if (result.ok) throw new Error('Expected ok:false');

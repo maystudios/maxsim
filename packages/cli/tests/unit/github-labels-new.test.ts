@@ -56,8 +56,8 @@ describe('MAXSIM_LABELS includes verification:failed', () => {
   it('verification:failed has a non-empty description and valid color', () => {
     const found = MAXSIM_LABELS.find((l) => l.name === 'verification:failed');
     expect(found).toBeDefined();
-    expect(found!.description.length).toBeGreaterThan(0);
-    expect(found!.color).toMatch(/^[0-9a-f]{6}$/i);
+    expect(found?.description.length).toBeGreaterThan(0);
+    expect(found?.color).toMatch(/^[0-9a-f]{6}$/i);
   });
 
   it('has exactly 7 labels (4 type + 2 maxsim + 1 verification)', () => {

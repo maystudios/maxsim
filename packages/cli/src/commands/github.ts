@@ -1204,7 +1204,7 @@ export const GITHUB_COMMANDS: CommandRegistry = {
       }
 
       if (maxsimCommentTimestamps.length > 0) {
-        const lastMaxsimComment = maxsimCommentTimestamps.sort().pop()!;
+        const lastMaxsimComment = maxsimCommentTimestamps.sort().pop() ?? '';
         if (issue.updatedAt > lastMaxsimComment) {
           report.bodyEdits.push({
             issueUpdatedAt: issue.updatedAt,
