@@ -1,3 +1,30 @@
+# [5.23.0](https://github.com/maystudios/maxsimcli/compare/v5.22.0...v5.23.0) (2026-04-02)
+
+
+### Bug Fixes
+
+* **phase-2:** remove duplicate label functions from merge ([82251e4](https://github.com/maystudios/maxsimcli/commit/82251e478323fe574ae73db2d52554db76297765))
+* **phase-2:** remove duplicate label functions from Wave 3 merge ([1ae9f89](https://github.com/maystudios/maxsimcli/commit/1ae9f89301ae45c2832cb9448e1f67b53c25d22d))
+* **phase-2:** resolve lint warnings in Phase 2 code ([25c5bb3](https://github.com/maystudios/maxsimcli/commit/25c5bb35bde5de118b194f21f286bef9c7edd236))
+* **phase-2:** update label test counts for verification:failed addition ([7b2dddf](https://github.com/maystudios/maxsimcli/commit/7b2dddf309a01d659e15f3f262e09cac87fadd87))
+
+
+### Features
+
+* **phase-2-plan-01:** add addLabelToIssue and removeLabelFromIssue to labels.ts ([574ddf3](https://github.com/maystudios/maxsimcli/commit/574ddf3d1f7ceaeb29fef2e18a8f3adc96909d60))
+* **phase-2-plan-01:** add listProjectItems to projects.ts ([edbb458](https://github.com/maystudios/maxsimcli/commit/edbb4589bd88765d76a8fe4710fba8d4556f62a4))
+* **phase-2-plan-01:** add verification:failed label to MAXSIM_LABELS ([e978bf6](https://github.com/maystudios/maxsimcli/commit/e978bf6abcdb59447ed938ef7a9a48ed37c30089))
+* **phase-2-plan-01:** export addLabelToIssue, removeLabelFromIssue, listProjectItems from index ([0210b74](https://github.com/maystudios/maxsimcli/commit/0210b7446b6f4dab95f3ab52725bfe1483c9a384))
+* **phase-2-plan-02A:** add reopen-issue CLI command ([8b3f7dd](https://github.com/maystudios/maxsimcli/commit/8b3f7dd79bd5ffb6d6dc4fff9c3ef48bd56e6416))
+* **phase-2-plan-02B:** add add-label and remove-label CLI commands ([af4af03](https://github.com/maystudios/maxsimcli/commit/af4af03b7803f152d86204fe00c2e02dbcf62b00))
+* **phase-2-plan-03:** rewrite status command for phase-level detail ([c37a28a](https://github.com/maystudios/maxsimcli/commit/c37a28a3061624f4e8d1021426282e905a32f1a1))
+* **phase-2-plan-04:** enhance batch-create-tasks with dedup, auto-labels, board placement ([d845bb7](https://github.com/maystudios/maxsimcli/commit/d845bb74fba48c8f8f8dd5ee33ec5c5428557bb5))
+* **phase-2-plan-04:** enhance create-phase with milestone/project defaults and board placement ([9d4b3c7](https://github.com/maystudios/maxsimcli/commit/9d4b3c7ce8a1ed71c1803b3aff9004b3b1457ed0))
+* **phase-2-plan-05:** rewrite detect-external-edits for comprehensive detection ([f9c6e5b](https://github.com/maystudios/maxsimcli/commit/f9c6e5b7a8f0d6144af68c3ae1f27ef5dce86622))
+* **phase-2-plan-06:** rewrite all-progress with adaptive output and progress bar ([8b84433](https://github.com/maystudios/maxsimcli/commit/8b84433a83ba987ebaa1e02e7ecadcbba8be0062))
+* **phase-2-plan-07:** add handle-verification-failure composite command ([8e4c609](https://github.com/maystudios/maxsimcli/commit/8e4c6093eece2d8203ef7f1734d8d86d51155b9f))
+* **phase-2-plan-07:** add handle-verification-success composite command ([60649ff](https://github.com/maystudios/maxsimcli/commit/60649ffa033ee3de5b5baa378114389d8a219fa5))
+
 # [5.22.0](https://github.com/maystudios/maxsimcli/compare/v5.21.1...v5.22.0) (2026-04-01)
 
 

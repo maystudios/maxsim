@@ -1,5 +1,5 @@
 {
-  "version": "5.21.1",
+  "version": "5.22.0",
   "__doc_model_profiles": {
     "_description": "Reference: model assignments per profile. Actual values are defined in code — this table is for documentation only.",
     "quality": {
