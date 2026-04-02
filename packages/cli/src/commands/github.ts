@@ -716,7 +716,7 @@ export const GITHUB_COMMANDS: CommandRegistry = {
 
   'create-phase': {
     name: 'create-phase',
-    description: 'Create a phase issue. Usage: create-phase --phase-number 1 --title "Title" [--body "..."] [--body-file /path] [--milestone 1]',
+    description: 'Create a phase issue with labels, milestone, and board placement. Usage: create-phase --phase-number 1 --title "Title" [--body "..."] [--body-file /path] [--milestone-number 11] [--project-number 4]',
     async handler(args) {
       let phaseNumber: number;
       try {
@@ -744,8 +744,23 @@ export const GITHUB_COMMANDS: CommandRegistry = {
         }
       }
 
-      const milestoneRaw = getIntFlag(args, '--milestone');
-      const milestone = milestoneRaw !== undefined && !Number.isNaN(milestoneRaw) ? milestoneRaw : undefined;
+      // Load config for defaults
+      const config = loadConfig(process.cwd());
+
+      // Resolve milestone: flag > config
+      const milestoneFlag = getIntFlag(args, '--milestone-number') ?? getIntFlag(args, '--milestone');
+      const milestone = milestoneFlag !== undefined && !Number.isNaN(milestoneFlag)
+        ? milestoneFlag
+        : config.github.milestone_number ?? undefined;
+
+      // Resolve project number: flag > config
+      const projectFlag = getIntFlag(args, '--project-number');
+      const projectNumber = projectFlag !== undefined && !Number.isNaN(projectFlag)
+        ? projectFlag
+        : config.github.project_number;
+
+      // Ensure labels exist before creating the issue
+      await ensureLabels();
 
       // Build issue body with metadata
       const now = new Date().toISOString();
@@ -777,21 +792,35 @@ export const GITHUB_COMMANDS: CommandRegistry = {
       if (!result.ok) return cmdErr(result.error);
 
       const issue = result.data;
+      const warnings: string[] = [];
 
-      // Add to project board if configured
-      const config = loadConfig(process.cwd());
-      const projectNumber = config.github.project_number;
+      // Add to project board and move to "To Do" if configured
       if (projectNumber) {
         const repoInfo = getRepoInfo();
         const issueUrl = `https://github.com/${repoInfo.owner}/${repoInfo.repo}/issues/${issue.number}`;
         const addResult = addItemToProject(projectNumber, issueUrl);
         if (!addResult.ok) {
-          // Non-fatal: report but don't fail
-          return cmdOk(`Created Phase #${issue.number}: ${issueTitle}\nWarning: could not add to project board — ${addResult.error}`);
+          warnings.push(`could not add to project board — ${addResult.error}`);
+        } else {
+          const moveResult = moveItemToStatus(projectNumber, addResult.data.itemId, 'To Do');
+          if (!moveResult.ok) {
+            warnings.push(`added to board but could not move to "To Do" — ${moveResult.error}`);
+          }
         }
       }
 
-      return cmdOk(`Created Phase #${issue.number}: ${issueTitle}`);
+      const output = [`Created Phase #${issue.number}: ${issueTitle}`];
+      if (milestone) {
+        output.push(`Milestone: ${milestone}`);
+      }
+      if (projectNumber) {
+        output.push(`Project board: #${projectNumber}`);
+      }
+      if (warnings.length > 0) {
+        for (const w of warnings) output.push(`Warning: ${w}`);
+      }
+
+      return cmdOk(output.join('\n'));
     },
   },
 
