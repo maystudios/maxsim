@@ -28,7 +28,7 @@ import {
   moveItemToStatus,
   findProject,
 } from '../github/projects.js';
-import { ensureLabels } from '../github/labels.js';
+import { ensureLabels, addLabelToIssue, removeLabelFromIssue } from '../github/labels.js';
 import { parseCommentMeta, formatCommentHeader, buildIssueBody } from '../github/comments.js';
 import { getRepoInfo } from '../github/client.js';
 import { ensureMilestone } from '../github/milestones.js';
@@ -306,6 +306,60 @@ export const GITHUB_COMMANDS: CommandRegistry = {
 
       const { created, existing } = result.data;
       return cmdOk(`Labels: ${created.length} created, ${existing.length} existing`);
+    },
+  },
+
+  'add-label': {
+    name: 'add-label',
+    description: 'Add a label to an issue. Usage: add-label --issue-number 216 --label "label-name"',
+    async handler(args) {
+      let issueNumber: number;
+      try {
+        const raw = getRequiredFlag(args, '--issue-number');
+        issueNumber = parseInt(raw, 10);
+        if (Number.isNaN(issueNumber)) return cmdErr('--issue-number must be an integer');
+      } catch (e) {
+        return cmdErr((e as Error).message);
+      }
+
+      let labelName: string;
+      try {
+        labelName = getRequiredFlag(args, '--label');
+      } catch (e) {
+        return cmdErr((e as Error).message);
+      }
+
+      const result = await addLabelToIssue(issueNumber, labelName);
+      if (!result.ok) return cmdErr(result.error);
+
+      return cmdOk(`Label "${labelName}" added to issue #${issueNumber}.`);
+    },
+  },
+
+  'remove-label': {
+    name: 'remove-label',
+    description: 'Remove a label from an issue. Usage: remove-label --issue-number 216 --label "label-name"',
+    async handler(args) {
+      let issueNumber: number;
+      try {
+        const raw = getRequiredFlag(args, '--issue-number');
+        issueNumber = parseInt(raw, 10);
+        if (Number.isNaN(issueNumber)) return cmdErr('--issue-number must be an integer');
+      } catch (e) {
+        return cmdErr((e as Error).message);
+      }
+
+      let labelName: string;
+      try {
+        labelName = getRequiredFlag(args, '--label');
+      } catch (e) {
+        return cmdErr((e as Error).message);
+      }
+
+      const result = await removeLabelFromIssue(issueNumber, labelName);
+      if (!result.ok) return cmdErr(result.error);
+
+      return cmdOk(`Label "${labelName}" removed from issue #${issueNumber}.`);
     },
   },
 
