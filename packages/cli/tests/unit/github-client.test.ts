@@ -42,6 +42,7 @@ import {
   resetClient,
   createRepo,
 } from '../../src/github/client.js';
+import { GithubError, GitError, RecoveryTier } from '../../src/core/errors.js';
 import type { GhResult, RepoInfo } from '../../src/github/types.js';
 
 // Typed alias so TypeScript knows this is a mock
@@ -704,6 +705,90 @@ describe('createRepo()', () => {
     expect(result.ok).toBe(false);
     if (!result.ok) {
       expect(result.code).toBe('FORBIDDEN');
+    }
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────
+// Error hierarchy — GithubError / GitError subtypes from client.ts
+// Verifies that Plan 05 wiring uses the correct error classes and tiers.
+// ─────────────────────────────────────────────────────────────────────
+
+describe('Error hierarchy — GithubError throws from getGhToken()', () => {
+  beforeEach(() => {
+    vi.resetAllMocks();
+    MockOctokit.mockImplementation(function OctokitStub() { return {}; });
+    MockOctokit.plugin = vi.fn().mockReturnValue(MockOctokit);
+    resetClient();
+  });
+
+  it('throws GithubError with tier=DEBUG when gh auth token returns an empty string', () => {
+    // First call to execFileSync (gh auth token) returns empty string
+    mockExecFileSync.mockReturnValueOnce('');
+
+    try {
+      getOctokit();
+      expect.unreachable('getOctokit() should have thrown');
+    } catch (err) {
+      expect(err).toBeInstanceOf(GithubError);
+      const ghErr = err as GithubError;
+      expect(ghErr.recovery.tier).toBe(RecoveryTier.DEBUG);
+    }
+  });
+
+  it('throws GithubError with suggestedAction containing "gh auth login" when auth fails', () => {
+    // execFileSync throws when gh is not authenticated
+    mockExecFileSync.mockImplementation(() => {
+      throw new Error('gh: not logged in');
+    });
+
+    try {
+      getOctokit();
+      expect.unreachable('getOctokit() should have thrown');
+    } catch (err) {
+      expect(err).toBeInstanceOf(GithubError);
+      const ghErr = err as GithubError;
+      expect(ghErr.recovery.suggestedAction).toContain('gh auth login');
+    }
+  });
+});
+
+describe('Error hierarchy — GitError throws from getRepoInfo()', () => {
+  beforeEach(() => {
+    vi.resetAllMocks();
+    MockOctokit.mockImplementation(function OctokitStub() { return {}; });
+    MockOctokit.plugin = vi.fn().mockReturnValue(MockOctokit);
+    resetClient();
+  });
+
+  it('throws GitError with tier=ROLLBACK when the remote URL is not a valid GitHub URL', () => {
+    // git remote get-url returns a non-GitHub URL → "Cannot parse" path
+    mockExecFileSync.mockReturnValueOnce('https://gitlab.com/someone/something.git\n');
+
+    try {
+      getRepoInfo();
+      expect.unreachable('getRepoInfo() should have thrown');
+    } catch (err) {
+      expect(err).toBeInstanceOf(GitError);
+      const gitErr = err as GitError;
+      expect(gitErr.recovery.tier).toBe(RecoveryTier.ROLLBACK);
+    }
+  });
+
+  it('throws GitError with suggestedAction when not inside a git repository', () => {
+    // execFileSync throws when git remote get-url fails (not a git repo)
+    mockExecFileSync.mockImplementation(() => {
+      throw new Error('fatal: not a git repository');
+    });
+
+    try {
+      getRepoInfo();
+      expect.unreachable('getRepoInfo() should have thrown');
+    } catch (err) {
+      expect(err).toBeInstanceOf(GitError);
+      const gitErr = err as GitError;
+      expect(gitErr.recovery.suggestedAction).toBeTruthy();
+      expect(gitErr.recovery.suggestedAction.length).toBeGreaterThan(0);
     }
   });
 });
