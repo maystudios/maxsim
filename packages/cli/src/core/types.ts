@@ -4,6 +4,7 @@
  */
 
 import { VERSION } from './version.js';
+import type { ErrorRecovery } from './errors.js';
 
 // ── Result Types ──────────────────────────────────────────────────────
 
@@ -16,6 +17,7 @@ interface CmdOk {
 interface CmdFail {
   ok: false;
   error: string;
+  recovery?: ErrorRecovery;
 }
 
 /** Discriminated union for CLI command results. */
@@ -25,8 +27,8 @@ export function cmdOk(result: unknown, rawValue?: unknown): CmdResult {
   return { ok: true, result, rawValue };
 }
 
-export function cmdErr(error: string): CmdResult {
-  return { ok: false, error };
+export function cmdErr(error: string, recovery?: ErrorRecovery): CmdResult {
+  return recovery ? { ok: false, error, recovery } : { ok: false, error };
 }
 
 // ── Enums ─────────────────────────────────────────────────────────────
