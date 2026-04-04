@@ -6,6 +6,7 @@ import { execFileSync } from 'node:child_process';
 import { Octokit } from '@octokit/rest';
 import { retry } from '@octokit/plugin-retry';
 import { throttling } from '@octokit/plugin-throttling';
+import { GithubError, GitError } from '../core/errors.js';
 import type { RepoInfo, GhResult } from './types.js';
 
 // ── Singleton ─────────────────────────────────────────────────────────
@@ -44,13 +45,17 @@ function getGhToken(): string {
     }).trim();
 
     if (!token) {
-      throw new Error('Empty token returned by gh auth token');
+      throw new GithubError('Empty token returned by gh auth token', {
+        suggestedAction: 'Run: gh auth login',
+      });
     }
 
     return token;
-  } catch {
-    throw new Error(
+  } catch (err) {
+    if (err instanceof GithubError) throw err;
+    throw new GithubError(
       'GitHub authentication required. Run: gh auth login',
+      { suggestedAction: 'Run: gh auth login' },
     );
   }
 }
@@ -70,7 +75,9 @@ export function getRepoInfo(): RepoInfo {
     );
 
     if (!match) {
-      throw new Error(`Cannot parse GitHub owner/repo from remote: ${remoteUrl}`);
+      throw new GitError(`Cannot parse GitHub owner/repo from remote: ${remoteUrl}`, {
+        suggestedAction: 'Verify the origin remote points to a GitHub repository.',
+      });
     }
 
     const [, owner, repo] = match;
@@ -90,11 +97,10 @@ export function getRepoInfo(): RepoInfo {
     _repoInfo = { owner, repo, isOrg };
     return _repoInfo;
   } catch (err) {
-    if (err instanceof Error && err.message.includes('Cannot parse')) {
-      throw err;
-    }
-    throw new Error(
+    if (err instanceof GitError) throw err;
+    throw new GitError(
       'Not a git repository with a GitHub remote. Run: git remote add origin <url>',
+      { suggestedAction: 'Run: git remote add origin <url>' },
     );
   }
 }
