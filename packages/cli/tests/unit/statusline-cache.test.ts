@@ -260,3 +260,100 @@ describe('write resilience', () => {
     }).not.toThrow();
   });
 });
+
+// ---------------------------------------------------------------------------
+// Cache fast-path: write then immediate read within TTL
+// ---------------------------------------------------------------------------
+
+describe('cache fast-path', () => {
+  it('returns data immediately after write (within TTL)', () => {
+    writeStatuslineCache(tmpDir, { phase: 5, status: 'Testing' });
+    const result = readStatuslineCache(tmpDir);
+
+    expect(result).not.toBeNull();
+    expect(result?.phase).toBe(5);
+    expect(result?.status).toBe('Testing');
+  });
+
+  it('overwrites previous cache entry on subsequent writes', () => {
+    writeStatuslineCache(tmpDir, { phase: 1, status: 'Planning' });
+    writeStatuslineCache(tmpDir, { phase: 2, status: 'Building' });
+
+    const result = readStatuslineCache(tmpDir);
+    expect(result).not.toBeNull();
+    expect(result?.phase).toBe(2);
+    expect(result?.status).toBe('Building');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Cache-miss-then-write cycle
+// ---------------------------------------------------------------------------
+
+describe('cache-miss-then-write cycle', () => {
+  it('returns null on first read, then data after write', () => {
+    // First read: no cache file
+    const miss = readStatuslineCache(tmpDir);
+    expect(miss).toBeNull();
+
+    // Write cache
+    writeStatuslineCache(tmpDir, { phase: 3, status: 'Done' });
+
+    // Second read: should return data
+    const hit = readStatuslineCache(tmpDir);
+    expect(hit).not.toBeNull();
+    expect(hit?.phase).toBe(3);
+    expect(hit?.status).toBe('Done');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Corrupt cache JSON (additional edge cases)
+// ---------------------------------------------------------------------------
+
+describe('corrupt cache JSON (additional edge cases)', () => {
+  it('returns null when cache file contains just whitespace', () => {
+    const cachePath = path.join(tmpDir, '.claude', 'maxsim', '.statusline-cache.json');
+    fs.writeFileSync(cachePath, '   \n  \t  ', 'utf8');
+
+    const result = readStatuslineCache(tmpDir);
+    expect(result).toBeNull();
+  });
+
+  it('returns null when cache file contains a JSON number', () => {
+    const cachePath = path.join(tmpDir, '.claude', 'maxsim', '.statusline-cache.json');
+    fs.writeFileSync(cachePath, '42', 'utf8');
+
+    const result = readStatuslineCache(tmpDir);
+    expect(result).toBeNull();
+  });
+
+  it('returns null when cache file contains a JSON string', () => {
+    const cachePath = path.join(tmpDir, '.claude', 'maxsim', '.statusline-cache.json');
+    fs.writeFileSync(cachePath, '"hello"', 'utf8');
+
+    const result = readStatuslineCache(tmpDir);
+    expect(result).toBeNull();
+  });
+
+  it('returns null when cache file contains an empty object', () => {
+    const cachePath = path.join(tmpDir, '.claude', 'maxsim', '.statusline-cache.json');
+    fs.writeFileSync(cachePath, '{}', 'utf8');
+
+    // Missing updatedAt => should return null
+    const result = readStatuslineCache(tmpDir);
+    expect(result).toBeNull();
+  });
+
+  it('returns null when updatedAt is a number instead of string', () => {
+    const cachePath = path.join(tmpDir, '.claude', 'maxsim', '.statusline-cache.json');
+    fs.writeFileSync(cachePath, JSON.stringify({
+      phase: 1,
+      status: 'Test',
+      updatedAt: Date.now(),
+    }), 'utf8');
+
+    const result = readStatuslineCache(tmpDir);
+    expect(result).toBeNull();
+  });
+});

@@ -247,3 +247,201 @@ describe('exit code', () => {
     expect(exitSpy).toHaveBeenCalledWith(0);
   });
 });
+
+// ---------------------------------------------------------------------------
+// Stale phase check: cache shows phase 3 while config is phase 4
+// ---------------------------------------------------------------------------
+
+describe('stale phase check', () => {
+  it('returns stale phase 3 from cache while config has phase 4 (cache fresh)', async () => {
+    // Write config with phase 4
+    writeConfig({ currentPhase: 4, projectStatus: 'Building' });
+
+    // Write a fresh cache with phase 3 + "In Progress"
+    const cacheDir = path.join(tmpDir, '.claude', 'maxsim');
+    fs.mkdirSync(cacheDir, { recursive: true });
+    fs.writeFileSync(
+      path.join(cacheDir, '.statusline-cache.json'),
+      JSON.stringify({
+        phase: 3,
+        status: 'In Progress',
+        updatedAt: new Date().toISOString(),
+      }),
+      'utf8',
+    );
+
+    await loadHook();
+    hookCallback!({ cwd: tmpDir });
+
+    // The hook should serve from cache (phase 3), NOT config (phase 4)
+    const output = getStatusOutput();
+    expect(output).toContain('Phase 3');
+    expect(output).toContain('In Progress');
+    expect(output).not.toContain('Phase 4');
+  });
+
+  it('returns phase 4 from config after cache TTL expires', async () => {
+    // Write config with phase 4
+    writeConfig({ currentPhase: 4, projectStatus: 'Building' });
+
+    // Write a stale cache with phase 3 + "In Progress" (70 seconds old — exceeds 60s active TTL)
+    const cacheDir = path.join(tmpDir, '.claude', 'maxsim');
+    fs.mkdirSync(cacheDir, { recursive: true });
+    fs.writeFileSync(
+      path.join(cacheDir, '.statusline-cache.json'),
+      JSON.stringify({
+        phase: 3,
+        status: 'In Progress',
+        updatedAt: new Date(Date.now() - 70_000).toISOString(),
+      }),
+      'utf8',
+    );
+
+    await loadHook();
+    hookCallback!({ cwd: tmpDir });
+
+    // The cache is expired ("In Progress" uses 60s TTL) — hook should read config
+    const output = getStatusOutput();
+    expect(output).toContain('Phase 4');
+    expect(output).toContain('Building');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Cache fast-path: verifies cache is used when fresh
+// ---------------------------------------------------------------------------
+
+describe('cache fast-path', () => {
+  it('serves from cache directly when cache is fresh (skips config read)', async () => {
+    // Write config with specific values — but the cache has different values
+    writeConfig({ currentPhase: 10, projectStatus: 'Deployed' });
+
+    const cacheDir = path.join(tmpDir, '.claude', 'maxsim');
+    fs.mkdirSync(cacheDir, { recursive: true });
+    fs.writeFileSync(
+      path.join(cacheDir, '.statusline-cache.json'),
+      JSON.stringify({
+        phase: 7,
+        status: 'Testing',
+        updatedAt: new Date().toISOString(),
+      }),
+      'utf8',
+    );
+
+    await loadHook();
+    hookCallback!({ cwd: tmpDir });
+
+    const output = getStatusOutput();
+    // Should show cache values, not config values
+    expect(output).toContain('Phase 7');
+    expect(output).toContain('Testing');
+    expect(output).not.toContain('Phase 10');
+    expect(output).not.toContain('Deployed');
+  });
+
+  it('falls back to config when cache file is missing', async () => {
+    writeConfig({ currentPhase: 5, projectStatus: 'Reviewing' });
+    // No cache file written
+
+    await loadHook();
+    hookCallback!({ cwd: tmpDir });
+
+    const output = getStatusOutput();
+    expect(output).toContain('Phase 5');
+    expect(output).toContain('Reviewing');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Cache-miss-then-write cycle
+// ---------------------------------------------------------------------------
+
+describe('cache-miss-then-write cycle', () => {
+  it('writes cache after config read so next invocation can use it', async () => {
+    writeConfig({ currentPhase: 2, projectStatus: 'Planning' });
+    // No cache file initially
+
+    await loadHook();
+    hookCallback!({ cwd: tmpDir });
+
+    // Verify config was read and output is correct
+    const output = getStatusOutput();
+    expect(output).toContain('Phase 2');
+    expect(output).toContain('Planning');
+
+    // Verify the cache file was written
+    const cacheFile = path.join(tmpDir, '.claude', 'maxsim', '.statusline-cache.json');
+    expect(fs.existsSync(cacheFile)).toBe(true);
+    const cacheData = JSON.parse(fs.readFileSync(cacheFile, 'utf8'));
+    expect(cacheData.phase).toBe(2);
+    expect(cacheData.status).toBe('Planning');
+    expect(cacheData.updatedAt).toBeDefined();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Corrupt cache JSON: hook degrades gracefully
+// ---------------------------------------------------------------------------
+
+describe('corrupt cache JSON', () => {
+  it('falls back to config when cache contains corrupt JSON', async () => {
+    writeConfig({ currentPhase: 6, projectStatus: 'Done' });
+
+    const cacheDir = path.join(tmpDir, '.claude', 'maxsim');
+    fs.mkdirSync(cacheDir, { recursive: true });
+    fs.writeFileSync(
+      path.join(cacheDir, '.statusline-cache.json'),
+      'this is not valid json{{{',
+      'utf8',
+    );
+
+    await loadHook();
+    hookCallback!({ cwd: tmpDir });
+
+    const output = getStatusOutput();
+    expect(output).toContain('Phase 6');
+    expect(output).toContain('Done');
+  });
+
+  it('falls back to config when cache has no updatedAt field', async () => {
+    writeConfig({ currentPhase: 8, projectStatus: 'Testing' });
+
+    const cacheDir = path.join(tmpDir, '.claude', 'maxsim');
+    fs.mkdirSync(cacheDir, { recursive: true });
+    fs.writeFileSync(
+      path.join(cacheDir, '.statusline-cache.json'),
+      JSON.stringify({ phase: 99, status: 'Cached' }),
+      'utf8',
+    );
+
+    await loadHook();
+    hookCallback!({ cwd: tmpDir });
+
+    const output = getStatusOutput();
+    expect(output).toContain('Phase 8');
+    expect(output).toContain('Testing');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Malformed config JSON: hook degrades gracefully
+// ---------------------------------------------------------------------------
+
+describe('malformed config JSON', () => {
+  it('outputs "MAXSIM > Ready" when config.json is corrupt', async () => {
+    const configDir = path.join(tmpDir, '.claude', 'maxsim');
+    fs.mkdirSync(configDir, { recursive: true });
+    fs.writeFileSync(
+      path.join(configDir, 'config.json'),
+      'not-valid-json!!!',
+      'utf8',
+    );
+
+    await loadHook();
+    hookCallback!({ cwd: tmpDir });
+
+    const output = getStatusOutput();
+    expect(output).toContain('MAXSIM');
+    expect(output).toContain('Ready');
+  });
+});
