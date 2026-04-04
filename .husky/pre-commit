@@ -1,0 +1,10 @@
+#!/usr/bin/env sh
+
+# Run workflow validation tests before committing.
+cd packages/cli || exit 0
+npx vitest run tests/unit/workflow-validation.test.ts --reporter=dot 2>/dev/null || {
+  echo ""
+  echo "Pre-commit check failed: workflow validation errors detected."
+  echo "Run 'npm test' in packages/cli/ for details."
+  exit 1
+}
