@@ -30,6 +30,10 @@ export { VERSION, parseVersion, isVersionAtLeast, getVersion } from './version.j
 export { claudeDir, maxsimDir, agentMemoryDir, configPath, parseFrontmatter } from './utils.js';
 export type { FrontmatterResult } from './utils.js';
 
+// Statusline cache
+export { writeStatuslineCache, readStatuslineCache } from './statusline-cache.js';
+export type { StatuslineCache, StatuslineCacheInput } from './statusline-cache.js';
+
 // Errors
 export {
   RecoveryTier,
