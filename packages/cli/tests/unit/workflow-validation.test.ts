@@ -124,21 +124,19 @@ describe('workflow validation', () => {
 
       for (const file of workflowFiles) {
         const content = fs.readFileSync(path.join(workflowsDir, file), 'utf-8');
-        let match;
         const regex = new RegExp(CLI_INVOCATION_REGEX.source, 'g');
 
-        while ((match = regex.exec(content)) !== null) {
-          const first = match[1];
-          const second = match[2];
+        for (const m of content.matchAll(regex)) {
+          const first = m[1];
+          const second = m[2];
 
           if (NAMESPACE_COMMANDS[first]) {
-            // Namespace command: github <subcommand>, init <subcommand>
             if (second && !NAMESPACE_COMMANDS[first].has(second)) {
               errors.push(`${file}: unknown ${first} subcommand "${second}"`);
             }
           } else if (!FLAT_COMMANDS.has(first)) {
-            // Not a known namespace and not a known flat command
-            errors.push(`${file}: unknown command "${first}${second ? ' ' + second : ''}"`);
+            const label = second ? `${first} ${second}` : first;
+            errors.push(`${file}: unknown command "${label}"`);
           }
         }
       }
@@ -150,15 +148,13 @@ describe('workflow validation', () => {
   describe('workflow file references', () => {
     it('all .claude/maxsim/workflows/ references point to existing workflow files', () => {
       const errors: string[] = [];
-      const WORKFLOW_REF_REGEX = /\.claude\/maxsim\/workflows\/([\w-]+\.md)/g;
+      const workflowRefRegex = /\.claude\/maxsim\/workflows\/([\w-]+\.md)/g;
 
       for (const file of workflowFiles) {
         const content = fs.readFileSync(path.join(workflowsDir, file), 'utf-8');
-        let match;
-        const regex = new RegExp(WORKFLOW_REF_REGEX.source, 'g');
 
-        while ((match = regex.exec(content)) !== null) {
-          const referenced = match[1];
+        for (const m of content.matchAll(workflowRefRegex)) {
+          const referenced = m[1];
           if (!workflowFiles.includes(referenced)) {
             errors.push(`${file}: references non-existent workflow "${referenced}"`);
           }
