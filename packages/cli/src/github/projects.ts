@@ -3,6 +3,7 @@
  * Key: GraphQL for mutations, gh CLI for creation, REST for items.
  */
 
+import { execFileSync } from 'node:child_process';
 import { getRepoInfo, ghJson, ghExec } from './client.js';
 import type {
   GhProject,
@@ -256,42 +257,35 @@ export async function ensureProjectBoard(
   const missingColumns = BOARD_COLUMNS.filter((col) => !existingNames.has(col.name));
 
   if (missingColumns.length > 0) {
-    // Build the merged options list: keep existing options first, then append new ones.
-    // Existing options must include their id; new options omit id (GitHub assigns it).
-    const optionsJson = JSON.stringify([
-      ...existingOptions.map((o) => ({ id: o.id, name: o.name, color: o.color ?? 'GRAY' })),
-      ...missingColumns.map((col) => ({ name: col.name, color: col.color })),
-    ]);
+    // Build the merged options list (name + color + description, no id).
+    // The GraphQL ProjectV2SingleSelectFieldOptionInput requires: name, color, description.
+    const options = [
+      ...existingOptions.map((o) => ({ name: o.name, color: o.color ?? 'GRAY', description: '' })),
+      ...missingColumns.map((col) => ({ name: col.name, color: col.color, description: '' })),
+    ];
 
-    const mutation = `
-      mutation($projectId: ID!, $fieldId: ID!, $options: [ProjectV2SingleSelectFieldOptionInput!]!) {
-        updateProjectV2Field(input: {
-          projectId: $projectId
-          fieldId: $fieldId
-          singleSelectOptions: $options
-        }) {
-          projectV2Field {
-            ... on ProjectV2SingleSelectField {
-              id
-              name
-            }
-          }
-        }
-      }
-    `.trim();
+    const mutation =
+      'mutation($fieldId: ID!, $options: [ProjectV2SingleSelectFieldOptionInput!]!) {' +
+      ' updateProjectV2Field(input: { fieldId: $fieldId, singleSelectOptions: $options }) {' +
+      ' projectV2Field { ... on ProjectV2SingleSelectField { id name } } } }';
 
-    const updateResult = ghExec([
-      'api', 'graphql',
-      '-f', `query=${mutation}`,
-      '-f', `projectId=${project.id}`,
-      '-f', `fieldId=${statusResult.data.id}`,
-      '-f', `options=${optionsJson}`,
-    ]);
+    // gh api graphql cannot pass array variables via -F flags; use --input - with JSON body.
+    const body = JSON.stringify({
+      query: mutation,
+      variables: { fieldId: statusResult.data.id, options },
+    });
 
-    if (!updateResult.ok) {
+    try {
+      execFileSync('gh', ['api', 'graphql', '--input', '-'], {
+        input: body,
+        encoding: 'utf8',
+        stdio: ['pipe', 'pipe', 'pipe'],
+      });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
       return {
         ok: false,
-        error: `Failed to add missing Status options (${missingColumns.map((c) => c.name).join(', ')}): ${updateResult.error}`,
+        error: `Failed to add missing Status options (${missingColumns.map((c) => c.name).join(', ')}): ${msg}`,
         code: 'UNKNOWN',
       };
     }
