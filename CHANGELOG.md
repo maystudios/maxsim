@@ -1,3 +1,17 @@
+# [5.24.0](https://github.com/maystudios/maxsimcli/compare/v5.23.1...v5.24.0) (2026-04-04)
+
+
+### Bug Fixes
+
+* **phase-3-395:** normalize init.md workflow dispatch to @ syntax ([2aac981](https://github.com/maystudios/maxsimcli/commit/2aac981dfcb1e5e15d751ea111f70eda7de2ec01))
+* **phase-3:** resolve lint warnings in statusline-cache tests ([ab80bf7](https://github.com/maystudios/maxsimcli/commit/ab80bf7996cb9eb832ccab98b1a881a718e684b9))
+
+
+### Features
+
+* **phase-3-396:** add statusline cache infrastructure with smart TTL ([b80de93](https://github.com/maystudios/maxsimcli/commit/b80de93db941468cfea2a037f04f13c008f80e5a))
+* **phase-3-398:** add pre-commit hook for workflow validation ([4ea72c5](https://github.com/maystudios/maxsimcli/commit/4ea72c598f054ae9a049c64fd90dd137f1f8fd27))
+
 ## [5.23.1](https://github.com/maystudios/maxsimcli/compare/v5.23.0...v5.23.1) (2026-04-04)
 
 
