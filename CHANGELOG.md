@@ -1,3 +1,11 @@
+## [5.23.1](https://github.com/maystudios/maxsimcli/compare/v5.23.0...v5.23.1) (2026-04-04)
+
+
+### Bug Fixes
+
+* **phase-3:** fix lint errors in workflow validation test ([d1f4d15](https://github.com/maystudios/maxsimcli/commit/d1f4d15c95b05fb006a7b6a1ce008837aaf14cfd))
+* **phase-3:** normalize workflows and fix CLI command references ([ee1f0f6](https://github.com/maystudios/maxsimcli/commit/ee1f0f6d8f87933418b15d79732f17a1172d7486)), closes [#218](https://github.com/maystudios/maxsimcli/issues/218) [#388](https://github.com/maystudios/maxsimcli/issues/388) [#389](https://github.com/maystudios/maxsimcli/issues/389) [#390](https://github.com/maystudios/maxsimcli/issues/390) [#391](https://github.com/maystudios/maxsimcli/issues/391) [#392](https://github.com/maystudios/maxsimcli/issues/392) [#393](https://github.com/maystudios/maxsimcli/issues/393) [#394](https://github.com/maystudios/maxsimcli/issues/394) [#395](https://github.com/maystudios/maxsimcli/issues/395) [#396](https://github.com/maystudios/maxsimcli/issues/396) [#397](https://github.com/maystudios/maxsimcli/issues/397) [#398](https://github.com/maystudios/maxsimcli/issues/398)
+
 # [5.23.0](https://github.com/maystudios/maxsimcli/compare/v5.22.0...v5.23.0) (2026-04-02)
 
 
