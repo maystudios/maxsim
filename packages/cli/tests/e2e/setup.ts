@@ -148,12 +148,14 @@ export async function closeTestIssue(
 }
 
 /**
- * Delete a GitHub Project v2 by its node ID.
+ * Delete a GitHub Project v2 by its project number.
+ * The gh CLI `project delete` command takes a number, not a node ID.
  */
-export async function deleteProject(projectId: string): Promise<void> {
-  const { ghExec } = await import('../../src/github/client.js');
+export async function deleteProject(projectNumber: number, owner?: string): Promise<void> {
+  const { ghExec, getRepoInfo } = await import('../../src/github/client.js');
   try {
-    ghExec(['project', 'delete', '--id', projectId, '--yes']);
+    const projectOwner = owner ?? getRepoInfo().owner;
+    ghExec(['project', 'delete', String(projectNumber), '--owner', projectOwner]);
   } catch {
     // Ignore cleanup errors.
   }
