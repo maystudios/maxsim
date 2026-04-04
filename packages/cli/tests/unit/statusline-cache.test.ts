@@ -35,9 +35,9 @@ describe('write then read', () => {
     const result = readStatuslineCache(tmpDir);
 
     expect(result).not.toBeNull();
-    expect(result!.phase).toBe(3);
-    expect(result!.status).toBe('Testing');
-    expect(result!.updatedAt).toBeDefined();
+    expect(result?.phase).toBe(3);
+    expect(result?.status).toBe('Testing');
+    expect(result?.updatedAt).toBeDefined();
   });
 
   it('handles write with only phase', () => {
@@ -46,8 +46,8 @@ describe('write then read', () => {
     const result = readStatuslineCache(tmpDir);
 
     expect(result).not.toBeNull();
-    expect(result!.phase).toBe(1);
-    expect(result!.status).toBeUndefined();
+    expect(result?.phase).toBe(1);
+    expect(result?.status).toBeUndefined();
   });
 
   it('handles write with only status', () => {
@@ -56,8 +56,8 @@ describe('write then read', () => {
     const result = readStatuslineCache(tmpDir);
 
     expect(result).not.toBeNull();
-    expect(result!.phase).toBeUndefined();
-    expect(result!.status).toBe('Planning');
+    expect(result?.phase).toBeUndefined();
+    expect(result?.status).toBe('Planning');
   });
 
   it('creates .claude/maxsim directory if it does not exist', () => {
@@ -67,7 +67,7 @@ describe('write then read', () => {
 
       const result = readStatuslineCache(emptyDir);
       expect(result).not.toBeNull();
-      expect(result!.phase).toBe(2);
+      expect(result?.phase).toBe(2);
     } finally {
       fs.rmSync(emptyDir, { recursive: true, force: true });
     }
@@ -107,7 +107,7 @@ describe('stale cache (> 120s)', () => {
     const result = readStatuslineCache(tmpDir);
 
     expect(result).not.toBeNull();
-    expect(result!.phase).toBe(2);
+    expect(result?.phase).toBe(2);
   });
 });
 
@@ -212,8 +212,8 @@ describe('Smart-Hybrid TTL', () => {
     const result = readStatuslineCache(tmpDir);
 
     expect(result).not.toBeNull();
-    expect(result!.phase).toBe(3);
-    expect(result!.status).toBe('In Progress');
+    expect(result?.phase).toBe(3);
+    expect(result?.status).toBe('In Progress');
   });
 
   it('uses 120s TTL for non-"In Progress" status', () => {
@@ -229,7 +229,7 @@ describe('Smart-Hybrid TTL', () => {
     const result = readStatuslineCache(tmpDir);
 
     expect(result).not.toBeNull();
-    expect(result!.status).toBe('Done');
+    expect(result?.status).toBe('Done');
   });
 
   it('applies shorter TTL when status contains "In Progress" as substring', () => {
