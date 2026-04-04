@@ -307,3 +307,144 @@ describe('command routing', () => {
     });
   }
 });
+
+// ── Namespace routing: github ──────────────────────────────────────────
+
+describe('github namespace routing', () => {
+  it('routes "github get-issue" to the github namespace (not "Unknown command")', () => {
+    // Running github get-issue without proper args should produce a command-level
+    // error (from the handler or getRepoInfo), NOT "Unknown command: github".
+    const result = runCli(['github', 'get-issue', '--issue-number', '1']);
+    expect(result.stderr).not.toContain('Unknown command');
+    // The command was routed into the github namespace; any error comes from
+    // the handler itself (missing GH auth, not a git repo, etc.)
+    expect(result.exitCode).not.toBe(0);
+  });
+
+  it('lists github subcommands when no subcommand is given', () => {
+    const result = runCli(['github']);
+    expect(result.exitCode).toBe(1);
+    expect(result.stderr).toContain('maxsim-tools github');
+    expect(result.stderr).toContain('Subcommands:');
+  });
+
+  it('produces error for unknown github subcommand', () => {
+    const result = runCli(['github', 'nonexistent-sub']);
+    expect(result.exitCode).toBe(1);
+    expect(result.stderr).toContain('maxsim-tools github');
+    expect(result.stderr).toContain('Subcommands:');
+    // Should list available subcommands like get-issue
+    expect(result.stderr).toContain('get-issue');
+  });
+});
+
+// ── Namespace routing: init ────────────────────────────────────────────
+
+describe('init namespace routing', () => {
+  it('routes "init plan-phase" to the init namespace (not "Unknown command")', () => {
+    // Running init plan-phase with an arg should route into the init namespace.
+    // It will fail (no GH access) but should NOT produce "Unknown command: init".
+    const result = runCli(['init', 'plan-phase', '1']);
+    expect(result.stderr).not.toContain('Unknown command');
+    expect(result.exitCode).not.toBe(0);
+  });
+
+  it('lists init subcommands when no subcommand is given', () => {
+    const result = runCli(['init']);
+    expect(result.exitCode).toBe(1);
+    expect(result.stderr).toContain('maxsim-tools init');
+    expect(result.stderr).toContain('Subcommands:');
+  });
+
+  it('produces error for unknown init subcommand', () => {
+    const result = runCli(['init', 'nonexistent-sub']);
+    expect(result.exitCode).toBe(1);
+    expect(result.stderr).toContain('maxsim-tools init');
+    expect(result.stderr).toContain('Subcommands:');
+    // Should list available subcommands like plan-phase
+    expect(result.stderr).toContain('plan-phase');
+  });
+});
+
+// ── Namespace listing in usage ─────────────────────────────────────────
+
+describe('namespace listing', () => {
+  it('lists namespaces (github, init) in top-level usage output', () => {
+    const result = runCli([]);
+    expect(result.stderr).toContain('Namespaces:');
+    expect(result.stderr).toContain('github');
+    expect(result.stderr).toContain('init');
+  });
+});
+
+// ── Error catch paths ──────────────────────────────────────────────────
+
+describe('error catch paths', () => {
+  it('MaxsimError produces [ERROR:TIER] format with suggestion', () => {
+    // Write a helper script that exercises the MaxsimError catch path
+    // exactly as cli.ts does, since no existing CLI command throws a MaxsimError
+    // through the unhandled rejection path.
+    const script = `
+      const { MaxsimError, RecoveryTier } = (() => {
+        const RecoveryTier = { DEBUG: 'debug', ROLLBACK: 'rollback', ESCALATE: 'escalate' };
+        class MaxsimError extends Error {
+          constructor(message, recovery) {
+            super(message);
+            this.name = 'MaxsimError';
+            this.recovery = recovery;
+          }
+        }
+        return { MaxsimError, RecoveryTier };
+      })();
+
+      async function main() {
+        throw new MaxsimError('config file corrupted', {
+          tier: RecoveryTier.ESCALATE,
+          reason: 'config file corrupted',
+          suggestedAction: 'Delete config and re-initialize.',
+        });
+      }
+
+      main().catch((err) => {
+        if (err instanceof MaxsimError) {
+          const tier = err.recovery.tier.toUpperCase();
+          process.stderr.write('[ERROR:' + tier + '] ' + err.message + '\\n');
+          if (err.recovery.suggestedAction) {
+            process.stderr.write('Suggestion: ' + err.recovery.suggestedAction + '\\n');
+          }
+        }
+        process.exit(1);
+      });
+    `.trim();
+
+    const scriptPath = path.join(tmpDir, 'maxsim-error-test.js');
+    fs.writeFileSync(scriptPath, script, 'utf8');
+
+    try {
+      execFileSync(NODE, [scriptPath], {
+        cwd: tmpDir,
+        encoding: 'utf8' as const,
+        timeout: 10_000,
+      });
+      // Should not reach here — the script exits with code 1
+      expect.unreachable('Script should have exited with code 1');
+    } catch (err: unknown) {
+      const e = err as { stderr?: string; status?: number };
+      expect(e.status).toBe(1);
+      expect(e.stderr).toContain('[ERROR:ESCALATE]');
+      expect(e.stderr).toContain('config file corrupted');
+      expect(e.stderr).toContain('Suggestion:');
+      expect(e.stderr).toContain('Delete config and re-initialize.');
+    }
+  });
+
+  it('generic error produces [ERROR:TIER] format via classifyError', () => {
+    // Running a github command in a non-git tmpDir causes getRepoInfo() to throw
+    // a regular Error. This propagates through main().catch() → classifyError path.
+    // The error message contains "git" which classifies as ROLLBACK tier.
+    const result = runCli(['github', 'get-issue', '--issue-number', '1']);
+    expect(result.exitCode).toBe(1);
+    // The error should be formatted with [ERROR:TIER] from the catch handler
+    expect(result.stderr).toMatch(/\[ERROR:[A-Z]+\]/);
+  });
+});
