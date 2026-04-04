@@ -13,7 +13,7 @@ import * as path from 'node:path';
 
 // ── Token + Remote Detection ────────────────────────────────────────
 
-function hasGitHubToken(): boolean {
+export function hasGitHubToken(): boolean {
   if (process.env.GITHUB_TOKEN) return true;
   try {
     const token = execFileSync('gh', ['auth', 'token'], {
@@ -26,7 +26,7 @@ function hasGitHubToken(): boolean {
   }
 }
 
-function hasGitHubRemote(): boolean {
+export function hasGitHubRemote(): boolean {
   try {
     const url = execFileSync('git', ['remote', 'get-url', 'origin'], {
       encoding: 'utf8',
