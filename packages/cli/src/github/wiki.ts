@@ -48,8 +48,8 @@ function cleanupDir(dir: string): void {
   }
 }
 
-/** Classify a caught error into a GhResult error object. */
-function classifyError(err: unknown): GhResult<never> {
+/** Classify a caught wiki error into a GhResult error object. */
+function classifyWikiError(err: unknown): GhResult<never> {
   const msg = err instanceof Error ? err.message : String(err);
   if (msg.includes('404') || msg.includes('Not Found') || msg.includes('not found')) {
     return { ok: false, error: msg, code: 'NOT_FOUND' };
@@ -96,7 +96,7 @@ export function getWikiPage(slug: string, repo?: RepoInfo): GhResult<GhWikiPage>
     }
     return { ok: true, data: { slug, title: slugToTitle(slug), content } };
   } catch (err) {
-    return classifyError(err);
+    return classifyWikiError(err);
   } finally {
     if (dir) cleanupDir(dir);
   }
@@ -135,7 +135,7 @@ export function createOrUpdateWikiPage(
     });
     return { ok: true, data: { slug, title, content } };
   } catch (err) {
-    return classifyError(err);
+    return classifyWikiError(err);
   } finally {
     if (dir) cleanupDir(dir);
   }
@@ -172,7 +172,7 @@ export function deleteWikiPage(slug: string, repo?: RepoInfo): GhResult<void> {
     });
     return { ok: true, data: undefined };
   } catch (err) {
-    return classifyError(err);
+    return classifyWikiError(err);
   } finally {
     if (dir) cleanupDir(dir);
   }
@@ -198,7 +198,7 @@ export function listWikiPages(repo?: RepoInfo): GhResult<GhWikiPage[]> {
       });
     return { ok: true, data: pages };
   } catch (err) {
-    return classifyError(err);
+    return classifyWikiError(err);
   } finally {
     if (dir) cleanupDir(dir);
   }
