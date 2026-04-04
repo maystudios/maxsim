@@ -1,3 +1,11 @@
+# [5.25.0](https://github.com/maystudios/maxsimcli/compare/v5.24.0...v5.25.0) (2026-04-04)
+
+
+### Features
+
+* **phase-4-05:** add ErrorRecovery to CmdFail and structured error output in CLI ([81ed097](https://github.com/maystudios/maxsimcli/commit/81ed0979399d6fda0631a69d26c43b4297bbab9d))
+* **phase-4-05:** migrate client.ts throws to GithubError and GitError subtypes ([d72aa13](https://github.com/maystudios/maxsimcli/commit/d72aa130ef8d130a7242bd121066c4ce02fb3ef4))
+
 # [5.24.0](https://github.com/maystudios/maxsimcli/compare/v5.23.1...v5.24.0) (2026-04-04)
 
 
