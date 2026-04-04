@@ -10,6 +10,8 @@ Task completion does not equal goal achievement. This workflow checks the codeba
 Verify goal achievement, not task completion. A task "create chat component" can be marked done when the component is a placeholder. The task is done — the goal "working chat interface" is not.
 
 Evidence-first: every PASS or FAIL verdict must cite specific file paths, line numbers, or command output.
+
+> **Reference:** See `.claude/maxsim/references/verification-patterns.md` for verification methodology, common patterns, and anti-patterns.
 </core_principle>
 
 <process>
@@ -455,7 +457,7 @@ Record: PASS / FAIL + failing test names if failure.
 
 Before declaring phase verification complete, verify each individual task sub-issue:
 
-1. List all task sub-issues: `gh issue list --repo {owner}/{repo} --search "parent:{phase_issue_number}" --json number,title,state`
+1. List all task sub-issues: `node .claude/maxsim/bin/maxsim-tools.cjs github list-sub-issues --phase-issue-number {phase_issue_number}`
 2. For each task:
    a. Confirm the sub-issue is **closed**
    b. Confirm at least one commit references the task number

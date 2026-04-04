@@ -67,18 +67,6 @@ function writeConfig(config: Record<string, unknown>): void {
   );
 }
 
-/** Create phase files in the temp project directory. */
-function createPhaseFiles(count: number): void {
-  const phasesDir = path.join(tmpDir, '.claude', 'maxsim', 'phases');
-  fs.mkdirSync(phasesDir, { recursive: true });
-  for (let i = 1; i <= count; i++) {
-    fs.writeFileSync(
-      path.join(phasesDir, `phase-${i}.json`),
-      JSON.stringify({ phase: i }),
-      'utf8',
-    );
-  }
-}
 
 /** Get the status text that was written to stdout. */
 function getStatusOutput(): string {
@@ -167,19 +155,23 @@ describe('output when config has no currentPhase', () => {
 });
 
 // ---------------------------------------------------------------------------
-// Output when no config exists but phase files exist
+// Output when no config exists (phase files are irrelevant — config-only)
 // ---------------------------------------------------------------------------
 
 describe('output when no config exists but phase files exist', () => {
-  it('outputs "MAXSIM > In Progress" when phase files exist but no config', async () => {
-    createPhaseFiles(3);
+  it('outputs "MAXSIM > Ready" when phase files exist but no config (config-only approach)', async () => {
+    // Phase files in .claude/maxsim/phases/ are not consulted — only config matters
+    const phasesDir = path.join(tmpDir, '.claude', 'maxsim', 'phases');
+    fs.mkdirSync(phasesDir, { recursive: true });
+    fs.writeFileSync(path.join(phasesDir, 'phase-1.json'), '{}', 'utf8');
+
     await loadHook();
 
     hookCallback!({ cwd: tmpDir });
 
     const output = getStatusOutput();
     expect(output).toContain('MAXSIM');
-    expect(output).toContain('In Progress');
+    expect(output).toContain('Ready');
   });
 });
 
@@ -237,7 +229,9 @@ describe('exit code', () => {
   });
 
   it('exits 0 when phase files exist but no config', async () => {
-    createPhaseFiles(1);
+    const phasesDir = path.join(tmpDir, '.claude', 'maxsim', 'phases');
+    fs.mkdirSync(phasesDir, { recursive: true });
+    fs.writeFileSync(path.join(phasesDir, 'phase-1.json'), '{}', 'utf8');
     await loadHook();
 
     hookCallback!({ cwd: tmpDir });

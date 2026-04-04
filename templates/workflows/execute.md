@@ -370,7 +370,7 @@ If any spot-check fails: report which plan failed. Ask user: "Retry plan or cont
 For each plan in the completed wave, iterate over its task sub-issues:
 
 ```bash
-gh issue list --repo {owner}/{repo} --label "type:task" --json number,title,state,body -q '.[] | select(.number == TASK_ID)'
+node .claude/maxsim/bin/maxsim-tools.cjs github get-issue --issue-number TASK_ID
 ```
 
 For each task sub-issue:
@@ -549,7 +549,10 @@ node .claude/maxsim/bin/maxsim-tools.cjs github post-comment \
 
 Mark phase complete:
 ```bash
-node .claude/maxsim/bin/maxsim-tools.cjs phase complete "${PHASE_NUMBER}"
+node .claude/maxsim/bin/maxsim-tools.cjs github move-issue \
+  --issue-number $PHASE_ISSUE_NUMBER --status "Done"
+node .claude/maxsim/bin/maxsim-tools.cjs github close-issue \
+  --issue-number $PHASE_ISSUE_NUMBER
 ```
 
 > **Push strategy:** A single push occurs after full phase verification rather than per-wave, to avoid pushing partially-verified work. Each wave's merges are committed locally and verified by the test suite (step 6.8) before the next wave begins. If execution is interrupted, local commits preserve progress for re-entry via `/maxsim:execute`.
@@ -627,7 +630,7 @@ cat > "$TMPFILE" << 'BODY_EOF'
 - Check for environmental dependencies
 - Consider breaking the task into smaller sub-tasks
 BODY_EOF
-gh issue create \
+node .claude/maxsim/bin/maxsim-tools.cjs github create-issue \
   --title "fix: [Phase {N}] Task {id} failed after 4 attempts" \
   --body-file "$TMPFILE" \
   --label "type:bug" --label "maxsim:auto"

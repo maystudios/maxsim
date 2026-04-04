@@ -206,7 +206,7 @@ If the same error persists after 3 fix attempts with different approaches (`$ATT
 4. **Escalate** — if still stuck, create a GitHub Issue for each resistant error:
 
 ```bash
-gh issue create \
+node .claude/maxsim/bin/maxsim-tools.cjs github create-issue \
   --title "fix-loop: resistant error in $FILE:$LINE" \
   --label "type:bug" --label "maxsim:auto" \
   --body "## Resistant Error\n\n**Error:** $ERROR_MESSAGE\n**File:** $FILE:$LINE\n\n## Approaches Tried\n{list of 3+ approaches attempted}\n\n## Context\nThis error persisted after $ATTEMPT_COUNT fix attempts during an autonomous fix-loop session."

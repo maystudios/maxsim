@@ -196,6 +196,8 @@ Continue to next iteration.
 
 ## Step 8: Stuck Detection
 
+> **Reference:** See `.claude/maxsim/references/self-improvement.md` for detailed recovery strategies and anti-patterns.
+
 After 5 consecutive discards (`$CONSECUTIVE_DISCARDS >= 5`):
 
 1. **Full context reload** — re-read ALL in-scope files (complete refresh of understanding)
@@ -206,7 +208,7 @@ After 5 consecutive discards (`$CONSECUTIVE_DISCARDS >= 5`):
 6. **Escalation** — if still stuck after trying strategies 1-5, create a diagnostic GitHub Issue with all findings and escalate to the user:
 
 ```bash
-gh issue create \
+node .claude/maxsim/bin/maxsim-tools.cjs github create-issue \
   --title "improve: stuck after $CONSECUTIVE_DISCARDS consecutive failures" \
   --label "type:bug" --label "maxsim:auto" \
   --body "## Stuck Detection\n\nMetric: $METRIC_CMD\nBaseline: $BASELINE\nBest achieved: $BEST_METRIC\nConsecutive failures: $CONSECUTIVE_DISCARDS\n\n## Approaches Tried\n{summary from TSV log}\n\n## Suggested Investigation\n- Review scope constraints\n- Consider if metric is hitting a ceiling\n- Check for environmental factors"

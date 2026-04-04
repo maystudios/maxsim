@@ -93,7 +93,7 @@ Prompt: "Read .env.example, .env.sample, .env.template, or any documented enviro
 Prompt: "Look for Dockerfile, docker-compose.yml, Kubernetes manifests (k8s/, kubernetes/), Terraform (.tf files), AWS CDK, Pulumi, or serverless.yml. Identify: whether the app is containerized, the orchestration approach, cloud provider, and infrastructure-as-code tool. Return JSON with keys: containerized (boolean), base_image (string or null), orchestration (string or null), cloud_provider (string or null), iac_tool (string or null), deploy_notes (string)."
 
 **Agent 10 — Tech debt and open work:**
-Prompt: "Search source files for TODO, FIXME, HACK, XXX, and DEPRECATED comments. Count occurrences per file. List the top 10 files by comment count. Also run: gh issue list --state open --json number,title,labels,createdAt to get open GitHub issues. Return JSON with keys: todo_files (array of {file, count}), total_todos (number), open_issues (array of {number, title, labels}), debt_notes (string)."
+Prompt: "Search source files for TODO, FIXME, HACK, XXX, and DEPRECATED comments. Count occurrences per file. List the top 10 files by comment count. Also run: node .claude/maxsim/bin/maxsim-tools.cjs github list-issues --state open to get open GitHub issues. Return JSON with keys: todo_files (array of {file, count}), total_todos (number), open_issues (array of {number, title, labels}), debt_notes (string)."
 
 **Agent 11 — API surface (if applicable):**
 Prompt: "Look for route definitions, API endpoint declarations, OpenAPI/Swagger specs, GraphQL schemas, or gRPC proto files. Summarize the API surface: how many endpoints/operations, authentication mechanism, versioning strategy. Return JSON with keys: api_type (rest/graphql/grpc/none), endpoint_count (number or null), auth_mechanism (string or null), api_version (string or null), spec_file (string or null), api_notes (string)."
@@ -160,17 +160,15 @@ Capture the project number.
 **4c. Store project board number:**
 
 ```bash
-node .claude/maxsim/bin/maxsim-tools.cjs github set-project --number {PROJECT_NUMBER}
+node .claude/maxsim/bin/maxsim-tools.cjs github set-project --project-number {PROJECT_NUMBER}
 ```
 
 **4d. Create initial milestone:**
 
 ```bash
-gh api repos/$REPO/milestones \
-  --method POST \
-  --field title="Milestone 1 — {project_name}" \
-  --field description="Initial milestone created by MAXSIM" \
-  --field state="open"
+node .claude/maxsim/bin/maxsim-tools.cjs github create-milestone \
+  --title "Milestone 1 — {project_name}" \
+  --description "Initial milestone created by MAXSIM"
 ```
 
 Capture the milestone number.
@@ -208,13 +206,7 @@ Create `.claude/maxsim/config.json` with:
 
 **5b. Write or update CLAUDE.md:**
 
-```bash
-node .claude/maxsim/bin/maxsim-tools.cjs install write-claude-md \
-  --project-name "{project_name}" \
-  --description "{description}"
-```
-
-If unavailable, add the project context to the project root `CLAUDE.md` directly, or create a GitHub Wiki page for persistent reference.
+Add the project context to the project root `CLAUDE.md` directly (CLAUDE.md generation is handled automatically by `npx maxsim` during installation). If CLAUDE.md already exists, append the MAXSIM context section.
 
 **5c. Commit initialization files:**
 
@@ -269,13 +261,10 @@ Each phase issue must:
 4. Be added to milestone #{MILESTONE_NUMBER}
 
 Commands:
-  gh issue create --title 'Phase N: {name}' --label 'phase:{N}' --milestone {MILESTONE_NUMBER} --body '{body}' --repo {owner/repo}
-
-After creating all issues, add each to the GitHub Project Board:
-  gh project item-add {PROJECT_NUMBER} --owner {OWNER} --url {issue_url}
+  node .claude/maxsim/bin/maxsim-tools.cjs github create-phase --phase-number N --title '{name}' --body '{body}' --milestone-number {MILESTONE_NUMBER} --project-number {PROJECT_NUMBER}
 
 Set each issue status to 'To Do':
-  node .claude/maxsim/bin/maxsim-tools.cjs github set-status --issue-number {N} --status 'To Do'
+  node .claude/maxsim/bin/maxsim-tools.cjs github move-issue --issue-number {N} --status 'To Do'
 
 Return the list of created issue numbers and titles."
 
