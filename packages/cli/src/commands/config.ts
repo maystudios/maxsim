@@ -3,6 +3,8 @@
  * Extracted from cli.ts to enable modular async dispatch.
  */
 
+import * as fs from 'node:fs';
+import * as path from 'node:path';
 import { loadConfig, saveConfig, cmdOk, cmdErr } from '../core/index.js';
 import { getPositionalArg, type CommandRegistry } from './types.js';
 
@@ -58,6 +60,48 @@ export const CONFIG_COMMANDS: CommandRegistry = {
       saveConfig(projectDir, config);
       const message = `Set ${key} = ${val}`;
       return cmdOk(message);
+    },
+  },
+
+  'config-save-defaults': {
+    name: 'config-save-defaults',
+    description: 'Save current config as a defaults snapshot. Usage: config-save-defaults <output-path>',
+    async handler(args) {
+      const dest = getPositionalArg(args, 0);
+      if (!dest) {
+        return cmdErr('Usage: config-save-defaults <output-path>');
+      }
+      const config = loadConfig(process.cwd());
+      const destPath = path.resolve(dest);
+      fs.mkdirSync(path.dirname(destPath), { recursive: true });
+      fs.writeFileSync(destPath, JSON.stringify(config, null, 2), 'utf8');
+      return cmdOk(`Defaults saved to ${destPath}`);
+    },
+  },
+
+  'validate-structure': {
+    name: 'validate-structure',
+    description: 'Validate the MaxsimCLI directory structure. Usage: validate-structure',
+    async handler(_args) {
+      const projectDir = process.cwd();
+      const checks = [
+        { path: '.claude', label: '.claude/ directory' },
+        { path: path.join('.claude', 'maxsim'), label: '.claude/maxsim/ directory' },
+        { path: path.join('.claude', 'maxsim', 'bin', 'maxsim-tools.cjs'), label: '.claude/maxsim/bin/maxsim-tools.cjs' },
+        { path: path.join('.claude', 'maxsim', 'config.json'), label: '.claude/maxsim/config.json' },
+      ];
+
+      const results: string[] = [];
+      let allPassed = true;
+      for (const check of checks) {
+        const fullPath = path.join(projectDir, check.path);
+        const exists = fs.existsSync(fullPath);
+        results.push(`${exists ? 'PASS' : 'FAIL'}: ${check.label}`);
+        if (!exists) allPassed = false;
+      }
+
+      const summary = allPassed ? 'All checks passed.' : 'Some checks failed.';
+      return cmdOk(`${results.join('\n')}\n${summary}`);
     },
   },
 

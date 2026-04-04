@@ -386,7 +386,7 @@ export const GITHUB_COMMANDS: CommandRegistry = {
 
   'post-comment': {
     name: 'post-comment',
-    description: 'Post a comment on an issue. Usage: post-comment --issue-number 216 --body "text" [--body-file /path] [--type plan]',
+    description: 'Post a comment on an issue. Usage: post-comment --issue-number 216 --body "text" [--body-file /path] [--type plan] [--plan-number 1]',
     async handler(args) {
       let issueNumber: number;
       try {
@@ -413,8 +413,13 @@ export const GITHUB_COMMANDS: CommandRegistry = {
       }
 
       const commentType = getFlag(args, '--type');
+      const planNumber = getIntFlag(args, '--plan-number');
       if (commentType) {
-        const header = formatCommentHeader({ type: commentType as Parameters<typeof formatCommentHeader>[0]['type'] });
+        const meta: Record<string, unknown> = { type: commentType };
+        if (planNumber !== undefined && !Number.isNaN(planNumber)) {
+          meta.plan = planNumber;
+        }
+        const header = formatCommentHeader(meta as Parameters<typeof formatCommentHeader>[0]);
         body = `${header}\n${body}`;
       }
 
@@ -573,7 +578,7 @@ export const GITHUB_COMMANDS: CommandRegistry = {
 
   'delete-comments': {
     name: 'delete-comments',
-    description: 'Delete comments of a given type from an issue. Usage: delete-comments --issue-number 216 --type plan',
+    description: 'Delete comments of a given type from an issue. Supports comma-separated types. Usage: delete-comments --issue-number 216 --type plan,context,research',
     async handler(args) {
       let issueNumber: number;
       try {
@@ -584,26 +589,30 @@ export const GITHUB_COMMANDS: CommandRegistry = {
         return cmdErr((e as Error).message);
       }
 
-      let type: string;
+      let typeRaw: string;
       try {
-        type = getRequiredFlag(args, '--type');
+        typeRaw = getRequiredFlag(args, '--type');
       } catch (e) {
         return cmdErr((e as Error).message);
       }
 
+      // Support comma-separated types (e.g. "plan,context,research")
+      const types = new Set(typeRaw.split(',').map((t) => t.trim()).filter(Boolean));
+
       const commentsResult = await listComments(issueNumber);
       if (!commentsResult.ok) return cmdErr(commentsResult.error);
 
-      const matching = commentsResult.data.filter(
-        (c) => parseCommentMeta(c.body)?.type === type,
-      );
+      const matching = commentsResult.data.filter((c) => {
+        const meta = parseCommentMeta(c.body);
+        return meta ? types.has(meta.type) : false;
+      });
 
       for (const comment of matching) {
         const deleteResult = await deleteComment(comment.id);
         if (!deleteResult.ok) return cmdErr(deleteResult.error);
       }
 
-      return cmdOk(`Deleted ${matching.length} ${type} comments from #${issueNumber}`);
+      return cmdOk(`Deleted ${matching.length} [${[...types].join(',')}] comments from #${issueNumber}`);
     },
   },
 
@@ -681,15 +690,6 @@ export const GITHUB_COMMANDS: CommandRegistry = {
       saveConfig(projectDir, config);
 
       return cmdOk(`Project number set to ${projectNumber}`);
-    },
-  },
-
-  'set-status': {
-    name: 'set-status',
-    description: 'Set an issue status on the project board (alias for move-issue). Usage: set-status --issue-number 216 --status "Done"',
-    async handler(args) {
-      // Delegate to move-issue handler
-      return GITHUB_COMMANDS['move-issue'].handler(args);
     },
   },
 
@@ -1041,13 +1041,13 @@ export const GITHUB_COMMANDS: CommandRegistry = {
     name: 'all-progress',
     description: 'Show adaptive progress for all phase issues with detail levels and progress bar. Usage: all-progress',
     async handler(_args) {
-      // Fetch all phase issues (label is 'maxsim:phase' per actual GitHub data)
-      const result = await listIssues({ labels: 'maxsim:phase', state: 'all' });
+      // Fetch all phase issues by canonical label (type:phase per types.ts)
+      const result = await listIssues({ labels: 'type:phase', state: 'all' });
       if (!result.ok) return cmdErr(result.error);
 
       const phases = result.data;
       if (phases.length === 0) {
-        return cmdOk('No phase issues found (label: maxsim:phase)');
+        return cmdOk('No phase issues found (label: type:phase)');
       }
 
       // Extract phase number from title (e.g., "Phase 2: ..." → 2) for sorting

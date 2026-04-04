@@ -54,8 +54,8 @@ Returns: `phase_number`, `title`, `issue_number`, `total_tasks`, `completed_task
 **2. Open bugs and issues:**
 
 ```bash
-gh issue list --label "type:bug" --state open --json number,title,createdAt
-gh issue list --state open --json number,title,labels,createdAt
+node .claude/maxsim/bin/maxsim-tools.cjs github list-issues --label "type:bug" --state open
+node .claude/maxsim/bin/maxsim-tools.cjs github list-issues --state open
 ```
 
 **3. Git context:**
@@ -115,7 +115,7 @@ Wait for user response before continuing.
 
 Detection rule: If open issues labeled `type:bug` exist → propose `/maxsim:debug` to investigate and fix them.
 
-If `gh issue list --label "type:bug"` returned open issues:
+If `list-issues --label "type:bug"` returned open issues:
 
 ```
 ## Problem Detected
@@ -154,7 +154,7 @@ Impact: These issues were likely created directly on GitHub and are not in the p
 Resolution: Apply a `type:` label and `maxsim:user` to integrate them
 
 Options:
-1. Triage now — for each issue, ask user for the type label and apply both `maxsim:user` and the chosen `type:` label via `gh issue edit {N} --add-label "maxsim:user,type:{chosen}"`
+1. Triage now — for each issue, ask user for the type label and apply both `maxsim:user` and the chosen `type:` label via `node .claude/maxsim/bin/maxsim-tools.cjs github add-label --issue-number {N} --label "maxsim:user"` and `node .claude/maxsim/bin/maxsim-tools.cjs github add-label --issue-number {N} --label "type:{chosen}"`
 2. View issues on GitHub
 3. Skip and continue anyway
 ```

@@ -363,7 +363,7 @@ Security controls that are correctly implemented:
 
 *This audit was performed by MaxsimCLI security scanner. It is not a substitute for professional penetration testing.*
 BODY_EOF
-gh issue create \
+node .claude/maxsim/bin/maxsim-tools.cjs github create-issue \
   --title "Security Audit: {date} — $AUDIT_SCOPE" \
   --label "security-audit" \
   --body-file "$TMPFILE"
@@ -393,7 +393,7 @@ Top recommendations:
   2. {second priority}
   3. {third priority}
 
-Full report: gh issue view $ISSUE_NUM
+Full report: node .claude/maxsim/bin/maxsim-tools.cjs github get-issue --issue-number $ISSUE_NUM
 ```
 
 </process>

@@ -9,7 +9,7 @@ Verify MaxsimCLI installation and GitHub connectivity. Report the status of each
 Verify the required files exist:
 
 ```bash
-node .claude/maxsim/bin/maxsim-tools.cjs validate structure
+node .claude/maxsim/bin/maxsim-tools.cjs validate-structure
 ```
 
 Expected checks:

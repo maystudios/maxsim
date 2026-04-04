@@ -41,16 +41,6 @@ function readMaxsimConfig(projectDir: string): MaxsimConfig | null {
   }
 }
 
-/** Check whether any maxsim phase plan files exist. */
-function hasPhaseFiles(projectDir: string): boolean {
-  const phasesDir = path.join(projectDir, CLAUDE_DIR, 'maxsim', 'phases');
-  try {
-    return fs.existsSync(phasesDir) && fs.readdirSync(phasesDir).length > 0;
-  } catch {
-    return false;
-  }
-}
-
 readStdinJson<StatusLineInput>((input) => {
   const projectDir = resolveProjectDir(input);
   const config = readMaxsimConfig(projectDir);
@@ -66,8 +56,6 @@ readStdinJson<StatusLineInput>((input) => {
     } else {
       statusText = `MAXSIM \u25ba ${status}`;
     }
-  } else if (hasPhaseFiles(projectDir)) {
-    statusText = 'MAXSIM \u25ba In Progress';
   } else {
     statusText = 'MAXSIM \u25ba Ready';
   }

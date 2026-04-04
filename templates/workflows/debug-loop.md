@@ -56,7 +56,7 @@ cat > "$TMPFILE" << 'BODY_EOF'
 $REPRO_OUTPUT
 ```
 BODY_EOF
-gh issue create \
+node .claude/maxsim/bin/maxsim-tools.cjs github create-issue \
   --title "debug: $SYMPTOM" \
   --label "debug" \
   --body-file "$TMPFILE"
@@ -91,7 +91,7 @@ Confirm to begin? (yes / edit / cancel)
 **Handle user response:**
 - **If user approves:** proceed to step 6
 - **If user requests changes:** revise the relevant parameters (scope, reproduction command, investigation approach). If the reproduction command changed, re-attempt reproduction (step 3). Update the GitHub Issue body with the revised plan. Return to step 5 (stay in Plan Mode).
-- **If user cancels:** close the GitHub Issue (`gh issue close $ISSUE_NUM --comment "Debug session cancelled by user before investigation began"`), Exit Plan Mode via `ExitPlanMode`, and stop.
+- **If user cancels:** close the GitHub Issue (`node .claude/maxsim/bin/maxsim-tools.cjs github close-issue --issue-number $ISSUE_NUM`), Exit Plan Mode via `ExitPlanMode`, and stop.
 
 ## Step 6: Exit Plan Mode
 
@@ -314,7 +314,7 @@ BODY_EOF
 node .claude/maxsim/bin/maxsim-tools.cjs github post-comment \
   --issue-number $ISSUE_NUM --body-file "$TMPFILE" --type summary
 
-gh issue close $ISSUE_NUM --comment "Debug session complete. Root cause: {found/not found}."
+node .claude/maxsim/bin/maxsim-tools.cjs github close-issue --issue-number $ISSUE_NUM
 ```
 
 </process>

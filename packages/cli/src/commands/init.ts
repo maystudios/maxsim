@@ -78,10 +78,10 @@ export const INIT_COMMANDS: CommandRegistry = {
       const researcherModel = resolveModel(profile, AgentType.RESEARCHER, overrides);
 
       // Find the phase issue
-      const issuesResult = await listIssues({ labels: 'maxsim:phase', state: 'open' });
+      const issuesResult = await listIssues({ labels: 'type:phase', state: 'open' });
       if (!issuesResult.ok) {
         // Try all states if open search fails
-        const allIssuesResult = await listIssues({ labels: 'maxsim:phase', state: 'all' });
+        const allIssuesResult = await listIssues({ labels: 'type:phase', state: 'all' });
         if (!allIssuesResult.ok) {
           process.stdout.write(JSON.stringify({ phase_found: false, phase_number: phaseNumber }));
           return cmdOk(null);
@@ -110,7 +110,7 @@ export const INIT_COMMANDS: CommandRegistry = {
 
       // Retry with all states if not found among open issues
       if (!phaseIssue) {
-        const allIssuesResult = await listIssues({ labels: 'maxsim:phase', state: 'all' });
+        const allIssuesResult = await listIssues({ labels: 'type:phase', state: 'all' });
         if (allIssuesResult.ok) {
           phaseIssue = allIssuesResult.data.find((i) => {
             const m = i.title.match(/^Phase\s+(\d+)/i);
@@ -288,7 +288,7 @@ export const INIT_COMMANDS: CommandRegistry = {
 
 /** Find a phase issue by number, searching open issues first then all. */
 async function findPhaseIssue(phaseNumber: number) {
-  const openResult = await listIssues({ labels: 'maxsim:phase', state: 'open' });
+  const openResult = await listIssues({ labels: 'type:phase', state: 'open' });
   if (openResult.ok) {
     const found = openResult.data.find((i) => {
       const m = i.title.match(/^Phase\s+(\d+)/i);
@@ -297,7 +297,7 @@ async function findPhaseIssue(phaseNumber: number) {
     if (found) return found;
   }
 
-  const allResult = await listIssues({ labels: 'maxsim:phase', state: 'all' });
+  const allResult = await listIssues({ labels: 'type:phase', state: 'all' });
   if (!allResult.ok) return null;
 
   return allResult.data.find((i) => {

@@ -122,7 +122,7 @@ Track results. If any creation fails, warn and provide the manual creation comma
 After all phases are created, add each issue to the project board in the "To Do" column:
 
 ```bash
-node .claude/maxsim/bin/maxsim-tools.cjs github set-status \
+node .claude/maxsim/bin/maxsim-tools.cjs github move-issue \
   --issue-number [ISSUE_NUM] \
   --status "To Do"
 ```
@@ -172,5 +172,5 @@ Start planning the first phase:
 - EnterPlanMode must be used before creating any GitHub resources
 - ExitPlanMode must be called after all GitHub resources are created
 - Use `node .claude/maxsim/bin/maxsim-tools.cjs` for CLI operations
-- Use `github set-status` (not `github move-issue`) to set board column status
+- Use `github move-issue` to set board column status
 </constraints>

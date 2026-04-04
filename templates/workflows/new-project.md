@@ -97,7 +97,7 @@ Prompt: "Look for ORM configs, migration files, schema files, or database connec
 Prompt: "Look for Dockerfile, docker-compose.yml, Kubernetes manifests, Terraform, CDK, or serverless configs. Summarize: containerization approach, orchestration, cloud provider, infrastructure-as-code tool. Return JSON with keys: containerized, orchestration, cloud_provider, iac_tool."
 
 **Agent 10 — Open issues and tech debt:**
-Prompt: "Search for TODO, FIXME, HACK, and DEPRECATED comments across source files. List the top 10 by frequency of occurrence. Also check if there are open GitHub issues via: gh issue list --state open --json number,title,labels. Return JSON with keys: todo_hotspots (array of {file, count}), open_issues (array of {number, title})."
+Prompt: "Search for TODO, FIXME, HACK, and DEPRECATED comments across source files. List the top 10 by frequency of occurrence. Also check if there are open GitHub issues via: node .claude/maxsim/bin/maxsim-tools.cjs github list-issues --state open. Return JSON with keys: todo_hotspots (array of {file, count}), open_issues (array of {number, title})."
 
 After all agents complete, synthesize their JSON outputs into a single findings object. This feeds into the interview phase to pre-fill answers and skip redundant questions.
 
@@ -162,17 +162,15 @@ Capture the project number from the output.
 **4c. Store project board number in config:**
 
 ```bash
-node .claude/maxsim/bin/maxsim-tools.cjs github set-project --number {PROJECT_NUMBER}
+node .claude/maxsim/bin/maxsim-tools.cjs github set-project --project-number {PROJECT_NUMBER}
 ```
 
 **4d. Create initial milestone:**
 
 ```bash
-gh api repos/$REPO/milestones \
-  --method POST \
-  --field title="Milestone 1 — {project_name}" \
-  --field description="Initial milestone created by MAXSIM" \
-  --field state="open"
+node .claude/maxsim/bin/maxsim-tools.cjs github create-milestone \
+  --title "Milestone 1 — {project_name}" \
+  --description "Initial milestone created by MAXSIM"
 ```
 
 ## Phase 5: Local Setup
@@ -202,15 +200,7 @@ Create `.claude/maxsim/config.json` with:
 
 **5b. Write or update CLAUDE.md:**
 
-Use the install system to write project-level CLAUDE.md context:
-
-```bash
-node .claude/maxsim/bin/maxsim-tools.cjs install write-claude-md \
-  --project-name "{project_name}" \
-  --description "{description}"
-```
-
-If the command is unavailable, add the project context to the project root `CLAUDE.md` directly, or create a GitHub Wiki page for persistent reference.
+Add the project context to the project root `CLAUDE.md` directly (CLAUDE.md generation is handled automatically by `npx maxsim` during installation). If CLAUDE.md already exists, append the MAXSIM context section.
 
 **5c. Commit initialization files:**
 
@@ -250,13 +240,10 @@ Create 3–7 phase GitHub Issues on the repo {owner/repo}. Each phase issue shou
 3. Have a body describing the phase goal and 5–10 acceptance criteria as a task list (- [ ] item)
 4. Be added to milestone #{MILESTONE_NUMBER}
 
-Use: gh issue create --title 'Phase N: {name}' --label 'phase:{N}' --milestone {MILESTONE_NUMBER} --body '{body}'
-
-After creating all issues, add each one to the GitHub Project Board:
-gh project item-add {PROJECT_NUMBER} --owner {OWNER} --url {issue_url}
+Use: node .claude/maxsim/bin/maxsim-tools.cjs github create-phase --phase-number N --title '{name}' --body '{body}' --milestone-number {MILESTONE_NUMBER} --project-number {PROJECT_NUMBER}
 
 Set each issue status to 'To Do' on the board using:
-node .claude/maxsim/bin/maxsim-tools.cjs github set-status --issue-number {N} --status 'To Do'
+node .claude/maxsim/bin/maxsim-tools.cjs github move-issue --issue-number {N} --status 'To Do'
 
 Return the list of created issue numbers and titles."
 
