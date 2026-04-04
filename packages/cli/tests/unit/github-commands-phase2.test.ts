@@ -46,6 +46,7 @@ const {
   mockGhJson,
   mockLoadConfig,
   mockSaveConfig,
+  mockReadFileSync,
 } = vi.hoisted(() => ({
   mockUpdateIssue: vi.fn(),
   mockCloseIssue: vi.fn(),
@@ -68,6 +69,7 @@ const {
   mockGhJson: vi.fn(),
   mockLoadConfig: vi.fn(),
   mockSaveConfig: vi.fn(),
+  mockReadFileSync: vi.fn(),
 }));
 
 // ── Module mocks ─────────────────────────────────────────────────────────────
@@ -117,6 +119,14 @@ vi.mock('../../src/core/config.js', () => ({
   loadConfig: mockLoadConfig,
   saveConfig: mockSaveConfig,
 }));
+
+vi.mock('node:fs', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('node:fs')>();
+  return {
+    ...actual,
+    readFileSync: mockReadFileSync,
+  };
+});
 
 // Import after mocks are established.
 import { GITHUB_COMMANDS } from '../../src/commands/github.js';
@@ -470,7 +480,7 @@ describe('handle-verification-success handler', () => {
   });
 });
 
-// ── status (argument validation) ─────────────────────────────────────────────
+// ── status (argument validation + composite tests) ──────────────────────────
 
 describe('status handler argument validation', () => {
   it('returns error when --phase-number is not a valid integer', async () => {
@@ -482,7 +492,154 @@ describe('status handler argument validation', () => {
   });
 });
 
-// ── create-phase (argument validation) ───────────────────────────────────────
+describe('status handler — single-phase happy path', () => {
+  it('returns phase header, task list, and acceptance criteria', async () => {
+    mockListIssues.mockResolvedValue({
+      ok: true,
+      data: [
+        { number: 100, title: 'Phase 3: Test Coverage', state: 'open', labels: [] },
+      ],
+    });
+    mockGetIssue.mockResolvedValue({
+      ok: true,
+      data: {
+        number: 100,
+        title: 'Phase 3: Test Coverage',
+        state: 'open',
+        body: '## Acceptance Criteria\n- [x] All tests pass\n- [ ] Coverage above 80%',
+        labels: [],
+        htmlUrl: 'https://github.com/test/test/issues/100',
+        updatedAt: '2026-01-01T00:00:00Z',
+      },
+    });
+    mockListSubIssues.mockResolvedValue({
+      ok: true,
+      data: [
+        { number: 101, title: 'Task 3.1: Write unit tests', state: 'closed' },
+        { number: 102, title: 'Task 3.2: Write integration tests', state: 'open' },
+      ],
+    });
+
+    const result = await GITHUB_COMMANDS.status.handler(['--phase-number', '3']);
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) throw new Error('Expected ok:true');
+    const output = result.result as string;
+    expect(output).toContain('Phase 3');
+    expect(output).toContain('Test Coverage');
+    expect(output).toContain('Tasks (1/2)');
+    expect(output).toContain('#101');
+    expect(output).toContain('#102');
+    expect(output).toContain('All tests pass');
+    expect(output).toContain('Coverage above 80%');
+  });
+});
+
+describe('status handler — all-phases happy path', () => {
+  it('returns connectivity info and phase list when no --phase-number', async () => {
+    mockFindProject.mockReturnValue({
+      ok: true,
+      data: { number: 7, title: 'Test Project' },
+    });
+    mockEnsureLabels.mockResolvedValue({
+      ok: true,
+      data: { created: [], existing: ['type:phase', 'type:task'] },
+    });
+    mockListIssues.mockResolvedValue({
+      ok: true,
+      data: [
+        { number: 100, title: 'Phase 1: Setup', state: 'closed', labels: [] },
+        { number: 200, title: 'Phase 2: Core', state: 'open', labels: [] },
+      ],
+    });
+    mockListSubIssues
+      .mockResolvedValueOnce({ ok: true, data: [{ number: 101, state: 'closed' }] })
+      .mockResolvedValueOnce({ ok: true, data: [{ number: 201, state: 'open' }, { number: 202, state: 'closed' }] });
+
+    const result = await GITHUB_COMMANDS.status.handler([]);
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) throw new Error('Expected ok:true');
+    const output = result.result as string;
+    expect(output).toContain('test-owner/test-repo');
+    expect(output).toContain('Auth: OK');
+    expect(output).toContain('Phase 1');
+    expect(output).toContain('Phase 2');
+    expect(output).toContain('DONE');
+    expect(output).toContain('OPEN');
+  });
+});
+
+describe('status handler — phase not found', () => {
+  it('returns error when the requested phase does not exist', async () => {
+    mockListIssues.mockResolvedValue({ ok: true, data: [] });
+
+    const result = await GITHUB_COMMANDS.status.handler(['--phase-number', '99']);
+
+    expect(result.ok).toBe(false);
+    if (result.ok) throw new Error('Expected ok:false');
+    expect(result.error).toContain('Phase issue not found');
+  });
+});
+
+describe('status handler — degraded mode', () => {
+  it('returns partial output when phase list fetch fails in all-phases mode', async () => {
+    mockFindProject.mockReturnValue({ ok: false, error: 'not found' });
+    mockEnsureLabels.mockResolvedValue({
+      ok: true,
+      data: { created: [], existing: [] },
+    });
+    mockListIssues.mockResolvedValue({ ok: false, error: 'Rate limited', code: 'RATE_LIMITED' });
+
+    const result = await GITHUB_COMMANDS.status.handler([]);
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) throw new Error('Expected ok:true');
+    const output = result.result as string;
+    // Even when phase fetch fails, connectivity info is shown
+    expect(output).toContain('test-owner/test-repo');
+    expect(output).toContain('could not fetch phase issues');
+  });
+});
+
+describe('status handler — drift warning', () => {
+  it('warns when all tasks closed but acceptance criteria remain unchecked', async () => {
+    mockListIssues.mockResolvedValue({
+      ok: true,
+      data: [{ number: 50, title: 'Phase 1: Init', state: 'open', labels: [] }],
+    });
+    mockGetIssue.mockResolvedValue({
+      ok: true,
+      data: {
+        number: 50,
+        title: 'Phase 1: Init',
+        state: 'open',
+        body: '## Acceptance Criteria\n- [x] Setup done\n- [ ] Docs written',
+        labels: [],
+        htmlUrl: 'https://github.com/test/test/issues/50',
+        updatedAt: '2026-01-01T00:00:00Z',
+      },
+    });
+    mockListSubIssues.mockResolvedValue({
+      ok: true,
+      data: [
+        { number: 51, title: 'Task 1.1: Setup', state: 'closed' },
+        { number: 52, title: 'Task 1.2: Config', state: 'closed' },
+      ],
+    });
+
+    const result = await GITHUB_COMMANDS.status.handler(['--phase-number', '1']);
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) throw new Error('Expected ok:true');
+    const output = result.result as string;
+    expect(output).toContain('WARNING');
+    expect(output).toContain('drift');
+    expect(output).toContain('1 acceptance criteria remain unchecked');
+  });
+});
+
+// ── create-phase (argument validation + composite tests) ─────────────────────
 
 describe('create-phase handler argument validation', () => {
   it('returns error when --phase-number is missing', async () => {
@@ -517,7 +674,132 @@ describe('create-phase handler argument validation', () => {
   });
 });
 
-// ── batch-create-tasks (argument validation) ─────────────────────────────────
+describe('create-phase handler — happy path', () => {
+  it('creates issue with labels, milestone, and board placement', async () => {
+    mockEnsureLabels.mockResolvedValue({ ok: true, data: { created: [], existing: [] } });
+    mockCreateIssue.mockResolvedValue({
+      ok: true,
+      data: { number: 300, title: 'Phase 5: Deploy', labels: [] },
+    });
+    mockAddItemToProject.mockReturnValue({ ok: true, data: { itemId: 'PVTI_xyz' } });
+    mockMoveItemToStatus.mockReturnValue({ ok: true, data: undefined });
+
+    const result = await GITHUB_COMMANDS['create-phase'].handler([
+      '--phase-number', '5',
+      '--title', 'Deploy',
+    ]);
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) throw new Error('Expected ok:true');
+    const output = result.result as string;
+    expect(output).toContain('Created Phase #300');
+    expect(output).toContain('Phase 5: Deploy');
+
+    // Verify createIssue was called with correct labels
+    expect(mockCreateIssue).toHaveBeenCalledOnce();
+    const createArgs = mockCreateIssue.mock.calls[0][0];
+    expect(createArgs.title).toContain('Phase 5: Deploy');
+    expect(createArgs.labels).toContain('type:phase');
+    expect(createArgs.labels).toContain('maxsim:auto');
+
+    // Verify board operations
+    expect(mockAddItemToProject).toHaveBeenCalledOnce();
+    expect(mockMoveItemToStatus).toHaveBeenCalledWith(7, 'PVTI_xyz', 'To Do');
+  });
+});
+
+describe('create-phase handler — no project configured', () => {
+  it('creates issue without board placement when no project_number', async () => {
+    mockLoadConfig.mockReturnValue({
+      github: {
+        projectName: '',
+        project_number: undefined,
+        milestone_number: 1,
+        auto_push: true,
+      },
+    });
+    mockEnsureLabels.mockResolvedValue({ ok: true, data: { created: [], existing: [] } });
+    mockCreateIssue.mockResolvedValue({
+      ok: true,
+      data: { number: 301, title: 'Phase 6: Polish', labels: [] },
+    });
+
+    const result = await GITHUB_COMMANDS['create-phase'].handler([
+      '--phase-number', '6',
+      '--title', 'Polish',
+    ]);
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) throw new Error('Expected ok:true');
+    expect(mockAddItemToProject).not.toHaveBeenCalled();
+    expect(mockMoveItemToStatus).not.toHaveBeenCalled();
+  });
+});
+
+describe('create-phase handler — board add fails', () => {
+  it('returns success with warning when board add fails', async () => {
+    mockEnsureLabels.mockResolvedValue({ ok: true, data: { created: [], existing: [] } });
+    mockCreateIssue.mockResolvedValue({
+      ok: true,
+      data: { number: 302, title: 'Phase 7: Release', labels: [] },
+    });
+    mockAddItemToProject.mockReturnValue({ ok: false, error: 'Project not found' });
+
+    const result = await GITHUB_COMMANDS['create-phase'].handler([
+      '--phase-number', '7',
+      '--title', 'Release',
+    ]);
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) throw new Error('Expected ok:true');
+    const output = result.result as string;
+    expect(output).toContain('Created Phase #302');
+    expect(output).toContain('Warning');
+    expect(output).toContain('could not add to project board');
+  });
+});
+
+describe('create-phase handler — board move fails', () => {
+  it('returns success with warning when board move fails', async () => {
+    mockEnsureLabels.mockResolvedValue({ ok: true, data: { created: [], existing: [] } });
+    mockCreateIssue.mockResolvedValue({
+      ok: true,
+      data: { number: 303, title: 'Phase 8: Hardening', labels: [] },
+    });
+    mockAddItemToProject.mockReturnValue({ ok: true, data: { itemId: 'PVTI_fail' } });
+    mockMoveItemToStatus.mockReturnValue({ ok: false, error: 'Invalid status column' });
+
+    const result = await GITHUB_COMMANDS['create-phase'].handler([
+      '--phase-number', '8',
+      '--title', 'Hardening',
+    ]);
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) throw new Error('Expected ok:true');
+    const output = result.result as string;
+    expect(output).toContain('Created Phase #303');
+    expect(output).toContain('Warning');
+    expect(output).toContain('could not move to "To Do"');
+  });
+});
+
+describe('create-phase handler — createIssue fails', () => {
+  it('returns error when issue creation fails', async () => {
+    mockEnsureLabels.mockResolvedValue({ ok: true, data: { created: [], existing: [] } });
+    mockCreateIssue.mockResolvedValue({ ok: false, error: 'Validation Failed', code: 'VALIDATION_ERROR' });
+
+    const result = await GITHUB_COMMANDS['create-phase'].handler([
+      '--phase-number', '9',
+      '--title', 'Broken Phase',
+    ]);
+
+    expect(result.ok).toBe(false);
+    if (result.ok) throw new Error('Expected ok:false');
+    expect(result.error).toContain('Validation Failed');
+  });
+});
+
+// ── batch-create-tasks (argument validation + composite tests) ───────────────
 
 describe('batch-create-tasks handler argument validation', () => {
   it('returns error when --phase-issue-number is missing', async () => {
@@ -552,7 +834,301 @@ describe('batch-create-tasks handler argument validation', () => {
   });
 });
 
-// ── detect-external-edits (argument validation) ──────────────────────────────
+describe('batch-create-tasks handler — happy path', () => {
+  it('creates tasks, links as sub-issues, and adds to board', async () => {
+    const tasksJson = JSON.stringify([
+      { title: 'Task A', body: 'Body A' },
+      { title: 'Task B', body: 'Body B', labels: ['priority:high'], wave: 1 },
+    ]);
+    mockReadFileSync.mockReturnValue(tasksJson);
+    mockEnsureLabels.mockResolvedValue({ ok: true, data: { created: [], existing: [] } });
+    mockListSubIssues.mockResolvedValue({ ok: true, data: [] });
+    mockCreateIssue
+      .mockResolvedValueOnce({ ok: true, data: { number: 401, title: 'Task A' } })
+      .mockResolvedValueOnce({ ok: true, data: { number: 402, title: 'Task B' } });
+    mockAddSubIssue
+      .mockResolvedValueOnce({ ok: true, data: {} })
+      .mockResolvedValueOnce({ ok: true, data: {} });
+    mockAddItemToProject.mockReturnValue({ ok: true, data: { itemId: 'PVTI_t1' } });
+    mockMoveItemToStatus.mockReturnValue({ ok: true, data: undefined });
+
+    const result = await GITHUB_COMMANDS['batch-create-tasks'].handler([
+      '--phase-issue-number', '216',
+      '--tasks-file', '/tmp/tasks.json',
+    ]);
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) throw new Error('Expected ok:true');
+    const output = result.result as string;
+    expect(output).toContain('Created 2 tasks');
+    expect(output).toContain('#401');
+    expect(output).toContain('#402');
+    expect(output).toContain('#216');
+
+    // Verify labels include auto-labels and wave
+    const secondCallLabels = mockCreateIssue.mock.calls[1][0].labels;
+    expect(secondCallLabels).toContain('type:task');
+    expect(secondCallLabels).toContain('maxsim:auto');
+    expect(secondCallLabels).toContain('priority:high');
+    expect(secondCallLabels).toContain('wave:1');
+
+    // Verify sub-issue linking
+    expect(mockAddSubIssue).toHaveBeenCalledTimes(2);
+    expect(mockAddSubIssue).toHaveBeenCalledWith(216, 401);
+    expect(mockAddSubIssue).toHaveBeenCalledWith(216, 402);
+  });
+});
+
+describe('batch-create-tasks handler — dedup logic', () => {
+  it('skips tasks that already exist as sub-issues (case-insensitive)', async () => {
+    const tasksJson = JSON.stringify([
+      { title: 'Task A', body: 'Body A' },
+      { title: 'Task B', body: 'Body B' },
+      { title: 'Task C', body: 'Body C' },
+    ]);
+    mockReadFileSync.mockReturnValue(tasksJson);
+    mockEnsureLabels.mockResolvedValue({ ok: true, data: { created: [], existing: [] } });
+    mockListSubIssues.mockResolvedValue({
+      ok: true,
+      data: [
+        { number: 400, title: 'task a', state: 'open' },  // matches "Task A" case-insensitively
+      ],
+    });
+    mockCreateIssue
+      .mockResolvedValueOnce({ ok: true, data: { number: 501, title: 'Task B' } })
+      .mockResolvedValueOnce({ ok: true, data: { number: 502, title: 'Task C' } });
+    mockAddSubIssue.mockResolvedValue({ ok: true, data: {} });
+    mockAddItemToProject.mockReturnValue({ ok: true, data: { itemId: 'PVTI_d1' } });
+    mockMoveItemToStatus.mockReturnValue({ ok: true, data: undefined });
+
+    const result = await GITHUB_COMMANDS['batch-create-tasks'].handler([
+      '--phase-issue-number', '216',
+      '--tasks-file', '/tmp/tasks.json',
+    ]);
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) throw new Error('Expected ok:true');
+    const output = result.result as string;
+    expect(output).toContain('Created 2 tasks');
+    expect(output).toContain('1 skipped: duplicate');
+
+    // Only 2 issues should have been created (not 3)
+    expect(mockCreateIssue).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe('batch-create-tasks handler — partial failure', () => {
+  it('continues creating remaining tasks when one fails', async () => {
+    const tasksJson = JSON.stringify([
+      { title: 'Task OK', body: 'ok' },
+      { title: 'Task FAIL', body: 'fail' },
+      { title: 'Task OK 2', body: 'ok2' },
+    ]);
+    mockReadFileSync.mockReturnValue(tasksJson);
+    mockEnsureLabels.mockResolvedValue({ ok: true, data: { created: [], existing: [] } });
+    mockListSubIssues.mockResolvedValue({ ok: true, data: [] });
+    mockCreateIssue
+      .mockResolvedValueOnce({ ok: true, data: { number: 601, title: 'Task OK' } })
+      .mockResolvedValueOnce({ ok: false, error: 'Server Error', code: 'UNKNOWN' })
+      .mockResolvedValueOnce({ ok: true, data: { number: 603, title: 'Task OK 2' } });
+    mockAddSubIssue.mockResolvedValue({ ok: true, data: {} });
+    mockAddItemToProject.mockReturnValue({ ok: true, data: { itemId: 'PVTI_p1' } });
+    mockMoveItemToStatus.mockReturnValue({ ok: true, data: undefined });
+
+    const result = await GITHUB_COMMANDS['batch-create-tasks'].handler([
+      '--phase-issue-number', '216',
+      '--tasks-file', '/tmp/tasks.json',
+    ]);
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) throw new Error('Expected ok:true');
+    const output = result.result as string;
+    expect(output).toContain('Created 2 tasks');
+    expect(output).toContain('1 errors');
+    expect(output).toContain('Failed to create "Task FAIL"');
+  });
+});
+
+describe('batch-create-tasks handler — sub-issue link failure', () => {
+  it('reports error when sub-issue linking fails but issue was created', async () => {
+    const tasksJson = JSON.stringify([
+      { title: 'Task Link Fail', body: 'body' },
+    ]);
+    mockReadFileSync.mockReturnValue(tasksJson);
+    mockEnsureLabels.mockResolvedValue({ ok: true, data: { created: [], existing: [] } });
+    mockListSubIssues.mockResolvedValue({ ok: true, data: [] });
+    mockCreateIssue.mockResolvedValue({ ok: true, data: { number: 701, title: 'Task Link Fail' } });
+    mockAddSubIssue.mockResolvedValue({ ok: false, error: 'Parent not found', code: 'NOT_FOUND' });
+    mockAddItemToProject.mockReturnValue({ ok: true, data: { itemId: 'PVTI_lf' } });
+    mockMoveItemToStatus.mockReturnValue({ ok: true, data: undefined });
+
+    const result = await GITHUB_COMMANDS['batch-create-tasks'].handler([
+      '--phase-issue-number', '216',
+      '--tasks-file', '/tmp/tasks.json',
+    ]);
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) throw new Error('Expected ok:true');
+    const output = result.result as string;
+    expect(output).toContain('Created 1 tasks');
+    expect(output).toContain('1 errors');
+    expect(output).toContain('#701');
+    expect(output).toContain('failed to link as sub-issue');
+  });
+});
+
+describe('batch-create-tasks handler — full dedup', () => {
+  it('reports 0 created when all tasks are duplicates', async () => {
+    const tasksJson = JSON.stringify([
+      { title: 'Existing Task', body: 'body' },
+    ]);
+    mockReadFileSync.mockReturnValue(tasksJson);
+    mockEnsureLabels.mockResolvedValue({ ok: true, data: { created: [], existing: [] } });
+    mockListSubIssues.mockResolvedValue({
+      ok: true,
+      data: [{ number: 800, title: 'existing task', state: 'open' }],
+    });
+
+    const result = await GITHUB_COMMANDS['batch-create-tasks'].handler([
+      '--phase-issue-number', '216',
+      '--tasks-file', '/tmp/tasks.json',
+    ]);
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) throw new Error('Expected ok:true');
+    const output = result.result as string;
+    expect(output).toContain('Created 0 tasks');
+    expect(output).toContain('1 skipped: duplicate');
+    expect(mockCreateIssue).not.toHaveBeenCalled();
+  });
+});
+
+// ── all-progress (composite tests) ──────────────────────────────────────────
+
+describe('all-progress handler — basic behavior', () => {
+  it('returns message when no phase issues exist', async () => {
+    mockListIssues.mockResolvedValue({ ok: true, data: [] });
+
+    const result = await GITHUB_COMMANDS['all-progress'].handler([]);
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) throw new Error('Expected ok:true');
+    expect(result.result).toContain('No phase issues found');
+  });
+
+  it('returns error when listIssues fails', async () => {
+    mockListIssues.mockResolvedValue({ ok: false, error: 'Unauthorized', code: 'UNAUTHORIZED' });
+
+    const result = await GITHUB_COMMANDS['all-progress'].handler([]);
+
+    expect(result.ok).toBe(false);
+    if (result.ok) throw new Error('Expected ok:false');
+    expect(result.error).toContain('Unauthorized');
+  });
+});
+
+describe('all-progress handler — multi-phase report', () => {
+  it('shows progress for multiple phases sorted by phase number', async () => {
+    mockListIssues.mockResolvedValue({
+      ok: true,
+      data: [
+        { number: 200, title: 'Phase 2: Core', state: 'open', labels: [] },
+        { number: 100, title: 'Phase 1: Setup', state: 'closed', labels: [] },
+        { number: 300, title: 'Phase 3: Polish', state: 'open', labels: [] },
+      ],
+    });
+    // Mock responses align with sorted order: Phase 1, Phase 2, Phase 3
+    mockListSubIssues
+      .mockResolvedValueOnce({
+        ok: true,
+        data: [{ number: 101, title: 'Task 1.1', state: 'closed' }],
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        data: [
+          { number: 201, title: 'Task 2.1', state: 'closed' },
+          { number: 202, title: 'Task 2.2', state: 'open' },
+        ],
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        data: [
+          { number: 301, title: 'Task 3.1', state: 'open' },
+          { number: 302, title: 'Task 3.2', state: 'open' },
+        ],
+      });
+
+    const result = await GITHUB_COMMANDS['all-progress'].handler([]);
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) throw new Error('Expected ok:true');
+    const output = result.result as string;
+    expect(output).toContain('Milestone Progress');
+    // Phase 1 should appear as Complete
+    expect(output).toContain('Phase 1');
+    expect(output).toContain('Complete');
+    // Phase 2 should appear as In Progress
+    expect(output).toContain('Phase 2');
+    expect(output).toContain('In Progress');
+    // Phase 3 should appear as Not started (no closed tasks)
+    expect(output).toContain('Phase 3');
+    expect(output).toContain('Not started');
+    // Overall progress bar should exist
+    expect(output).toContain('Overall');
+  });
+});
+
+describe('all-progress handler — sub-issue fetch failure', () => {
+  it('shows warning for phase whose sub-issues could not be fetched', async () => {
+    mockListIssues.mockResolvedValue({
+      ok: true,
+      data: [
+        { number: 100, title: 'Phase 1: Setup', state: 'open', labels: [] },
+      ],
+    });
+    mockListSubIssues.mockResolvedValueOnce({
+      ok: false,
+      error: 'Server Error',
+      code: 'UNKNOWN',
+    });
+
+    const result = await GITHUB_COMMANDS['all-progress'].handler([]);
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) throw new Error('Expected ok:true');
+    const output = result.result as string;
+    expect(output).toContain('could not fetch tasks');
+  });
+});
+
+describe('all-progress handler — all phases complete', () => {
+  it('shows 100% progress when all phases and tasks are closed', async () => {
+    mockListIssues.mockResolvedValue({
+      ok: true,
+      data: [
+        { number: 100, title: 'Phase 1: Setup', state: 'closed', labels: [] },
+      ],
+    });
+    mockListSubIssues.mockResolvedValueOnce({
+      ok: true,
+      data: [
+        { number: 101, title: 'Task 1.1', state: 'closed' },
+        { number: 102, title: 'Task 1.2', state: 'closed' },
+      ],
+    });
+
+    const result = await GITHUB_COMMANDS['all-progress'].handler([]);
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) throw new Error('Expected ok:true');
+    const output = result.result as string;
+    expect(output).toContain('Complete');
+    expect(output).toContain('2/2');
+    expect(output).toContain('100%');
+  });
+});
+
+// ── detect-external-edits (argument validation + composite tests) ────────────
 
 describe('detect-external-edits handler argument validation', () => {
   it('returns error when --phase-number is missing', async () => {
@@ -574,26 +1150,205 @@ describe('detect-external-edits handler argument validation', () => {
   });
 });
 
-// ── all-progress (basic behavior) ────────────────────────────────────────────
+describe('detect-external-edits handler — no edits detected', () => {
+  it('reports no external edits when everything is clean', async () => {
+    mockListIssues.mockResolvedValue({
+      ok: true,
+      data: [{ number: 100, title: 'Phase 1: Setup', state: 'open', labels: [] }],
+    });
+    mockGetIssue.mockResolvedValue({
+      ok: true,
+      data: {
+        number: 100,
+        title: 'Phase 1: Setup',
+        state: 'open',
+        body: 'Phase body',
+        updatedAt: '2026-01-01T10:00:00Z',
+        labels: [],
+        htmlUrl: 'https://github.com/test/test/issues/100',
+      },
+    });
+    mockListComments.mockResolvedValue({
+      ok: true,
+      data: [
+        {
+          id: 1,
+          body: '<!-- maxsim:type=plan plan=1 -->\nSome plan content',
+          createdAt: '2026-01-01T11:00:00Z',
+          updatedAt: '2026-01-01T11:00:00Z',
+          user: { login: 'maxsim-bot' },
+        },
+      ],
+    });
+    // Events: only automation actors
+    mockGhJson.mockReturnValue({
+      ok: true,
+      data: [
+        {
+          event: 'labeled',
+          created_at: '2026-01-01T10:00:00Z',
+          actor: { login: 'github-actions[bot]' },
+          label: { name: 'type:phase' },
+        },
+      ],
+    });
 
-describe('all-progress handler', () => {
-  it('returns message when no phase issues exist', async () => {
-    mockListIssues.mockResolvedValue({ ok: true, data: [] });
-
-    const result = await GITHUB_COMMANDS['all-progress'].handler([]);
+    const result = await GITHUB_COMMANDS['detect-external-edits'].handler([
+      '--phase-number', '1',
+    ]);
 
     expect(result.ok).toBe(true);
     if (!result.ok) throw new Error('Expected ok:true');
-    expect(result.result).toContain('No phase issues found');
+    const output = result.result as string;
+    expect(output).toContain('No external edits detected');
   });
+});
 
-  it('returns error when listIssues fails', async () => {
-    mockListIssues.mockResolvedValue({ ok: false, error: 'Unauthorized', code: 'UNAUTHORIZED' });
+describe('detect-external-edits handler — body edit detected', () => {
+  it('reports body edit when issue updatedAt is after last maxsim comment', async () => {
+    mockListIssues.mockResolvedValue({
+      ok: true,
+      data: [{ number: 100, title: 'Phase 1: Setup', state: 'open', labels: [] }],
+    });
+    mockGetIssue.mockResolvedValue({
+      ok: true,
+      data: {
+        number: 100,
+        title: 'Phase 1: Setup',
+        state: 'open',
+        body: 'Modified body',
+        updatedAt: '2026-01-02T15:00:00Z',  // After last maxsim comment
+        labels: [],
+        htmlUrl: 'https://github.com/test/test/issues/100',
+      },
+    });
+    mockListComments.mockResolvedValue({
+      ok: true,
+      data: [
+        {
+          id: 1,
+          body: '<!-- maxsim:type=plan plan=1 -->\nOld plan',
+          createdAt: '2026-01-01T10:00:00Z',
+          updatedAt: '2026-01-01T10:00:00Z',
+          user: { login: 'maxsim-bot' },
+        },
+      ],
+    });
+    mockGhJson.mockReturnValue({ ok: true, data: [] });
 
-    const result = await GITHUB_COMMANDS['all-progress'].handler([]);
+    const result = await GITHUB_COMMANDS['detect-external-edits'].handler([
+      '--phase-number', '1',
+    ]);
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) throw new Error('Expected ok:true');
+    const output = result.result as string;
+    expect(output).toContain('Body Edits');
+    expect(output).toContain('Total findings');
+  });
+});
+
+describe('detect-external-edits handler — unmarked comments', () => {
+  it('reports comments without maxsim markers', async () => {
+    mockListIssues.mockResolvedValue({
+      ok: true,
+      data: [{ number: 100, title: 'Phase 1: Setup', state: 'open', labels: [] }],
+    });
+    mockGetIssue.mockResolvedValue({
+      ok: true,
+      data: {
+        number: 100,
+        title: 'Phase 1: Setup',
+        state: 'open',
+        body: 'Body',
+        updatedAt: '2026-01-01T10:00:00Z',
+        labels: [],
+        htmlUrl: 'https://github.com/test/test/issues/100',
+      },
+    });
+    mockListComments.mockResolvedValue({
+      ok: true,
+      data: [
+        {
+          id: 42,
+          body: 'Hey, I manually changed something here',
+          createdAt: '2026-01-01T12:00:00Z',
+          updatedAt: '2026-01-01T12:00:00Z',
+          user: { login: 'human-dev' },
+        },
+      ],
+    });
+    mockGhJson.mockReturnValue({ ok: true, data: [] });
+
+    const result = await GITHUB_COMMANDS['detect-external-edits'].handler([
+      '--phase-number', '1',
+    ]);
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) throw new Error('Expected ok:true');
+    const output = result.result as string;
+    expect(output).toContain('Unmarked Comments');
+    expect(output).toContain('@human-dev');
+    expect(output).toContain('Comment #42');
+  });
+});
+
+describe('detect-external-edits handler — events fetch failure', () => {
+  it('still reports findings when events API fails (graceful degradation)', async () => {
+    mockListIssues.mockResolvedValue({
+      ok: true,
+      data: [{ number: 100, title: 'Phase 1: Setup', state: 'open', labels: [] }],
+    });
+    mockGetIssue.mockResolvedValue({
+      ok: true,
+      data: {
+        number: 100,
+        title: 'Phase 1: Setup',
+        state: 'open',
+        body: 'Body',
+        updatedAt: '2026-01-01T10:00:00Z',
+        labels: [],
+        htmlUrl: 'https://github.com/test/test/issues/100',
+      },
+    });
+    mockListComments.mockResolvedValue({
+      ok: true,
+      data: [
+        {
+          id: 55,
+          body: 'Manual note without maxsim marker',
+          createdAt: '2026-01-01T12:00:00Z',
+          updatedAt: '2026-01-01T12:00:00Z',
+          user: { login: 'reviewer' },
+        },
+      ],
+    });
+    // Events API fails
+    mockGhJson.mockReturnValue({ ok: false, error: 'API timeout', code: 'TIMEOUT' });
+
+    const result = await GITHUB_COMMANDS['detect-external-edits'].handler([
+      '--phase-number', '1',
+    ]);
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) throw new Error('Expected ok:true');
+    const output = result.result as string;
+    // Should still report unmarked comments even though events failed
+    expect(output).toContain('Unmarked Comments');
+    expect(output).toContain('@reviewer');
+  });
+});
+
+describe('detect-external-edits handler — phase not found', () => {
+  it('returns error when the requested phase does not exist', async () => {
+    mockListIssues.mockResolvedValue({ ok: true, data: [] });
+
+    const result = await GITHUB_COMMANDS['detect-external-edits'].handler([
+      '--phase-number', '99',
+    ]);
 
     expect(result.ok).toBe(false);
     if (result.ok) throw new Error('Expected ok:false');
-    expect(result.error).toContain('Unauthorized');
+    expect(result.error).toContain('Phase issue not found');
   });
 });
