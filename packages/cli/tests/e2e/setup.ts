@@ -4,46 +4,17 @@
  * E2E tests hit the real GitHub API and require:
  *   - `GITHUB_TOKEN` env var or `gh auth token` to be available
  *   - A real GitHub repo to operate against (detected from git remote)
+ *
+ * Token and remote detection is centralised in globalSetup.ts.
+ * This module re-exports the combined check as CAN_RUN_E2E.
  */
 
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import * as os from 'node:os';
-import { execFileSync } from 'node:child_process';
+import { hasGitHubToken, hasGitHubRemote } from './globalSetup.js';
 
 // ── Environment Checks ───────────────────────────────────────────────
-
-/**
- * Returns true when a usable GitHub token is available,
- * either via GITHUB_TOKEN env var or `gh auth token`.
- */
-export function hasGitHubToken(): boolean {
-  if (process.env.GITHUB_TOKEN) return true;
-  try {
-    const token = execFileSync('gh', ['auth', 'token'], {
-      encoding: 'utf8',
-      stdio: ['pipe', 'pipe', 'pipe'],
-    }).trim();
-    return token.length > 0;
-  } catch {
-    return false;
-  }
-}
-
-/**
- * Returns true when the working directory is a git repo with a GitHub remote.
- */
-export function hasGitHubRemote(): boolean {
-  try {
-    const url = execFileSync('git', ['remote', 'get-url', 'origin'], {
-      encoding: 'utf8',
-      stdio: ['pipe', 'pipe', 'pipe'],
-    }).trim();
-    return url.includes('github.com');
-  } catch {
-    return false;
-  }
-}
 
 /** Combined check: both a token and a GitHub remote are present. */
 export const CAN_RUN_E2E = hasGitHubToken() && hasGitHubRemote();
