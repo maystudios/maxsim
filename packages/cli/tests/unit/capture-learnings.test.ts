@@ -315,3 +315,101 @@ describe('extractPattern', () => {
     expect(result?.length).toBeLessThanOrEqual(200);
   });
 });
+
+// ---------------------------------------------------------------------------
+// Edge cases: stop_hook_active guard, isMaxsimProject false, error catch
+// ---------------------------------------------------------------------------
+
+describe('capture-learnings hook edge cases', () => {
+  let hookCallback: ((input: Record<string, unknown>) => void) | null = null;
+  let exitSpy: ReturnType<typeof vi.spyOn>;
+
+  beforeEach(async () => {
+    hookCallback = null;
+    exitSpy = vi.spyOn(process, 'exit').mockImplementation((_code?: number | string) => {
+      return undefined as never;
+    });
+    // Reset module cache so vi.doMock takes effect on next import
+    vi.resetModules();
+  });
+
+  afterEach(() => {
+    vi.doUnmock('../../src/hooks/shared.js');
+    vi.doUnmock('node:child_process');
+    vi.resetModules();
+  });
+
+  it('calls process.exit(0) when stop_hook_active is true (guard fires early)', async () => {
+    vi.doMock('../../src/hooks/shared.js', () => ({
+      readStdinJson: vi.fn((cb: (data: Record<string, unknown>) => void) => {
+        hookCallback = cb;
+      }),
+      CLAUDE_DIR: '.claude',
+      isMaxsimProject: vi.fn(() => true),
+      recentCommits: vi.fn(() => []),
+    }));
+
+    // Also mock child_process since the module imports spawnSync
+    vi.doMock('node:child_process', () => ({
+      spawnSync: vi.fn(() => ({
+        pid: 0, output: [], stdout: '', stderr: '', status: 0, signal: null, error: undefined,
+      })),
+    }));
+
+    await import('../../src/hooks/maxsim-capture-learnings.js');
+    hookCallback!({ stop_hook_active: true, cwd: tmpDir });
+
+    // The guard calls process.exit(0) before any processing.
+    // Since our mock doesn't actually halt, exit(0) is called first.
+    expect(exitSpy).toHaveBeenCalledWith(0);
+    // First call should be the early exit from stop_hook_active guard
+    expect(exitSpy.mock.calls[0][0]).toBe(0);
+  });
+
+  it('calls process.exit(0) when isMaxsimProject returns false (early exit)', async () => {
+    vi.doMock('../../src/hooks/shared.js', () => ({
+      readStdinJson: vi.fn((cb: (data: Record<string, unknown>) => void) => {
+        hookCallback = cb;
+      }),
+      CLAUDE_DIR: '.claude',
+      isMaxsimProject: vi.fn(() => false),
+      recentCommits: vi.fn(() => []),
+    }));
+
+    vi.doMock('node:child_process', () => ({
+      spawnSync: vi.fn(() => ({
+        pid: 0, output: [], stdout: '', stderr: '', status: 0, signal: null, error: undefined,
+      })),
+    }));
+
+    await import('../../src/hooks/maxsim-capture-learnings.js');
+    hookCallback!({ cwd: tmpDir });
+
+    // isMaxsimProject returns false => process.exit(0) called
+    expect(exitSpy).toHaveBeenCalledWith(0);
+    expect(exitSpy.mock.calls[0][0]).toBe(0);
+  });
+
+  it('exits 0 and does not crash when an error occurs during processing', async () => {
+    vi.doMock('../../src/hooks/shared.js', () => ({
+      readStdinJson: vi.fn((cb: (data: Record<string, unknown>) => void) => {
+        hookCallback = cb;
+      }),
+      CLAUDE_DIR: '.claude',
+      isMaxsimProject: vi.fn(() => {
+        throw new Error('unexpected error');
+      }),
+      recentCommits: vi.fn(() => []),
+    }));
+
+    vi.doMock('node:child_process', () => ({
+      spawnSync: vi.fn(() => ({
+        pid: 0, output: [], stdout: '', stderr: '', status: 0, signal: null, error: undefined,
+      })),
+    }));
+
+    await import('../../src/hooks/maxsim-capture-learnings.js');
+    expect(() => hookCallback!({ cwd: tmpDir })).not.toThrow();
+    expect(exitSpy).toHaveBeenCalledWith(0);
+  });
+});

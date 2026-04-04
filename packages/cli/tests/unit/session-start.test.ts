@@ -630,4 +630,77 @@ describe('session-start hook (integration)', () => {
     expect(parsed.hookSpecificOutput.additionalContext).toContain('## Recent Git History');
     expect(parsed.hookSpecificOutput.additionalContext).not.toContain('## Warning: Missing MaxsimCLI Hooks');
   });
+
+  it('warns about partial hooks when only some hooks are registered', async () => {
+    vi.doUnmock('../../src/hooks/shared.js');
+    vi.resetModules();
+    hookCallback = null;
+
+    // Create settings.json with only partial hooks
+    const settingsDir = path.join(tmpDir, '.claude');
+    fs.mkdirSync(settingsDir, { recursive: true });
+    const partialSettings = {
+      hooks: {
+        SessionStart: [
+          { hooks: [{ type: 'command', command: 'node maxsim-session-start.cjs' }] },
+        ],
+        // Missing: Notification, Stop, TeammateIdle, TaskCompleted
+      },
+    };
+    fs.writeFileSync(
+      path.join(settingsDir, 'settings.json'),
+      JSON.stringify(partialSettings, null, 2),
+    );
+
+    vi.doMock('../../src/hooks/shared.js', () => ({
+      readStdinJson: vi.fn((cb: (data: Record<string, unknown>) => void) => {
+        hookCallback = cb;
+      }),
+      CLAUDE_DIR: '.claude',
+      isMaxsimProject: vi.fn(() => true),
+      recentCommits: vi.fn(() => []),
+    }));
+
+    await import('../../src/hooks/maxsim-session-start.js');
+    hookCallback!({ cwd: tmpDir });
+
+    const writeCall = stdoutSpy.mock.calls.find((call) => {
+      const arg = String(call[0]);
+      return arg.includes('hookSpecificOutput');
+    });
+
+    expect(writeCall).toBeDefined();
+    const parsed = JSON.parse(String(writeCall![0]).trim());
+    expect(parsed.hookSpecificOutput.additionalContext).toContain('## Warning: Missing MaxsimCLI Hooks');
+    // Should list specific missing hooks
+    expect(parsed.hookSpecificOutput.additionalContext).toContain('Notification');
+    expect(parsed.hookSpecificOutput.additionalContext).toContain('Stop');
+  });
+
+  it('handles malformed settings.json gracefully (no crash)', async () => {
+    vi.doUnmock('../../src/hooks/shared.js');
+    vi.resetModules();
+    hookCallback = null;
+
+    // Create a malformed settings.json
+    const settingsDir = path.join(tmpDir, '.claude');
+    fs.mkdirSync(settingsDir, { recursive: true });
+    fs.writeFileSync(
+      path.join(settingsDir, 'settings.json'),
+      'this is not valid json!!!',
+    );
+
+    vi.doMock('../../src/hooks/shared.js', () => ({
+      readStdinJson: vi.fn((cb: (data: Record<string, unknown>) => void) => {
+        hookCallback = cb;
+      }),
+      CLAUDE_DIR: '.claude',
+      isMaxsimProject: vi.fn(() => true),
+      recentCommits: vi.fn(() => ['abc commit']),
+    }));
+
+    await import('../../src/hooks/maxsim-session-start.js');
+    expect(() => hookCallback!({ cwd: tmpDir })).not.toThrow();
+    expect(exitSpy).toHaveBeenCalledWith(0);
+  });
 });

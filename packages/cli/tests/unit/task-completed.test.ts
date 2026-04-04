@@ -449,6 +449,52 @@ describe('error handling', () => {
     // Since there's no package.json at process.cwd() necessarily, this just tests no crash
     expect(() => hookCallback!({})).not.toThrow();
   });
+
+  it('exits 0 when package.json contains malformed JSON', async () => {
+    // Write a malformed package.json directly
+    fs.writeFileSync(
+      path.join(tmpDir, 'package.json'),
+      'not valid json{{{',
+      'utf8',
+    );
+
+    vi.doMock('../../src/hooks/shared.js', () => ({
+      readStdinJson: vi.fn((cb: (data: Record<string, unknown>) => void) => {
+        hookCallback = cb;
+      }),
+    }));
+    vi.doMock('node:child_process', () => ({
+      spawnSync: vi.fn(() => makeSpawnResult()),
+    }));
+
+    await import('../../src/hooks/maxsim-task-completed.js');
+    hookCallback!({ cwd: tmpDir });
+
+    // Malformed package.json => scripts is null => no gates run => exit 0
+    expect(exitSpy).toHaveBeenCalledWith(0);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Timeout stderr behavior
+// ---------------------------------------------------------------------------
+
+describe('timeout stderr', () => {
+  it('includes stderr content from timed-out gate in failure report', async () => {
+    await loadHookWithMocks({
+      packageJson: { scripts: { test: 'vitest' } },
+      spawnResults: {
+        test: makeSpawnResult({ status: null as unknown as number, stderr: 'SIGTERM: process killed due to timeout' }),
+      },
+    });
+
+    hookCallback!({ cwd: tmpDir });
+
+    expect(exitSpy).toHaveBeenCalledWith(2);
+    const stderrOutput = stderrSpy.mock.calls.map((c) => String(c[0])).join('');
+    expect(stderrOutput).toContain('test FAILED');
+    expect(stderrOutput).toContain('SIGTERM');
+  });
 });
 
 // ---------------------------------------------------------------------------

@@ -220,3 +220,29 @@ describe('exit code', () => {
     expect(exitSpy).toHaveBeenCalledWith(0);
   });
 });
+
+// ---------------------------------------------------------------------------
+// Edge case: truthy non-boolean stop_hook_active
+// ---------------------------------------------------------------------------
+
+describe('truthy non-boolean stop_hook_active', () => {
+  it('plays sound when stop_hook_active is truthy but not exactly boolean true', async () => {
+    await loadHook({ isWindows: false, isMac: false, bundledSound: null });
+
+    // The hook checks `input.stop_hook_active === true` (strict equality)
+    // So truthy non-boolean values like "true" or 1 should NOT skip playback
+    invokeHook({ stop_hook_active: 'true' as unknown as boolean });
+
+    expect(playSoundMock).toHaveBeenCalled();
+    expect(exitSpy).toHaveBeenCalledWith(0);
+  });
+
+  it('plays sound when stop_hook_active is number 1 (not boolean true)', async () => {
+    await loadHook({ isWindows: false, isMac: false, bundledSound: null });
+
+    invokeHook({ stop_hook_active: 1 as unknown as boolean });
+
+    expect(playSoundMock).toHaveBeenCalled();
+    expect(exitSpy).toHaveBeenCalledWith(0);
+  });
+});

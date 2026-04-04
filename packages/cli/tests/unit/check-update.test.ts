@@ -326,3 +326,46 @@ describe('background check fallback', () => {
     expect(exitSpy).toHaveBeenCalledWith(0);
   });
 });
+
+// ---------------------------------------------------------------------------
+// Edge cases: prerelease isNewer, missing package.json
+// ---------------------------------------------------------------------------
+
+describe('edge cases', () => {
+  it('handles prerelease version strings by stripping non-numeric prefix', async () => {
+    // npm can return "v1.2.3-beta.1" — the isNewer function strips the prefix.
+    // A version like "v99.0.0-beta.1" should still be parsed as 99.0.0 and be newer.
+    await loadHook({
+      spawnSyncResult: makeSpawnResult({
+        status: 0,
+        stdout: '"v99.0.0-beta.1"',
+      }),
+      cacheContent: null,
+    });
+
+    hookCallback!({});
+
+    expect(exitSpy).toHaveBeenCalledWith(0);
+    // v99.0.0 > 0.0.0 so update notice should be emitted
+    const writeCall = stdoutSpy.mock.calls.find((call) => {
+      const arg = String(call[0]);
+      return arg.includes('update available');
+    });
+    expect(writeCall).toBeDefined();
+  });
+
+  it('handles npm returning non-JSON stdout gracefully', async () => {
+    await loadHook({
+      spawnSyncResult: makeSpawnResult({
+        status: 0,
+        stdout: 'not-json-output',
+      }),
+      cacheContent: null,
+    });
+
+    hookCallback!({});
+
+    // Should not crash, just exit 0
+    expect(exitSpy).toHaveBeenCalledWith(0);
+  });
+});

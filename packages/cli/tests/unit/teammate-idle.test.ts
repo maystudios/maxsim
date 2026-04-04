@@ -252,3 +252,44 @@ describe('error handling', () => {
     expect(exitSpy).toHaveBeenCalledWith(2);
   });
 });
+
+// ---------------------------------------------------------------------------
+// Edge cases: empty team_name, tasks dir is file, subdirectories
+// ---------------------------------------------------------------------------
+
+describe('edge cases', () => {
+  it('exits 0 when team_name is an empty string', async () => {
+    await loadHook(tmpDir);
+    hookCallback!({ team_name: '' });
+
+    // Empty string is falsy, so should exit 0
+    expect(exitSpy).toHaveBeenCalledWith(0);
+  });
+
+  it('exits 0 when tasks directory path is actually a file', async () => {
+    const teamName = 'file-team';
+    const tasksPath = path.join(tmpDir, '.claude', 'tasks');
+    fs.mkdirSync(path.dirname(tasksPath), { recursive: true });
+    // Create a file where the tasks directory would be
+    fs.writeFileSync(tasksPath, 'this is a file, not a directory', 'utf8');
+
+    await loadHook(tmpDir);
+    // This should not throw, even though .claude/tasks is a file
+    expect(() => hookCallback!({ team_name: teamName })).not.toThrow();
+    expect(exitSpy).toHaveBeenCalledWith(0);
+  });
+
+  it('counts subdirectories as entries (exit 2 when subdir exists)', async () => {
+    const teamName = 'subdir-team';
+    const tasksDir = path.join(tmpDir, '.claude', 'tasks', teamName);
+    fs.mkdirSync(tasksDir, { recursive: true });
+    // Create a subdirectory instead of a file — readdirSync still returns it
+    fs.mkdirSync(path.join(tasksDir, 'subtask-dir'));
+
+    await loadHook(tmpDir);
+    hookCallback!({ team_name: teamName });
+
+    // A subdirectory entry is still "something in the directory"
+    expect(exitSpy).toHaveBeenCalledWith(2);
+  });
+});

@@ -166,5 +166,27 @@ describe('exit code', () => {
 
     expect(exitSpy).toHaveBeenCalledWith(0);
   });
+});
 
+// ---------------------------------------------------------------------------
+// Edge case: bundledSound returns null fallback
+// ---------------------------------------------------------------------------
+
+describe('bundledSound null fallback', () => {
+  it('falls back to system sound when bundledSound returns null and preference is bundled', async () => {
+    await loadHook({
+      isWindows: false,
+      isMac: true,
+      bundledSound: null,
+      soundPreference: 'bundled',
+    });
+
+    hookCallback!({});
+
+    // bundledSound was checked but returned null — should fall back to system
+    expect(bundledSoundMock).toHaveBeenCalledWith('notification.wav');
+    // Should play the macOS system sound as fallback
+    expect(playSoundMock).toHaveBeenCalledWith('/System/Library/Sounds/Funk.aiff');
+    expect(exitSpy).toHaveBeenCalledWith(0);
+  });
 });
