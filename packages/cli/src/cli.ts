@@ -7,6 +7,7 @@
 import { MaxsimError, classifyError } from './core/errors.js';
 import { ALL_COMMANDS, GITHUB_COMMANDS, INIT_COMMANDS } from './commands/index.js';
 import type { CommandRegistry } from './commands/index.js';
+import type { CmdResult } from './core/types.js';
 
 /**
  * Namespace command registries for two-level routing (e.g. `github push`).
@@ -18,6 +19,25 @@ export const NAMESPACE_COMMANDS: Record<string, CommandRegistry> = {
 
 const args = process.argv.slice(2);
 const command = args[0];
+
+/** Write a structured error for a failed CmdResult, then exit. */
+function handleCmdErr(result: CmdResult & { ok: false }): never {
+  if (result.recovery) {
+    const tier = result.recovery.tier.toUpperCase();
+    process.stderr.write(`[ERROR:${tier}] ${result.error}\n`);
+    if (result.recovery.suggestedAction) {
+      process.stderr.write(`Suggestion: ${result.recovery.suggestedAction}\n`);
+    }
+  } else {
+    const recovery = classifyError(result.error);
+    const tier = recovery.tier.toUpperCase();
+    process.stderr.write(`[ERROR:${tier}] ${result.error}\n`);
+    if (recovery.suggestedAction) {
+      process.stderr.write(`Suggestion: ${recovery.suggestedAction}\n`);
+    }
+  }
+  process.exit(1);
+}
 
 async function main(): Promise<void> {
   if (!command) {
@@ -39,8 +59,7 @@ async function main(): Promise<void> {
     }
     const result = await registry[subcommand].handler(args.slice(2));
     if (!result.ok) {
-      process.stderr.write(`${result.error}\n`);
-      process.exit(1);
+      handleCmdErr(result);
     }
     if (result.ok && typeof result.result === 'string') {
       console.log(result.result);
@@ -52,8 +71,7 @@ async function main(): Promise<void> {
   if (ALL_COMMANDS[command]) {
     const result = await ALL_COMMANDS[command].handler(args.slice(1));
     if (!result.ok) {
-      process.stderr.write(`${result.error}\n`);
-      process.exit(1);
+      handleCmdErr(result);
     }
     if (result.ok && typeof result.result === 'string') {
       console.log(result.result);
