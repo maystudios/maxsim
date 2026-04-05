@@ -143,6 +143,44 @@ describe('resolveModel', () => {
   });
 });
 
+describe('resolveModel priority chain', () => {
+  it('agent-type override takes priority over profile default', () => {
+    // Budget profile maps executor -> sonnet, but override says opus
+    const overrides = { [AgentType.EXECUTOR]: Model.OPUS };
+    expect(resolveModel(ModelProfile.BUDGET, AgentType.EXECUTOR, overrides)).toBe(Model.OPUS);
+  });
+
+  it('profile default used when no overrides provided', () => {
+    expect(resolveModel(ModelProfile.QUALITY, AgentType.RESEARCHER)).toBe(Model.SONNET);
+    expect(resolveModel(ModelProfile.BUDGET, AgentType.PLANNER)).toBe(Model.SONNET);
+    expect(resolveModel(ModelProfile.BALANCED, AgentType.VERIFIER)).toBe(Model.SONNET);
+  });
+
+  it('agent type with no matching override falls through to profile', () => {
+    // Override only executor, verify researcher still uses profile default
+    const overrides = { [AgentType.EXECUTOR]: Model.OPUS };
+    expect(resolveModel(ModelProfile.BUDGET, AgentType.RESEARCHER, overrides)).toBe(Model.HAIKU);
+  });
+
+  it('multiple overrides each resolve independently', () => {
+    const overrides = {
+      [AgentType.EXECUTOR]: Model.OPUS,
+      [AgentType.RESEARCHER]: Model.HAIKU,
+    };
+    expect(resolveModel(ModelProfile.BALANCED, AgentType.EXECUTOR, overrides)).toBe(Model.OPUS);
+    expect(resolveModel(ModelProfile.BALANCED, AgentType.RESEARCHER, overrides)).toBe(Model.HAIKU);
+    // Planner not in overrides, falls to profile
+    expect(resolveModel(ModelProfile.BALANCED, AgentType.PLANNER, overrides)).toBe(Model.OPUS);
+  });
+
+  it('backward compatible: callers without overrides param still work', () => {
+    // Calling with only 2 required params (no overrides)
+    expect(resolveModel(ModelProfile.BALANCED, AgentType.EXECUTOR)).toBe(Model.SONNET);
+    expect(resolveModel(ModelProfile.QUALITY, AgentType.PLANNER)).toBe(Model.OPUS);
+    expect(resolveModel(ModelProfile.BUDGET, AgentType.VERIFIER)).toBe(Model.SONNET);
+  });
+});
+
 describe('resolveMaxAgents', () => {
   it('small project (<10 files) caps at 5 for quality profile', () => {
     expect(resolveMaxAgents(ModelProfile.QUALITY, 5)).toBe(5);
