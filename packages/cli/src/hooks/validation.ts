@@ -125,6 +125,9 @@ export function detectForbiddenPhrasesMulti(sources: string[]): ValidationResult
  * Combined validation: evidence block check + forbidden phrase check across
  * multiple named text sources.
  *
+ * Used by the TaskCompleted hook for the spec_compliance gate.
+ * Skipped when verification_profile is 'fast'.
+ *
  * @param namedSources - Map of source name to text content.
  *   Example: { task_description: "...", task_context: "..." }
  *   Keys with empty/undefined values are silently skipped.

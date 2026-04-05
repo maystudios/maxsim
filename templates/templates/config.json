@@ -39,7 +39,7 @@
   "execution": {
     "__doc_model_profile": "Selects which model profile to use. One of: quality, balanced, budget. Each profile maps agent types (planner, executor, researcher, verifier) to Claude model tiers (opus, sonnet, haiku). See __doc_model_profiles above for the full mapping table.",
     "model_profile": "balanced",
-    "competitive_enabled": false,
+    "competitive_enabled": true,
     "__doc_model_overrides": "Optional per-agent-type model overrides. Keys are agent types (planner, executor, researcher, verifier) and values are model tiers (opus, sonnet, haiku). Overrides take precedence over the profile's default assignment. Example: { \"executor\": \"opus\" } upgrades the executor to opus while keeping other agents at their profile defaults.",
     "model_overrides": {},
     "parallelism": {
@@ -75,7 +75,9 @@
         "code_review"
       ],
       "require_code_review": true,
-      "auto_resolve_conflicts": true
+      "auto_resolve_conflicts": true,
+      "__doc_verification_profile": "Verification strictness profile. One of: strict, standard, fast. strict = both gates + code review + all evidence. standard = both gates + evidence (no mandatory code review). fast = post-check only + evidence.",
+      "verification_profile": "standard"
     }
   },
   "worktrees": {
@@ -104,7 +106,7 @@
     "research": true,
     "plan_checker": true,
     "verifier": true,
-    "auto_advance": false
+    "auto_advance": true
   },
   "git": {
     "branching_strategy": "phase"
