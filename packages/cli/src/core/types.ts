@@ -264,7 +264,7 @@ export const DEFAULT_CONFIG: MaxsimConfig = {
   version: VERSION,
   execution: {
     model_profile: ModelProfile.BALANCED,
-    competitive_enabled: false,
+    competitive_enabled: true,
     task_type_overrides: {},
     parallelism: {
       max_agents_per_wave: 3,
