@@ -170,6 +170,8 @@ Agent(
 
 Discard the losing worktree branch. Merge the winner via the standard flow.
 
+**Multi-model note:** When `task_type_overrides` are configured, assign different model tiers to each competitor for genuine perspective diversity. For example, competitor-a on opus (deep reasoning) and competitor-b on sonnet (pragmatic speed). This produces implementations that differ not just in approach prompt but in underlying reasoning architecture. See Pattern 4 for the full cross-provider review workflow.
+
 **Tier 1 fallback:** Spawn 2 independent executor subagents via `Agent(isolation: "worktree", run_in_background: true)` with different approach prompts. After both complete, spawn a verifier to compare. No inter-agent messaging -- the verifier reads both outputs directly.
 
 ---
@@ -381,6 +383,84 @@ Agent(
 The confirmed investigator's fix is merged. Other worktree branches are discarded.
 
 **Tier 1 fallback:** Spawn 2-3 independent debugging subagents via `Agent(isolation: "worktree", run_in_background: true)`. Each investigates a different hypothesis and reports findings. The orchestrator compares reports without inter-agent debate. Less adversarial but still tests multiple hypotheses in parallel.
+
+---
+
+## Pattern 4 -- Multi-Model Competition (Cross-Provider Diversity)
+
+**Use when:** A task benefits from genuine perspective diversity that comes from different model architectures, not just different prompts. Multi-model competition uses `task_type_overrides` in config to route different task types to different model tiers, producing implementations that reflect fundamentally different reasoning styles.
+
+**Flow:** Configure `task_type_overrides` --> spawn competitors with distinct models --> each implements independently --> cross-provider review --> verifier selects winner.
+
+### Model Resolution Priority
+
+When determining which model to use for a given agent spawn, the system follows this priority chain:
+
+```
+resolveModel(task_type, agent_type, profile):
+  1. task_type_override  — config.execution.task_type_overrides[task_type]
+  2. agent_type_override — config.execution.model_overrides[agent_type]
+  3. profile_default     — model_profiles[config.execution.model_profile][agent_type]
+```
+
+The first non-empty match wins. This allows fine-grained control without requiring a full profile change.
+
+### Configuration Example
+
+```json
+{
+  "execution": {
+    "model_profile": "balanced",
+    "model_overrides": {},
+    "task_type_overrides": {
+      "planning": "opus",
+      "coding": "sonnet",
+      "review": "opus",
+      "commit": "haiku",
+      "research": "sonnet",
+      "verification": "sonnet"
+    }
+  }
+}
+```
+
+### Cost-Tiered Assignment
+
+| Task Type | Recommended Model | Rationale |
+|-----------|-------------------|-----------|
+| planning | opus | High-stakes decisions, architecture, scope definition |
+| coding | sonnet | Balance of speed and quality for implementation |
+| review | opus | Deep reasoning needed for correctness and security analysis |
+| commit | haiku | Low complexity -- message formatting and git operations |
+| research | sonnet | Breadth of knowledge with adequate depth |
+| verification | sonnet | Evidence collection and gate checks at reasonable cost |
+
+### Cross-Provider Review Pattern
+
+When multi-model competition is active, competitors are spawned with different model tiers to maximize perspective diversity:
+
+```
+// Competitor A -- opus (deep reasoning)
+Spawn teammate "competitor-a" with prompt: "..."
+Model: opus
+
+// Competitor B -- sonnet (fast, pragmatic)
+Spawn teammate "competitor-b" with prompt: "..."
+Model: sonnet
+```
+
+The cross-provider review phase then has each competitor review the other's implementation. Because the models reason differently, the review catches different classes of issues compared to same-model competition.
+
+### Fallback Routing
+
+When a requested model is unavailable (rate-limited, API error, or not configured):
+
+1. **Retry once** with the same model after a 5-second backoff
+2. **Fall back** to the next tier down: opus -> sonnet -> haiku
+3. **Log the fallback** in the handoff report as a deviation
+4. **Never fail silently** -- the orchestrator must know which model actually ran
+
+If all models in the fallback chain are unavailable, escalate to the user immediately.
 
 ---
 
