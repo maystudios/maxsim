@@ -136,6 +136,24 @@ If any of these occur: stop, check the routing table, and follow the workflow.
 - `research` skill merges former `research-methodology` and `tool-priority-guide`
 - `project-memory` skill replaces `memory-management`
 
+## Phase 5 Changes (Workflow Redefinition)
+
+Major changes introduced in Phase 5:
+
+- **2-gate verification** -- Replaced the 4-gate model (Input, Pre-Action, Completion, Quality) with 2 gates (Pre-Check, Post-Check). Verification is now continuous during execution, not a separate phase.
+- **Verification profiles** -- Three profiles (strict, standard, fast) control which gates and checks are required. Default: standard.
+- **Auto-advance** -- Execution proceeds automatically between waves without user confirmation by default (`auto_advance: true`).
+- **Parallel research** -- Research agents run in parallel via `autoresearch` skill for autonomous optimization and debug loops.
+- **Competitive enabled by default** -- `competitive_enabled` is now `true` in the default config template.
+- **Multi-model routing** -- `task_type_overrides` in config allow routing different task types to different model tiers for cost optimization and perspective diversity.
+- **State detection** -- `/maxsim:go` detects project state and routes to the highest-priority action using prioritized signals (P0-P3).
+- **Memory consolidation** -- `project-memory` skill consolidates session learnings and decisions into GitHub Issue comments.
+- **Auto-improvement** -- `autoresearch` skill enables autonomous optimization loops (`/maxsim:improve`), error repair (`/maxsim:fix-loop`), and bug hunting (`/maxsim:debug-loop`).
+- **Gate failure auto-reopen** -- When verification fails after 3 retry attempts, the associated GitHub Issue is automatically reopened with a diagnostic comment.
+
 ## See also
 
-- `verification` -- Evidence-based verification with quality gates
+- `verification` -- Evidence-based verification with 2 quality gates (Pre-Check and Post-Check)
+- `agent-teams` -- Multi-model competition and cross-provider review patterns
+- `project-memory` -- Session learning persistence and cross-session context
+- `autoresearch` -- Autonomous optimization, error repair, and debug loops
