@@ -9,6 +9,7 @@ import {
   type Model,
   type ModelProfile,
   type AgentType,
+  type TaskType,
   TaskComplexity,
   DEFAULT_CONFIG,
   MODEL_PROFILES,
@@ -133,14 +134,22 @@ export function resolveEffectiveWaveSize(
   return Math.max(1, Math.min(maxAgentsPerWave, profileCap));
 }
 
-/** Resolve the model for a given profile and agent type, with optional per-agent overrides. */
+/** Resolve the model for a given profile and agent type, with optional per-agent and per-task-type overrides. */
 export function resolveModel(
   profile: ModelProfile,
   agentType: AgentType,
   overrides?: Partial<Record<AgentType, Model>>,
+  taskType?: TaskType,
+  taskTypeOverrides?: Partial<Record<TaskType, Model>>,
 ): Model {
+  // Task-type override takes highest priority
+  if (taskType && taskTypeOverrides?.[taskType]) {
+    return taskTypeOverrides[taskType]!;
+  }
+  // Then agent-type override
   const override = overrides?.[agentType];
   if (override) return override;
+  // Then profile default
   const assignment = MODEL_PROFILES[profile];
   return assignment[agentType as keyof typeof assignment];
 }

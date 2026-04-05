@@ -47,6 +47,7 @@ After N iterations the agent stops and prints a final summary with baseline, cur
 | Quick improvement session | `Iterations: 10` |
 | Targeted fix with known scope | `Iterations: 5` |
 | Exploratory approach test | `Iterations: 15` |
+| Auto-triggered from TSV trend | `Iterations: 5` (conservative, requires review) |
 
 ## Setup Phase
 
@@ -166,3 +167,56 @@ iteration	commit	metric	delta	guard	status	description
 ```
 
 Valid statuses: `baseline`, `keep`, `keep (reworked)`, `discard`, `crash`, `no-op`, `hook-blocked`.
+
+## Auto-Improvement Trigger
+
+The optimization loop can be triggered automatically when TSV results logs indicate declining metrics. This enables proactive maintenance without manual intervention.
+
+### Trigger Conditions
+
+| Condition | Detection Method | Action |
+|-----------|-----------------|--------|
+| 3+ consecutive metric declines | Parse `delta` column in TSV log; 3+ negative values in sequence | Trigger `/maxsim:improve` with `Iterations: 5` |
+| Test count decreased | Compare test count between iterations | Trigger `/maxsim:fix-loop` targeting test restoration |
+| Build time increased 20%+ | Compare build duration baseline vs current | Trigger `/maxsim:improve` targeting build performance |
+| No improvement in 30 days | Check TSV log timestamps; no `keep` status in 30+ days | Suggest `/maxsim:improve` with broader scope |
+
+### Integration with Execution
+
+During plan execution, the executor agent monitors quality signals and logs deferred improvement items:
+
+1. **During execution:** The executor logs `[improvement]` deferred items when it notices declining metrics but cannot address them within current task scope
+2. **At phase completion:** The orchestrator reviews deferred `[improvement]` items and decides whether to trigger an auto-improvement cycle
+3. **Trigger format:** Deferred items follow the standard format: `- [improvement] {description} -- {metric evidence}`
+
+Example deferred item from an executor:
+```
+- [improvement] Test coverage dropped from 85% to 78% during refactor -- coverage delta: -7%
+- [improvement] Build time increased from 12s to 18s after adding new deps -- build delta: +50%
+```
+
+### TSV Trend Detection
+
+The auto-improvement trigger parses the results log TSV to detect declining trends:
+
+1. **Read** the TSV results log for the target scope
+2. **Parse** the `delta` column values (numeric, signed)
+3. **Detect** — 3 or more consecutive negative delta values indicate a declining trend
+4. **Classify** the trend:
+   - **Declining** — 3+ consecutive negative deltas
+   - **Stagnant** — 5+ consecutive zero deltas (no improvement or regression)
+   - **Volatile** — Alternating positive/negative with amplitude > 10% of baseline
+5. **Report** the trend classification and recommend the appropriate loop command
+
+```
+# Example TSV trend analysis
+iteration  delta   trend_signal
+5          -1.2    --
+6          -0.8    --
+7          -2.1    DECLINING (3 consecutive negatives)
+```
+
+When a declining trend is detected, the agent:
+- Logs the trend evidence (iterations, deltas, total decline)
+- Proposes an auto-improvement cycle with conservative iteration count (`Iterations: 5`)
+- Waits for orchestrator approval before launching (unless `auto_advance: true` in config)

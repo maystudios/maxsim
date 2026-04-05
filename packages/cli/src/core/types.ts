@@ -91,6 +91,17 @@ export const TaskComplexity = {
 } as const;
 export type TaskComplexity = (typeof TaskComplexity)[keyof typeof TaskComplexity];
 
+/** Task types for multi-model routing. */
+export const TaskType = {
+  PLANNING: 'planning',
+  CODING: 'coding',
+  REVIEW: 'review',
+  RESEARCH: 'research',
+  COMMIT: 'commit',
+  VERIFICATION: 'verification',
+} as const;
+export type TaskType = (typeof TaskType)[keyof typeof TaskType];
+
 /** Verification gate types. */
 export const VerificationGate = {
   TESTS_PASS: 'tests_pass',
@@ -204,6 +215,7 @@ export interface MaxsimConfig {
     model_profile: ModelProfile;
     competitive_enabled: boolean;
     model_overrides?: Partial<Record<AgentType, Model>>;
+    task_type_overrides?: Partial<Record<TaskType, Model>>;
     parallelism: {
       max_agents_per_wave: number;
       max_retries: number;
@@ -252,7 +264,8 @@ export const DEFAULT_CONFIG: MaxsimConfig = {
   version: VERSION,
   execution: {
     model_profile: ModelProfile.BALANCED,
-    competitive_enabled: true,
+    competitive_enabled: false,
+    task_type_overrides: {},
     parallelism: {
       max_agents_per_wave: 3,
       max_retries: 3,
