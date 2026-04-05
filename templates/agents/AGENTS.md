@@ -4,12 +4,12 @@ This document is a reference for orchestrators. It describes the 4 agent types a
 
 ## Agent Overview
 
-| Agent | Role | Tools | Preloaded Skills |
-|-------|------|-------|-----------------|
-| `executor` | Implements plans with atomic commits, test verification, and deviation handling | Read, Write, Edit, Bash, Grep, Glob | handoff-contract, commit-conventions |
-| `planner` | Creates detailed plans with task breakdowns, wave assignments, and dependency graphs | Read, Write, Bash, Grep, Glob | handoff-contract, roadmap-writing |
-| `researcher` | Investigates codebase patterns, evaluates technologies, and gathers information with confidence levels | Read, Bash, Grep, Glob, WebFetch, WebSearch | handoff-contract, research |
-| `verifier` | Reviews completed work for correctness, quality, security, and spec compliance with evidence-based verification | Read, Bash, Grep, Glob | handoff-contract, verification, code-review |
+| Agent | Role | Tools | Preloaded Skills | Frontmatter |
+|-------|------|-------|-----------------|-------------|
+| `executor` | Implements plans with atomic commits, test verification, and deviation handling | Read, Write, Edit, Bash, Grep, Glob | handoff-contract, commit-conventions | `effort: high, maxTurns: 50, memory: session` |
+| `planner` | Creates detailed plans with task breakdowns, wave assignments, and dependency graphs | Read, Write, Bash, Grep, Glob | handoff-contract, roadmap-writing | `effort: high, maxTurns: 30, memory: session` |
+| `researcher` | Investigates codebase patterns, evaluates technologies, and gathers information with confidence levels | Read, Bash, Grep, Glob, WebFetch, WebSearch | handoff-contract, research | `effort: medium, maxTurns: 40, memory: session` |
+| `verifier` | Reviews completed work for correctness, quality, security, and spec compliance with evidence-based verification | Read, Bash, Grep, Glob | handoff-contract, verification, code-review | `effort: medium, maxTurns: 25, memory: session` |
 
 ## Model Profiles
 
@@ -23,6 +23,10 @@ Config `model_profile` (quality/balanced/budget) sets baseline model per agent t
 | verifier | opus | sonnet | sonnet |
 
 All agents use `model: inherit` in their frontmatter, meaning they run on the session model unless the orchestrator specifies an explicit model at spawn time.
+
+The `competitive_enabled` flag is `true` by default. When enabled, orchestrators may spawn multiple agents for the same task and select the best result.
+
+For commit message generation and other routine operations, orchestrators may use Haiku (budget tier) to reduce costs. This weak-model-for-commits pattern keeps the expensive model focused on implementation while routine text generation uses the cheapest available option.
 
 ## Spawn Format
 
@@ -63,6 +67,8 @@ Agents do not communicate directly with each other. All inter-agent communicatio
 - The orchestrator passes prior agent output to subsequent agents in the spawn prompt
 - Use Agent Teams (multi-agent orchestration) when parallel agent execution is needed
 
+The orchestrator auto-advances between plans and waves when `workflow.auto_advance` is true (default). No human gate between waves unless a checkpoint task is encountered.
+
 ## Handoff Contract
 
 Every agent return MUST include these sections, enforced by the `handoff-contract` skill:
@@ -75,6 +81,17 @@ Every agent return MUST include these sections, enforced by the `handoff-contrac
 | Deferred Items | Work discovered but not implemented, categorized by type |
 
 Agents load this format via the `handoff-contract` preloaded skill. Orchestrators parse these sections to determine board transitions, next agent spawns, and GitHub comment posting.
+
+## Continuous Verification Model
+
+Verification is continuous, not a separate phase:
+
+1. **Per-task**: Executor verifies after each task (verify block in the plan)
+2. **Per-wave**: Orchestrator runs build+test between execution waves
+3. **Per-plan**: Verifier agent checks must_haves after all tasks in a plan complete
+4. **Per-phase**: Final phase verification checks all plans' must_haves
+
+Gate failures at any level trigger the retry escalation (quick fix -> deeper analysis -> Codex rescue -> auto issue reopen). See the `verification` skill for full gate definitions.
 
 ## Available Skills (On-Demand)
 
@@ -97,7 +114,7 @@ All skills use `user-invocable: false` -- agents auto-invoke them based on descr
 
 The `planner` agent runs with `permissionMode: plan`. This enforces read-only access to the filesystem -- the planner can analyze the codebase and return plan content, but cannot execute commands that modify source files or run builds. This prevents the planner from accidentally beginning execution during the planning phase.
 
-## Tier 2 — Agent Teams
+## Tier 2 -- Agent Teams
 
 When `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` is set and Claude Code supports it, MaxsimCLI can use multi-agent orchestration via Agent Teams.
 
@@ -112,16 +129,16 @@ If either condition fails, all workflows gracefully degrade to Tier 1 (subagents
 ### Communication
 
 Teams coordinate exclusively through:
-- **Task lists** — `.claude/tasks/{team-name}/` for pending work
-- **GitHub Issues** — Phase tracking, task sub-issues, plan comments
-- **Handoff contracts** — Structured output posted as GitHub Issue comments
-- **SendMessage** — Direct inter-agent messages within the same team
+- **Task lists** -- `.claude/tasks/{team-name}/` for pending work
+- **GitHub Issues** -- Phase tracking, task sub-issues, plan comments
+- **Handoff contracts** -- Structured output posted as GitHub Issue comments
+- **SendMessage** -- Direct inter-agent messages within the same team
 
 ### Hooks
 
 Two hooks support Tier 2 operations:
-- `maxsim-teammate-idle` (TeammateIdle) — Checks for pending tasks and assigns idle teammates
-- `maxsim-task-completed` (TaskCompleted) — Runs verification gates (test, build, lint) before allowing task completion
+- `maxsim-teammate-idle` (TeammateIdle) -- Checks for pending tasks and assigns idle teammates
+- `maxsim-task-completed` (TaskCompleted) -- Runs verification gates (test, build, lint) before allowing task completion
 
 ### Architecture
 
