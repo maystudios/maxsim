@@ -1,5 +1,5 @@
 /** MaxsimCLI version — auto-injected from package.json at build time. */
-export const VERSION = '5.23.1';
+export const VERSION = '5.24.0';
 
 /**
  * Parse a semantic version string into components.

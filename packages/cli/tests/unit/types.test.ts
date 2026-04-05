@@ -8,6 +8,7 @@ import {
   AgentType,
   Model,
   ModelProfile,
+  TaskComplexity,
   VerificationGate,
   VerificationProfile,
   VerificationResult,
@@ -255,5 +256,30 @@ describe('DEFAULT_CONFIG', () => {
   it('includes worktree path and branch templates', () => {
     expect(DEFAULT_CONFIG.worktrees.path_template).toBe('.claude/worktrees/agent-{id}/');
     expect(DEFAULT_CONFIG.worktrees.branch_template).toBe('maxsim/phase-{N}-task-{id}');
+  });
+
+  it('includes all verification gates in default config', () => {
+    const gates = DEFAULT_CONFIG.execution.verification.gates;
+    expect(gates).toContain(VerificationGate.TESTS_PASS);
+    expect(gates).toContain(VerificationGate.BUILD_SUCCEEDS);
+    expect(gates).toContain(VerificationGate.LINT_CLEAN);
+    expect(gates).toContain(VerificationGate.SPEC_COMPLIANCE);
+    expect(gates).toContain(VerificationGate.CODE_REVIEW);
+    expect(gates).toHaveLength(5);
+  });
+
+  it('includes automation section with conventional commit defaults', () => {
+    expect(DEFAULT_CONFIG.automation.auto_commit_on_success).toBe(true);
+    expect(DEFAULT_CONFIG.automation.conventional_commits).toBe(true);
+    expect(DEFAULT_CONFIG.automation.co_author).toContain('Co-Authored-By:');
+  });
+});
+
+describe('TaskComplexity', () => {
+  it('has all 3 complexity levels', () => {
+    expect(Object.values(TaskComplexity)).toHaveLength(3);
+    expect(TaskComplexity.SIMPLE).toBe('simple');
+    expect(TaskComplexity.MEDIUM).toBe('medium');
+    expect(TaskComplexity.COMPLEX).toBe('complex');
   });
 });

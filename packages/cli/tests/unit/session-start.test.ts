@@ -703,4 +703,186 @@ describe('session-start hook (integration)', () => {
     expect(() => hookCallback!({ cwd: tmpDir })).not.toThrow();
     expect(exitSpy).toHaveBeenCalledWith(0);
   });
+
+  // -----------------------------------------------------------------------
+  // Enriched signal tests — covering edge cases and data-driven behavior
+  // -----------------------------------------------------------------------
+
+  it('truncates large MEMORY.md to first 200 lines', async () => {
+    vi.doUnmock('../../src/hooks/shared.js');
+    vi.resetModules();
+    hookCallback = null;
+
+    // Create a MEMORY.md with 300 lines (well over the 200-line limit)
+    const memoryDir = path.join(tmpDir, '.claude', 'agent-memory', 'maxsim-learner');
+    fs.mkdirSync(memoryDir, { recursive: true });
+    const lines = Array.from({ length: 300 }, (_, i) => `pattern line ${i + 1}`);
+    fs.writeFileSync(path.join(memoryDir, 'MEMORY.md'), lines.join('\n'), 'utf8');
+
+    vi.doMock('../../src/hooks/shared.js', () => ({
+      readStdinJson: vi.fn((cb: (data: Record<string, unknown>) => void) => {
+        hookCallback = cb;
+      }),
+      CLAUDE_DIR: '.claude',
+      isMaxsimProject: vi.fn(() => true),
+      recentCommits: vi.fn(() => []),
+    }));
+
+    await import('../../src/hooks/maxsim-session-start.js');
+    hookCallback!({ cwd: tmpDir });
+
+    const writeCall = stdoutSpy.mock.calls.find((call) => {
+      const arg = String(call[0]);
+      return arg.includes('hookSpecificOutput');
+    });
+
+    expect(writeCall).toBeDefined();
+    const parsed = JSON.parse(String(writeCall![0]).trim());
+    const ctx = parsed.hookSpecificOutput.additionalContext;
+    expect(ctx).toContain('pattern line 200');
+    expect(ctx).not.toContain('pattern line 201');
+  });
+
+  it('shows only last 10 TSV lines when file has many entries', async () => {
+    vi.doUnmock('../../src/hooks/shared.js');
+    vi.resetModules();
+    hookCallback = null;
+
+    const tsvDir = path.join(tmpDir, '.claude', 'agent-memory', 'maxsim-learner');
+    fs.mkdirSync(tsvDir, { recursive: true });
+    const tsvLines = Array.from({ length: 50 }, (_, i) => `metric_${i}\t${i * 10}`);
+    fs.writeFileSync(
+      path.join(tsvDir, 'autoresearch-results.tsv'),
+      tsvLines.join('\n'),
+      'utf8',
+    );
+
+    vi.doMock('../../src/hooks/shared.js', () => ({
+      readStdinJson: vi.fn((cb: (data: Record<string, unknown>) => void) => {
+        hookCallback = cb;
+      }),
+      CLAUDE_DIR: '.claude',
+      isMaxsimProject: vi.fn(() => true),
+      recentCommits: vi.fn(() => []),
+    }));
+
+    await import('../../src/hooks/maxsim-session-start.js');
+    hookCallback!({ cwd: tmpDir });
+
+    const writeCall = stdoutSpy.mock.calls.find((call) => {
+      const arg = String(call[0]);
+      return arg.includes('hookSpecificOutput');
+    });
+
+    expect(writeCall).toBeDefined();
+    const parsed = JSON.parse(String(writeCall![0]).trim());
+    const ctx = parsed.hookSpecificOutput.additionalContext;
+    // Should contain last 10 entries (metric_40 through metric_49)
+    expect(ctx).toContain('metric_49');
+    expect(ctx).toContain('metric_40');
+    // Should NOT contain earlier entries
+    expect(ctx).not.toContain('metric_39');
+  });
+
+  it('gracefully handles recentCommits throwing an error', async () => {
+    vi.doUnmock('../../src/hooks/shared.js');
+    vi.resetModules();
+    hookCallback = null;
+
+    vi.doMock('../../src/hooks/shared.js', () => ({
+      readStdinJson: vi.fn((cb: (data: Record<string, unknown>) => void) => {
+        hookCallback = cb;
+      }),
+      CLAUDE_DIR: '.claude',
+      isMaxsimProject: vi.fn(() => true),
+      recentCommits: vi.fn(() => {
+        throw new Error('git not found');
+      }),
+    }));
+
+    await import('../../src/hooks/maxsim-session-start.js');
+    // The hook should never crash — the outer try/catch catches any error
+    expect(() => hookCallback!({ cwd: tmpDir })).not.toThrow();
+    expect(exitSpy).toHaveBeenCalledWith(0);
+  });
+
+  it('gracefully handles isMaxsimProject throwing an error', async () => {
+    vi.doUnmock('../../src/hooks/shared.js');
+    vi.resetModules();
+    hookCallback = null;
+
+    vi.doMock('../../src/hooks/shared.js', () => ({
+      readStdinJson: vi.fn((cb: (data: Record<string, unknown>) => void) => {
+        hookCallback = cb;
+      }),
+      CLAUDE_DIR: '.claude',
+      isMaxsimProject: vi.fn(() => {
+        throw new Error('filesystem error');
+      }),
+      recentCommits: vi.fn(() => []),
+    }));
+
+    await import('../../src/hooks/maxsim-session-start.js');
+    expect(() => hookCallback!({ cwd: tmpDir })).not.toThrow();
+    expect(exitSpy).toHaveBeenCalledWith(0);
+  });
+
+  it('outputs hookEventName as SessionStart in the envelope', async () => {
+    vi.doUnmock('../../src/hooks/shared.js');
+    vi.resetModules();
+    hookCallback = null;
+
+    vi.doMock('../../src/hooks/shared.js', () => ({
+      readStdinJson: vi.fn((cb: (data: Record<string, unknown>) => void) => {
+        hookCallback = cb;
+      }),
+      CLAUDE_DIR: '.claude',
+      isMaxsimProject: vi.fn(() => true),
+      recentCommits: vi.fn(() => ['abc123 some commit']),
+    }));
+
+    await import('../../src/hooks/maxsim-session-start.js');
+    hookCallback!({ cwd: tmpDir });
+
+    const writeCall = stdoutSpy.mock.calls.find((call) => {
+      const arg = String(call[0]);
+      return arg.includes('hookSpecificOutput');
+    });
+
+    expect(writeCall).toBeDefined();
+    const parsed = JSON.parse(String(writeCall![0]).trim());
+    expect(parsed.hookSpecificOutput.hookEventName).toBe('SessionStart');
+  });
+
+  it('handles empty MEMORY.md gracefully (no empty section)', async () => {
+    vi.doUnmock('../../src/hooks/shared.js');
+    vi.resetModules();
+    hookCallback = null;
+
+    const memoryDir = path.join(tmpDir, '.claude', 'agent-memory', 'maxsim-learner');
+    fs.mkdirSync(memoryDir, { recursive: true });
+    fs.writeFileSync(path.join(memoryDir, 'MEMORY.md'), '', 'utf8');
+
+    vi.doMock('../../src/hooks/shared.js', () => ({
+      readStdinJson: vi.fn((cb: (data: Record<string, unknown>) => void) => {
+        hookCallback = cb;
+      }),
+      CLAUDE_DIR: '.claude',
+      isMaxsimProject: vi.fn(() => true),
+      recentCommits: vi.fn(() => ['abc commit']),
+    }));
+
+    await import('../../src/hooks/maxsim-session-start.js');
+    hookCallback!({ cwd: tmpDir });
+
+    const writeCall = stdoutSpy.mock.calls.find((call) => {
+      const arg = String(call[0]);
+      return arg.includes('hookSpecificOutput');
+    });
+
+    expect(writeCall).toBeDefined();
+    const parsed = JSON.parse(String(writeCall![0]).trim());
+    // Empty MEMORY.md should not produce a Learned Patterns section
+    expect(parsed.hookSpecificOutput.additionalContext).not.toContain('## Learned Patterns');
+  });
 });
