@@ -102,6 +102,15 @@ export const VerificationGate = {
 export type VerificationGate =
   (typeof VerificationGate)[keyof typeof VerificationGate];
 
+/** Verification profile -- controls which gates and checks are required. */
+export const VerificationProfile = {
+  STRICT: 'strict',
+  STANDARD: 'standard',
+  FAST: 'fast',
+} as const;
+export type VerificationProfile =
+  (typeof VerificationProfile)[keyof typeof VerificationProfile];
+
 /** Verification result states. */
 export const VerificationResult = {
   PASS: 'pass',
@@ -205,6 +214,7 @@ export interface MaxsimConfig {
       gates: VerificationGate[];
       require_code_review: boolean;
       auto_resolve_conflicts: boolean;
+      verification_profile: VerificationProfile;
     };
   };
   worktrees: {
@@ -242,7 +252,7 @@ export const DEFAULT_CONFIG: MaxsimConfig = {
   version: VERSION,
   execution: {
     model_profile: ModelProfile.BALANCED,
-    competitive_enabled: false,
+    competitive_enabled: true,
     parallelism: {
       max_agents_per_wave: 3,
       max_retries: 3,
@@ -259,6 +269,7 @@ export const DEFAULT_CONFIG: MaxsimConfig = {
       ],
       require_code_review: true,
       auto_resolve_conflicts: true,
+      verification_profile: VerificationProfile.STANDARD,
     },
   },
   worktrees: {
@@ -283,7 +294,7 @@ export const DEFAULT_CONFIG: MaxsimConfig = {
     research: true,
     plan_checker: true,
     verifier: true,
-    auto_advance: false,
+    auto_advance: true,
   },
   git: {
     branching_strategy: 'phase',

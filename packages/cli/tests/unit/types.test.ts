@@ -9,6 +9,7 @@ import {
   Model,
   ModelProfile,
   VerificationGate,
+  VerificationProfile,
   VerificationResult,
   TaskState,
   WaveState,
@@ -90,6 +91,13 @@ describe('Enums', () => {
 
   it('VerificationGate has 5 gates', () => {
     expect(Object.values(VerificationGate)).toHaveLength(5);
+  });
+
+  it('VerificationProfile has 3 profiles', () => {
+    expect(Object.values(VerificationProfile)).toHaveLength(3);
+    expect(VerificationProfile.STRICT).toBe('strict');
+    expect(VerificationProfile.STANDARD).toBe('standard');
+    expect(VerificationProfile.FAST).toBe('fast');
   });
 
   it('VerificationResult has 3 states', () => {
@@ -228,7 +236,7 @@ describe('DEFAULT_CONFIG', () => {
     expect(DEFAULT_CONFIG.workflow.research).toBe(true);
     expect(DEFAULT_CONFIG.workflow.plan_checker).toBe(true);
     expect(DEFAULT_CONFIG.workflow.verifier).toBe(true);
-    expect(DEFAULT_CONFIG.workflow.auto_advance).toBe(false);
+    expect(DEFAULT_CONFIG.workflow.auto_advance).toBe(true);
   });
 
   it('includes git section with branching_strategy phase', () => {
@@ -236,8 +244,12 @@ describe('DEFAULT_CONFIG', () => {
     expect(DEFAULT_CONFIG.git.branching_strategy).toBe('phase');
   });
 
-  it('includes competitive_enabled default as false', () => {
-    expect(DEFAULT_CONFIG.execution.competitive_enabled).toBe(false);
+  it('includes competitive_enabled default as true', () => {
+    expect(DEFAULT_CONFIG.execution.competitive_enabled).toBe(true);
+  });
+
+  it('includes verification_profile default as standard', () => {
+    expect(DEFAULT_CONFIG.execution.verification.verification_profile).toBe('standard');
   });
 
   it('includes worktree path and branch templates', () => {
