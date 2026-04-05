@@ -1,3 +1,18 @@
+# [5.26.0](https://github.com/maystudios/maxsimcli/compare/v5.25.0...v5.26.0) (2026-04-05)
+
+
+### Bug Fixes
+
+* **phase-5:** restore competitive_enabled default to true after merge ([f021320](https://github.com/maystudios/maxsimcli/commit/f021320481575bdcb29ee490036c91b02eef17e9))
+
+
+### Features
+
+* **phase-5-01:** simplify verification to 2-gate model with profiles ([876598b](https://github.com/maystudios/maxsimcli/commit/876598b7bf124cacf95e39963dd948de775f169d))
+* **phase-5-03:** enhance session-start hook with context freshness and CI detection ([229a78c](https://github.com/maystudios/maxsimcli/commit/229a78c1cee658bcb32b54891e65ad7e41307dc3))
+* **phase-5-03:** overhaul using-maxsim skill with richer go routing state detection ([51ace4d](https://github.com/maystudios/maxsimcli/commit/51ace4dc667f17bb4614ba03abdcf5ebfe5bcc38))
+* **phase-5-04:** add TaskType enum and task-type routing to resolveModel ([0808cff](https://github.com/maystudios/maxsimcli/commit/0808cff08d34734eef3efb43f4eace03dbd78de9))
+
 # [5.25.0](https://github.com/maystudios/maxsimcli/compare/v5.24.0...v5.25.0) (2026-04-04)
 
 
