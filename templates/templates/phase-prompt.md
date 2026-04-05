@@ -97,7 +97,20 @@ the GitHub Project Board status
 
 </tasks>
 
+<wave_verification>
+After each wave completes, the orchestrator runs:
+1. `npm test` -- all tests pass
+2. `npm run build` -- build exits 0
+3. Check each plan's must_haves.truths -- observable behaviors verified
+
+If any check fails:
+- The failing plan is re-assigned for fix (retry escalation applies)
+- Other plans in the next wave proceed if they do not depend on the failing plan
+- Failed plan's GitHub Issue is reopened automatically
+</wave_verification>
+
 <verification>
+This verification runs after all waves complete. Per-wave verification catches issues earlier.
 Before declaring plan complete:
 - [ ] [Specific test command]
 - [ ] [Build/type check passes]
@@ -111,6 +124,13 @@ Before declaring plan complete:
 - No errors or warnings introduced
 - [Plan-specific criteria]
   </success_criteria>
+
+<auto_report>
+After plan completion, the executor automatically:
+1. Posts a summary comment on the phase GitHub Issue
+2. Updates the GitHub Project Board status
+3. No human gate required -- results are reported, not gated
+</auto_report>
 
 <output>
 After completion, create a summary comment on the phase GitHub Issue
@@ -238,7 +258,7 @@ the 03-02-SUMMARY comment on the phase Issue  # Reflexive chaining
 
 **Plan sizing:**
 
-- 2-3 tasks per plan
+- 2-5 tasks per plan
 - ~50% context usage maximum
 - Complex phases: Multiple focused plans, not one large plan
 
@@ -465,7 +485,7 @@ files_modified: [...]
 - Prefer vertical slices over horizontal layers
 - Only reference prior SUMMARYs when genuinely needed
 - Group checkpoints with related auto tasks in same plan
-- 2-3 tasks per plan, ~50% context max
+- 2-5 tasks per plan, ~50% context max
 
 ---
 
