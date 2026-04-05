@@ -57,7 +57,30 @@ Use as many parallel agents as the task allows. When 3 or more independent units
 
 ## Full Automation
 
-Commits, merges, and pushes happen automatically as part of execution — no manual git steps. Human gates are limited to plan approval (`ExitPlanMode`) and explicit escalations. Everything else runs unattended.
+Commits, merges, and pushes happen automatically as part of execution — no manual git steps. Human gates are limited to discussion threads and plan approval (`ExitPlanMode`) ONLY. Everything else runs unattended. The `auto_advance` workflow setting (default: `true`) controls whether execution proceeds automatically between waves without waiting for user confirmation.
+
+## Verification Model
+
+MaxsimCLI uses a 2-gate verification model. All verification passes through these gates in order:
+
+| Gate | Name | When | What it checks |
+|------|------|------|----------------|
+| 1 | Pre-Check | Before execution begins | Spec exists, acceptance criteria stated, git clean, deps installed |
+| 2 | Post-Check | After implementation, before done | Tests pass, build exits 0, lint clean, all criteria addressed, no regressions |
+
+Verification is continuous — the executor verifies after each task, not in a separate phase after all tasks complete. The orchestrator may also run per-wave verification between execution waves.
+
+**Retry escalation:** Quick Fix (attempt 1) -> Deeper Analysis (attempt 2, fresh agent) -> Codex Rescue (attempt 3, alternate model). After 3 failures, auto-reopen the GitHub Issue with a diagnostic comment.
+
+**Profiles:** Three verification profiles control strictness:
+
+| Profile | Gates | Code Review | GUARD Check |
+|---------|-------|-------------|-------------|
+| strict | Both (Pre-Check + Post-Check) | Required | Required |
+| standard | Both (Pre-Check + Post-Check) | Optional | Required |
+| fast | Post-Check only | No | Recommended |
+
+Default profile: `standard`. Set via `config.execution.verification.verification_profile`.
 
 ## GitHub-First
 
@@ -75,4 +98,4 @@ When encountering work outside current scope, log it instead of implementing it:
 - [{category}] {description} -- {why deferred}
 ```
 
-Categories: `feature`, `bug`, `refactor`, `investigation`
+Categories: `feature`, `bug`, `refactor`, `investigation`, `improvement`
