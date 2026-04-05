@@ -1,6 +1,6 @@
 # Verification Patterns
 
-> **Note:** The `verification` skill is the authoritative source for the full 4-gate verification structure (Exists, Substantive, Wired, Functional), retry protocol, and escalation paths. This file provides supporting grep patterns and checklists for common artifact types.
+> **Note:** The `verification` skill is the authoritative source for the 2-gate verification model (Pre-Check, Post-Check), verification profiles, retry escalation, and auto-reopen patterns. This file provides supporting grep patterns and checklists for common artifact types.
 
 How to verify different types of artifacts are real implementations, not stubs or placeholders.
 

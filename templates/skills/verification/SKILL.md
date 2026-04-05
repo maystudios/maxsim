@@ -1,6 +1,6 @@
 ---
 name: verification
-description: Evidence-based verification with quality gates, anti-rationalization enforcement, and retry escalation. Merges gate framework, evidence collection, and completion verification into one authoritative source. Used when completing tasks, verifying implementations, or before claiming work is done.
+description: Evidence-based verification with 2 quality gates (pre-check and post-check), anti-rationalization enforcement, and 3-step retry escalation. Used when completing tasks, verifying implementations, or before claiming work is done.
 ---
 
 # Verification
@@ -30,50 +30,70 @@ SKIPPED is only allowed when the claim is explicitly out of scope and the reason
 
 ---
 
-## 4 Quality Gates
+## 2 Quality Gates
 
 Gates run in order. A failure at any gate stops forward progress until resolved.
 
-### Gate 1 — Input Gate
-Run before work begins.
+### Gate 1 — Pre-Check
+
+Run before execution begins.
 
 - Spec or task definition exists and is unambiguous
 - Acceptance criteria are stated explicitly
-- Required inputs (files, configs, credentials) are present
-- Scope boundaries are defined — what is in and what is out
-
-Failure action: Return to requester with a clarifying question. Do not guess at requirements.
-
-### Gate 2 — Pre-Action Gate
-Run before executing changes.
-
 - Git state is clean or the working branch is correctly scoped
 - Dependencies are installed and match the lockfile
-- Linter and formatter configs are present
 - No blocking issues from a previous failed run remain in the working tree
 
-Failure action: Resolve the blocking state first. Document what was found and what was done to fix it.
+Failure action: Resolve the blocking state first. If the spec is unclear, return to requester with a clarifying question. Do not guess at requirements. Document what was found and what was done to fix it.
 
-### Gate 3 — Completion Gate
+### Gate 2 — Post-Check
+
 Run after implementation, before declaring done.
 
 - All tests pass (fresh run, not cached)
 - Build exits with code 0
 - Lint is clean
-- Every acceptance criterion from Gate 1 is addressed with an Evidence Block
-- No files are left in a modified-but-uncommitted state unless that is the intended deliverable
-
-Failure action: Fix failures. Do not skip a failing test. Do not suppress a lint error. Each fix resets the gate — re-run from the top of Gate 3.
-
-### Gate 4 — Quality Gate
-Run after Gate 3 passes.
-
+- Every acceptance criterion is addressed with an Evidence Block
+- No regressions introduced — GUARD command confirms this
 - Code review concerns (if any were raised) are resolved
-- No regressions introduced — GUARD command confirms this (see below)
+- No files are left in a modified-but-uncommitted state unless that is the intended deliverable
 - Evidence Blocks are complete and attached to the work artifact
 - Handoff contract or completion note is written if another agent will consume this output
 
-Failure action: Rework the implementation. If regressions are found, revert before attempting a fix.
+Failure action: Fix failures. Do not skip a failing test. Do not suppress a lint error. Each fix resets the gate — re-run from the top of Gate 2.
+
+---
+
+## Verification Profiles
+
+Three profiles control which gates and checks are required:
+
+### strict
+
+- Both gates mandatory (Pre-Check and Post-Check)
+- Code review required
+- All evidence blocks required
+- GUARD regression check required
+
+Use for: critical path work, breaking changes, security-sensitive code.
+
+### standard
+
+- Both gates mandatory (Pre-Check and Post-Check)
+- Code review optional
+- All evidence blocks required
+- GUARD regression check required
+
+Use for: normal feature and fix work. This is the default profile.
+
+### fast
+
+- Post-Check only (skip Pre-Check)
+- No code review
+- All evidence blocks required
+- GUARD regression check recommended but not blocking
+
+Use for: trivial changes, documentation updates, config tweaks.
 
 ---
 
@@ -139,29 +159,48 @@ If you catch yourself using any phrase from this table, STOP immediately and gat
 
 ---
 
-## Retry Logic
+## Retry Escalation
 
-### Attempt Counting
+When a gate fails, follow this 3-step escalation. Each step uses a fresh approach to avoid repeating the same mistake.
 
-Each task starts at attempt 1. A failed gate that triggers a rework cycle increments the attempt counter. Attempt count resets only when the task scope changes materially.
+### Step 1 — Quick Fix (Attempt 1)
 
-### Per-Attempt Rules
+Standard fix attempt. Read the error output, fix inline, re-run gates.
 
-- **Attempt 1**: Execute normally. Collect full evidence. If gates pass, complete.
-- **Attempt 2**: Fresh context. Do not carry forward assumptions from attempt 1. Re-read the spec. Re-run all gates from Gate 1.
-- **Attempt 3**: Fresh agent context. Treat this as a cold start. Diagnose why attempts 1 and 2 failed before touching any code.
+- Read the exact error message from the gate failure
+- Make the minimal fix to address the root cause
+- Re-run the failed gate from the top
+- If gates pass, complete normally
 
-### After 3 Failures
+### Step 2 — Deeper Analysis (Attempt 2)
 
-Escalate to the user. The escalation must include:
+Fresh agent context. Re-read the spec from scratch. Diagnose root cause before touching code.
+
+- Spawn a new executor agent (do NOT reuse the previous one)
+- Provide the full task spec — do not assume prior context carries over
+- Include the diagnostic summary from the Step 1 failure
+- Diagnose why Step 1 failed before touching any code
+- Run all gates from Gate 1 (Pre-Check)
+
+### Step 3 — Codex Rescue (Attempt 3)
+
+If multi-model is available (`config.execution.model_overrides` has entries), spawn a Codex or alternate model agent for a fresh perspective. Otherwise, use a fresh Claude agent with the full diagnostic context from Steps 1 and 2.
+
+- Provide: original spec, Step 1 error, Step 2 error, root cause analysis
+- The alternate agent starts clean — no assumptions from prior attempts
+- Run all gates from Gate 1 (Pre-Check)
+
+### After 3 Failures — Escalate
+
+Do not attempt a 4th run without user acknowledgment and revised instructions.
+
+Auto-reopen the GitHub Issue and post a diagnostic comment (see "Gate Failure: Auto Issue Reopen" below). The escalation must include:
 
 1. The original task spec (quoted)
 2. What was attempted in each of the 3 runs (brief, factual)
 3. The specific gate that failed each time and the exact error output
 4. A diagnostic summary: is this a spec problem, an environment problem, or an implementation problem?
 5. A proposed next step (rewrite spec, fix environment, reduce scope)
-
-Do not attempt a 4th run without user acknowledgment and revised instructions.
 
 ---
 
@@ -171,10 +210,10 @@ Do not attempt a 4th run without user acknowledgment and revised instructions.
 |---|---|---|
 | Caching test results | Reporting pass without re-running | Always run tests fresh; use `--no-cache` or equivalent |
 | Partial lint scope | Running lint on one file, claiming lint is clean | Run lint on the entire affected module or project |
-| Missing Gate 1 | Starting work before spec is confirmed | Always confirm acceptance criteria exist before writing code |
+| Missing Pre-Check | Starting work before spec is confirmed | Always confirm acceptance criteria exist before writing code |
 | Evidence copied from prior session | Referencing output not produced in this session | All evidence must come from tool calls in the current session |
 | Verifying only the happy path | Tests pass but edge cases are untested | GUARD must include regression tests, not only new tests |
-| Skipping Gate 4 after Gate 3 passes | Declaring done without regression check | Gate 3 and Gate 4 are both required; neither is optional |
+| Skipping Post-Check | Declaring done without regression check | Both Pre-Check and Post-Check are required (unless using fast profile) |
 | Conflating "no errors" with "correct output" | Exit code 0 but wrong behavior | Evidence must show correct output, not just absence of error |
 | Writing evidence after the fact | Constructing output from memory | Run the command, capture the output, paste it verbatim |
 
@@ -192,17 +231,29 @@ When verification fails, follow this structured process:
 
 ---
 
-## GitHub Issue Escalation
+## Gate Failure: Auto Issue Reopen
 
-When a task fails verification after 3 attempts, escalate by creating (or commenting on) a GitHub Issue:
+When a task fails verification after all 3 retry attempts, automatically reopen the associated GitHub Issue and post a diagnostic comment:
 
-1. **Original task spec** — quoted from the plan comment
-2. **What was attempted** — brief factual summary of each attempt
-3. **The specific gate that failed** — exact error output from each run
-4. **Root cause analysis** — spec/environment/implementation classification
-5. **Proposed next step** — rewrite spec, fix environment, reduce scope, or request user input
+```bash
+# Reopen the issue
+gh issue reopen #{issue_number}
 
-Label the issue with `type:bug` and `maxsim:auto`.
+# Post diagnostic comment with all 3 attempt summaries
+gh issue comment #{issue_number} --body "..."
+```
+
+The comment body should include:
+
+- **Task**: description of the task
+- **Gate**: which gate failed
+- **Profile**: which verification profile was active
+- **Attempt 1 (Quick Fix)**: error and fix attempted
+- **Attempt 2 (Deeper Analysis)**: root cause diagnosis and error
+- **Attempt 3 (Codex Rescue)**: approach and error
+- **Diagnosis**: classification (spec/environment/implementation) and proposed next step
+
+Label the issue with `type:bug`, `maxsim:auto`, and `verification:failed`.
 
 ---
 

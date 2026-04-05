@@ -62,15 +62,23 @@ These phrases indicate reasoning without evidence. Replace them with a verificat
 
 ## Gate Structure
 
-The `verification` skill defines the authoritative 4-gate structure all verification must pass through:
+The `verification` skill defines the authoritative 2-gate structure all verification must pass through:
 
-1. **Input Gate** — spec exists, acceptance criteria are stated, required inputs are present, scope is defined.
-2. **Pre-Action Gate** — git state is clean, dependencies match the lockfile, no blocking state from a prior run.
-3. **Completion Gate** — all tests pass, build exits 0, lint is clean, every acceptance criterion is addressed with an evidence block, spec compliance is confirmed.
-4. **Quality Gate** — code review concerns resolved, no regressions (GUARD command passes), evidence blocks are complete and attached.
+1. **Pre-Check** — spec exists, acceptance criteria are stated, git state is clean, dependencies match the lockfile, no blocking state from a prior run.
+2. **Post-Check** — all tests pass, build exits 0, lint is clean, every acceptance criterion is addressed with an evidence block, no regressions (GUARD command passes), code review concerns resolved.
 
-Each gate must produce its own evidence block. Gates are sequential: a failure at any gate stops progression.
+Each gate must produce its own evidence block. Gates are sequential: a failure at any gate stops progression. The verification skill defines three profiles (strict, standard, fast) that control which gates are required.
 
 ## Retry Protocol
 
-When verification fails: read the error, fix the issue, re-run the command, produce a new evidence block. Maximum 3 total attempts per gate before escalating. The `verification` skill provides detailed methodology for gate types, retry feedback, and escalation.
+When verification fails: read the error, fix the issue, re-run the command, produce a new evidence block.
+
+3-step escalation:
+
+1. **Quick Fix** — standard fix attempt, re-run gates
+2. **Deeper Analysis** — fresh agent context, re-read spec from scratch, diagnose root cause before touching code
+3. **Codex Rescue** — alternate model agent (if available) or fresh Claude agent with full diagnostic context
+
+After 3 failures: auto-reopen the GitHub Issue with `gh issue reopen` and post a diagnostic comment. Do not attempt a 4th run without user acknowledgment.
+
+The `verification` skill provides detailed methodology for each retry step and the auto-reopen pattern.
