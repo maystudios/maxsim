@@ -733,3 +733,82 @@ describe('Gate 4: actionable feedback in stderr', () => {
     expect(stderrOutput).toContain('Forbidden phrase detected: "should work"');
   });
 });
+
+// ---------------------------------------------------------------------------
+// Verification gate selection (profile-equivalent behavior)
+// ---------------------------------------------------------------------------
+
+describe('verification gate selection', () => {
+  it('runs all 3 gates when test, build, and lint scripts are present', async () => {
+    const { spawnSyncMock } = await loadHookWithMocks({
+      packageJson: {
+        scripts: { test: 'vitest', build: 'tsc', lint: 'eslint .' },
+      },
+      spawnResults: {
+        test: makeSpawnResult({ status: 0, stdout: 'ok' }),
+        build: makeSpawnResult({ status: 0, stdout: 'ok' }),
+        lint: makeSpawnResult({ status: 0, stdout: 'ok' }),
+      },
+    });
+
+    hookCallback!({
+      cwd: tmpDir,
+      task_description: 'CLAIM: x\nEVIDENCE: y\nOUTPUT: z\nVERDICT: w',
+    });
+
+    // All 3 spawn gates attempted
+    expect(spawnSyncMock).toHaveBeenCalledTimes(3);
+    const callArgs = spawnSyncMock.mock.calls.map(
+      (c: unknown[]) => (c[1] as string[]).join(' '),
+    );
+    expect(callArgs.some((a: string) => a.includes('test'))).toBe(true);
+    expect(callArgs.some((a: string) => a.includes('build'))).toBe(true);
+    expect(callArgs.some((a: string) => a.includes('lint'))).toBe(true);
+  });
+
+  it('runs only test gate when build and lint scripts are absent', async () => {
+    const { spawnSyncMock } = await loadHookWithMocks({
+      packageJson: { scripts: { test: 'vitest' } },
+      spawnResults: {
+        test: makeSpawnResult({ status: 0, stdout: 'ok' }),
+      },
+    });
+
+    hookCallback!({
+      cwd: tmpDir,
+      task_description: 'CLAIM: x\nEVIDENCE: y\nOUTPUT: z\nVERDICT: w',
+    });
+
+    expect(spawnSyncMock).toHaveBeenCalledTimes(1);
+    const args = (spawnSyncMock.mock.calls[0] as unknown[])[1] as string[];
+    expect(args.includes('test')).toBe(true);
+  });
+
+  it('runs only build and lint gates when test script is absent', async () => {
+    const { spawnSyncMock } = await loadHookWithMocks({
+      packageJson: { scripts: { build: 'tsc', lint: 'eslint .' } },
+      spawnResults: {
+        build: makeSpawnResult({ status: 0, stdout: 'ok' }),
+        lint: makeSpawnResult({ status: 0, stdout: 'ok' }),
+      },
+    });
+
+    hookCallback!({
+      cwd: tmpDir,
+      task_description: 'CLAIM: x\nEVIDENCE: y\nOUTPUT: z\nVERDICT: w',
+    });
+
+    expect(spawnSyncMock).toHaveBeenCalledTimes(2);
+  });
+
+  it('defaults to allowing completion when no scripts exist at all', async () => {
+    const { spawnSyncMock } = await loadHookWithMocks({
+      packageJson: null,
+    });
+
+    hookCallback!({ cwd: tmpDir });
+
+    expect(spawnSyncMock).not.toHaveBeenCalled();
+    expect(exitSpy).toHaveBeenCalledWith(0);
+  });
+});
