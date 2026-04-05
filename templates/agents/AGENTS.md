@@ -114,6 +114,22 @@ All skills use `user-invocable: false` -- agents auto-invoke them based on descr
 
 The `planner` agent runs with `permissionMode: plan`. This enforces read-only access to the filesystem -- the planner can analyze the codebase and return plan content, but cannot execute commands that modify source files or run builds. This prevents the planner from accidentally beginning execution during the planning phase.
 
+## Session Start Enrichment
+
+The `maxsim-session-start` hook (SessionStart event) injects orientation context at the beginning of every session. All signals are best-effort -- if any signal fails to resolve, it is silently skipped and never blocks session start.
+
+| Signal | Source | Description |
+|--------|--------|-------------|
+| Recent git history | `git log --oneline -20` | Last 20 commits for instant orientation on recent work |
+| Learned patterns | `.claude/agent-memory/maxsim-learner/MEMORY.md` (first 200 lines) | Persistent learnings from previous sessions |
+| Metric trends | `.claude/agent-memory/maxsim-learner/autoresearch-results.tsv` (last 10 lines) | Recent autoresearch metric measurements |
+| Context freshness | `git log -1 --format=%ct` on current branch | Warns when last commit is older than 7 days |
+| Memory size | `MEMORY.md` file size check | Warns when MEMORY.md exceeds 50 KB |
+| CI/CD status | `gh run list --limit 3 --json status,conclusion,name` | Detects failing CI workflows (P0 priority) |
+| Proactive suggestions | Metric trend analysis (3+ consecutive declines) | Suggests `/maxsim:improve` for regressing metrics |
+
+All signals are injected as `additionalContext` in the hook output. The CI/CD status section appears first when failures are detected (highest priority). Context freshness and proactive suggestions appear after the standard sections.
+
 ## Tier 2 -- Agent Teams
 
 When `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` is set and Claude Code supports it, MaxsimCLI can use multi-agent orchestration via Agent Teams.
