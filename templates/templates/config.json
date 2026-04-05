@@ -1,5 +1,5 @@
 {
-  "version": "5.23.1",
+  "version": "5.24.0",
   "__doc_model_profiles": {
     "_description": "Reference: model assignments per profile. Actual values are defined in code — this table is for documentation only.",
     "quality": {
@@ -42,6 +42,8 @@
     "competitive_enabled": true,
     "__doc_model_overrides": "Optional per-agent-type model overrides. Keys are agent types (planner, executor, researcher, verifier) and values are model tiers (opus, sonnet, haiku). Overrides take precedence over the profile's default assignment. Example: { \"executor\": \"opus\" } upgrades the executor to opus while keeping other agents at their profile defaults.",
     "model_overrides": {},
+    "__doc_task_type_overrides": "Optional per-task-type model overrides. Keys are task types (planning, coding, review, commit, research, verification) and values are model tiers (opus, sonnet, haiku). Task type overrides take highest precedence in the model resolution chain: task_type_override > agent_type_override > profile_default. Use for cost-tiered assignment (e.g. opus for planning, haiku for commits).",
+    "task_type_overrides": {},
     "parallelism": {
       "__doc_parallelism": [
         "Two limits govern agent parallelism:",
@@ -106,6 +108,7 @@
     "research": true,
     "plan_checker": true,
     "verifier": true,
+    "__doc_auto_advance": "When true, execution proceeds automatically between waves without waiting for user confirmation. When false, the orchestrator pauses after each wave for user review. Default: true.",
     "auto_advance": true
   },
   "git": {
