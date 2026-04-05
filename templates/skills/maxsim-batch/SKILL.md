@@ -21,6 +21,8 @@ Do not use for fewer than 3 tasks (overhead exceeds benefit), sequential depende
 
 ## Process
 
+The batch orchestrator auto-advances between waves when `workflow.auto_advance` is true (default). No human confirmation needed between waves.
+
 ### 1. DECOMPOSE -- Verify Independence
 
 List all units. For each unit, list the files it will create or modify. Check:
@@ -75,13 +77,26 @@ Update the table in place -- replace the previous table, do not append a new one
 
 ### 5. COLLECT -- Handle Results
 
-When all agents complete:
-1. List all PRs created
-2. Verify each PR is independently mergeable (no dependency on another PR)
-3. Handle failures:
-   - Unit fails tests: spawn a fix agent in the same worktree (up to 2 retries)
-   - Merge conflict found: decomposition was wrong -- fix overlap and re-run the conflicting units
-   - 3+ failures on one unit: stop and escalate to user with full failure context
+When all agents complete: list all PRs, verify each is independently mergeable, merge automatically (fast-forward preferred, rebase if needed).
+
+Handle failures:
+- Unit fails tests: spawn a fix agent in the same worktree (up to 2 retries)
+- Merge conflict found: decomposition was wrong -- fix overlap and re-run the conflicting units
+- 3+ failures on one unit: stop and escalate to user with full failure context
+
+## Per-Wave Verification
+
+After all agents in a wave complete, the orchestrator runs verification before starting the next wave:
+
+1. **Build gate**: `npm run build` -- must exit 0
+2. **Test gate**: `npm test` -- must pass
+3. **Must-haves check**: For each completed plan in this wave, check `must_haves.truths` from frontmatter
+
+If a wave fails verification:
+- Failing plans get retry escalation (quick fix -> deeper analysis -> rescue)
+- Non-dependent plans in the next wave proceed
+- Dependent plans are blocked until the failing plan passes
+- After 3 failed retries: auto-reopen the plan's GitHub Issue with diagnostic comment
 
 ## Agent Teams (Tier 2)
 
