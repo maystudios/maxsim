@@ -13,7 +13,8 @@
 
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import { readStdinJson, CLAUDE_DIR, isMaxsimProject, recentCommits } from './shared.js';
+import { spawnSync } from 'node:child_process';
+import { readStdinJson, CLAUDE_DIR, isMaxsimProject, recentCommits, gitBranchAge, memoryFileSize } from './shared.js';
 
 interface SessionStartInput {
   session_id?: string;
@@ -87,6 +88,75 @@ function detectMissingHooks(projectDir: string): string[] {
   }
 }
 
+interface CIRun {
+  name?: string;
+  status?: string;
+  conclusion?: string;
+}
+
+/**
+ * Check CI status via gh CLI. Returns an array of failing run names,
+ * or null if CI status cannot be determined (gh not installed, not a GitHub repo, etc.).
+ * Never throws.
+ */
+function checkCIStatus(projectDir: string): string[] | null {
+  try {
+    const result = spawnSync(
+      'gh',
+      ['run', 'list', '--limit', '3', '--json', 'status,conclusion,name'],
+      {
+        cwd: projectDir,
+        encoding: 'utf8',
+        timeout: 8000,
+        stdio: ['ignore', 'pipe', 'ignore'],
+        windowsHide: true,
+      },
+    );
+    if (result.status !== 0) return null;
+    const runs: CIRun[] = JSON.parse((result.stdout ?? '').trim());
+    if (!Array.isArray(runs)) return null;
+    const failing = runs
+      .filter((r) => r.conclusion === 'failure' || r.conclusion === 'cancelled')
+      .map((r) => r.name ?? 'unknown workflow');
+    return failing.length > 0 ? failing : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Detect declining metric trends from TSV data.
+ * Returns true if 3+ consecutive negative deltas are found in any numeric column.
+ * Never throws.
+ */
+function hasDeclineInMetrics(tsvContent: string): boolean {
+  try {
+    const lines = tsvContent.split('\n').filter(Boolean);
+    if (lines.length < 4) return false;
+    // Parse numeric values from the last column (metric value)
+    const values: number[] = [];
+    for (const line of lines) {
+      const parts = line.split('\t');
+      const lastVal = parseFloat(parts[parts.length - 1]);
+      if (Number.isFinite(lastVal)) values.push(lastVal);
+    }
+    if (values.length < 4) return false;
+    // Check for 3+ consecutive negative deltas
+    let consecutiveDeclines = 0;
+    for (let i = 1; i < values.length; i++) {
+      if (values[i] < values[i - 1]) {
+        consecutiveDeclines++;
+        if (consecutiveDeclines >= 3) return true;
+      } else {
+        consecutiveDeclines = 0;
+      }
+    }
+    return false;
+  } catch {
+    return false;
+  }
+}
+
 readStdinJson<SessionStartInput>((input) => {
   try {
     const projectDir = input.cwd ?? process.cwd();
@@ -97,7 +167,20 @@ readStdinJson<SessionStartInput>((input) => {
 
     const sections: string[] = [];
 
-    // Detect missing hooks and warn — this hook works standalone even if
+    // --- P0: CI/CD failure detection (highest priority, goes first) ---
+    try {
+      const ciFailures = checkCIStatus(projectDir);
+      if (ciFailures) {
+        sections.push(
+          '## CI/CD Failures Detected (P0)',
+          `The following CI workflows are failing:\n${ciFailures.map((n) => `  - ${n}`).join('\n')}\n\nFix blockers first. Run \`/maxsim:fix-loop\` to auto-repair CI failures.`,
+        );
+      }
+    } catch {
+      // Silent failure -- CI check is best-effort
+    }
+
+    // Detect missing hooks and warn -- this hook works standalone even if
     // others are not registered, but the user should know about it.
     const missingHooks = detectMissingHooks(projectDir);
     if (missingHooks.length > 0) {
@@ -143,6 +226,40 @@ readStdinJson<SessionStartInput>((input) => {
         '## Metric Trends (autoresearch-results.tsv)',
         tsvTail,
       );
+    }
+
+    // --- Context Freshness warnings ---
+    try {
+      const branchAge = gitBranchAge(projectDir);
+      if (branchAge !== null && branchAge > 7) {
+        sections.push(
+          '## Context Freshness Warning',
+          `Last commit on this branch was ${branchAge} days ago. Context may be stale.\nRun \`/maxsim:progress\` to review current project state before starting new work.`,
+        );
+      }
+
+      const memSize = memoryFileSize(projectDir);
+      if (memSize > 51200) {
+        const sizeKB = Math.round(memSize / 1024);
+        sections.push(
+          '## Memory Size Warning',
+          `MEMORY.md is ${sizeKB} KB (>${Math.round(51200 / 1024)} KB threshold). Consider pruning old entries to keep context injection efficient.`,
+        );
+      }
+    } catch {
+      // Silent failure -- context freshness is best-effort
+    }
+
+    // --- Proactive Suggestions for declining metrics ---
+    try {
+      if (tsvTail && hasDeclineInMetrics(tsvTail)) {
+        sections.push(
+          '## Proactive Suggestion: Declining Metrics',
+          'Metric trends show 3+ consecutive declines. Consider running `/maxsim:improve` to investigate and optimize the regressing metric.',
+        );
+      }
+    } catch {
+      // Silent failure -- proactive suggestions are best-effort
     }
 
     if (sections.length > 0) {

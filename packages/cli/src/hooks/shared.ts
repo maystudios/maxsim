@@ -82,6 +82,57 @@ export function recentCommits(projectDir: string, n = 5): string[] {
   }
 }
 
+/**
+ * Returns the number of days since the last commit on the current branch.
+ * Returns null on any failure (not a git repo, no commits, etc.).
+ * Never throws.
+ */
+export function gitBranchAge(projectDir: string): number | null {
+  try {
+    const result = spawnSync(
+      'git',
+      ['log', '-1', '--format=%ct'],
+      {
+        cwd: projectDir,
+        encoding: 'utf8',
+        timeout: 4000,
+        stdio: ['ignore', 'pipe', 'ignore'],
+        windowsHide: true,
+      },
+    );
+    if (result.status !== 0) return null;
+    const timestamp = parseInt((result.stdout ?? '').trim(), 10);
+    if (!Number.isFinite(timestamp) || timestamp <= 0) return null;
+    const nowSeconds = Math.floor(Date.now() / 1000);
+    const diffDays = (nowSeconds - timestamp) / 86400;
+    return Math.max(0, Math.floor(diffDays));
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Returns the size in bytes of the MEMORY.md file.
+ * Looks in .claude/agent-memory/maxsim-learner/MEMORY.md.
+ * Returns 0 if the file does not exist or on any error.
+ * Never throws.
+ */
+export function memoryFileSize(projectDir: string): number {
+  try {
+    const memoryPath = path.join(
+      projectDir,
+      CLAUDE_DIR,
+      'agent-memory',
+      'maxsim-learner',
+      'MEMORY.md',
+    );
+    const stats = fs.statSync(memoryPath);
+    return stats.size;
+  } catch {
+    return 0;
+  }
+}
+
 /** Returns true when running on Windows. */
 export function isWindows(): boolean {
   return os.platform() === 'win32';
